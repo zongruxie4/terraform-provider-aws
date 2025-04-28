@@ -21,8 +21,7 @@ Provides an Amazon MQ broker resource. This resource manages broker users at cre
 > - Terraform cannot update or manage users after broker creation. Any changes to the `user` block will trigger full broker recreation (`ForceNew` behavior).
 > - Amazon MQ does not return RabbitMQ user information via APIs, making drift detection for users impossible.
 
-
-!> **Warning:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+~> **NOTE:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
 ~> **Note:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
@@ -214,7 +213,6 @@ The following arguments are optional:
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
 * `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ActiveMQ` only.
 * `replication_user` - (Optional) Whether to set replication user. Defaults to `false`.
-
 
 ## Attribute Reference
 
