@@ -39,9 +39,19 @@ func TestAccIAMRole_basic(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role/{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
 			},
 			{
@@ -1304,13 +1314,8 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_service_principal" "ec2" {
-  service_name = "ec2"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
-  path = "/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -1323,6 +1328,10 @@ resource "aws_iam_role" "test" {
       Sid    = ""
     }]
   })
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
 }
 `, rName)
 }
