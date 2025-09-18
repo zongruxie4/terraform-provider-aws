@@ -362,7 +362,8 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 				),
 			},
 			{
@@ -370,13 +371,28 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				Config: testAccUserConfig_basic(name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -400,7 +416,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_path(name, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
 				),
 			},
 			{
@@ -413,7 +429,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_path(name, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, resourceName, &conf),
 				),
 			},
 		},
