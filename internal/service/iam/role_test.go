@@ -181,6 +181,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -192,6 +193,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
