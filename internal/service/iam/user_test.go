@@ -363,6 +363,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				Config: testAccUserConfig_basic(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 				),
 			},
@@ -378,6 +379,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				Config: testAccUserConfig_basic(name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -417,6 +419,8 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				Config: testAccUserConfig_path(name, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path1),
 				),
 			},
 			{
@@ -431,6 +435,8 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				Config: testAccUserConfig_path(name, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
