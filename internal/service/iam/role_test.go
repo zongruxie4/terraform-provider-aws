@@ -208,6 +208,57 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_path(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Role
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	path1 := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
+	path2 := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_path(path1, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoleConfig_path(path2, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, t, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "role{path}{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/23288
 // https://github.com/hashicorp/terraform-provider-aws/issues/28833
 func TestAccIAMRole_diffs(t *testing.T) {
@@ -1557,6 +1608,31 @@ resource "aws_iam_role" "test" {
   })
 }
 `, rName)
+}
+
+func testAccRoleConfig_path(path, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[2]q
+  path = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = data.aws_service_principal.ec2.name,
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+`, path, rName)
 }
 
 func testAccRoleConfig_badJSON(rName string) string {
