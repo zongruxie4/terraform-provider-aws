@@ -683,9 +683,10 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, 
 		Target:                    []string{names.AttrARN},
 		Refresh:                   statusRoleARNValue(conn, id),
 		Timeout:                   propagationTimeout,
-		NotFoundChecks:            10,
+		NotFoundChecks:            5,
 		ContinuousTargetOccurence: 5,
-		Delay:                     10 * time.Second,
+		Delay:                     5 * time.Second,
+		PollInterval:              1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
