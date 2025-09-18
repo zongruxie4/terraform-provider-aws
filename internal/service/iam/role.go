@@ -653,7 +653,7 @@ const (
 	roleNotFoundState      = "notfound"
 )
 
-func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
+func statusRoleARNValue(conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findRoleByName(ctx, conn, id)
 
@@ -681,7 +681,7 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{roleARNIsUniqueIDState, roleNotFoundState},
 		Target:                    []string{names.AttrARN},
-		Refresh:                   statusRoleCreate(conn, id),
+		Refresh:                   statusRoleARNValue(conn, id),
 		Timeout:                   propagationTimeout,
 		NotFoundChecks:            10,
 		ContinuousTargetOccurence: 5,
