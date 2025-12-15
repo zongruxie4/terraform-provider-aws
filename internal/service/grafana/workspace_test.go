@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -441,6 +442,21 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
 				Config: testAccWorkspaceConfig_networkAccess(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
@@ -462,6 +478,21 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.0.vpce_ids.#", "2"),
 				),
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				Config: testAccWorkspaceConfig_networkAccessRemoved(rName),
@@ -740,6 +771,41 @@ resource "aws_grafana_workspace" "test" {
   }
 }
 `, rName, endpoints))
+}
+
+func testAccWorkspaceConfig_networkAccessEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+}
+
+resource "aws_security_group" "test" {
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
+  subnet_ids          = aws_subnet.test[*].id
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+}
+`, rName))
 }
 
 func testAccWorkspaceConfig_networkAccessRemoved(rName string) string {
