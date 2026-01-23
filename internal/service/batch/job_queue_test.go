@@ -462,6 +462,14 @@ func testAccJobQueueConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "batch" {
+  service_name = "batch"
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
@@ -472,7 +480,7 @@ resource "aws_iam_role" "test" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "batch.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.batch.name}"
         }
     }
     ]
@@ -496,7 +504,7 @@ resource "aws_iam_role" "ecs_instance_role" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
         }
     }
     ]
@@ -843,6 +851,14 @@ func testAccJobQueueConfig_legacyBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "batch" {
+  service_name = "batch"
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
@@ -853,7 +869,7 @@ resource "aws_iam_role" "test" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "batch.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.batch.name}"
         }
     }
     ]
@@ -877,7 +893,7 @@ resource "aws_iam_role" "ecs_instance_role" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
         }
     }
     ]
