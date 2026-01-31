@@ -34,7 +34,7 @@ func TestAccS3BucketCORSConfiguration_basic(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_methods.#": "1",
@@ -95,7 +95,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": "1",
@@ -111,7 +111,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": "1",
@@ -171,7 +171,7 @@ func TestAccS3BucketCORSConfiguration_SingleRule(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": "1",
@@ -213,7 +213,7 @@ func TestAccS3BucketCORSConfiguration_MultipleRules(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": "1",
@@ -414,7 +414,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   cors_rule {
     allowed_methods = ["PUT"]
@@ -431,7 +431,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   cors_rule {
     allowed_headers = ["*"]
@@ -452,7 +452,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   cors_rule {
     allowed_headers = ["*"]
@@ -475,7 +475,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   cors_rule {
     allowed_headers = ["*"]
@@ -495,7 +495,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   cors_rule {
     allowed_methods = ["PUT"]
