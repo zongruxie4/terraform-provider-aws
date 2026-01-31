@@ -33,3 +33,7 @@ resource/aws_s3_bucket_server_side_encryption_configuration: Deprecates `expecte
 ```release-note:note
 resource/aws_s3_bucket_versioning: Deprecates `expected_bucket_owner` attribute.
 ```
+
+```release-note:note
+resource/aws_s3_bucket_website_configuration: Deprecates `expected_bucket_owner` attribute.
+```
