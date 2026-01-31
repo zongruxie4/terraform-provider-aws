@@ -297,7 +297,7 @@ resource "aws_s3_bucket_accelerate_configuration" "test" {
   bucket                = aws_s3_bucket.test.bucket
   expected_bucket_owner = data.aws_caller_identity.current.account_id
 
-status = %[2]q
+  status = %[2]q
 }
 
 resource "aws_s3_bucket" "test" {
