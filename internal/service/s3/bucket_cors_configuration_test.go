@@ -42,6 +42,8 @@ func TestAccS3BucketCORSConfiguration_basic(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_rule.*.allowed_methods.*", "PUT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_rule.*.allowed_origins.*", "https://www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 				),
 			},
 			{
@@ -331,6 +333,37 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketCORSConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_cors_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketCORSConfigurationConfig_expectedBucketOwner(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cors_rule.0.max_age_seconds",
+				},
+			},
+		},
+	})
+}
+
 func TestAccS3BucketCORSConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -524,4 +557,24 @@ resource "aws_s3_bucket_cors_configuration" "test" {
   }
 }
 `)
+}
+
+func testAccBucketCORSConfigurationConfig_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_cors_configuration" "test" {
+  bucket                = aws_s3_bucket.test.bucket
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  cors_rule {
+    allowed_methods = ["PUT"]
+    allowed_origins = ["https://www.example.com"]
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_caller_identity" "current" {}
+`, rName)
 }
