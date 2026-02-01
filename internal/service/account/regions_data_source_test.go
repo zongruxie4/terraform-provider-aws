@@ -15,10 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	enabledByDefault = string(awstypes.RegionOptStatusEnabledByDefault)
-	disabled         = string(awstypes.RegionOptStatusDisabled)
-)
 
 func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -38,15 +34,15 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 				Check:  resource.TestCheckResourceAttrSet(dataSourceName, "regions.#"),
 			},
 			{
-				Config: testAccRegionsDataSourceConfig_status(enabledByDefault),
+				Config: testAccRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusEnabledByDefault)),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-					"region_opt_status": enabledByDefault,
+					"region_opt_status": string(awstypes.RegionOptStatusEnabledByDefault),
 				}),
 			},
 			{
-				Config: testAccRegionsDataSourceConfig_status(disabled),
+				Config: testAccRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusDisabled)),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-					"region_opt_status": disabled,
+					"region_opt_status": string(awstypes.RegionOptStatusDisabled),
 				}),
 			},
 		},

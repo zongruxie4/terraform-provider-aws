@@ -61,11 +61,13 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var input account.ListRegionsInput
-	flex.Expand(ctx, &data, &input)
-	inputPtr := &input
+	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	output := &account.ListRegionsOutput{}
-	paginator := account.NewListRegionsPaginator(conn, inputPtr)
+	paginator := account.NewListRegionsPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
