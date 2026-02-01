@@ -33,13 +33,13 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 				Check:  resource.TestCheckResourceAttrSet(dataSourceName, "regions.#"),
 			},
 			{
-				Config: testAccAccountRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusEnabledByDefault)),
+				Config: testAccRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusEnabledByDefault)),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
 					"region_opt_status": string(awstypes.RegionOptStatusEnabledByDefault),
 				}),
 			},
 			{
-				Config: testAccAccountRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusDisabled)),
+				Config: testAccRegionsDataSourceConfig_status(string(awstypes.RegionOptStatusDisabled)),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
 					"region_opt_status": string(awstypes.RegionOptStatusDisabled),
 				}),
@@ -48,7 +48,7 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAccountRegionsDataSourceConfig_status(status string) string {
+func testAccRegionsDataSourceConfig_status(status string) string {
 	return fmt.Sprintf(`
 data "aws_account_regions" "test" {
   region_opt_status_contains = ["%s"]
