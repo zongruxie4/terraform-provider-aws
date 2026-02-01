@@ -9,7 +9,7 @@ description: |-
 
 # Data Source: aws_account_regions
 
-The `aws_account_regions` data source lets you query AWS region information for any account in your AWS Organization, not just the current account. It uses the AWS Account REST Service to show all regions, including those that are enabled, disabled, or in the process of being enabled or disabled. You can list regions for any organization account, see all possible region opt-in statuses (Enabled, Enabling, Disabled, Disabling, Enabled_By_Default), and check which regions are being enabled or disabled, not just those that are currently available.
+The `aws_account_regions` data source lets you query AWS region information for any account in your AWS Organization. It uses the AWS Account REST Service to show all regions, including those that are enabled, disabled, or in the process of being enabled or disabled. You can list regions for any organization account, see all possible region opt-in statuses (`Enabled`, `Enabling`, `Disabled`, `Disabling`, `Enabled_By_Default`), and check which regions are being enabled or disabled.
 
 This is more comprehensive than the [aws_regions](./region.html.markdown) data source, which only uses the EC2 REST service and is limited to the current account and a subset of region statuses.
 
