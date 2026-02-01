@@ -61,7 +61,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var input account.ListRegionsInput
-	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

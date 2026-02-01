@@ -9,7 +9,7 @@ description: |-
 
 # Data Source: aws_account_regions
 
-The `aws_account_regions` data source lets you query AWS region information for any account in your AWS Organization. It uses the AWS Account REST Service to show all regions, including those that are enabled, disabled, or in the process of being enabled or disabled. You can list regions for any organization account, see all possible region opt-in statuses (`Enabled`, `Enabling`, `Disabled`, `Disabling`, `Enabled_By_Default`), and check which regions are being enabled or disabled.
+The `aws_account_regions` data source lets you query AWS region information for any account in your AWS Organization. It uses the AWS Account REST Service to show all regions, including those that are enabled, disabled, or in the process of being enabled or disabled. You can list regions for any organization account, see all possible region opt-in statuses (`ENABLED`, `ENABLING`, `DISABLING`, `DISABLED`, `ENABLED_BY_DEFAULT`), and check which regions are being enabled or disabled.
 
 This is more comprehensive than the [aws_regions](./region.html.markdown) data source, which only uses the EC2 REST service and is limited to the current account and a subset of region statuses.
 
@@ -26,7 +26,7 @@ data "aws_account_regions" "example" {}
 The following arguments are optional:
 
 * `account_id` - (Optional) AWS account ID. Must be a member account in the same organization.
-* `region_opt_status_contains` - (Optional) A list of Region statuses (Enabling, Enabled, Disabling, Disabled, Enabled_by_default) to use to filter the list of Regions for a given account.
+* `region_opt_status_contains` - (Optional) A list of region opt-in statuses to filter the results. Valid values are `ENABLED`, `ENABLING`, `DISABLING`, `DISABLED`, and `ENABLED_BY_DEFAULT`.
 
 ## Attribute Reference
 
@@ -37,4 +37,4 @@ This data source exports the following attributes in addition to the arguments a
 ### region
 
 * `region_name` - The Region code of a given Region
-* `region_opt_status` - One of potential statuses a Region can undergo (Enabled, Enabling, Disabled, Disabling, Enabled_By_Default).
+* `region_opt_status` - The opt-in status of the region. Possible values are `ENABLED`, `ENABLING`, `DISABLING`, `DISABLED`, and `ENABLED_BY_DEFAULT`.
