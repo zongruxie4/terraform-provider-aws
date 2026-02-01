@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-
 func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_account_regions.test"
