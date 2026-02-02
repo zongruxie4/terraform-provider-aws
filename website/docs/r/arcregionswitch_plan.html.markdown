@@ -155,7 +155,7 @@ resource "aws_arcregionswitch_plan" "complex" {
     }
   }
 
-  trigger {
+  triggers {
     action                               = "activate"
     target_region                        = "us-west-2"
     min_delay_minutes_between_executions = 30
@@ -295,7 +295,7 @@ The following arguments are optional:
 * `map_block_key` - (Required) Name of the alarm.
 * `resource_identifier` - (Required) Resource identifier (ARN) of the CloudWatch alarm.
 
-### Trigger
+### Triggers
 
 * `action` - (Required) Action to trigger. Valid values: `activate`, `deactivate`.
 * `conditions` - (Required) List of conditions that must be met. See [Conditions](#conditions) below.
