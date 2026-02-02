@@ -17,31 +17,33 @@ import (
 )
 
 const (
-	notebookInstanceInServiceTimeout  = 60 * time.Minute
-	notebookInstanceStoppedTimeout    = 10 * time.Minute
-	notebookInstanceDeletedTimeout    = 10 * time.Minute
-	modelPackageGroupCompletedTimeout = 10 * time.Minute
-	modelPackageGroupDeletedTimeout   = 10 * time.Minute
-	imageCreatedTimeout               = 10 * time.Minute
-	imageDeletedTimeout               = 10 * time.Minute
-	imageVersionCreatedTimeout        = 10 * time.Minute
-	imageVersionDeletedTimeout        = 10 * time.Minute
-	domainInServiceTimeout            = 20 * time.Minute
-	domainDeletedTimeout              = 20 * time.Minute
-	featureGroupCreatedTimeout        = 20 * time.Minute
-	featureGroupDeletedTimeout        = 10 * time.Minute
-	appInServiceTimeout               = 10 * time.Minute
-	appDeletedTimeout                 = 10 * time.Minute
-	flowDefinitionActiveTimeout       = 2 * time.Minute
-	flowDefinitionDeletedTimeout      = 2 * time.Minute
-	projectCreatedTimeout             = 15 * time.Minute
-	projectDeletedTimeout             = 15 * time.Minute
-	workforceActiveTimeout            = 10 * time.Minute
-	workforceDeletedTimeout           = 10 * time.Minute
-	spaceDeletedTimeout               = 10 * time.Minute
-	spaceInServiceTimeout             = 10 * time.Minute
-	mlflowTrackingServerTimeout       = 45 * time.Minute
-	hubTimeout                        = 10 * time.Minute
+	notebookInstanceInServiceTimeout   = 60 * time.Minute
+	notebookInstanceStoppedTimeout     = 10 * time.Minute
+	notebookInstanceDeletedTimeout     = 10 * time.Minute
+	modelPackageGroupCompletedTimeout  = 10 * time.Minute
+	modelPackageGroupDeletedTimeout    = 10 * time.Minute
+	imageCreatedTimeout                = 10 * time.Minute
+	imageDeletedTimeout                = 10 * time.Minute
+	imageVersionCreatedTimeout         = 10 * time.Minute
+	imageVersionDeletedTimeout         = 10 * time.Minute
+	domainInServiceTimeout             = 20 * time.Minute
+	domainDeletedTimeout               = 20 * time.Minute
+	featureGroupCreatedTimeout         = 20 * time.Minute
+	featureGroupDeletedTimeout         = 10 * time.Minute
+	appInServiceTimeout                = 10 * time.Minute
+	appDeletedTimeout                  = 10 * time.Minute
+	flowDefinitionActiveTimeout        = 2 * time.Minute
+	flowDefinitionDeletedTimeout       = 2 * time.Minute
+	projectCreatedTimeout              = 15 * time.Minute
+	projectDeletedTimeout              = 15 * time.Minute
+	workforceActiveTimeout             = 10 * time.Minute
+	workforceDeletedTimeout            = 10 * time.Minute
+	spaceDeletedTimeout                = 10 * time.Minute
+	spaceInServiceTimeout              = 10 * time.Minute
+	monitoringScheduleScheduledTimeout = 2 * time.Minute
+	monitoringScheduleStoppedTimeout   = 2 * time.Minute
+	mlflowTrackingServerTimeout        = 45 * time.Minute
+	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
@@ -211,11 +213,11 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	return err
 }
 
-func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+func waitImageVersionCreatedByVersion(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageVersionStatusCreating),
 		Target:  enum.Slice(awstypes.ImageVersionStatusCreated),
-		Refresh: statusImageVersionByName(ctx, conn, name),
+		Refresh: statusImageVersionByTwoPartKey(ctx, conn, name, version),
 		Timeout: imageVersionCreatedTimeout,
 	}
 
