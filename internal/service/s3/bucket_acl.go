@@ -34,11 +34,11 @@ import (
 
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @IdentityAttribute("acl", optional="true")
-// @MutableIdentity
+// @IdentityVersion(1)
 // @ImportIDHandler("bucketACLImportID")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(identityVersion="0;v6.11.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="access_control_policy.0.grant.0.grantee.0.display_name;access_control_policy.0.owner.0.display_name")
 // @Testing(plannableImportAction="NoOp")

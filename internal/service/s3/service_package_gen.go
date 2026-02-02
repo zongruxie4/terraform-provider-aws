@@ -162,12 +162,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_acl",
 			Name:     "Bucket ACL",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-				inttypes.StringIdentityAttribute("acl", false),
-			},
-				inttypes.WithMutableIdentity(),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
