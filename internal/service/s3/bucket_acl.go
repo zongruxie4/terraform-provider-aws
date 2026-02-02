@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -142,22 +143,39 @@ func resourceBucketACL() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 		},
 
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-			if d.HasChange("acl") {
-				_, n := d.GetChange("acl")
-				if n.(string) != "" {
-					return d.SetNewComputed("access_control_policy")
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.HasChange("acl") {
+					_, n := d.GetChange("acl")
+					if n.(string) != "" {
+						return d.SetNewComputed("access_control_policy")
+					}
 				}
-			}
-
-			return nil
-		},
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+				if d.HasChange(names.AttrExpectedBucketOwner) {
+					o, n := d.GetChange(names.AttrExpectedBucketOwner)
+					os, ns := o.(string), n.(string)
+					if os == ns {
+						return nil
+					}
+					if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+						return nil
+					}
+					return d.ForceNew(names.AttrExpectedBucketOwner)
+				}
+				return nil
+			},
+		),
 	}
 }
 
