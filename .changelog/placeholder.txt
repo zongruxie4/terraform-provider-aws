@@ -15,6 +15,10 @@ resource/aws_s3_bucket_cors_configuration: Deprecates `expected_bucket_owner` at
 ```
 
 ```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: Deprecates `expected_bucket_owner` attribute.
+```
+
+```release-note:note
 resource/aws_s3_bucket_logging: Deprecates `expected_bucket_owner` attribute.
 ```
 
