@@ -861,7 +861,7 @@ func TestAccS3BucketACL_Identity_Upgrade_CannedACL(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BucketACL/basic_v6.30.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketACL/canned_acl_v6.30.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -876,7 +876,7 @@ func TestAccS3BucketACL_Identity_Upgrade_CannedACL(t *testing.T) {
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketACL/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/BucketACL/canned_acl/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
