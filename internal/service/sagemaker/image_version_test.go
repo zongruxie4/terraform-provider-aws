@@ -6,6 +6,7 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -523,4 +524,71 @@ func TestImageVersionFromARN(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccSageMakerImageVersion_concurrentCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
+
+	count := 10
+	if v := os.Getenv(imageVersionConcurrentCountEnvVar); v != "" {
+		if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
+			count = parsed
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_concurrent(rName, baseImage, count),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test.0", "image_name", rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccImageVersionConfig_concurrent(rName, baseImage string, count int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  count      = %[3]d
+  image_name = aws_sagemaker_image.test.image_name
+  base_image = %[2]q
+}
+`, rName, baseImage, count)
 }
