@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,7 +35,6 @@ import (
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
 // @IdentityAttribute("bucket")
 // @IdentityVersion(1)
-// @ImportIDHandler("bucketACLImportID")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(identityVersion="0;v6.11.0")
 // @Testing(identityVersion="1;v6.31.0")
@@ -588,36 +586,6 @@ func parseBucketACLResourceID(id string) (string, string, string, error) {
 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER or BUCKET%[2]sACL "+
 		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, bucketACLSeparator)
-}
-
-var _ inttypes.SDKv2ImportID = bucketACLImportID{}
-
-type bucketACLImportID struct{}
-
-func (bucketACLImportID) Create(d *schema.ResourceData) string {
-	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	acl := d.Get("acl").(string)
-	return createBucketACLResourceID(bucket, expectedBucketOwner, acl)
-}
-
-func (bucketACLImportID) Parse(id string) (string, map[string]string, error) {
-	bucket, expectedBucketOwner, acl, err := parseBucketACLResourceID(id)
-	if err != nil {
-		return id, nil, err
-	}
-
-	results := map[string]string{
-		names.AttrBucket: bucket,
-	}
-	if expectedBucketOwner != "" {
-		results[names.AttrExpectedBucketOwner] = expectedBucketOwner
-	}
-	if acl != "" {
-		results["acl"] = acl
-	}
-
-	return id, results, nil
 }
 
 // These should be defined in the AWS SDK for Go. There is an issue, https://github.com/aws/aws-sdk-go/issues/2683.

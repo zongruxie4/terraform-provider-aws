@@ -167,7 +167,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      bucketACLImportID{},
 			},
 		},
 		{
