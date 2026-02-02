@@ -55,7 +55,7 @@ func resourceBucketVersioning() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "This attribute will be removed in a future verion of the provider.",
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"mfa": {
 				Type:     schema.TypeString,
