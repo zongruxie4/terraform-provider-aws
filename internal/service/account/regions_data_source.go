@@ -66,7 +66,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	output := &account.ListRegionsOutput{}
+	var output account.ListRegionsOutput
 	paginator := account.NewListRegionsPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
