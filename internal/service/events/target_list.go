@@ -135,7 +135,7 @@ func listTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 
 			for _, item := range page.Targets {
 				if !yield(item, nil) {
-					return false
+					return !lastPage
 				}
 			}
 
