@@ -48,7 +48,10 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 
 	tflog.Info(ctx, "Listing S3 Bucket")
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input s3.ListBucketsInput
+		input := s3.ListBucketsInput{
+			BucketRegion: aws.String(l.Meta().Region(ctx)),
+			MaxBuckets:   aws.Int32(int32(request.Limit)),
+		}
 		for item, err := range listBuckets(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
