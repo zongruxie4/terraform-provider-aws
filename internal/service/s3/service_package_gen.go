@@ -374,6 +374,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
 		},
 		{
+			Factory:  newBucketACLResourceAsListResource,
+			TypeName: "aws_s3_bucket_acl",
+			Name:     "Bucket ACL",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
+		},
+		{
 			Factory:  newObjectResourceAsListResource,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
