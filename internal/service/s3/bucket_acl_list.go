@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_s3_bucket_acl")
 func newBucketACLResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceBucketACL{}
