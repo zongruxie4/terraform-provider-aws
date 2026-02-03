@@ -906,6 +906,278 @@ func TestAccS3BucketACL_grant_expectedBucketOwner(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketACL_Identity_grant_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				Config: testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:              knownvalue.NotNull(),
+						names.AttrExpectedBucketOwner: tfknownvalue.AccountID(),
+						"acl":                         knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				Config:            testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				Config:          testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				Config:          testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.10.0
+func TestAccS3BucketACL_Identity_ExistingResource_grant_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.10.0",
+					},
+				},
+				Config: testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:              knownvalue.NotNull(),
+						names.AttrExpectedBucketOwner: tfknownvalue.AccountID(),
+						"acl":                         knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketACL_Identity_cannedACL_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:              knownvalue.NotNull(),
+						names.AttrExpectedBucketOwner: tfknownvalue.AccountID(),
+						"acl":                         knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("acl")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				Config:            testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				Config:          testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				Config:          testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.10.0
+func TestAccS3BucketACL_Identity_ExistingResource_cannedACL_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.10.0",
+					},
+				},
+				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:              knownvalue.NotNull(),
+						names.AttrExpectedBucketOwner: tfknownvalue.AccountID(),
+						"acl":                         knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("acl")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
