@@ -760,7 +760,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_providerOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -944,7 +944,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nonOverlap
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1107,7 +1107,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_overlappin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1286,7 +1286,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToPr
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1379,7 +1379,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToRe
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1471,7 +1471,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyResou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1539,7 +1539,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyProvi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1599,7 +1599,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullOverla
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1664,7 +1664,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullNonOve
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1729,7 +1729,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnCreate(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1787,7 +1787,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_A
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1887,7 +1887,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_R
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1977,7 +1977,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Def
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2142,7 +2142,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Res
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{

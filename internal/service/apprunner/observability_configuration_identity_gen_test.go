@@ -238,7 +238,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -316,7 +316,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource_NoRefr
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

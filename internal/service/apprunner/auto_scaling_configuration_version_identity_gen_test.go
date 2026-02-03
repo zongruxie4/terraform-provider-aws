@@ -238,7 +238,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -316,7 +316,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource_N
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

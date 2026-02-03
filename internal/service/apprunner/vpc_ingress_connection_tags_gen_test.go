@@ -760,7 +760,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_providerOnly(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -944,7 +944,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_nonOverlapping(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1107,7 +1107,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_overlapping(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1286,7 +1286,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_updateToProviderOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1379,7 +1379,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_updateToResourceOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1471,7 +1471,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_emptyResourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1539,7 +1539,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_emptyProviderOnlyTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1599,7 +1599,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_nullOverlappingResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1664,7 +1664,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_DefaultTags_nullNonOverlappingRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1729,7 +1729,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_ComputedTag_OnCreate(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1787,7 +1787,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_ComputedTag_OnUpdate_Add(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1887,7 +1887,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_ComputedTag_OnUpdate_Replace(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1977,7 +1977,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_IgnoreTags_Overlap_DefaultTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2142,7 +2142,7 @@ func TestAccAppRunnerVPCIngressConnection_tags_IgnoreTags_Overlap_ResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{

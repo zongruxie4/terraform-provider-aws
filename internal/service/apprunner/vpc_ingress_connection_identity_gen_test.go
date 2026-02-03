@@ -238,7 +238,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -316,7 +316,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource_NoRefresh_No
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

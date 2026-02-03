@@ -760,7 +760,7 @@ func TestAccAppRunnerService_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -944,7 +944,7 @@ func TestAccAppRunnerService_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1107,7 +1107,7 @@ func TestAccAppRunnerService_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1286,7 +1286,7 @@ func TestAccAppRunnerService_tags_DefaultTags_updateToProviderOnly(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1379,7 +1379,7 @@ func TestAccAppRunnerService_tags_DefaultTags_updateToResourceOnly(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1471,7 +1471,7 @@ func TestAccAppRunnerService_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1539,7 +1539,7 @@ func TestAccAppRunnerService_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1599,7 +1599,7 @@ func TestAccAppRunnerService_tags_DefaultTags_nullOverlappingResourceTag(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1664,7 +1664,7 @@ func TestAccAppRunnerService_tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1729,7 +1729,7 @@ func TestAccAppRunnerService_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1787,7 +1787,7 @@ func TestAccAppRunnerService_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1887,7 +1887,7 @@ func TestAccAppRunnerService_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1977,7 +1977,7 @@ func TestAccAppRunnerService_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2142,7 +2142,7 @@ func TestAccAppRunnerService_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{

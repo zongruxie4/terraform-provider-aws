@@ -760,7 +760,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_providerOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -944,7 +944,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nonOverlapping(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1107,7 +1107,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_overlapping(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1286,7 +1286,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToProvide
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1379,7 +1379,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToResourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1471,7 +1471,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyResourceTa
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1539,7 +1539,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyProviderOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1599,7 +1599,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullOverlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1664,7 +1664,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullNonOverlapp
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1729,7 +1729,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnCreate(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1787,7 +1787,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Add(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1887,7 +1887,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Replac
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1977,7 +1977,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_IgnoreTags_Overlap_DefaultT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2142,7 +2142,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_IgnoreTags_Overlap_Resource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx, t),
+		CheckDestroy: testAccCheckObservabilityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{

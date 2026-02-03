@@ -68,7 +68,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 			{
 				Config: testAccDefaultAutoScalingConfigurationVersionConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx, t, &priorDefault),
+					testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx, t, &priorDefault),
 				),
 				ExpectNonEmptyPlan: true,
 			},
