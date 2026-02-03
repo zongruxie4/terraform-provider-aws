@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_cloudwatch_event_rule")
 func newRuleResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceRule{}
@@ -68,7 +67,7 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 			tflog.Info(ctx, "Reading EventBridge Rule")
 			diags := resourceRuleRead(ctx, rd, l.Meta())
 			if diags.HasError() {
-				tflog.Error(ctx, "Reading EventBridge Rule\"", map[string]any{
+				tflog.Error(ctx, "Reading EventBridge Rule", map[string]any{
 					names.AttrID: id,
 					"diags":      sdkdiag.DiagnosticsString(diags),
 				})
@@ -79,7 +78,7 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 				continue
 			}
 
-			result.DisplayName = aws.ToString(item.Name)
+			result.DisplayName = name
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
