@@ -27,5 +27,5 @@ list "aws_cloudwatch_event_target" "example" {
 This list resource supports the following arguments:
 
 * `event_bus_name` - (Required) Name or ARN of the event bus associated with the rule.
-* `rule` - (Required) Name of the rule.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `rule` - (Required) Name of the rule.
