@@ -75,6 +75,10 @@ func testAccComputeEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_%[1]s"
 
@@ -86,7 +90,7 @@ resource "aws_iam_role" "ecs_instance_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       }
     }
   ]

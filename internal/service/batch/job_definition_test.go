@@ -1766,6 +1766,10 @@ func testAccJobDefinitionConfig_capabilitiesFargateContainerPropertiesDefaults(r
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ecs_tasks" {
+  service_name = "ecs-tasks"
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -1777,7 +1781,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
+      identifiers = [data.aws_service_principal.ecs_tasks.name]
     }
   }
 }
@@ -1813,6 +1817,10 @@ func testAccJobDefinitionConfig_capabilitiesFargate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ecs_tasks" {
+  service_name = "ecs-tasks"
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -1824,7 +1832,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
+      identifiers = [data.aws_service_principal.ecs_tasks.name]
     }
   }
 }
@@ -2402,6 +2410,10 @@ func testAccJobDefinitionConfig_ECSProperties_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ecs_tasks" {
+  service_name = "ecs-tasks"
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -2413,7 +2425,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
+      identifiers = [data.aws_service_principal.ecs_tasks.name]
     }
   }
 }
@@ -2506,6 +2518,10 @@ func testAccJobDefinitionConfig_ECSProperties_updated(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ecs_tasks" {
+  service_name = "ecs-tasks"
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -2517,7 +2533,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
+      identifiers = [data.aws_service_principal.ecs_tasks.name]
     }
   }
 }

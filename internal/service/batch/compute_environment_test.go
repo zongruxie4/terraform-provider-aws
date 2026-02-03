@@ -405,7 +405,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2023"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
@@ -1800,7 +1800,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2023"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
@@ -1877,7 +1877,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2023"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
@@ -2038,6 +2038,18 @@ func testAccComputeEnvironmentConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
+data "aws_service_principal" "batch" {
+  service_name = "batch"
+}
+
+data "aws_service_principal" "spotfleet" {
+  service_name = "spotfleet"
+}
+
 resource "aws_iam_role" "ecs_instance" {
   name = "%[1]s_ecs_instance"
 
@@ -2048,7 +2060,7 @@ resource "aws_iam_role" "ecs_instance" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.ec2.name}"
     }
   }]
 }
@@ -2075,7 +2087,7 @@ resource "aws_iam_role" "batch_service" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "batch.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.batch.name}"
     }
   }]
 }
@@ -2097,7 +2109,7 @@ resource "aws_iam_role" "ec2_spot_fleet" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "spotfleet.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.spotfleet.name}"
     }
   }]
 }
@@ -2141,6 +2153,14 @@ func testAccComputeEnvironmentConfig_baseDefaultSLR(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
+data "aws_service_principal" "spotfleet" {
+  service_name = "spotfleet"
+}
+
 resource "aws_iam_role" "ecs_instance" {
   name = "%[1]s_ecs_instance"
 
@@ -2151,7 +2171,7 @@ resource "aws_iam_role" "ecs_instance" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.ec2.name}"
     }
   }]
 }
@@ -2178,7 +2198,7 @@ resource "aws_iam_role" "ec2_spot_fleet" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "spotfleet.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.spotfleet.name}"
     }
   }]
 }
@@ -2273,6 +2293,18 @@ data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
+data "aws_service_principal" "eks_nodegroup" {
+  service_name = "eks-nodegroup"
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "cluster" {
   name = "%[1]s-cluster"
 
@@ -2282,8 +2314,8 @@ resource "aws_iam_role" "cluster" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "eks.${data.aws_partition.current.dns_suffix}",
-          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
+          data.aws_service_principal.eks.name,
+          data.aws_service_principal.eks_nodegroup.name,
         ]
       }
     }]
@@ -2304,7 +2336,7 @@ resource "aws_iam_role" "node" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.ec2.name
       }
     }]
     Version = "2012-10-17"
@@ -2775,7 +2807,7 @@ resource "aws_iam_role" "batch_service_2" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "batch.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.batch.name}"
     }
   }]
 }
@@ -3237,7 +3269,7 @@ resource "aws_iam_role" "ecs_instance_2" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      "Service": "${data.aws_service_principal.ec2.name}"
     }
   }]
 }
