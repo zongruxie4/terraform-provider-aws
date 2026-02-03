@@ -46,7 +46,7 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 (Simple Storage) Bucket")
+	tflog.Info(ctx, "Listing S3 Bucket")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input s3.ListBucketsInput
 		for item, err := range listBuckets(ctx, conn, &input) {
@@ -64,12 +64,12 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			tflog.Info(ctx, "Reading S3 (Simple Storage) Bucket")
+			tflog.Info(ctx, "Reading S3 Bucket")
 			diags := resourceBucketRead(ctx, rd, l.Meta())
 			if diags.HasError() {
-				tflog.Error(ctx, "Reading S3 (Simple Storage) Bucket", map[string]any{
-					names.AttrID: bucketName,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+				tflog.Error(ctx, "Reading S3 Bucket", map[string]any{
+					names.AttrBucket: bucketName,
+					"diags":          sdkdiag.DiagnosticsString(diags),
 				})
 				continue
 			}
@@ -101,7 +101,7 @@ func listBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInpu
 	return func(yield func(awstypes.Bucket, error) bool) {
 		output, err := conn.ListBuckets(ctx, input)
 		if err != nil {
-			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 (Simple Storage) Bucket resources: %w", err))
+			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
 			return
 		}
 
