@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 go 1.25.6
 
 require (
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.2
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
 )
 
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.159.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.160.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.54.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.284.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.285.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0 // indirect
@@ -140,9 +140,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.49.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.50.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glue v1.136.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.17 // indirect
@@ -222,7 +222,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.102.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0 // indirect
@@ -299,7 +299,7 @@ require (
 	github.com/aws/smithy-go v1.24.0 // indirect
 	github.com/beevik/etree v1.6.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/cedar-policy/cedar-go v1.4.0 // indirect
+	github.com/cedar-policy/cedar-go v1.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
