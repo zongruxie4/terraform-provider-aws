@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.8
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.1
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.10
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.17.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.17
@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.16
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.5
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.19
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.8
@@ -116,10 +116,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.19
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.19
-	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.18
+	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.5
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.13
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.18
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/evs v1.6.0
@@ -175,7 +175,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.17
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.1
-	github.com/aws/aws-sdk-go-v2/service/mpa v1.5.9
+	github.com/aws/aws-sdk-go-v2/service/mpa v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.15
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.18
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.5
