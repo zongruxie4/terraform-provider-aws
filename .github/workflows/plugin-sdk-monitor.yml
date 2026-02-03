@@ -51,14 +51,14 @@ jobs:
 
             # Count new Factory entries in SDKResources function
             RESOURCE_BLOCK=$(echo "$DIFF" | awk '
-              /func.*SDKResources/,/^func [^(]/ {
+              /func.*\) SDKResources\(/,/^func [^(]/ {
                 if (/^\+.*Factory:/) print
               }
             ')
 
             # Count new Factory entries in SDKDataSources function
             DATA_SOURCE_BLOCK=$(echo "$DIFF" | awk '
-              /func.*SDKDataSources/,/^func [^(]/ {
+              /func.*\) SDKDataSources\(/,/^func [^(]/ {
                 if (/^\+.*Factory:/) print
               }
             ')
