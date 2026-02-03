@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_lambda_function")
 func newFunctionResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceFunction{}
