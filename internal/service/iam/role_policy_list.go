@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -82,9 +83,11 @@ func (l *listResourceRolePolicy) List(ctx context.Context, request list.ListRequ
 			tflog.Info(ctx, "Reading IAM (Identity & Access Management) Role Policy")
 			diags := resourceRolePolicyRead(ctx, rd, awsClient)
 			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
+				tflog.Error(ctx, "eading IAM (Identity & Access Management) Role Policy", map[string]any{
+					names.AttrID: id,
+					"diags":      sdkdiag.DiagnosticsString(diags),
+				})
+				continue
 			}
 			if rd.Id() == "" {
 				// Resource is logically deleted
