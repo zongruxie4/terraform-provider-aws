@@ -67,10 +67,11 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 			tflog.Info(ctx, "Reading Lambda Function")
 			diags := resourceFunctionRead(ctx, rd, l.Meta())
 			if diags.HasError() {
-				tflog.Error(ctx, "Reading IAM (Identity & Access Management) Role Policy", map[string]any{
+				tflog.Error(ctx, "Reading Lambda Function", map[string]any{
 					names.AttrID: functionName,
 					"diags":      sdkdiag.DiagnosticsString(diags),
 				})
+				continue
 			}
 			if rd.Id() == "" {
 				// Resource is logically deleted
