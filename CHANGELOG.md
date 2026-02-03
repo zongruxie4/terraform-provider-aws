@@ -3,17 +3,29 @@
 NOTES:
 
 * resource/aws_s3_bucket_abac: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_abac: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_accelerate_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_accelerate_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_acl: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_acl: Removes `expected_bucket_owner` and `acl` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_cors_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_cors_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_lifecycle_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_lifecycle_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_logging: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_logging: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_metadata_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_metadata_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_object_lock_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_object_lock_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_request_payment_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_request_payment_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_server_side_encryption_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_versioning: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_versioning: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 * resource/aws_s3_bucket_website_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_website_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
 
 FEATURES:
 
