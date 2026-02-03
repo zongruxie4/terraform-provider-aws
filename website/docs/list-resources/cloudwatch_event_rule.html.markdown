@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge"
 layout: "aws"
-page_title: "AWS: aws_events_rule"
+page_title: "AWS: aws_cloudwatch_event_rule"
 description: |-
   Lists EventBridge Rule resources.
 ---
 
-# List Resource: aws_events_rule
+# List Resource: aws_cloudwatch_event_rule
 
 Lists EventBridge Rule resources.
 
