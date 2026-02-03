@@ -57,7 +57,7 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 			}
 
 			bucketName := aws.ToString(item.Name)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), bucketName)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrBucket), bucketName)
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
