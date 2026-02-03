@@ -102,7 +102,7 @@ func listRules(ctx context.Context, conn *eventbridge.Client, input *eventbridge
 		err := listRulesPages(ctx, conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
 			for _, item := range page.Rules {
 				if !yield(item, nil) {
-					return false
+					return !lastPage
 				}
 			}
 			return !lastPage
