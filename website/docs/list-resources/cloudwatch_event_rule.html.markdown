@@ -13,7 +13,7 @@ Lists EventBridge Rule resources.
 ## Example Usage
 
 ```terraform
-list "aws_events_rule" "example" {
+list "aws_cloudwatch_event_rule" "example" {
   provider = aws
 }
 ```
