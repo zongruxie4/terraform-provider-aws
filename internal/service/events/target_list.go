@@ -144,6 +144,7 @@ func listTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 
 		if err != nil {
 			yield(awstypes.Target{}, fmt.Errorf("listing EventBridge Target resources: %w", err))
+			return
 		}
 	}
 }
