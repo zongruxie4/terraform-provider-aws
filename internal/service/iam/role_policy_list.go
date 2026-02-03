@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_iam_role_policy")
 func newRolePolicyResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceRolePolicy{}
@@ -83,7 +82,7 @@ func (l *listResourceRolePolicy) List(ctx context.Context, request list.ListRequ
 			tflog.Info(ctx, "Reading IAM (Identity & Access Management) Role Policy")
 			diags := resourceRolePolicyRead(ctx, rd, awsClient)
 			if diags.HasError() {
-				tflog.Error(ctx, "eading IAM (Identity & Access Management) Role Policy", map[string]any{
+				tflog.Error(ctx, "Reading IAM (Identity & Access Management) Role Policy", map[string]any{
 					names.AttrID: id,
 					"diags":      sdkdiag.DiagnosticsString(diags),
 				})
