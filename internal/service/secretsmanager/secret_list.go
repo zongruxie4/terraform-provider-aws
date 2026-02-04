@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_secretsmanager_secret")
 func newSecretResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceSecret{}
@@ -66,7 +65,7 @@ func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest,
 			tflog.Info(ctx, "Reading Secrets Manager Secret")
 			diags := resourceSecretRead(ctx, rd, l.Meta())
 			if diags.HasError() {
-				tflog.Error(ctx, "Reading Secrets Manager Secret\"", map[string]any{
+				tflog.Error(ctx, "Reading Secrets Manager Secret", map[string]any{
 					names.AttrID: arn,
 					"diags":      sdkdiag.DiagnosticsString(diags),
 				})
