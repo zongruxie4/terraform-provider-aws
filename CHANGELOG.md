@@ -1,5 +1,9 @@
 ## 6.32.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
+
 ## 6.31.0 (February 4, 2026)
 
 NOTES:
