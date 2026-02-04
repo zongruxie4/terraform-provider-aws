@@ -63,19 +63,19 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			if request.IncludeResource {
-				tflog.Info(ctx, "Reading S3 Bucket Public Access Block")
-				diags := resourceBucketPublicAccessBlockRead(ctx, rd, l.Meta())
-				if diags.HasError() {
-					tflog.Error(ctx, "Reading S3 Bucket Public Access Block", map[string]any{
-						"diags": sdkdiag.DiagnosticsString(diags),
-					})
-					continue
-				}
-				if rd.Id() == "" {
-					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-					continue
-				}
+			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
+			// So always try to read it to see if it is present.
+			tflog.Info(ctx, "Reading S3 Bucket Public Access Block")
+			diags := resourceBucketPublicAccessBlockRead(ctx, rd, l.Meta())
+			if diags.HasError() {
+				tflog.Error(ctx, "Reading S3 Bucket Public Access Block", map[string]any{
+					"diags": sdkdiag.DiagnosticsString(diags),
+				})
+				continue
+			}
+			if rd.Id() == "" {
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+				continue
 			}
 
 			result.DisplayName = bucketName
