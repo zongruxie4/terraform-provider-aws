@@ -7,6 +7,23 @@ provider "aws" {
   }
 }
 
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+
+  tags = var.resource_tags
+}
+
+# testAccDirectoryBucketConfig_baseAZ
+
+locals {
+  location_name = data.aws_availability_zones.available.zone_ids[0]
+  bucket        = "${var.rName}--${local.location_name}--x-s3"
+}
+
 # testAccConfigDirectoryBucket_availableAZs
 
 locals {
@@ -24,23 +41,6 @@ data "aws_availability_zones" "available" {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
-}
-
-# testAccDirectoryBucketConfig_baseAZ
-
-locals {
-  location_name = data.aws_availability_zones.available.zone_ids[0]
-  bucket        = "${var.rName}--${local.location_name}--x-s3"
-}
-
-resource "aws_s3_directory_bucket" "test" {
-  bucket = local.bucket
-
-  location {
-    name = local.location_name
-  }
-
-  tags = var.resource_tags
 }
 
 variable "rName" {
