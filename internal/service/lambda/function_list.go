@@ -45,7 +45,7 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 		}
 	}
 
-	tflog.Info(ctx, "Listing Lambda Function")
+	tflog.Info(ctx, "Listing Lambda Functions")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input lambda.ListFunctionsInput
 		for item, err := range listFunctions(ctx, conn, &input) {
