@@ -31,6 +31,7 @@ FEATURES:
 
 * **New Data Source:** `aws_account_regions` ([#41746](https://github.com/hashicorp/terraform-provider-aws/issues/41746))
 * **New Ephemeral Resource:** `aws_ecrpublic_authorization_token` ([#45841](https://github.com/hashicorp/terraform-provider-aws/issues/45841))
+* **New List Resource:** `aws_cloudwatch_event_rule` ([#46304](https://github.com/hashicorp/terraform-provider-aws/issues/46304))
 * **New List Resource:** `aws_cloudwatch_event_target` ([#46297](https://github.com/hashicorp/terraform-provider-aws/issues/46297))
 * **New List Resource:** `aws_cloudwatch_metric_alarm` ([#46268](https://github.com/hashicorp/terraform-provider-aws/issues/46268))
 * **New List Resource:** `aws_iam_role_policy` ([#46293](https://github.com/hashicorp/terraform-provider-aws/issues/46293))
