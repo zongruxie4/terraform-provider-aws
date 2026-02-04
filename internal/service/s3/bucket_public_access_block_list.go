@@ -44,7 +44,10 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 
 	tflog.Info(ctx, "Listing S3 Bucket Public Access Block")
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input s3.ListBucketsInput
+		input := s3.ListBucketsInput{
+			BucketRegion: aws.String(l.Meta().Region(ctx)),
+			MaxBuckets:   aws.Int32(int32(request.Limit)),
+		}
 		for bucket, err := range listBuckets(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
