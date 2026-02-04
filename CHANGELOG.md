@@ -35,6 +35,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatch_event_target` ([#46297](https://github.com/hashicorp/terraform-provider-aws/issues/46297))
 * **New List Resource:** `aws_cloudwatch_metric_alarm` ([#46268](https://github.com/hashicorp/terraform-provider-aws/issues/46268))
 * **New List Resource:** `aws_iam_role_policy` ([#46293](https://github.com/hashicorp/terraform-provider-aws/issues/46293))
+* **New List Resource:** `aws_s3_bucket_acl` ([#46305](https://github.com/hashicorp/terraform-provider-aws/issues/46305))
 * **New Resource:** `aws_ssoadmin_customer_managed_policy_attachments_exclusive` ([#46191](https://github.com/hashicorp/terraform-provider-aws/issues/46191))
 
 ENHANCEMENTS:
@@ -44,6 +45,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* list-resource/aws_s3_bucket: Restricts listed buckets to expected region. ([#46305](https://github.com/hashicorp/terraform-provider-aws/issues/46305))
 * resource/aws_elasticache_replication_group: Fixed AUTH to RBAC migration. Previously, `auth_token_update_strategy` always required `auth_token`, which caused an error when migrating from AUTH to RBAC. Now, `auth_token_update_strategy` still requires `auth_token` except when `auth_token_update_strategy` is `DELETE`. ([#45518](https://github.com/hashicorp/terraform-provider-aws/issues/45518))
 * resource/aws_elasticache_replication_group: Fixed an issue with downscaling `aws_elasticache_replication_group` when `cluster_mode="enabled"` and `num_node_groups` is reduced. Previously, downscaling could fail in certain scenarios; for example, if nodes `0001`, `0002`, `0003`, `0004`, and `0005` exist, and a user manually removes `0003` and `0005`, then sets `num_node_groups = 2`, terraform would attempt to delete `0003`, `0004`, and `0005`. This is now fixed, after this fix terraform will retrieve the current node groups before resizing. ([#45893](https://github.com/hashicorp/terraform-provider-aws/issues/45893))
 * resource/aws_elasticache_serverless_cache: Fix `user_group_id` removal during modification. ([#45571](https://github.com/hashicorp/terraform-provider-aws/issues/45571))
