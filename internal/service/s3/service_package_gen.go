@@ -383,6 +383,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newBucketPublicAccessBlockResourceAsListResource,
+			TypeName: "aws_s3_bucket_public_access_block",
+			Name:     "Bucket Public Access Block",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
 			Factory:  newObjectResourceAsListResource,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
