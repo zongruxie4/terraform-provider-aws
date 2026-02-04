@@ -37,6 +37,7 @@ FEATURES:
 * **New List Resource:** `aws_iam_role_policy` ([#46293](https://github.com/hashicorp/terraform-provider-aws/issues/46293))
 * **New List Resource:** `aws_lambda_function` ([#46295](https://github.com/hashicorp/terraform-provider-aws/issues/46295))
 * **New List Resource:** `aws_s3_bucket_acl` ([#46305](https://github.com/hashicorp/terraform-provider-aws/issues/46305))
+* **New List Resource:** `aws_s3_bucket_policy` ([#46312](https://github.com/hashicorp/terraform-provider-aws/issues/46312))
 * **New List Resource:** `aws_s3_bucket_public_access_block` ([#46309](https://github.com/hashicorp/terraform-provider-aws/issues/46309))
 * **New Resource:** `aws_ssoadmin_customer_managed_policy_attachments_exclusive` ([#46191](https://github.com/hashicorp/terraform-provider-aws/issues/46191))
 
