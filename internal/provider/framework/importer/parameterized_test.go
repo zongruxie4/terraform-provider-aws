@@ -51,6 +51,12 @@ func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAtt
 	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
 }
 
+func regionalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(name,
+		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
+	)
+}
+
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -63,7 +69,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	testCases := map[string]struct {
 		identityAttrName    string
 		resourceAttrName    string
-		alsoSetIDAttr       bool
+		duplicateAttrs      []string
 		inputID             string
 		inputRegion         string
 		useSchemaWithID     bool
@@ -122,7 +128,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 
 		"Attr_DuplicateID": {
 			identityAttrName: "name",
-			alsoSetIDAttr:    true,
+			duplicateAttrs:   []string{"id"},
 			inputID:          "a_name",
 			inputRegion:      region,
 			useSchemaWithID:  true,
@@ -146,7 +152,9 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 			}
 
 			var identitySpec inttypes.Identity
-			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = regionalSingleParameterIdentitySpecWithDuplicates(tc.identityAttrName, tc.duplicateAttrs)
+			} else if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
 				identitySpec = regionalSingleParameterIdentitySpec(tc.identityAttrName)
 			} else {
 				identitySpec = regionalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
@@ -164,9 +172,6 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
-			}
-			if tc.alsoSetIDAttr {
-				importSpec.SetIDAttr = true
 			}
 
 			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
@@ -256,7 +261,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 		identityAttrName    string
 		identityAttrValues  map[string]string
 		resourceAttrName    string
-		alsoSetIDAttr       bool
+		duplicateAttrs      []string
 		useSchemaWithID     bool
 		expectedRegion      string
 		expectError         bool
@@ -369,7 +374,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 		"Attr_DuplicateID": {
 			identityAttrName: "name",
-			alsoSetIDAttr:    true,
+			duplicateAttrs:   []string{"id"},
 			identityAttrValues: map[string]string{
 				"name": "a_name",
 			},
@@ -390,7 +395,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			}
 
 			var identitySpec inttypes.Identity
-			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = regionalSingleParameterIdentitySpecWithDuplicates(tc.identityAttrName, tc.duplicateAttrs)
+			} else if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
 				identitySpec = regionalSingleParameterIdentitySpec(tc.identityAttrName)
 			} else {
 				identitySpec = regionalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
@@ -400,9 +407,6 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
-			}
-			if tc.alsoSetIDAttr {
-				importSpec.SetIDAttr = true
 			}
 
 			schema := regionalSingleParameterizedSchema
@@ -490,6 +494,12 @@ func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrN
 	return inttypes.GlobalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
 }
 
+func globalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(name,
+		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
+	)
+}
+
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -501,7 +511,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	testCases := map[string]struct {
 		identityAttrName    string
 		resourceAttrName    string
-		alsoSetIDAttr       bool
+		duplicateAttrs      []string
 		inputID             string
 		useSchemaWithID     bool
 		noIdentity          bool
@@ -535,7 +545,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 
 		"Attr_DuplicateID": {
 			identityAttrName: "name",
-			alsoSetIDAttr:    true,
+			duplicateAttrs:   []string{"id"},
 			inputID:          "a_name",
 			useSchemaWithID:  true,
 			expectError:      false,
@@ -555,7 +565,9 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 			stateAttrs := map[string]string{}
 
 			var identitySpec inttypes.Identity
-			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = globalSingleParameterIdentitySpecWithDuplicates(tc.identityAttrName, tc.duplicateAttrs)
+			} else if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
 				identitySpec = globalSingleParameterIdentitySpec(tc.identityAttrName)
 			} else {
 				identitySpec = globalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
@@ -573,9 +585,6 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
-			}
-			if tc.alsoSetIDAttr {
-				importSpec.SetIDAttr = true
 			}
 
 			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
@@ -658,7 +667,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 		identityAttrName    string
 		identityAttrValues  map[string]string
 		resourceAttrName    string
-		alsoSetIDAttr       bool
+		duplicateAttrs      []string
 		useSchemaWithID     bool
 		expectError         bool
 		expectedErrorPrefix string
@@ -725,7 +734,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 
 		"Attr_DuplicateID": {
 			identityAttrName: "name",
-			alsoSetIDAttr:    true,
+			duplicateAttrs:   []string{"id"},
 			identityAttrValues: map[string]string{
 				"name": "a_name",
 			},
@@ -745,7 +754,9 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			}
 
 			var identitySpec inttypes.Identity
-			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = globalSingleParameterIdentitySpecWithDuplicates(tc.identityAttrName, tc.duplicateAttrs)
+			} else if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
 				identitySpec = globalSingleParameterIdentitySpec(tc.identityAttrName)
 			} else {
 				identitySpec = globalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
@@ -755,9 +766,6 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
-			}
-			if tc.alsoSetIDAttr {
-				importSpec.SetIDAttr = true
 			}
 
 			schema := globalSingleParameterizedSchema

@@ -36,8 +36,8 @@ func SingleParameterized(ctx context.Context, client AWSClient, request resource
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
-	if importSpec.SetIDAttr {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parameterVal)...)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), parameterVal)...)
 	}
 
 	if identity := response.Identity; identity != nil {
