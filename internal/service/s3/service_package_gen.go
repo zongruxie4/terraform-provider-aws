@@ -73,8 +73,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "DirectoryBucket",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
