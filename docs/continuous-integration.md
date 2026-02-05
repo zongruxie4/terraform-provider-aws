@@ -90,6 +90,12 @@ PKG=rds make quick-fix
 
 This is particularly useful before committing changes or submitting a pull request to catch and fix issues early.
 
+Use the `quick-fix-core` target to run fixes only on core directories (non-service packages):
+
+```console
+make quick-fix-core
+```
+
 ### Acceptance Test Linting
 
 Acceptance test linting involves thoroughly testing the Terraform configuration associated with acceptance tests. Currently, this process extracts configuration embedded as strings in Go files. However, as we move testing configurations to `.tf` files, linting will involve testing those files for correctness.
