@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_ecr_repository` ([#46344](https://github.com/hashicorp/terraform-provider-aws/issues/46344))
 * **New List Resource:** `aws_lambda_permission` ([#46341](https://github.com/hashicorp/terraform-provider-aws/issues/46341))
 * **New List Resource:** `aws_route_table` ([#46337](https://github.com/hashicorp/terraform-provider-aws/issues/46337))
 * **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
