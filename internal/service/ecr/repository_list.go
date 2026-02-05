@@ -27,7 +27,6 @@ func repositoryResourceAsListResource() inttypes.ListResourceForSDK {
 }
 
 type repositoryListResource struct {
-	framework.ResourceWithConfigure
 	framework.ListResourceWithSDKv2Resource
 }
 
