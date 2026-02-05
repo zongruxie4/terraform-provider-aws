@@ -191,6 +191,14 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			case "resourceAttributeName":
 				identityAttribute.ResourceAttributeName_ = args.Keyword[k]
 
+			case "setIDAttribute":
+				attr := args.Keyword[k]
+				if b, err := strconv.ParseBool(attr); err != nil {
+					errs = errors.Join(errs, err)
+				} else {
+					d.SetIDAttribute = b
+				}
+
 			case "testNotNull":
 				attr := args.Keyword[k]
 				if b, err := ParseBoolAttr("testNotNull", attr); err != nil {

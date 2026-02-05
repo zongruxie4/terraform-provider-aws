@@ -60,6 +60,13 @@ at a minimum the equivalent of the `Basic` test as well as the `ExistingResource
 If it is not possible to create a test case where all optional values are `null`,
 add the annotation parameter `testNotNull=true` to the corresponding `@IdentityAttribute` annotation.
 
+If a resource type is implemented in Plugin Framework,
+has a single Resource Identity attribute,
+and also has an `id` attribute that is set to the same value as the Resource Identity attribute,
+add the parameter `setIDAttribute=true` to the `@IdentityAttribute` annotation.
+For example, the resource type `aws_s3_directory_bucket` has the Resource Identity attribute `bucket` and also defines an `id` attribute which is set to the same value as `bucket`.
+The annotation is `@IdentityAttribute("bucket", setIDAttribute=true)`.
+
 #### What **Not** to Include in Resource Identity
 
 The attributes used in Resource Identity should _only_ be those used to uniquely identify a resource.
