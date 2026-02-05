@@ -3,6 +3,4 @@
 
 list "aws_ecr_repository" "test" {
   provider = aws
-
-  config {}
 }
