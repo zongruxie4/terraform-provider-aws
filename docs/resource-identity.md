@@ -60,13 +60,6 @@ at a minimum the equivalent of the `Basic` test as well as the `ExistingResource
 If it is not possible to create a test case where all optional values are `null`,
 add the annotation parameter `testNotNull=true` to the corresponding `@IdentityAttribute` annotation.
 
-If a resource type is implemented in Plugin Framework,
-has a single Resource Identity attribute,
-and also has an `id` attribute that is set to the same value as the Resource Identity attribute,
-add the parameter `setIDAttribute=true` to the `@IdentityAttribute` annotation.
-For example, the resource type `aws_s3_directory_bucket` has the Resource Identity attribute `bucket` and also defines an `id` attribute which is set to the same value as `bucket`.
-The annotation is `@IdentityAttribute("bucket", setIDAttribute=true)`.
-
 #### What **Not** to Include in Resource Identity
 
 The attributes used in Resource Identity should _only_ be those used to uniquely identify a resource.
@@ -265,7 +258,7 @@ In order to [generate tests](#acceptance-testing) related to adding Identity dat
 Add the annotation `@Testing(preIdentityVersion="<version>")`, where version is the last version of the provider **before** Resource Identity is added to the resource type.
 For example, Resource Identity was added to `aws_batch_job_definition` in version 6.5.0, so the annotation is `preIdentityVersion="v6.4.0"`.
 
-In some cases, even though a resource type has an ARN Identity or Singleton Identity, it also has an `id` attribute that is set to the same value.
+In some cases, even though a resource type has an ARN Identity, a Single-Attribute Parameterized Identity, or a Singleton Identity, it also has an `id` attribute that is set to the same value.
 Specify this by adding the annotation parameter `identityDuplicateAttributes="id"` to the identity annotation.
 (This will always be the case for resource types implemented with the Plugin SDK, so setting `identityDuplicateAttributes="id"` is not necessary for those resource types.)
 For example, the resource type `aws_rds_integration` has an `id` attribute that duplicates the `arn`.

@@ -306,11 +306,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
-					{{ if and (.SetIDAttribute) (eq (len .IdentityAttributes) 1) -}}
-						{{ with index .IdentityAttributes 0 -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .Name }}), compare.ValuesSame()),
-						{{ end -}}
-					{{ end -}}
 					{{ if .HasRegionAttribute -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
@@ -445,11 +440,6 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
-					{{ end -}}
-					{{ if and (.SetIDAttribute) (eq (len .IdentityAttributes) 1) -}}
-						{{ with index .IdentityAttributes 0 -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .Name }}), compare.ValuesSame()),
-						{{ end -}}
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					{{ if .HasInherentRegionIdentity -}}
