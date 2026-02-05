@@ -14,6 +14,8 @@ Lists ECR repositories in a region.
 
 ```terraform
 list "aws_ecr_repository" "example" {
+  provider = aws
+
   config {}
 }
 ```
