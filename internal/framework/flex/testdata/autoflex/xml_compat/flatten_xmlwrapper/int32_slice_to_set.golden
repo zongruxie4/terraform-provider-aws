@@ -74,8 +74,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
-    "target_type": "SetTypeOf[basetypes.Int64Value]",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "wrapper_field": "Items"
   },
   {
@@ -85,7 +84,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "items_is_nil": false,
     "items_kind": "slice",
     "items_len": 2,
@@ -98,7 +97,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "element_type": "basetypes.Int64Type"
   },
   {
@@ -108,7 +107,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "items_count": 2,
     "valid_count": 2
   },
@@ -119,7 +118,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "index": 0,
     "item_kind": "int32",
     "item_value": 400
@@ -131,7 +130,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "index": 1,
     "item_kind": "int32",
     "item_value": 404
@@ -143,7 +142,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "element_count": 2,
     "element_type": "basetypes.Int64Type"
   }

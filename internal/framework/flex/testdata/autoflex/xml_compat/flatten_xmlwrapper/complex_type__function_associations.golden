@@ -74,8 +74,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
-    "target_type": "SetNestedObjectTypeOf[flex.FunctionAssociationTF]",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "wrapper_field": "Items"
   },
   {
@@ -85,8 +84,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
-    "target_type": "SetNestedObjectTypeOf[flex.FunctionAssociationTF]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "trace",
@@ -95,7 +93,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "field_count": 2,
     "is_rule2": false
   },
@@ -106,7 +104,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "trace",
@@ -115,7 +113,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "items_is_nil": false,
     "items_kind": "slice",
     "items_len": 2,
@@ -128,7 +126,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_type": "ObjectTypeOf[flex.FunctionAssociationTF]"
   },
   {
@@ -138,7 +136,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "items_count": 2,
     "valid_count": 2
   },
@@ -149,7 +147,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "index": 0,
     "item_kind": "struct",
     "item_value": {
@@ -213,7 +211,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "index": 1,
     "item_kind": "struct",
     "item_value": {
@@ -277,7 +275,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_count": 2,
     "element_type": "ObjectTypeOf[flex.FunctionAssociationTF]"
   }

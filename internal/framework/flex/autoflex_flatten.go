@@ -1741,17 +1741,16 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 //
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
+
 	wrapperField := opts.XMLWrapperField()
 	tflog.SubsystemTrace(ctx, subsystemName, "Starting XML wrapper flatten", map[string]any{
-		"target_type":   tTo.String(),
 		"wrapper_field": wrapperField,
 	})
 
 	// Check if target is a NestedObjectCollection (Rule 2 pattern)
 	if nestedObjType, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2", map[string]any{
-			"target_type": tTo.String(),
-		})
+		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2", map[string]any{})
 
 		// Rule 2 detection: check if source AWS struct has more than 2 fields
 		// (Items, Quantity, plus additional fields like Enabled)
@@ -1855,6 +1854,7 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 		})
 
 		for i, item := range validItems {
+			// TODO: source type and target type should be set to element types
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
 				"index":      i,
 				"item_kind":  item.Kind().String(),
@@ -2015,6 +2015,7 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 		})
 
 		for i, item := range validItems {
+			// TODO: source type and target type should be set to element types
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
 				"index":      i,
 				"item_kind":  item.Kind().String(),
