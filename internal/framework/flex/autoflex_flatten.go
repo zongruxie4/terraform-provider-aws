@@ -1776,7 +1776,6 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom ref
 		tflog.SubsystemTrace(ctx, subsystemName, "Rule 2 detection result", map[string]any{
 			"is_rule2":    isRule2,
 			"field_count": sourceStructType.NumField(),
-			"source_type": sourceStructType.String(),
 		})
 
 		if isRule2 {

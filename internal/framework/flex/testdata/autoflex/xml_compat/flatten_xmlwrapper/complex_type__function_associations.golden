@@ -97,8 +97,7 @@
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
     "field_count": 2,
-    "is_rule2": false,
-    "source_type": "flex.FunctionAssociations"
+    "is_rule2": false
   },
   {
     "@level": "trace",
