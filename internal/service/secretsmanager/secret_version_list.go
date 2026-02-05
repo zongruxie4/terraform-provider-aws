@@ -28,7 +28,6 @@ func secretVersionResourceAsListResource() inttypes.ListResourceForSDK {
 }
 
 type secretVersionListResource struct {
-	framework.ResourceWithConfigure
 	framework.ListResourceWithSDKv2Resource
 }
 
