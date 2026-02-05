@@ -2832,8 +2832,6 @@ func handleDirectXMLWrapperStruct(ctx context.Context, valFrom, valTo reflect.Va
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
 		"wrapper_field_name": wrapperFieldName,
-		"source_type":        typeFrom.String(),
-		"target_type":        typeTo.String(),
 	})
 
 	// Find target fields with matching xmlwrapper tags and map the source Items field to them
