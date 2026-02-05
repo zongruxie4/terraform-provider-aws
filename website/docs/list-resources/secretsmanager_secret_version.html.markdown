@@ -14,6 +14,8 @@ Lists Secrets Manager secret versions for a secret.
 
 ```terraform
 list "aws_secretsmanager_secret_version" "example" {
+  provider = aws
+
   config {
     secret_id = aws_secretsmanager_secret.example.id
   }
