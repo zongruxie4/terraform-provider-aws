@@ -1743,7 +1743,6 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
 	wrapperField := opts.XMLWrapperField()
 	tflog.SubsystemTrace(ctx, subsystemName, "Starting XML wrapper flatten", map[string]any{
-		"source_type":   vFrom.Type().String(),
 		"target_type":   tTo.String(),
 		"wrapper_field": wrapperField,
 	})

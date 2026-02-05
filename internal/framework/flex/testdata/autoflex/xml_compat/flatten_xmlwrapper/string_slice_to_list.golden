@@ -75,7 +75,6 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten",
-    "source_type": "flex.awsHeadersForFlatten",
     "target_type": "ListTypeOf[basetypes.StringValue]",
     "wrapper_field": "Items"
   },
