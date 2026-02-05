@@ -622,24 +622,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- end }}
 						{{- end }}
 					{{- end }}
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{ else -}}
 						inttypes.RegionalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
