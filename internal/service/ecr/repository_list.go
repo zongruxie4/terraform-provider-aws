@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -32,13 +31,6 @@ type repositoryListResource struct {
 
 type repositoryListResourceModel struct {
 	framework.WithRegionModel
-}
-
-func (l *repositoryListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-		Blocks:     map[string]listschema.Block{},
-	}
 }
 
 func (l *repositoryListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
