@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_route53_resolver_rule_association")
 func newRuleAssociationResourceAsListResource() inttypes.ListResourceForSDK {
 	l := listResourceRuleAssociation{}
