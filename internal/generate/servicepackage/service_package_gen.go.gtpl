@@ -334,15 +334,15 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
