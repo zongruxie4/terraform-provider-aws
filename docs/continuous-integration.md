@@ -632,7 +632,7 @@ make yamllint
 
 ### Terraform Formatting / terraform fmt
 
-This check ensures that all `.tf` files in the repository are properly formatted using `terraform fmt`.
+This check ensures that all `.tf`, `.tfvars`, `.tftest.hcl`, and `.tfquery.hcl` files in the repository are properly formatted using `terraform fmt`.
 
 Use the `terraform-fmt` target to format all Terraform files:
 

@@ -924,8 +924,8 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
 
-terraform-fmt: ## Format all .tf and .tfquery.hcl files
-	@echo "make: Formatting .tf and .tfquery.hcl files..."
+terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
 	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
 	@terraform fmt -recursive .
 	@find . -name "*.BEGIANT.tf" -type f -exec sh -c 'mv "$$1" "$${1%.BEGIANT.tf}.tfquery.hcl"' _ {} \;

@@ -25,6 +25,9 @@ on:
       - names/**
       - website/**
       - '**/*.tf'
+      - '**/*.tfvars'
+      - '**/*.tftest.hcl'
+      - '**/*.tfquery.hcl'
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
