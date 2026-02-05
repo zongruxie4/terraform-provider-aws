@@ -52,9 +52,7 @@
     "autoflex.source.size": 2,
     "autoflex.source.type": "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
-    "source_type": "[]*flex.awsExpander",
-    "target_type": "SetNestedObjectTypeOf[flex.tfFlexer]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]"
   },
   {
     "@level": "debug",

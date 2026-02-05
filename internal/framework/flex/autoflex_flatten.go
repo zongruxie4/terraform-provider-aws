@@ -1662,8 +1662,6 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Flattening nested object collection", map[string]any{
 		logAttrKeySourceSize: n,
-		"source_type":        vFrom.Type().String(),
-		"target_type":        tTo.String(),
 	})
 
 	// DEBUG: Log the source struct fields for the first element
