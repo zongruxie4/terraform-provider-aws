@@ -23,5 +23,5 @@ list "aws_secretsmanager_secret_version" "example" {
 
 This list resource supports the following arguments:
 
-* `secret_id` - (Required) ARN or name of the secret.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `secret_id` - (Required) ARN or name of the secret.
