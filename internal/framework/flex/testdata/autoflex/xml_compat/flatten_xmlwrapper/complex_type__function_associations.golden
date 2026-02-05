@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF",
-    "source_type": "flex.FunctionAssociations"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
   },
   {
     "@level": "trace",

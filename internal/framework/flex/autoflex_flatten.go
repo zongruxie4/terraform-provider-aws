@@ -113,9 +113,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			// Special case: Check if source is XML wrapper struct and target has xmlwrapper fields
 			if potentialXMLWrapperStruct(typFrom) {
-				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct", map[string]any{
-					"source_type": typFrom.String(),
-				})
+				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct")
 				// Check if target has any fields with xmlwrapper tags
 				for toField := range tfreflect.ExportedStructFields(typTo) {
 					_, toOpts := autoflexTags(toField)
@@ -131,9 +129,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 				}
 				tflog.SubsystemTrace(ctx, subsystemName, "No xmlwrapper tags found in target")
 			} else {
-				tflog.SubsystemTrace(ctx, subsystemName, "Source is not XML wrapper struct", map[string]any{
-					"source_type": typFrom.String(),
-				})
+				tflog.SubsystemTrace(ctx, subsystemName, "Source is not XML wrapper struct")
 			}
 
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
