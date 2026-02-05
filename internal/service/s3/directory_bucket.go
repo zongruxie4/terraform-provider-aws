@@ -45,8 +45,10 @@ func isDirectoryBucket(bucket string) bool {
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
+// @IdentityAttribute("bucket", identityDuplicateAttributes="id")
 // @Testing(importIgnore="force_destroy")
 // @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preIdentityVersion="v6.31.0")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -55,7 +57,7 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 
 type directoryBucketResource struct {
 	framework.ResourceWithModel[directoryBucketResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *directoryBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
