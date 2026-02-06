@@ -8,6 +8,10 @@ FEATURES:
 * **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
 * **New List Resource:** `aws_secretsmanager_secret_version` ([#46342](https://github.com/hashicorp/terraform-provider-aws/issues/46342))
 
+ENHANCEMENTS:
+
+* resource/aws_quicksight_data_set: Support `use_as` property to create special RLS rules dataset ([#42687](https://github.com/hashicorp/terraform-provider-aws/issues/42687))
+
 ## 6.31.0 (February 4, 2026)
 
 NOTES:
