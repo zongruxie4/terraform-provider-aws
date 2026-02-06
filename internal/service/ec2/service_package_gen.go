@@ -299,6 +299,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	}
 }
 
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSecurityGroupIngressRuleResourceAsListResource,
+			TypeName: "aws_vpc_security_group_ingress_rule",
+			Name:     "Security Group Ingress Rule",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+	})
+}
+
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
