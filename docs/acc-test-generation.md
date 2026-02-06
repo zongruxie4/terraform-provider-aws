@@ -391,7 +391,7 @@ Declare the set of exluded availability zones in a local value named `exclude_zo
 
 Defines an `aws_availability_zones` data source named `available` which lists availability zones in the current region which are available and not opt-in.
 
-Uses a default set of excluded availablity zones: `usw2-az4` and `usgw1-az2`.
+Uses a default set of excluded availability zones: `usw2-az4` and `usgw1-az2`.
 
 #### `acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI`
 
