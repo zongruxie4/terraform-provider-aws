@@ -128,7 +128,7 @@ func TestAccVPCSecurityGroupEgressRule_List_filter(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupEgressRule_List_RegionOverride(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc_security_group_egress_rule.test[0]"
