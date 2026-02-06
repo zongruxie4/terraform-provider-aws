@@ -33,7 +33,7 @@ type directoryBucketListResource struct {
 }
 
 func (r *directoryBucketListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := r.Meta().S3Client(ctx)
+	conn := r.Meta().S3ExpressClient(ctx)
 
 	var query listDirectoryBucketModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
