@@ -82,3 +82,76 @@ func TestAccS3DirectoryBucket_List_Basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccS3DirectoryBucket_List_IncludeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_s3_directory_bucket.test[0]"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccDirectoryBucketPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckDirectoryBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/DirectoryBucket/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+"-0"))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(directoryBucketFullNameRegex(rName+"-0"))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"key": knownvalue.StringExact("value"),
+					})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"key": knownvalue.StringExact("value"),
+					})),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/DirectoryBucket/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_s3_directory_bucket.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_s3_directory_bucket.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+"-0"))),
+					querycheck.ExpectResourceKnownValues("aws_s3_directory_bucket.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("data_redundancy"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrForceDestroy), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrLocation), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"key": knownvalue.StringExact("value"),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"key": knownvalue.StringExact("value"),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.NotNull()),
+					}),
+				},
+			},
+		},
+	})
+}
