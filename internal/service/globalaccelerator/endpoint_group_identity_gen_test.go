@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlobalAcceleratorEndpointGroup_Identity_Basic(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EndpointGroup
@@ -106,7 +106,7 @@ func TestAccGlobalAcceleratorEndpointGroup_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccGlobalAcceleratorEndpointGroup_Identity_ExistingResource(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EndpointGroup
@@ -162,7 +162,7 @@ func TestAccGlobalAcceleratorEndpointGroup_Identity_ExistingResource(t *testing.
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccGlobalAcceleratorEndpointGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EndpointGroup

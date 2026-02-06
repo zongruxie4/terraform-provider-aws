@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIVSChannel_Identity_Basic(t *testing.T) {
+func TestAccIVSChannel_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Channel
@@ -99,7 +99,7 @@ func TestAccIVSChannel_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccIVSChannel_Identity_RegionOverride(t *testing.T) {
+func TestAccIVSChannel_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ivs_channel.test"
@@ -213,7 +213,7 @@ func TestAccIVSChannel_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccIVSChannel_Identity_ExistingResource(t *testing.T) {
+func TestAccIVSChannel_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Channel
@@ -264,7 +264,7 @@ func TestAccIVSChannel_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccIVSChannel_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIVSChannel_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Channel

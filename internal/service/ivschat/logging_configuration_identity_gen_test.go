@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIVSChatLoggingConfiguration_Identity_Basic(t *testing.T) {
+func TestAccIVSChatLoggingConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ivschat.GetLoggingConfigurationOutput
@@ -108,7 +108,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccIVSChatLoggingConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccIVSChatLoggingConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ivschat_logging_configuration.test"
@@ -229,7 +229,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.5.0
-func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ivschat.GetLoggingConfigurationOutput
@@ -285,7 +285,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource(t *testing.T) 
 }
 
 // Resource Identity was added after v6.5.0
-func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ivschat.GetLoggingConfigurationOutput

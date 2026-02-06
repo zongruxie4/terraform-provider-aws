@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlobalAcceleratorListener_Identity_Basic(t *testing.T) {
+func TestAccGlobalAcceleratorListener_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_listener.test"
@@ -104,7 +104,7 @@ func TestAccGlobalAcceleratorListener_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccGlobalAcceleratorListener_Identity_ExistingResource(t *testing.T) {
+func TestAccGlobalAcceleratorListener_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_listener.test"
@@ -159,7 +159,7 @@ func TestAccGlobalAcceleratorListener_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccGlobalAcceleratorListener_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccGlobalAcceleratorListener_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_listener.test"
