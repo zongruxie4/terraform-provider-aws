@@ -238,7 +238,7 @@ import (
 )
 
 {{ if .Serialize }}
-func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
+func {{ template "testname" . }}_identitySerial(t *testing.T) {
 	t.Helper()
 	{{ if .SerializeParallelTests -}}
 	t.Parallel()
@@ -1463,7 +1463,7 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 }
 
 // Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
-func {{ template "testname" . }}_Identity_upgrade_NoRefresh(t *testing.T) {
+func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
