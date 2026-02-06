@@ -120,8 +120,11 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
-				yield(result)
-				return
+				tflog.Error(ctx, "Setting result", map[string]any{
+					names.AttrID: routeID,
+					"diags":      result.Diagnostics,
+				})
+				continue
 			}
 
 			if !yield(result) {
