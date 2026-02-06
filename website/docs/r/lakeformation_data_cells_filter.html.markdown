@@ -16,10 +16,10 @@ Terraform resource for managing an AWS Lake Formation Data Cells Filter.
 ```terraform
 resource "aws_lakeformation_data_cells_filter" "example" {
   table_data {
-    database_name    = aws_glue_catalog_database.test.name
+    database_name    = aws_glue_catalog_database.example.name
     name             = "example"
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name       = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.example.name
 
     column_names = ["my_column"]
 
@@ -29,16 +29,18 @@ resource "aws_lakeformation_data_cells_filter" "example" {
   }
 }
 ```
+
 ### Filter with Excluded Columns Only (No Row Filter)
 
 When excluding columns without a row filter, you must include `all_rows_wildcard {}`:
+
 ```terraform
 resource "aws_lakeformation_data_cells_filter" "excluded_columns" {
   table_data {
-    database_name    = aws_glue_catalog_database.test.name
+    database_name    = aws_glue_catalog_database.example.name
     name             = "exclude-pii"
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name       = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.example.name
 
     column_wildcard {
       excluded_column_names = ["ssn", "credit_card"]
@@ -52,13 +54,14 @@ resource "aws_lakeformation_data_cells_filter" "excluded_columns" {
 ```
 
 ### Filter with Row Filter and Excluded Columns
+
 ```terraform
 resource "aws_lakeformation_data_cells_filter" "row_and_column" {
   table_data {
-    database_name    = aws_glue_catalog_database.test.name
+    database_name    = aws_glue_catalog_database.example.name
     name             = "marketing-filtered"
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name       = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.example.name
 
     column_wildcard {
       excluded_column_names = ["salary", "bonus"]
@@ -74,13 +77,14 @@ resource "aws_lakeformation_data_cells_filter" "row_and_column" {
 ### Filter with Row Filter Only (All Columns Included)
 
 To include all columns with a row filter, set `excluded_column_names` to an empty list:
+
 ```terraform
 resource "aws_lakeformation_data_cells_filter" "row_only" {
   table_data {
-    database_name    = aws_glue_catalog_database.test.name
+    database_name    = aws_glue_catalog_database.example.name
     name             = "regional-filter"
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name       = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.example.name
 
     column_wildcard {
       excluded_column_names = []
