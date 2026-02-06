@@ -8,6 +8,7 @@ FEATURES:
 * **New List Resource:** `aws_route_table` ([#46337](https://github.com/hashicorp/terraform-provider-aws/issues/46337))
 * **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
 * **New List Resource:** `aws_secretsmanager_secret_version` ([#46342](https://github.com/hashicorp/terraform-provider-aws/issues/46342))
+* **New List Resource:** `aws_vpc_security_group_egress_rule` ([#46368](https://github.com/hashicorp/terraform-provider-aws/issues/46368))
 * **New List Resource:** `aws_vpc_security_group_ingress_rule` ([#46367](https://github.com/hashicorp/terraform-provider-aws/issues/46367))
 
 ENHANCEMENTS:
