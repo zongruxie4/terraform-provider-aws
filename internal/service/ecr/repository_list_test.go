@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECRRepository_List_Basic(t *testing.T) {
+func TestAccECRRepository_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ecr_repository.test[0]"
@@ -74,7 +74,7 @@ func TestAccECRRepository_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepository_List_RegionOverride(t *testing.T) {
+func TestAccECRRepository_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
