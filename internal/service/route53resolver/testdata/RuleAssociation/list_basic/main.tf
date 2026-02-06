@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_vpc" "test" {
-  count = var.resource_count
-
-  cidr_block           = "10.${6 + count.index}.0.0/16"
+  cidr_block           = "10.6.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
@@ -22,7 +20,7 @@ resource "aws_route53_resolver_rule_association" "test" {
 
   name             = "${var.rName}-${count.index}"
   resolver_rule_id = aws_route53_resolver_rule.test[count.index].id
-  vpc_id           = aws_vpc.test[count.index].id
+  vpc_id           = aws_vpc.test.id
 }
 
 variable "rName" {
