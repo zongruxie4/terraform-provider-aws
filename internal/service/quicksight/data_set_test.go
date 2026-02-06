@@ -1228,29 +1228,29 @@ func testAccDataSetConfigUseAs(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
-	resource "aws_quicksight_data_set" "test" {
-		data_set_id = %[1]q
-		name        = %[2]q
-		import_mode = "SPICE"
-		use_as      = "RLS_RULES"
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+  use_as      = "RLS_RULES"
 
-		physical_table_map {
-			physical_table_map_id = %[1]q
-			s3_source {
-				data_source_arn = aws_quicksight_data_source.test.arn
-				input_columns {
-					name = "UserName"
-					type = "STRING"
-				}
-				input_columns {
-					name = "Column1"
-					type = "STRING"
-				}
-				upload_settings {
-					format = "JSON"
-				}
-			}
-		}
-	}
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "UserName"
+        type = "STRING"
+      }
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
 	`, rId, rName))
 }
