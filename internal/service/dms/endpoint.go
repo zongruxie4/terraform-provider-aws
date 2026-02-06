@@ -345,6 +345,11 @@ func resourceEndpoint() *schema.Resource {
 							Default:          awstypes.NestingLevelValueNone,
 							ValidateDiagFunc: enum.Validate[awstypes.NestingLevelValue](),
 						},
+						"use_update_lookup": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -777,6 +782,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
 		settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
 		settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
+		settings.UseUpdateLookUp = aws.Bool(d.Get("mongodb_settings.0.use_update_lookup").(bool))
 
 		input.MongoDbSettings = settings
 	case engineNameOracle:
@@ -1094,7 +1100,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			case engineNameMongodb:
 				if d.HasChanges(
 					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
-					names.AttrDatabaseName, names.AttrKMSKeyARN, "mongodb_settings.0.auth_type", "mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id", "mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source",
+					names.AttrDatabaseName, names.AttrKMSKeyARN, "mongodb_settings.0.auth_type", "mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id", "mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source", "mongodb_settings.0.use_update_lookup",
 					"secrets_manager_access_role_arn", "secrets_manager_arn") {
 					var settings = &awstypes.MongoDbSettings{}
 
@@ -1119,7 +1125,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
 					settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
 					settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
-
+					settings.UseUpdateLookUp = aws.Bool(d.Get("mongodb_settings.0.use_update_lookup").(bool))
 					input.MongoDbSettings = settings
 				}
 			case engineNameOracle:
@@ -1963,6 +1969,7 @@ func flattenMongoDBSettings(settings *awstypes.MongoDbSettings) []map[string]any
 		"extract_doc_id":      aws.ToString(settings.ExtractDocId),
 		"docs_to_investigate": aws.ToString(settings.DocsToInvestigate),
 		"auth_source":         aws.ToString(settings.AuthSource),
+		"use_update_lookup":   aws.ToBool(settings.UseUpdateLookUp),
 	}
 
 	return []map[string]any{m}
