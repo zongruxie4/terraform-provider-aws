@@ -56,7 +56,7 @@ func (r *directoryBucketListResource) List(ctx context.Context, request list.Lis
 			bucketName := aws.ToString(item.Name)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrBucket), bucketName)
 
-			bucket, err := findBucket(ctx, conn, bucketName, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
+			bucket, err := findDirectoryBucket(ctx, conn, bucketName)
 			if err != nil {
 				tflog.Error(ctx, "Reading S3 Directory Bucket", map[string]any{
 					"error": err.Error(),
