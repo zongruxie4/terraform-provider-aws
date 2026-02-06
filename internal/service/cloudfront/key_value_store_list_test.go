@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudFrontKeyValueStore_List_Basic(t *testing.T) {
+func TestAccCloudFrontKeyValueStore_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_cloudfront_key_value_store.test[0]"
