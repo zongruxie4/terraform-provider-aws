@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -196,7 +197,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 
 	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
-	// Disable S3 Expression session authentication for HeadBucket.
+	// Disable S3 Express session authentication for HeadBucket.
 	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
 
 	if retry.NotFound(err) {
@@ -212,17 +213,25 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	// Set attributes for import.
-	data.ARN = fwflex.StringToFramework(ctx, output.BucketArn)
-	data.Bucket = fwflex.StringValueToFramework(ctx, bucket)
-	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(output.BucketLocationType))
-	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
-		Name: fwflex.StringToFramework(ctx, output.BucketLocationName),
-		Type: fwtypes.StringEnumValue(output.BucketLocationType),
-	})
-	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
+	flattenDirectoryBucket(ctx, output, &data, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func flattenDirectoryBucket(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, bucket, data, fwflex.WithFieldNamePrefix("Bucket"))...)
+	if diags.HasError() {
+		return
+	}
+	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(bucket.BucketLocationType))
+	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
+		Name: fwflex.StringToFramework(ctx, bucket.BucketLocationName),
+		Type: fwtypes.StringEnumValue(bucket.BucketLocationType),
+	})
+	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
 }
 
 func (r *directoryBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
