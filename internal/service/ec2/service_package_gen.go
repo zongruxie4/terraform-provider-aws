@@ -311,6 +311,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
+		{
+			Factory:  newSecurityGroupIngressRuleResourceAsListResource,
+			TypeName: "aws_vpc_security_group_ingress_rule",
+			Name:     "Security Group Ingress Rule",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
 	})
 }
 
