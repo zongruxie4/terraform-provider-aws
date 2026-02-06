@@ -39,9 +39,9 @@ list "aws_vpc_security_group_egress_rule" "example" {
 
 This list resource supports the following arguments:
 
-* `security_group_rule_ids` - (Optional) List of security group rule IDs to retrieve.
 * `filter` - (Optional) Custom filter block as described below.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `security_group_rule_ids` - (Optional) List of security group rule IDs to retrieve.
 
 ### filter
 
