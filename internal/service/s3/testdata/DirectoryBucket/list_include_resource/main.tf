@@ -21,8 +21,8 @@ data "aws_caller_identity" "current" {}
 # testAccDirectoryBucketConfig_baseAZ
 
 locals {
-  location_name= data.aws_availability_zones.available.zone_ids[0]
-  bucket_format= "%s-%s--${local.location_name}--x-s3"
+  location_name = data.aws_availability_zones.available.zone_ids[0]
+  bucket_format = "%s-%s--${local.location_name}--x-s3"
 }
 
 # testAccConfigDirectoryBucket_availableAZs
