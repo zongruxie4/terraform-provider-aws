@@ -50,7 +50,7 @@ resource "aws_lambda_capacity_provider" "example" {
   }
 
   capacity_provider_scaling_config {
-    scaling_mode   = "Manual"
+    scaling_mode = "Manual"
     scaling_policies = [
       {
         predefined_metric_type = "LambdaCapacityProviderAverageCPUUtilization"
