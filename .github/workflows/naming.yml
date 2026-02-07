@@ -23,6 +23,3 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ripgrep
       - name: Check test naming conventions
         run: make test-naming
-          fi
-
-          echo "✓ All list test names follow correct convention"
