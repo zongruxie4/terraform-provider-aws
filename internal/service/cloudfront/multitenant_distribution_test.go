@@ -194,12 +194,12 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
