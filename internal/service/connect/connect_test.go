@@ -61,7 +61,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"tags":                              testAccInstance_tags,
 			"identityBasic":                     testAccConnectInstance_Identity_basic,
 			"identityExistingResource":          testAccConnectInstance_Identity_ExistingResource_basic,
-			"identityExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_basic_NoRefresh_NoChange,
+			"identityExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange,
 			"identityRegionOverride":            testAccConnectInstance_Identity_regionOverride,
 		},
 		"InstanceStorageConfig": {
@@ -94,7 +94,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"targetARN":                         testAccPhoneNumber_targetARN,
 			"identityBasic":                     testAccConnectPhoneNumber_Identity_basic,
 			"identityExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource_basic,
-			"identityExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_basic_NoRefresh_NoChange,
+			"identityExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange,
 			"identityRegionOverride":            testAccConnectPhoneNumber_Identity_regionOverride,
 		},
 		"PhoneNumberContactFlowAssociation": {
