@@ -891,6 +891,40 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
+test-naming: ## Check test function naming conventions
+	@echo "Checking test naming conventions..."
+	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_gen_test.go' -c 2>/dev/null | awk '{s+=$$1} END {print s+0}'); \
+	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
+	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
+	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
+	echo "Generated tests (*_gen_test.go): $$CORRECT/$$TOTAL correct"; \
+	if [ "$$UPPERCASE" -gt 0 ]; then \
+		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null; \
+		exit 1; \
+	fi; \
+	if [ "$$LOWERCASE" -gt 0 ]; then \
+		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null; \
+		exit 1; \
+	fi; \
+	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_list_test.go' -c 2>/dev/null | awk '{s+=$$1} END {print s+0}'); \
+	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null | wc -l | xargs); \
+	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null | wc -l | xargs); \
+	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
+	echo "List tests (*_list_test.go): $$CORRECT/$$TOTAL correct"; \
+	if [ "$$UPPERCASE" -gt 0 ]; then \
+		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null; \
+		exit 1; \
+	fi; \
+	if [ "$$LOWERCASE" -gt 0 ]; then \
+		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null; \
+		exit 1; \
+	fi; \
+	echo "✓ All test names follow correct convention"
+
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"

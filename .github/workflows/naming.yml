@@ -21,63 +21,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
-      - name: Check test naming in _gen_test.go files
-        run: |
-          # Count total test functions in generated files
-          TOTAL=$(rg '^func [tT]estAcc[A-Z]' -g '*_gen_test.go' | wc -l)
-
-          # Check for uppercase final segment in generated test files
-          UPPERCASE_FINAL=$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' || true)
-          UPPERCASE_COUNT=$(echo "$UPPERCASE_FINAL" | grep -c '^' || echo 0)
-
-          # Check for lowercase middle segment in generated test files
-          LOWERCASE_MIDDLE=$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' || true)
-          LOWERCASE_COUNT=$(echo "$LOWERCASE_MIDDLE" | grep -c '^' || echo 0)
-
-          CORRECT=$((TOTAL - UPPERCASE_COUNT - LOWERCASE_COUNT))
-
-          echo "Generated test naming: $CORRECT/$TOTAL correct"
-
-          if [ -n "$UPPERCASE_FINAL" ]; then
-            echo "Error: Found $UPPERCASE_COUNT test functions with uppercase final segment:"
-            echo "$UPPERCASE_FINAL"
-            exit 1
-          fi
-
-          if [ -n "$LOWERCASE_MIDDLE" ]; then
-            echo "Error: Found $LOWERCASE_COUNT test functions with lowercase middle segment:"
-            echo "$LOWERCASE_MIDDLE"
-            exit 1
-          fi
-
-          echo "✓ All generated test names follow correct convention"
-      - name: Check test naming in _list_test.go files
-        run: |
-          # Count total test functions in list test files
-          TOTAL=$(rg '^func [tT]estAcc[A-Z]' -g '*_list_test.go' | wc -l)
-
-          # Check for uppercase final segment in list test files
-          UPPERCASE_FINAL=$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_list_test.go' || true)
-          UPPERCASE_COUNT=$(echo "$UPPERCASE_FINAL" | grep -c '^' || echo 0)
-
-          # Check for lowercase middle segment in list test files
-          LOWERCASE_MIDDLE=$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_list_test.go' || true)
-          LOWERCASE_COUNT=$(echo "$LOWERCASE_MIDDLE" | grep -c '^' || echo 0)
-
-          CORRECT=$((TOTAL - UPPERCASE_COUNT - LOWERCASE_COUNT))
-
-          echo "List test naming: $CORRECT/$TOTAL correct"
-
-          if [ -n "$UPPERCASE_FINAL" ]; then
-            echo "Error: Found $UPPERCASE_COUNT test functions with uppercase final segment:"
-            echo "$UPPERCASE_FINAL"
-            exit 1
-          fi
-
-          if [ -n "$LOWERCASE_MIDDLE" ]; then
-            echo "Error: Found $LOWERCASE_COUNT test functions with lowercase middle segment:"
-            echo "$LOWERCASE_MIDDLE"
-            exit 1
+      - name: Check test naming conventions
+        run: make test-naming
           fi
 
           echo "✓ All list test names follow correct convention"
