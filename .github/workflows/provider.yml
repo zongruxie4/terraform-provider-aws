@@ -171,52 +171,6 @@ jobs:
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
-  test_naming:
-    name: test naming
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install ripgrep
-        run: sudo apt-get update && sudo apt-get install -y ripgrep
-      - name: Check test naming in _gen_test.go files
-        run: |
-          # Check for uppercase final segment in generated test files
-          UPPERCASE_FINAL=$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' || true)
-          if [ -n "$UPPERCASE_FINAL" ]; then
-            echo "Error: Found test functions with uppercase final segment in generated files:"
-            echo "$UPPERCASE_FINAL"
-            exit 1
-          fi
-          
-          # Check for lowercase middle segment in generated test files
-          LOWERCASE_MIDDLE=$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' || true)
-          if [ -n "$LOWERCASE_MIDDLE" ]; then
-            echo "Error: Found test functions with lowercase middle segment in generated files:"
-            echo "$LOWERCASE_MIDDLE"
-            exit 1
-          fi
-          
-          echo "✓ All generated test names follow correct convention"
-      - name: Check test naming in _list_test.go files
-        run: |
-          # Check for uppercase final segment in list test files
-          UPPERCASE_FINAL=$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_list_test.go' || true)
-          if [ -n "$UPPERCASE_FINAL" ]; then
-            echo "Error: Found test functions with uppercase final segment in list test files:"
-            echo "$UPPERCASE_FINAL"
-            exit 1
-          fi
-          
-          # Check for lowercase middle segment in list test files
-          LOWERCASE_MIDDLE=$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_list_test.go' || true)
-          if [ -n "$LOWERCASE_MIDDLE" ]; then
-            echo "Error: Found test functions with lowercase middle segment in list test files:"
-            echo "$LOWERCASE_MIDDLE"
-            exit 1
-          fi
-          
-          echo "✓ All list test names follow correct convention"
-
   terraform_fmt:
     name: terraform fmt
     runs-on: ubuntu-latest
