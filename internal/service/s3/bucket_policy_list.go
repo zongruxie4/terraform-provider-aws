@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,15 +68,22 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
 			// So always try to read it to see if it is present.
 			tflog.Info(ctx, "Reading S3 Bucket Policy")
-			diags := resourceBucketPolicyRead(ctx, rd, l.Meta())
-			if diags.HasError() {
+			policy, err := findBucketPolicy(ctx, conn, bucketName)
+			if retry.NotFound(err) {
+				tflog.Debug(ctx, "Bucket has no policy, skipping")
+				continue
+			}
+			if err != nil {
 				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
-					"diags": diags,
+					"error": err.Error(),
 				})
 				continue
 			}
-			if rd.Id() == "" {
-				tflog.Warn(ctx, "Bucket has no policy, skipping")
+
+			if err := resourceBucketPolicyFlatten(ctx, policy, rd); err != nil {
+				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
+					"error": err.Error(),
+				})
 				continue
 			}
 
