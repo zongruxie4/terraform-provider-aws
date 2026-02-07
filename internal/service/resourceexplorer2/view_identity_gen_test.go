@@ -28,7 +28,7 @@ func testAccResourceExplorer2View_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccResourceExplorer2View_Identity_basic,
 		"ExistingResource":          testAccResourceExplorer2View_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccResourceExplorer2View_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccResourceExplorer2View_Identity_regionOverride,
 	}
 
@@ -241,7 +241,7 @@ func testAccResourceExplorer2View_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2View_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccResourceExplorer2View_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resourceexplorer2.GetViewOutput
@@ -321,7 +321,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_basic_basic(t *testi
 	})
 }
 
-func testAccResourceExplorer2View_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resourceexplorer2.GetViewOutput

@@ -28,7 +28,7 @@ func testAccIoTEventConfigurations_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccIoTEventConfigurations_Identity_basic,
 		"ExistingResource":          testAccIoTEventConfigurations_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccIoTEventConfigurations_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccIoTEventConfigurations_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccIoTEventConfigurations_Identity_regionOverride,
 	}
 
@@ -216,7 +216,7 @@ func testAccIoTEventConfigurations_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccIoTEventConfigurations_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"
@@ -282,7 +282,7 @@ func testAccIoTEventConfigurations_Identity_ExistingResource_basic_basic(t *test
 	})
 }
 
-func testAccIoTEventConfigurations_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"

@@ -28,7 +28,7 @@ func testAccConnectInstance_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccConnectInstance_Identity_basic,
 		"ExistingResource":          testAccConnectInstance_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccConnectInstance_Identity_regionOverride,
 	}
 
@@ -208,7 +208,7 @@ func testAccConnectInstance_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectInstance_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccConnectInstance_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
@@ -266,7 +266,7 @@ func testAccConnectInstance_Identity_ExistingResource_basic_basic(t *testing.T) 
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectInstance_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance

@@ -28,7 +28,7 @@ func testAccDevOpsGuruServiceIntegration_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccDevOpsGuruServiceIntegration_Identity_basic,
 		"ExistingResource":          testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccDevOpsGuruServiceIntegration_Identity_regionOverride,
 	}
 
@@ -225,7 +225,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
@@ -300,7 +300,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic_basic(t
 	})
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"

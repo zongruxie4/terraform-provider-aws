@@ -27,7 +27,7 @@ func testAccSSMContactsContact_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccSSMContactsContact_Identity_basic,
 		"ExistingResource":          testAccSSMContactsContact_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccSSMContactsContact_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -119,7 +119,7 @@ func testAccSSMContactsContact_Identity_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.15.0
-func testAccSSMContactsContact_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccSSMContactsContact_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact.test"
@@ -174,7 +174,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_basic_basic(t *testing.
 }
 
 // Resource Identity was added after v6.15.0
-func testAccSSMContactsContact_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact.test"

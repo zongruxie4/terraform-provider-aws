@@ -28,7 +28,7 @@ func testAccIoTIndexingConfiguration_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccIoTIndexingConfiguration_Identity_basic,
 		"ExistingResource":          testAccIoTIndexingConfiguration_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccIoTIndexingConfiguration_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccIoTIndexingConfiguration_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccIoTIndexingConfiguration_Identity_regionOverride,
 	}
 
@@ -216,7 +216,7 @@ func testAccIoTIndexingConfiguration_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccIoTIndexingConfiguration_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"
@@ -282,7 +282,7 @@ func testAccIoTIndexingConfiguration_Identity_ExistingResource_basic_basic(t *te
 	})
 }
 
-func testAccIoTIndexingConfiguration_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"

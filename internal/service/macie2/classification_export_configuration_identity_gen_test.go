@@ -29,7 +29,7 @@ func testAccMacie2ClassificationExportConfiguration_identitySerial(t *testing.T)
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_basic,
 		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_regionOverride,
 	}
 
@@ -221,7 +221,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_regionOverride(t *t
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -294,7 +294,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_ba
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput

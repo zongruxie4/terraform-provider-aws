@@ -28,7 +28,7 @@ func testAccCloudTrailTrail_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccCloudTrailTrail_Identity_basic,
 		"ExistingResource":          testAccCloudTrailTrail_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccCloudTrailTrail_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccCloudTrailTrail_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccCloudTrailTrail_Identity_regionOverride,
 	}
 
@@ -241,7 +241,7 @@ func testAccCloudTrailTrail_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccCloudTrailTrail_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccCloudTrailTrail_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail
@@ -320,7 +320,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource_basic_basic(t *testing.T) 
 	})
 }
 
-func testAccCloudTrailTrail_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccCloudTrailTrail_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail

@@ -28,7 +28,7 @@ func testAccAuditManagerAccountRegistration_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccAuditManagerAccountRegistration_Identity_basic,
 		"ExistingResource":          testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccAuditManagerAccountRegistration_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccAuditManagerAccountRegistration_Identity_regionOverride,
 	}
 
@@ -216,7 +216,7 @@ func testAccAuditManagerAccountRegistration_Identity_regionOverride(t *testing.T
 	})
 }
 
-func testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_auditmanager_account_registration.test"
@@ -282,7 +282,7 @@ func testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic_basi
 	})
 }
 
-func testAccAuditManagerAccountRegistration_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccAuditManagerAccountRegistration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_auditmanager_account_registration.test"

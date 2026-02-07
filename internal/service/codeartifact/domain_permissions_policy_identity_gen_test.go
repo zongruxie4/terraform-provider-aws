@@ -27,7 +27,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccCodeArtifactDomainPermissionsPolicy_Identity_basic,
 		"ExistingResource":          testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccCodeArtifactDomainPermissionsPolicy_Identity_regionOverride,
 	}
 
@@ -239,7 +239,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_regionOverride(t *testi
 	})
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
@@ -317,7 +317,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic_
 	})
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"

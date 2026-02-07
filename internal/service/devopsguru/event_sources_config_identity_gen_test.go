@@ -29,7 +29,7 @@ func testAccDevOpsGuruEventSourcesConfig_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccDevOpsGuruEventSourcesConfig_Identity_basic,
 		"ExistingResource":          testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccDevOpsGuruEventSourcesConfig_Identity_regionOverride,
 	}
 
@@ -227,7 +227,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v devopsguru.DescribeEventSourcesConfigOutput
@@ -303,7 +303,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic_basic(t
 	})
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v devopsguru.DescribeEventSourcesConfigOutput

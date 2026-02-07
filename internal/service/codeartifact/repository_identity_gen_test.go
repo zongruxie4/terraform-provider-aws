@@ -27,7 +27,7 @@ func testAccCodeArtifactRepository_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccCodeArtifactRepository_Identity_basic,
 		"ExistingResource":          testAccCodeArtifactRepository_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccCodeArtifactRepository_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccCodeArtifactRepository_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccCodeArtifactRepository_Identity_regionOverride,
 	}
 
@@ -241,7 +241,7 @@ func testAccCodeArtifactRepository_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccCodeArtifactRepository_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_repository.test"
@@ -319,7 +319,7 @@ func testAccCodeArtifactRepository_Identity_ExistingResource_basic_basic(t *test
 	})
 }
 
-func testAccCodeArtifactRepository_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccCodeArtifactRepository_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_repository.test"

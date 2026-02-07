@@ -29,7 +29,7 @@ func testAccRDSCertificate_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccRDSCertificate_Identity_basic,
 		"ExistingResource":          testAccRDSCertificate_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccRDSCertificate_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccRDSCertificate_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccRDSCertificate_Identity_regionOverride,
 	}
 
@@ -221,7 +221,7 @@ func testAccRDSCertificate_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccRDSCertificate_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccRDSCertificate_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Certificate
@@ -294,7 +294,7 @@ func testAccRDSCertificate_Identity_ExistingResource_basic_basic(t *testing.T) {
 	})
 }
 
-func testAccRDSCertificate_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccRDSCertificate_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Certificate

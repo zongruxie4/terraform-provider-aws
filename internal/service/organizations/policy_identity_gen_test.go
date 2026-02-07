@@ -28,7 +28,7 @@ func testAccOrganizationsPolicy_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccOrganizationsPolicy_Identity_basic,
 		"ExistingResource":          testAccOrganizationsPolicy_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -119,7 +119,7 @@ func testAccOrganizationsPolicy_Identity_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -179,7 +179,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource_basic_basic(t *testing
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy

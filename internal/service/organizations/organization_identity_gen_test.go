@@ -28,7 +28,7 @@ func testAccOrganizationsOrganization_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccOrganizationsOrganization_Identity_basic,
 		"ExistingResource":          testAccOrganizationsOrganization_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccOrganizationsOrganization_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -110,7 +110,7 @@ func testAccOrganizationsOrganization_Identity_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganization_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccOrganizationsOrganization_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Organization
@@ -165,7 +165,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_basic_basic(t *t
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganization_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Organization

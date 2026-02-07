@@ -28,7 +28,7 @@ func testAccBedrockCustomModel_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccBedrockCustomModel_Identity_basic,
 		"ExistingResource":          testAccBedrockCustomModel_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccBedrockCustomModel_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccBedrockCustomModel_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccBedrockCustomModel_Identity_regionOverride,
 	}
 
@@ -260,7 +260,7 @@ func testAccBedrockCustomModel_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccBedrockCustomModel_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -340,7 +340,7 @@ func testAccBedrockCustomModel_Identity_ExistingResource_basic_basic(t *testing.
 	})
 }
 
-func testAccBedrockCustomModel_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccBedrockCustomModel_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput

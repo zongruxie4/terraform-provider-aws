@@ -28,7 +28,7 @@ func testAccIVSPlaybackKeyPair_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccIVSPlaybackKeyPair_Identity_basic,
 		"ExistingResource":          testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccIVSPlaybackKeyPair_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccIVSPlaybackKeyPair_Identity_regionOverride,
 	}
 
@@ -263,7 +263,7 @@ func testAccIVSPlaybackKeyPair_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PlaybackKeyPair
@@ -320,7 +320,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic_basic(t *testing.
 }
 
 // Resource Identity was added after v6.7.0
-func testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PlaybackKeyPair

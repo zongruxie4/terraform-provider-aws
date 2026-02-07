@@ -29,7 +29,7 @@ func testAccAppFabricAppBundle_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccAppFabricAppBundle_Identity_basic,
 		"ExistingResource":          testAccAppFabricAppBundle_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccAppFabricAppBundle_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccAppFabricAppBundle_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccAppFabricAppBundle_Identity_regionOverride,
 	}
 
@@ -232,7 +232,7 @@ func testAccAppFabricAppBundle_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -308,7 +308,7 @@ func testAccAppFabricAppBundle_Identity_ExistingResource_basic_basic(t *testing.
 	})
 }
 
-func testAccAppFabricAppBundle_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle

@@ -28,7 +28,7 @@ func testAccSageMakerUserProfile_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_basic,
 		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccSageMakerUserProfile_Identity_regionOverride,
 	}
 
@@ -218,7 +218,7 @@ func testAccSageMakerUserProfile_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -278,7 +278,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_basic_basic(t *testin
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput

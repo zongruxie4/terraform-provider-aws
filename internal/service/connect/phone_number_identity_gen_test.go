@@ -28,7 +28,7 @@ func testAccConnectPhoneNumber_identitySerial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccConnectPhoneNumber_Identity_basic,
 		"ExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource_basic,
-		"ExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_basic_noRefreshNoChange,
+		"ExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange,
 		"RegionOverride":            testAccConnectPhoneNumber_Identity_regionOverride,
 	}
 
@@ -208,7 +208,7 @@ func testAccConnectPhoneNumber_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectPhoneNumber_Identity_ExistingResource_basic_basic(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
@@ -266,7 +266,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource_basic_basic(t *testing.
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectPhoneNumber_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
