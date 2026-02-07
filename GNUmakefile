@@ -893,7 +893,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 
 test-naming: ## Check test function naming conventions
 	@echo "Checking test naming conventions..."
-	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_gen_test.go' -c 2>/dev/null | awk '{s+=$$1} END {print s+0}'); \
+	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
@@ -908,7 +908,7 @@ test-naming: ## Check test function naming conventions
 		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null; \
 		exit 1; \
 	fi; \
-	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_list_test.go' -c 2>/dev/null | awk '{s+=$$1} END {print s+0}'); \
+	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_list_test.go' 2>/dev/null | wc -l | xargs); \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_list_test.go' 2>/dev/null | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
