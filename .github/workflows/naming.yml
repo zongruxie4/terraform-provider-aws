@@ -11,7 +11,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/naming.yml
-      - internal/**/*_test.go
+      - "**/*_test.go"
 
 jobs:
   test_naming:
