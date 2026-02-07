@@ -27,8 +27,8 @@ func testAccGlueResourcePolicy_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccGlueResourcePolicy_Identity_basic,
-		"ExistingResource":          testAccGlueResourcePolicy_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccGlueResourcePolicy_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccGlueResourcePolicy_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccGlueResourcePolicy_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccGlueResourcePolicy_Identity_regionOverride,
 	}
 
@@ -216,7 +216,7 @@ func testAccGlueResourcePolicy_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccGlueResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
+func testAccGlueResourcePolicy_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_glue_resource_policy.test"
@@ -282,7 +282,7 @@ func testAccGlueResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-func testAccGlueResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccGlueResourcePolicy_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_glue_resource_policy.test"

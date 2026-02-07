@@ -27,8 +27,8 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_basic,
-		"ExistingResource":          testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_regionOverride,
 	}
 
@@ -216,7 +216,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_regionOverride(t *testin
 	})
 }
 
-func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic(t *testing.T) {
+func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
@@ -282,7 +282,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic(t
 	})
 }
 
-func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_snapshot_block_public_access.test"

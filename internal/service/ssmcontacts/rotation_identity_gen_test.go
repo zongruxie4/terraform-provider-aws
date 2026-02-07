@@ -26,8 +26,8 @@ func testAccSSMContactsRotation_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccSSMContactsRotation_Identity_basic,
-		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_basic_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -118,7 +118,7 @@ func testAccSSMContactsRotation_Identity_basic(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource_basic(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -197,7 +197,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"

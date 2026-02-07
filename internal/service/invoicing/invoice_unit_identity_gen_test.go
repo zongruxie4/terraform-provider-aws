@@ -26,8 +26,8 @@ func testAccInvoicingInvoiceUnit_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccInvoicingInvoiceUnit_Identity_basic,
-		"ExistingResource":          testAccInvoicingInvoiceUnit_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccInvoicingInvoiceUnit_Identity_regionOverride,
 	}
 
@@ -191,7 +191,7 @@ func testAccInvoicingInvoiceUnit_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.28.0
-func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v invoicing.GetInvoiceUnitOutput
@@ -248,7 +248,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.28.0
-func testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v invoicing.GetInvoiceUnitOutput

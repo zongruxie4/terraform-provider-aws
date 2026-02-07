@@ -28,8 +28,8 @@ func testAccBackupRegionSettings_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccBackupRegionSettings_Identity_basic,
-		"ExistingResource":          testAccBackupRegionSettings_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccBackupRegionSettings_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccBackupRegionSettings_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccBackupRegionSettings_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccBackupRegionSettings_Identity_regionOverride,
 	}
 
@@ -227,7 +227,7 @@ func testAccBackupRegionSettings_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccBackupRegionSettings_Identity_ExistingResource_basic(t *testing.T) {
+func testAccBackupRegionSettings_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeRegionSettingsOutput
@@ -303,7 +303,7 @@ func testAccBackupRegionSettings_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-func testAccBackupRegionSettings_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccBackupRegionSettings_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeRegionSettingsOutput

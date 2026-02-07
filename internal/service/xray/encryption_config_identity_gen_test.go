@@ -28,8 +28,8 @@ func testAccXRayEncryptionConfig_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccXRayEncryptionConfig_Identity_basic,
-		"ExistingResource":          testAccXRayEncryptionConfig_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccXRayEncryptionConfig_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccXRayEncryptionConfig_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccXRayEncryptionConfig_Identity_regionOverride,
 	}
 
@@ -221,7 +221,7 @@ func testAccXRayEncryptionConfig_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccXRayEncryptionConfig_Identity_ExistingResource_basic(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EncryptionConfig
@@ -294,7 +294,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-func testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EncryptionConfig

@@ -27,8 +27,8 @@ func testAccBedrockModelInvocationLoggingConfiguration_identitySerial(t *testing
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccBedrockModelInvocationLoggingConfiguration_Identity_basic,
-		"ExistingResource":          testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccBedrockModelInvocationLoggingConfiguration_Identity_regionOverride,
 	}
 
@@ -235,7 +235,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_regionOverride(t
 	})
 }
 
-func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_basic(t *testing.T) {
+func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
@@ -314,7 +314,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 	})
 }
 
-func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"

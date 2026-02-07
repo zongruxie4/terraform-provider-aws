@@ -28,8 +28,8 @@ func testAccSageMakerServicecatalogPortfolioStatus_identitySerial(t *testing.T) 
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccSageMakerServicecatalogPortfolioStatus_Identity_basic,
-		"ExistingResource":          testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccSageMakerServicecatalogPortfolioStatus_Identity_regionOverride,
 	}
 
@@ -221,7 +221,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_regionOverride(t *te
 	})
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput
@@ -294,7 +294,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_bas
 	})
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput

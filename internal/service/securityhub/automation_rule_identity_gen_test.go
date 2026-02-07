@@ -27,8 +27,8 @@ func testAccSecurityHubAutomationRule_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccSecurityHubAutomationRule_Identity_basic,
-		"ExistingResource":          testAccSecurityHubAutomationRule_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSecurityHubAutomationRule_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccSecurityHubAutomationRule_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSecurityHubAutomationRule_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccSecurityHubAutomationRule_Identity_regionOverride,
 	}
 
@@ -241,7 +241,7 @@ func testAccSecurityHubAutomationRule_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccSecurityHubAutomationRule_Identity_ExistingResource_basic(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AutomationRulesConfig
@@ -321,7 +321,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource_basic(t *testing
 	})
 }
 
-func testAccSecurityHubAutomationRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AutomationRulesConfig

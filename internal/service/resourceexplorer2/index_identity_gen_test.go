@@ -26,8 +26,8 @@ func testAccResourceExplorer2Index_identitySerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:             testAccResourceExplorer2Index_Identity_basic,
-		"ExistingResource":          testAccResourceExplorer2Index_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccResourceExplorer2Index_Identity_ExistingResource_noRefreshNoChange,
+		"ExistingResource":          testAccResourceExplorer2Index_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccResourceExplorer2Index_Identity_ExistingResource_basic_noRefreshNoChange,
 		"RegionOverride":            testAccResourceExplorer2Index_Identity_regionOverride,
 	}
 
@@ -223,7 +223,7 @@ func testAccResourceExplorer2Index_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2Index_Identity_ExistingResource_basic(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_ExistingResource_basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"
@@ -295,7 +295,7 @@ func testAccResourceExplorer2Index_Identity_ExistingResource_basic(t *testing.T)
 	})
 }
 
-func testAccResourceExplorer2Index_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_ExistingResource_basic_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"
