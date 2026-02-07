@@ -893,6 +893,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 
 test-naming: ## Check test function naming conventions
 	@echo "Checking test naming conventions..."
+	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
 	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -g '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
