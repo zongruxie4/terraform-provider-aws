@@ -171,9 +171,17 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"response_code": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"response_page_path": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 				},
