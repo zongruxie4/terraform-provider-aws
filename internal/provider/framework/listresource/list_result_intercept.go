@@ -332,9 +332,10 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 }
 
 type InterceptorParamsSDK struct {
-	C            *conns.AWSClient
-	ResourceData *schema.ResourceData
-	When         when
+	C               *conns.AWSClient
+	IncludeResource bool
+	ResourceData    *schema.ResourceData
+	When            when
 }
 
 type tagsInterceptorSDK struct {
@@ -349,6 +350,11 @@ func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags])
 
 func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if !params.IncludeResource {
+		return diags
+	}
+
 	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
 		return diags

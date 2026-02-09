@@ -84,12 +84,13 @@ func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Id
 	l.identitySpec = identitySpec
 }
 
-func (l *ListResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
+func (l *ListResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData, includeResource bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 	params := listresource.InterceptorParamsSDK{
-		C:            awsClient,
-		ResourceData: d,
-		When:         when,
+		C:               awsClient,
+		IncludeResource: includeResource,
+		ResourceData:    d,
+		When:            when,
 	}
 
 	switch when {
@@ -176,7 +177,7 @@ func getAttributeOk(d resourceData, name string) (string, bool) {
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
 func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
-	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd); err.HasError() {
+	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd, includeResource); err.HasError() {
 		result.Diagnostics.Append(err...)
 		return
 	}
