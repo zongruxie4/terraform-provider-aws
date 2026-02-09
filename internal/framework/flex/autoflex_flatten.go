@@ -2839,27 +2839,32 @@ func handleDirectXMLWrapperStruct(ctx context.Context, valFrom, valTo reflect.Va
 		_, toOpts := autoflexTags(toField)
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Checking target field", map[string]any{
-			"target_field":   toFieldName,
-			"xmlwrapper_tag": toOpts.XMLWrapperField(),
+			logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+			logAttrKeyTargetFieldname: toFieldName,
 		})
 
 		// Check if this target field expects the wrapper field from source
 		if toOpts.XMLWrapperField() == wrapperFieldName {
 			toFieldVal := valTo.FieldByName(toFieldName)
 			if !toFieldVal.IsValid() || !toFieldVal.CanSet() {
-				tflog.SubsystemError(ctx, subsystemName, "Target field not valid or settable")
+				tflog.SubsystemError(ctx, subsystemName, "Target field not valid or settable", map[string]any{
+					logAttrKeyTargetFieldname: toFieldName,
+				})
 				continue
 			}
 
 			tflog.SubsystemTrace(ctx, subsystemName, "Found matching xmlwrapper field", map[string]any{
-				"source_field": wrapperFieldName,
-				"target_field": toFieldName,
+				logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+				logAttrKeyTargetFieldname: toFieldName,
 			})
 
 			// Get the target field as attr.Value for XML wrapper flattening
 			if toAttr, ok := toFieldVal.Interface().(attr.Value); ok {
 				if f, ok := flexer.(*autoFlattener); ok {
-					tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten")
+					tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten", map[string]any{
+						logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+						logAttrKeyTargetFieldname: toFieldName,
+					})
 					// Use XML wrapper flattening to convert the source Items field to the target collection
 					diags.Append(f.xmlWrapperFlatten(ctx, valFrom, toAttr.Type(ctx), toFieldVal, toOpts)...)
 				} else {

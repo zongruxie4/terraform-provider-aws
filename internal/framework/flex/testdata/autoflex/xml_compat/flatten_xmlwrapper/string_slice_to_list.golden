@@ -40,30 +40,32 @@
     "@level": "trace",
     "@message": "Checking target field",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
+    "autoflex.target.fieldname": "Headers",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten",
-    "target_field": "Headers",
-    "xmlwrapper_tag": "Items"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten"
   },
   {
     "@level": "trace",
     "@message": "Found matching xmlwrapper field",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
+    "autoflex.target.fieldname": "Headers",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten",
-    "source_field": "Items",
-    "target_field": "Headers"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten"
   },
   {
     "@level": "trace",
     "@message": "Calling xmlWrapperFlatten",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
+    "autoflex.target.fieldname": "Headers",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfHeadersModelForFlatten"
   },
