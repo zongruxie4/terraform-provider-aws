@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_s3_directory_bucket" "test" {
+  region = var.region
+
   bucket = local.bucket
 
   location {
     name = local.location_name
   }
-
-  tags = var.resource_tags
 }
 
 # testAccDirectoryBucketConfig_baseAZ
@@ -28,6 +28,8 @@ locals {
 # acctest.ConfigAvailableAZsNoOptInExclude
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.exclude_zone_ids
   state            = "available"
 
@@ -43,9 +45,8 @@ variable "rName" {
   nullable    = false
 }
 
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

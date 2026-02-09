@@ -45,8 +45,10 @@ func isDirectoryBucket(bucket string) bool {
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
+// @IdentityAttribute("bucket", identityDuplicateAttributes="id")
 // @Testing(importIgnore="force_destroy")
 // @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preIdentityVersion="v6.31.0")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -55,7 +57,7 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 
 type directoryBucketResource struct {
 	framework.ResourceWithModel[directoryBucketResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *directoryBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -192,7 +194,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
 	// Disable S3 Expression session authentication for HeadBucket.
 	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
@@ -232,7 +234,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	input := s3.DeleteBucketInput{
 		Bucket: aws.String(bucket),
 	}
@@ -249,9 +251,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 				return
 			}
 
-			_, err = conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-				Bucket: aws.String(bucket),
-			})
+			_, err = conn.DeleteBucket(ctx, &input)
 		}
 	}
 
