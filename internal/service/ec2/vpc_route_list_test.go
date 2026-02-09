@@ -82,6 +82,108 @@ func TestAccVPCRoute_List_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_List_ipv6Destination(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_route.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	routeTableID := tfstatecheck.StateValue()
+	destinationIPv6 := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_ipv6_destination"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					routeTableID.GetStateValue("aws_route_table.test", tfjsonpath.New(names.AttrID)),
+					destinationIPv6.GetStateValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block")),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_ipv6_destination"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              routeTableID.Value(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": destinationIPv6.Value(),
+						"destination_prefix_list_id":  knownvalue.Null(),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCRoute_List_prefixListDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_route.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	routeTableID := tfstatecheck.StateValue()
+	prefixListID := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_prefix_list_destination"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					routeTableID.GetStateValue("aws_route_table.test", tfjsonpath.New(names.AttrID)),
+					prefixListID.GetStateValue(resourceName, tfjsonpath.New("destination_prefix_list_id")),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_prefix_list_destination"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              routeTableID.Value(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.Null(),
+						"destination_prefix_list_id":  prefixListID.Value(),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func TestAccVPCRoute_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
