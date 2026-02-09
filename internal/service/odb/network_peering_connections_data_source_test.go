@@ -6,6 +6,7 @@ package odb_test
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"strconv"
 	"testing"
 
@@ -55,7 +56,6 @@ func TestAccODBListNetworkPeeringConnections_basic(t *testing.T) {
 func TestAccODBListNetworkPeeringConnections_planCheck(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listOfPeeredNwks = listOdbNetworkPeering{}
-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -63,11 +63,15 @@ func TestAccODBListNetworkPeeringConnections_planCheck(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+
 		Steps: []resource.TestStep{
 			{
-				Config:             listOfPeeredNwks.basic(),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: listOfPeeredNwks.basic(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
