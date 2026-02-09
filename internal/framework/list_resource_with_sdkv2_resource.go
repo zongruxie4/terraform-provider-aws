@@ -24,11 +24,9 @@ type WithRegionSpec interface {
 	SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion])
 }
 
-var _ Lister[listresource.InterceptorParamsSDK] = &listResourceWithSDKv2Resource{}
+var _ Lister[listresource.InterceptorParamsSDK] = &ListResourceWithSDKv2Resource{}
 
-type ListResourceWithSDKv2Resource = listResourceWithSDKv2Resource
-
-type listResourceWithSDKv2Resource struct {
+type ListResourceWithSDKv2Resource struct {
 	withListResourceConfigSchema
 	ResourceWithConfigure
 	resourceSchema *schema.Resource
@@ -38,11 +36,11 @@ type listResourceWithSDKv2Resource struct {
 	interceptors   []listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]
 }
 
-func (l *listResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]) {
+func (l *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]) {
 	l.interceptors = append(l.interceptors, interceptor)
 }
 
-func (l *listResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
+func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
 	l.regionSpec = regionSpec
 
 	var isRegionOverrideEnabled bool
@@ -62,7 +60,7 @@ func (l *listResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[i
 	}
 }
 
-func (l *listResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
+func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
 	out := make(map[string]*schema.Schema)
 	for _, v := range identitySpec.Attributes {
 		out[v.Name()] = &schema.Schema{
@@ -86,7 +84,7 @@ func (l *listResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Id
 	l.identitySpec = identitySpec
 }
 
-func (l *listResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
+func (l *ListResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
 	var diags diag.Diagnostics
 	params := listresource.InterceptorParamsSDK{
 		C:            awsClient,
@@ -114,20 +112,20 @@ func (l *listResourceWithSDKv2Resource) runResultInterceptors(ctx context.Contex
 	return diags
 }
 
-func (l *listResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
 	response.ProtoV5Schema = l.resourceSchema.ProtoSchema(ctx)()
 	response.ProtoV5IdentitySchema = l.resourceSchema.ProtoIdentitySchema(ctx)()
 }
 
-func (l *listResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
+func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
 	l.resourceSchema = resource
 }
 
-func (l *listResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
+func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 	return l.resourceSchema.Data(&terraform.InstanceState{})
 }
 
-func (l *listResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
+func (l *ListResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
 	identity, err := d.Identity()
 	if err != nil {
 		return err
@@ -177,7 +175,7 @@ func getAttributeOk(d resourceData, name string) (string, bool) {
 
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
-func (l *listResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
 	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd); err.HasError() {
 		result.Diagnostics.Append(err...)
 		return

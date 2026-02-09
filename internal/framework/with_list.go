@@ -19,27 +19,25 @@ type Lister[T listresource.InterceptorParams | listresource.InterceptorParamsSDK
 	AppendResultInterceptor(listresource.ListResultInterceptor[T])
 }
 
-var _ Lister[listresource.InterceptorParams] = &withList{}
-
-type WithList = withList
+var _ Lister[listresource.InterceptorParams] = &WithList{}
 
 // WithList provides common functionality for ListResources
-type withList struct {
+type WithList struct {
 	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
 type flattenFunc func()
 
-func (w *withList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
+func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
 }
 
-func (w withList) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
+func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
 	return w.interceptors
 }
 
-func (w *withList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
 	params := listresource.InterceptorParams{
 		C:      awsClient,
@@ -62,7 +60,7 @@ func (w *withList) runResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *withList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
 	var diags diag.Diagnostics
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, data, result)...)
