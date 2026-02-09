@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -466,9 +465,8 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	output, err := conn.DescribeWorkspace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -483,8 +481,8 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	return output.Workspace, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspace(conn *grafana.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -500,10 +498,10 @@ func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) sdkre
 }
 
 func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusCreating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -517,10 +515,10 @@ func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusUpdating, awstypes.WorkspaceStatusVersionUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -534,10 +532,10 @@ func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
