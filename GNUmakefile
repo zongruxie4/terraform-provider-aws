@@ -894,15 +894,11 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 test-naming: ## Check test function naming conventions
 	@echo "Checking test naming conventions..."
 	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
-	@echo "Starting in $$PWD"
-	@rg --version
-	@echo "Debug: Checking for gen test files..."; \
-	find internal/service -name '*_gen_test.go' 2>/dev/null | head -3; \
-	echo "Debug: Running rg with glob..."; \
-	rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>&1 | head -3; \
-	echo "Debug: Running rg with type filter..."; \
-	rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>&1 | grep '_gen_test.go:' | head -3; \
-	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
+	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
+	if [ "$$TOTAL" -eq 0 ]; then \
+		echo "Error: No generated tests found. Check ripgrep command."; \
+		exit 1; \
+	fi; \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
@@ -918,6 +914,10 @@ test-naming: ## Check test function naming conventions
 		exit 1; \
 	fi; \
 	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
+	if [ "$$TOTAL" -eq 0 ]; then \
+		echo "Error: No list tests found. Check ripgrep command."; \
+		exit 1; \
+	fi; \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
