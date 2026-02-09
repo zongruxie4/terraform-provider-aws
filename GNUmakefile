@@ -896,36 +896,40 @@ test-naming: ## Check test function naming conventions
 	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
 	@echo "Starting in $$PWD"
 	@rg --version
-	@echo "Debug: Finding gen test files..."; \
+	@echo "Debug: Checking for gen test files..."; \
+	find internal/service -name '*_gen_test.go' 2>/dev/null | head -3; \
+	echo "Debug: Running rg with glob..."; \
 	rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>&1 | head -3; \
-	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
-	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
-	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
+	echo "Debug: Running rg with type filter..."; \
+	rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>&1 | grep '_gen_test.go:' | head -3; \
+	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
+	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
+	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
 	echo "Generated tests (*_gen_test.go): $$CORRECT/$$TOTAL correct"; \
 	if [ "$$UPPERCASE" -gt 0 ]; then \
 		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:'; \
 		exit 1; \
 	fi; \
 	if [ "$$LOWERCASE" -gt 0 ]; then \
 		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:'; \
 		exit 1; \
 	fi; \
-	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' --glob '*_list_test.go' 2>/dev/null | wc -l | xargs); \
-	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' --glob '*_list_test.go' 2>/dev/null | wc -l | xargs); \
-	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' --glob '*_list_test.go' 2>/dev/null | wc -l | xargs); \
+	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
+	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
+	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
 	echo "List tests (*_list_test.go): $$CORRECT/$$TOTAL correct"; \
 	if [ "$$UPPERCASE" -gt 0 ]; then \
 		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' --glob '*_list_test.go' 2>/dev/null; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:'; \
 		exit 1; \
 	fi; \
 	if [ "$$LOWERCASE" -gt 0 ]; then \
 		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' --glob '*_list_test.go' 2>/dev/null; \
+		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:'; \
 		exit 1; \
 	fi; \
 	echo "✓ All test names follow correct convention"
