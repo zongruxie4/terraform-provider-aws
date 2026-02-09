@@ -52,6 +52,27 @@ func TestAccODBListNetworkPeeringConnections_basic(t *testing.T) {
 	})
 }
 
+func TestAccODBListNetworkPeeringConnections_planCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listOfPeeredNwks = listOdbNetworkPeering{}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			listOfPeeredNwks.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             listOfPeeredNwks.basic(),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func (listOdbNetworkPeering) basic() string {
 	return `data "aws_odb_network_peering_connections" "test" {}`
 }
