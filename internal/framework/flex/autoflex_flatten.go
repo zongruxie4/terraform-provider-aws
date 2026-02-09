@@ -1750,7 +1750,7 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom ref
 
 	// Check if target is a NestedObjectCollection (Rule 2 pattern)
 	if nestedObjType, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2", map[string]any{})
+		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2")
 
 		// Rule 2 detection: check if source AWS struct has more than 2 fields
 		// (Items, Quantity, plus additional fields like Enabled)
@@ -2824,13 +2824,13 @@ func handleDirectXMLWrapperStruct(ctx context.Context, valFrom, valTo reflect.Va
 	sourceItemsField := valFrom.FieldByName(wrapperFieldName)
 	if !sourceItemsField.IsValid() {
 		tflog.SubsystemError(ctx, subsystemName, "Source Items field not valid", map[string]any{
-			"wrapper_field_name": wrapperFieldName,
+			logAttrKeySourceFieldname: wrapperFieldName,
 		})
 		return diags
 	}
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
-		"wrapper_field_name": wrapperFieldName,
+		logAttrKeySourceFieldname: wrapperFieldName,
 	})
 
 	// Find target fields with matching xmlwrapper tags and map the source Items field to them
