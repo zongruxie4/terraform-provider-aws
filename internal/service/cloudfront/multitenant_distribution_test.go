@@ -183,6 +183,7 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 	})
 }
 
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46302
 func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponsePagePath(t *testing.T) {
 	t.Parallel()
 
@@ -205,8 +206,8 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.error_code", "404"),
-					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.response_code", ""),
-					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.response_page_path", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_code"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_page_path"),
 				),
 			},
 			{

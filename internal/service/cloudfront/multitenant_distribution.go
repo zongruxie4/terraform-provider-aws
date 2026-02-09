@@ -171,17 +171,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"response_code": schema.StringAttribute{
 							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 						"response_page_path": schema.StringAttribute{
 							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 				},
@@ -1158,8 +1150,8 @@ type cacheBehaviorModel struct {
 type customErrorResponseModel struct {
 	ErrorCachingMinTtl types.Int64  `tfsdk:"error_caching_min_ttl"`
 	ErrorCode          types.Int64  `tfsdk:"error_code"`
-	ResponseCode       types.String `tfsdk:"response_code"`
-	ResponsePagePath   types.String `tfsdk:"response_page_path"`
+	ResponseCode       types.String `tfsdk:"response_code" autoflex:",omitempty"`
+	ResponsePagePath   types.String `tfsdk:"response_page_path" autoflex:",omitempty"`
 }
 
 type restrictionsModel struct {
