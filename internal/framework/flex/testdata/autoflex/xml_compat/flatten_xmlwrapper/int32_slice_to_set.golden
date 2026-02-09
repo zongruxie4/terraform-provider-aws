@@ -19,12 +19,12 @@
     "@level": "trace",
     "@message": "Direct XML wrapper struct conversion",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.fieldname": "StatusCodes",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
-    "target_field": "StatusCodes",
-    "xmlwrapper_tag": "Items"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten"
   },
   {
     "@level": "trace",

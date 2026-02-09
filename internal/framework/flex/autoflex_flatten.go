@@ -120,8 +120,8 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					if toOpts.XMLWrapperField() != "" {
 						// Found xmlwrapper tag, handle direct XML wrapper conversion
 						tflog.SubsystemTrace(ctx, subsystemName, "Direct XML wrapper struct conversion", map[string]any{
-							"target_field":   toField.Name,
-							"xmlwrapper_tag": toOpts.XMLWrapperField(),
+							logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+							logAttrKeyTargetFieldname: toField.Name,
 						})
 						diags.Append(handleDirectXMLWrapperStruct(ctx, valFrom, valTo, typFrom, typTo, flexer)...)
 						return diags
