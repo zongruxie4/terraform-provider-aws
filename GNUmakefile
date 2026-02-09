@@ -891,8 +891,8 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-test-naming: ## Check test function naming conventions
-	@echo "Checking test naming conventions..."
+test-naming: ## Check test naming against Go conventions
+	@echo "Checking test naming against Go conventions..."
 	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
 	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
 	if [ "$$TOTAL" -eq 0 ]; then \
