@@ -6,12 +6,12 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
