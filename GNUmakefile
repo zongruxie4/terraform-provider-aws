@@ -896,7 +896,9 @@ test-naming: ## Check test function naming conventions
 	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
 	@echo "Starting in $$PWD"
 	@rg --version
-	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
+	@echo "Debug: Finding gen test files..."; \
+	rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>&1 | head -3; \
+	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' --glob '*_gen_test.go' 2>/dev/null | wc -l | xargs); \
 	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
