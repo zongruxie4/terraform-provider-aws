@@ -876,9 +876,21 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, re
 	if stateHasValue && !configHasValue {
 		// Removing `result_configuration`
 		result.RemoveEncryptionConfiguration = aws.Bool(true)
+		result.RemoveOutputLocation = aws.Bool(true)
 	} else if configHasValue {
-		encryptionConfigurations := config.GetAttr(names.AttrEncryptionConfiguration)
-		result.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration2(encryptionConfigurations)
+		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
+
+		stateEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, state)
+		configEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, config)
+		// encryptionConfigurations := config.GetAttr(names.AttrEncryptionConfiguration)
+		expandWorkGroupEncryptionConfigurationByDiff(stateEncryptionConfiguration, configEncryptionConfiguration, result)
+
+		outputLocation := config.GetAttr("output_location")
+		if outputLocation.IsNull() {
+			result.RemoveOutputLocation = aws.Bool(true)
+		} else {
+			result.OutputLocation = aws.String(outputLocation.AsString())
+		}
 	}
 }
 
@@ -1041,12 +1053,6 @@ func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurati
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
-	if v, ok := m["output_location"].(string); ok && v != "" {
-		resultConfigurationUpdates.OutputLocation = aws.String(v)
-	} else {
-		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
-	}
-
 	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
 	} else {
@@ -1082,27 +1088,30 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 	return &encryptionConfiguration
 }
 
-func expandWorkGroupEncryptionConfiguration2(l cty.Value) *types.EncryptionConfiguration {
-	if l.LengthInt() == 0 {
-		return nil
+func expandWorkGroupEncryptionConfigurationByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
+	stateHasValue := ctyHasValue(state)
+	configHasValue := ctyHasValue(config)
+
+	if stateHasValue && !configHasValue {
+		result.RemoveEncryptionConfiguration = aws.Bool(true)
+		return
 	}
 
-	val := l.Index(cty.NumberIntVal(0))
-	if val.IsNull() {
-		return nil
+	if !configHasValue {
+		return
 	}
 
 	encryptionConfiguration := types.EncryptionConfiguration{}
 
-	if foo := val.GetAttr("encryption_option"); !foo.IsNull() && foo.AsString() != "" {
-		encryptionConfiguration.EncryptionOption = types.EncryptionOption(foo.AsString())
+	if v := config.GetAttr("encryption_option"); !v.IsNull() && v.AsString() != "" {
+		encryptionConfiguration.EncryptionOption = types.EncryptionOption(v.AsString())
 	}
 
-	if foo := val.GetAttr(names.AttrKMSKeyARN); !foo.IsNull() && foo.AsString() != "" {
-		encryptionConfiguration.KmsKey = aws.String(foo.AsString())
+	if v := config.GetAttr(names.AttrKMSKeyARN); !v.IsNull() && v.AsString() != "" {
+		encryptionConfiguration.KmsKey = aws.String(v.AsString())
 	}
 
-	return &encryptionConfiguration
+	result.EncryptionConfiguration = &encryptionConfiguration
 }
 
 func expandWorkGroupManagedQueryResultsConfiguration(l []any) *types.ManagedQueryResultsConfiguration {
