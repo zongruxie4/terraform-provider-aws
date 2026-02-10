@@ -325,6 +325,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecs_task_definition.example
+  identity = {
+    arn = "arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123"
+  }
+}
+
+resource "aws_ecs_task_definition" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the ECS Task Definition.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Task Definitions using their ARNs. For example:
 
 ```terraform
