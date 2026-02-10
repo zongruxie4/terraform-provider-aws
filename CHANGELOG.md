@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_ecr_repository` ([#46344](https://github.com/hashicorp/terraform-provider-aws/issues/46344))
 * **New List Resource:** `aws_lambda_permission` ([#46341](https://github.com/hashicorp/terraform-provider-aws/issues/46341))
+* **New List Resource:** `aws_route` ([#46370](https://github.com/hashicorp/terraform-provider-aws/issues/46370))
 * **New List Resource:** `aws_route53_resolver_rule_association` ([#46349](https://github.com/hashicorp/terraform-provider-aws/issues/46349))
 * **New List Resource:** `aws_route_table` ([#46337](https://github.com/hashicorp/terraform-provider-aws/issues/46337))
 * **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
@@ -14,6 +15,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_quicksight_data_set: Support `use_as` property to create special RLS rules dataset ([#42687](https://github.com/hashicorp/terraform-provider-aws/issues/42687))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_multitenant_distribution: Fix the "inconsistent result" error when `custom_error_response` is configured and `custom_error_response.response_code` and `custom_error_response.response_page_path` are omitted ([#46375](https://github.com/hashicorp/terraform-provider-aws/issues/46375))
 
 ## 6.31.0 (February 4, 2026)
 
