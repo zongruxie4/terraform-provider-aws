@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// / @FrameworkListResource("aws_s3_directory_bucket")
+// @FrameworkListResource("aws_s3_directory_bucket")
 func newDirectoryBucketResourceAsListResource() list.ListResourceWithConfigure {
 	return &directoryBucketListResource{}
 }
