@@ -3351,7 +3351,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	}
 
 	// Set secondary network interfaces
-	if instance.SecondaryInterfaces != nil && len(instance.SecondaryInterfaces) > 0 {
+	if len(instance.SecondaryInterfaces) > 0 {
 		if err := rd.Set("secondary_network_interface", flattenSecondaryNetworkInterfaces(instance.SecondaryInterfaces)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting secondary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
 		}
@@ -4169,7 +4169,6 @@ func expandSecondaryNetworkInterfaces(tfList []any) []awstypes.InstanceSecondary
 
 // flattenSecondaryNetworkInterfaces flattens secondary network interface specifications
 func flattenSecondaryNetworkInterfaces(apiObjects []awstypes.InstanceSecondaryInterface) []any {
-
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -4177,7 +4176,6 @@ func flattenSecondaryNetworkInterfaces(apiObjects []awstypes.InstanceSecondaryIn
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-
 		tfMap := map[string]any{}
 
 		// Fields from the request that are preserved

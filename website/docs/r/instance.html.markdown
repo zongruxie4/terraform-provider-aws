@@ -430,7 +430,6 @@ Each `secondary_network_interface` block supports the following:
 * `private_ip_address_count` - (Optional) Number of private IP addresses to assign to the network interface. Defaults to `1`. Forces replacement.
 * `private_ip_addresses` - (Optional) List of private IP addresses to assign to the network interface. If not specified, AWS will automatically assign IP addresses based on `private_ip_address_count`. Forces replacement.
 
-
 ### Private DNS Name Options
 
 The `private_dns_name_options` block supports the following:

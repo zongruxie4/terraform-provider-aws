@@ -3279,7 +3279,7 @@ func sweepSecondaryNetworks(ctx context.Context, client *conns.AWSClient) ([]swe
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("error listing EC2 Secondary Networks for %s: %w", client.Region, err)
+			return nil, fmt.Errorf("error listing EC2 Secondary Networks: %w", err)
 		}
 
 		for _, v := range page.SecondaryNetworks {
@@ -3301,7 +3301,7 @@ func sweepSecondarySubnets(ctx context.Context, client *conns.AWSClient) ([]swee
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("error listing EC2 Secondary Subnets for %s: %w", client.Region, err)
+			return nil, fmt.Errorf("error listing EC2 Secondary Subnets: %w", err)
 		}
 
 		for _, v := range page.SecondarySubnets {

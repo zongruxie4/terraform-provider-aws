@@ -309,7 +309,7 @@ func findSecondaryNetworkResourceByID(ctx context.Context, conn *ec2.Client, id 
 }
 
 func statusSecondaryNetworkResource(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSecondaryNetworkResourceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -326,23 +326,6 @@ func statusSecondaryNetworkResource(ctx context.Context, conn *ec2.Client, id st
 }
 
 func waitSecondaryNetworkResourceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{SecondaryNetworkStateCreateInProgress},
-		Target:  []string{SecondaryNetworkStateCreateComplete},
-		Refresh: statusSecondaryNetworkResource(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondaryNetwork); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSecondaryNetworkResourceUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{SecondaryNetworkStateCreateInProgress},
 		Target:  []string{SecondaryNetworkStateCreateComplete},

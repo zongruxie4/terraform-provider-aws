@@ -321,7 +321,7 @@ func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (
 }
 
 func statusSecondarySubnet(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSecondarySubnetByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -337,23 +337,6 @@ func statusSecondarySubnet(ctx context.Context, conn *ec2.Client, id string) sdk
 }
 
 func waitSecondarySubnetCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SecondarySubnetStateCreateInProgress),
-		Target:  enum.Slice(awstypes.SecondarySubnetStateCreateComplete),
-		Refresh: statusSecondarySubnet(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSecondarySubnetUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SecondarySubnetStateCreateInProgress),
 		Target:  enum.Slice(awstypes.SecondarySubnetStateCreateComplete),
