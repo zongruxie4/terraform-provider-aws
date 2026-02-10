@@ -12,10 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
@@ -744,6 +748,87 @@ func TestAccAthenaWorkGroup_Result_outputLocationUpdate_removeEncryption(t *test
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ResultConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"result_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"acl_configuration":               knownvalue.ListExact([]knownvalue.Check{}),
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{}),
+									"output_location":                 knownvalue.StringExact(""),
+									"expected_bucket_owner":           knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("result_configuration").AtSliceIndex(0).AtMapKey("expected_bucket_owner"),
+						"data.aws_caller_identity.current", tfjsonpath.New(names.AttrAccountID),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner_alternateAccount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"result_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"acl_configuration":               knownvalue.ListExact([]knownvalue.Check{}),
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{}),
+									"output_location":                 knownvalue.StringExact(""),
+									"expected_bucket_owner":           knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("result_configuration").AtSliceIndex(0).AtMapKey("expected_bucket_owner"),
+						"data.aws_caller_identity.alternate", tfjsonpath.New(names.AttrAccountID),
+						compare.ValuesSame(),
+					),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1853,6 +1938,42 @@ resource "aws_kms_key" "test" {
   enable_key_rotation     = true
 }
 `, rName, encryptionOption, outputLocation)
+}
+
+func testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      expected_bucket_owner = data.aws_caller_identity.current.account_id
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName)
+}
+
+func testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner_alternateAccount(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      expected_bucket_owner = data.aws_caller_identity.alternate.account_id
+    }
+  }
+}
+
+data "aws_caller_identity" "alternate" {
+  provider = awsalternate
+}
+`, rName))
 }
 
 func testAccWorkGroupConfig_state(rName, state string) string {
