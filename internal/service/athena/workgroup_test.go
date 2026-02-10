@@ -567,7 +567,7 @@ func TestAccAthenaWorkGroup_SwitchEncryptionManagement_fromResultConfigWithOutpu
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, rEncryption),
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, rEncryption, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1729,7 +1729,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, encryptionOption)
 }
 
-func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, encryptionOption string) string {
+func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, encryptionOption, outputLocation string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -1746,7 +1746,7 @@ resource "aws_athena_workgroup" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
+  bucket        = %[3]q
   force_destroy = true
 }
 
@@ -1755,7 +1755,7 @@ resource "aws_kms_key" "test" {
   description             = "Terraform Acceptance Testing"
   enable_key_rotation     = true
 }
-`, rName, encryptionOption)
+`, rName, encryptionOption, outputLocation)
 }
 
 func testAccWorkGroupConfig_state(rName, state string) string {
