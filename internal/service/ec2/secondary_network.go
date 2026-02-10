@@ -64,6 +64,7 @@ func (r *secondaryNetworkResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"network_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -73,7 +74,7 @@ func (r *secondaryNetworkResource) Schema(ctx context.Context, request resource.
 					stringvalidator.OneOf(string(awstypes.SecondaryNetworkTypeRdma)),
 				},
 			},
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -91,9 +92,8 @@ func (r *secondaryNetworkResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
-			names.AttrTags:                 tftags.TagsAttribute(),
-			names.AttrTagsAll:              tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -219,11 +219,11 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	input := &ec2.DeleteSecondaryNetworkInput{
+	input := ec2.DeleteSecondaryNetworkInput{
 		SecondaryNetworkId: fwflex.StringFromFramework(ctx, data.ID),
 	}
 
-	_, err = conn.DeleteSecondaryNetwork(ctx, input)
+	_, err = conn.DeleteSecondaryNetwork(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
 		return
@@ -282,11 +282,11 @@ func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.Des
 }
 
 func findSecondaryNetworkResourceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondaryNetwork, error) {
-	input := &ec2.DescribeSecondaryNetworksInput{
+	input := ec2.DescribeSecondaryNetworksInput{
 		SecondaryNetworkIds: []string{id},
 	}
 
-	output, err := findSecondaryNetworks(ctx, conn, input)
+	output, err := findSecondaryNetworks(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -37,8 +38,8 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/24"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`secondary-subnet/ss-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_network_id"),
@@ -93,11 +94,11 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecondarySubnetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSecondarySubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -106,20 +107,20 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecondarySubnetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSecondarySubnetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSecondarySubnetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSecondarySubnetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -144,7 +145,7 @@ func TestAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
 					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/24"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 				),
 			},
 			{

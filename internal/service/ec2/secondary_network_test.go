@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,8 +38,8 @@ func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "rdma"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`secondary-network/sn-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_network_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, tfec2.SecondaryNetworkStateCreateComplete),
 				),
@@ -89,11 +90,11 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSecondaryNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecondaryNetworkConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSecondaryNetworkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +103,20 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecondaryNetworkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSecondaryNetworkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSecondaryNetworkConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSecondaryNetworkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

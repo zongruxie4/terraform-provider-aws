@@ -57,7 +57,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
