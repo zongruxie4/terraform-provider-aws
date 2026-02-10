@@ -3714,18 +3714,18 @@ func TestAccEC2Instance_SecondaryNetworkInterface_multiple(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "secondary_network_interface.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_network_interface.*", map[string]string{
-						"network_card_index":       "1",
-						"device_index":             "0",
-						"interface_type":           "secondary",
-						"delete_on_termination":    "true",
-						"private_ip_address_count": "1",
+						"network_card_index":          "1",
+						"device_index":                "0",
+						"interface_type":              "secondary",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
+						"private_ip_address_count":    "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_network_interface.*", map[string]string{
-						"network_card_index":       "2",
-						"device_index":             "0",
-						"interface_type":           "secondary",
-						"delete_on_termination":    "true",
-						"private_ip_address_count": "2",
+						"network_card_index":          "2",
+						"device_index":                "0",
+						"interface_type":              "secondary",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
+						"private_ip_address_count":    "2",
 					}),
 				),
 			},
@@ -10471,7 +10471,7 @@ resource "aws_secondary_subnet" "test" {
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id   = aws_subnet.test.id
+  subnet_id = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
@@ -10480,10 +10480,10 @@ resource "aws_network_interface" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-linux-2023-ami.id
-  instance_type =  %[2]q
+  instance_type = %[2]q
   network_interface {
-	network_interface_id = aws_network_interface.test.id
-	device_index         = 0
+    network_interface_id = aws_network_interface.test.id
+    device_index         = 0
   }
   availability_zone = data.aws_subnet.selected.availability_zone
 
