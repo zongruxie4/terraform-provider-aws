@@ -10429,8 +10429,8 @@ resource "aws_instance" "test" {
 func testAccPreCheckSecondaryNetworkInterface(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSecondaryNetworksInput{}
-	_, err := conn.DescribeSecondaryNetworks(ctx, input)
+	input := ec2.DescribeSecondaryNetworksInput{}
+	_, err := conn.DescribeSecondaryNetworks(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
