@@ -212,7 +212,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	flattenDirectoryBucket(ctx, output, &data, &response.Diagnostics)
+	flattenDirectoryBucketResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -220,7 +220,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenDirectoryBucket(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel, diags *diag.Diagnostics) {
+func flattenDirectoryBucketResource(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel, diags *diag.Diagnostics) {
 	diags.Append(fwflex.Flatten(ctx, bucket, data, fwflex.WithFieldNamePrefix("Bucket"))...)
 	if diags.HasError() {
 		return
