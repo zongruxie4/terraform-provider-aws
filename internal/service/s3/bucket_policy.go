@@ -115,7 +115,10 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resourceBucketPolicyFlatten(ctx, policy, d)
+	err = resourceBucketPolicyFlatten(ctx, policy, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
