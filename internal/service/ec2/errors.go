@@ -92,6 +92,8 @@ const (
 	errCodeInvalidRouteServerPeerIdNotFound                        = "InvalidRouteServerPeerId.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
+	errCodeInvalidSecondaryNetworkIdNotFound                       = "InvalidSecondaryNetworkId.NotFound"
+	errCodeInvalidSecondarySubnetIdNotFound                        = "InvalidSecondarySubnetId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                          = "InvalidSecurityGroupID.NotFound"
 	errCodeInvalidSecurityGroupRuleIdNotFound                      = "InvalidSecurityGroupRuleId.NotFound"
 	errCodeInvalidServiceName                                      = "InvalidServiceName"
