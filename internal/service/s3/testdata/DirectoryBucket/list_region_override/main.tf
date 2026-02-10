@@ -12,9 +12,6 @@ resource "aws_s3_directory_bucket" "test" {
   }
 }
 
-data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
-
 # testAccDirectoryBucketConfig_baseAZ
 
 locals {
