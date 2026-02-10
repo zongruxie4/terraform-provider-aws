@@ -23,7 +23,7 @@ func TestAccRDSCertificate_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccCertificate_basic,
 		acctest.CtDisappears: testAccCertificate_disappears,
-		"Identity":           testAccRDSCertificate_IdentitySerial,
+		"Identity":           testAccRDSCertificate_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -63,7 +63,7 @@ func testAccCertificate_basic(t *testing.T) {
 	})
 }
 
-// func testAccRDSCertificate_Identity_Basic(t *testing.T) {
+// func testAccRDSCertificate_Identity_basic(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	var v types.Certificate
 // 	resourceName := "aws_rds_certificate.test"
@@ -123,7 +123,7 @@ func testAccCertificate_basic(t *testing.T) {
 // 	})
 // }
 
-// func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
+// func testAccRDSCertificate_Identity_regionOverride(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	resourceName := "aws_rds_certificate.test"
 

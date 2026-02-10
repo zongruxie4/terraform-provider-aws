@@ -24,25 +24,25 @@ func testAccGuardDutyIPSet_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccGuardDutyIPSet_tags,
-		"null":                                      testAccGuardDutyIPSet_tags_null,
-		"EmptyMap":                                  testAccGuardDutyIPSet_tags_EmptyMap,
-		"AddOnUpdate":                               testAccGuardDutyIPSet_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccGuardDutyIPSet_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccGuardDutyIPSet_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccGuardDutyIPSet_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccGuardDutyIPSet_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccGuardDutyIPSet_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccGuardDutyIPSet_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccGuardDutyIPSet_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccGuardDutyIPSet_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccGuardDutyIPSet_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccGuardDutyIPSet_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccGuardDutyIPSet_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccGuardDutyIPSet_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccGuardDutyIPSet_Tags_null,
+		"EmptyMap":                                  testAccGuardDutyIPSet_Tags_emptyMap,
+		"AddOnUpdate":                               testAccGuardDutyIPSet_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccGuardDutyIPSet_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccGuardDutyIPSet_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccGuardDutyIPSet_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccGuardDutyIPSet_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccGuardDutyIPSet_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccGuardDutyIPSet_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccGuardDutyIPSet_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccGuardDutyIPSet_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccGuardDutyIPSet_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccGuardDutyIPSet_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccGuardDutyIPSet_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccGuardDutyIPSet_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccGuardDutyIPSet_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccGuardDutyIPSet_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccGuardDutyIPSet_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccGuardDutyIPSet_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -236,7 +236,7 @@ func testAccGuardDutyIPSet_tags(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_null(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -309,7 +309,7 @@ func testAccGuardDutyIPSet_tags_null(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_EmptyMap(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -378,7 +378,7 @@ func testAccGuardDutyIPSet_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_AddOnUpdate(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -465,7 +465,7 @@ func testAccGuardDutyIPSet_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -560,7 +560,7 @@ func testAccGuardDutyIPSet_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -703,7 +703,7 @@ func testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -798,7 +798,7 @@ func testAccGuardDutyIPSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -985,7 +985,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1151,7 +1151,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1333,7 +1333,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1429,7 +1429,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1524,7 +1524,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1595,7 +1595,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1658,7 +1658,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1726,7 +1726,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 	})
 }
 
-func testAccGuardDutyIPSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1794,7 +1794,7 @@ func testAccGuardDutyIPSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 	})
 }
 
-func testAccGuardDutyIPSet_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1855,7 +1855,7 @@ func testAccGuardDutyIPSet_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -1958,7 +1958,7 @@ func testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -2051,7 +2051,7 @@ func testAccGuardDutyIPSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"
@@ -2219,7 +2219,7 @@ func testAccGuardDutyIPSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyIPSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccGuardDutyIPSet_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_guardduty_ipset.test"

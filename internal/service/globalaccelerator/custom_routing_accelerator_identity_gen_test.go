@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_Basic(t *testing.T) {
+func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_custom_routing_accelerator.test"
@@ -104,7 +104,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_Basic(t *testing.
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_ExistingResource(t *testing.T) {
+func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_custom_routing_accelerator.test"
@@ -159,7 +159,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_ExistingResource(
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccGlobalAcceleratorCustomRoutingAccelerator_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_globalaccelerator_custom_routing_accelerator.test"

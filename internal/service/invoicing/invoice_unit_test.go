@@ -32,7 +32,7 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
 		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
 		"regionOverride": testAccInvoicingInvoiceUnit_regionOverride,
-		"Identity":       testAccInvoicingInvoiceUnit_IdentitySerial,
+		"Identity":       testAccInvoicingInvoiceUnit_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

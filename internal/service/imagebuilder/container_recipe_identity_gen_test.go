@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -106,7 +106,7 @@ func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccImageBuilderContainerRecipe_Identity_RegionOverride(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -227,7 +227,7 @@ func TestAccImageBuilderContainerRecipe_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -282,7 +282,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) 
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"

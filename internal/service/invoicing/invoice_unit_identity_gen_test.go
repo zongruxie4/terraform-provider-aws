@@ -21,20 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccInvoicingInvoiceUnit_IdentitySerial(t *testing.T) {
+func testAccInvoicingInvoiceUnit_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccInvoicingInvoiceUnit_Identity_Basic,
-		"ExistingResource":          testAccInvoicingInvoiceUnit_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccInvoicingInvoiceUnit_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccInvoicingInvoiceUnit_Identity_RegionOverride,
+		acctest.CtBasic:             testAccInvoicingInvoiceUnit_Identity_basic,
+		"ExistingResource":          testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccInvoicingInvoiceUnit_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccInvoicingInvoiceUnit_Identity_Basic(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v invoicing.GetInvoiceUnitOutput
@@ -121,7 +121,7 @@ func testAccInvoicingInvoiceUnit_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccInvoicingInvoiceUnit_Identity_RegionOverride(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
@@ -191,7 +191,7 @@ func testAccInvoicingInvoiceUnit_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.28.0
-func testAccInvoicingInvoiceUnit_Identity_ExistingResource(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v invoicing.GetInvoiceUnitOutput
@@ -248,7 +248,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.28.0
-func testAccInvoicingInvoiceUnit_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v invoicing.GetInvoiceUnitOutput
