@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -576,13 +577,22 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				}
 			}
 
-			if d.HasChange("configuration.0.result_configuration.0.encryption_configuration") {
-				// encryption_option is required if result_configuration is set.
-				// we can remove the configuration if unset
-				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.ResultConfigurationUpdates == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration.EncryptionOption == "") {
-					input.ConfigurationUpdates.ResultConfigurationUpdates = &types.ResultConfigurationUpdates{}
-					input.ConfigurationUpdates.ResultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+			if d.HasChanges("configuration.0.result_configuration") {
+				path := cty.GetAttrPath("configuration").IndexInt(0).GetAttr("result_configuration").IndexInt(0)
+
+				rs := d.GetRawState()
+				stateResultConfiguration, _, err := ctyPathSafeApply(path, rs)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading state value: %s", err)
 				}
+
+				rc := d.GetRawConfig()
+				configResultConfiguration, _, err := ctyPathSafeApply(path, rc)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading config value: %s", err)
+				}
+
+				expandWorkGroupResultConfigurationUpdatesByDiff(stateResultConfiguration, configResultConfiguration, input.ConfigurationUpdates.ResultConfigurationUpdates)
 			}
 		}
 
@@ -831,6 +841,47 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 	return configurationUpdates
 }
 
+func ctyHasValue(value cty.Value) bool {
+	if !value.IsKnown() || value.IsNull() {
+		return false
+	}
+
+	if !value.Type().IsCollectionType() {
+		return true
+	}
+
+	return value.LengthInt() > 0
+}
+
+func ctyPathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
+	var err error
+
+	l := len(p)
+	for i, step := range p {
+		val, err = step.Apply(val)
+		if err != nil {
+			return cty.NilVal, false, fmt.Errorf("at step %d: %s", i, err)
+		}
+		if !ctyHasValue(val) && i < l-1 {
+			return val, false, nil
+		}
+	}
+	return val, true, nil
+}
+
+func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
+	stateHasValue := ctyHasValue(state)
+	configHasValue := ctyHasValue(config)
+
+	if stateHasValue && !configHasValue {
+		// Removing `result_configuration`
+		result.RemoveEncryptionConfiguration = aws.Bool(true)
+	} else if configHasValue {
+		encryptionConfigurations := config.GetAttr(names.AttrEncryptionConfiguration)
+		result.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration2(encryptionConfigurations)
+	}
+}
+
 func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -990,12 +1041,6 @@ func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurati
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
-	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
-		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]any))
-	} else {
-		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
-	}
-
 	if v, ok := m["output_location"].(string); ok && v != "" {
 		resultConfigurationUpdates.OutputLocation = aws.String(v)
 	} else {
@@ -1024,7 +1069,7 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 
 	m := l[0].(map[string]any)
 
-	encryptionConfiguration := &types.EncryptionConfiguration{}
+	encryptionConfiguration := types.EncryptionConfiguration{}
 
 	if v, ok := m["encryption_option"]; ok && v.(string) != "" {
 		encryptionConfiguration.EncryptionOption = types.EncryptionOption(v.(string))
@@ -1034,7 +1079,30 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 		encryptionConfiguration.KmsKey = aws.String(v.(string))
 	}
 
-	return encryptionConfiguration
+	return &encryptionConfiguration
+}
+
+func expandWorkGroupEncryptionConfiguration2(l cty.Value) *types.EncryptionConfiguration {
+	if l.LengthInt() == 0 {
+		return nil
+	}
+
+	val := l.Index(cty.NumberIntVal(0))
+	if val.IsNull() {
+		return nil
+	}
+
+	encryptionConfiguration := types.EncryptionConfiguration{}
+
+	if foo := val.GetAttr("encryption_option"); !foo.IsNull() && foo.AsString() != "" {
+		encryptionConfiguration.EncryptionOption = types.EncryptionOption(foo.AsString())
+	}
+
+	if foo := val.GetAttr(names.AttrKMSKeyARN); !foo.IsNull() && foo.AsString() != "" {
+		encryptionConfiguration.KmsKey = aws.String(foo.AsString())
+	}
+
+	return &encryptionConfiguration
 }
 
 func expandWorkGroupManagedQueryResultsConfiguration(l []any) *types.ManagedQueryResultsConfiguration {

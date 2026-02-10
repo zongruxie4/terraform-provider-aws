@@ -357,6 +357,49 @@ func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 	})
 }
 
+func TestAccAthenaWorkGroup_ResultEncryption_sseS3ToKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+	encryption := string(types.EncryptionOptionSseKms)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_configurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", string(types.EncryptionOptionSseS3)),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", encryption),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
 func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workgroup2 types.WorkGroup
@@ -396,6 +439,61 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption2),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ResultEncryption_kmsToSSES3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+	rEncryption := string(types.EncryptionOptionSseKms)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_configurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", string(types.EncryptionOptionSseS3)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -445,6 +543,69 @@ func TestAccAthenaWorkGroup_SwitchEncryptionManagement(t *testing.T) {
 					},
 				},
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_SwitchEncryptionManagement_fromResultConfigWithOutputLocation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+	rEncryption := string(types.EncryptionOptionSseKms)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rName+"/test/output"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
 		},
 	})
 }
@@ -486,6 +647,12 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1558,6 +1725,35 @@ resource "aws_athena_workgroup" "test" {
       }
     }
   }
+}
+`, rName, encryptionOption)
+}
+
+func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS_WithOutputLocation(rName, encryptionOption string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/test/output"
+      encryption_configuration {
+        encryption_option = %[2]q
+        kms_key_arn       = aws_kms_key.test.arn
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
 }
 `, rName, encryptionOption)
 }
