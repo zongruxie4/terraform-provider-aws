@@ -11,7 +11,7 @@ resource "aws_s3_directory_bucket" "test" {
   }
 
   tags = {
-    "key" = "value"
+    "key1" = "value1"
   }
 }
 

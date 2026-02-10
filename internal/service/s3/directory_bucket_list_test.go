@@ -115,10 +115,10 @@ func TestAccS3DirectoryBucket_List_IncludeResource(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+"-0"))),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(directoryBucketFullNameRegex(rName+"-0"))),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"key": knownvalue.StringExact("value"),
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"key": knownvalue.StringExact("value"),
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
 			},
@@ -143,10 +143,10 @@ func TestAccS3DirectoryBucket_List_IncludeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrLocation), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"key": knownvalue.StringExact("value"),
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"key": knownvalue.StringExact("value"),
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.NotNull()),
 					}),
