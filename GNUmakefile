@@ -891,48 +891,8 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-test-naming: ## Check test naming against Go conventions
-	@echo "Checking test naming against Go conventions..."
-	@command -v rg >/dev/null 2>&1 || { echo "Error: ripgrep (rg) is required but not installed. Install with: brew install ripgrep"; exit 1; }
-	@TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
-	if [ "$$TOTAL" -eq 0 ]; then \
-		echo "Error: No generated tests found. Check ripgrep command."; \
-		exit 1; \
-	fi; \
-	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
-	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:' | wc -l | xargs); \
-	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
-	echo "Generated tests (*_gen_test.go): $$CORRECT/$$TOTAL correct"; \
-	if [ "$$UPPERCASE" -gt 0 ]; then \
-		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:'; \
-		exit 1; \
-	fi; \
-	if [ "$$LOWERCASE" -gt 0 ]; then \
-		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_gen_test.go:'; \
-		exit 1; \
-	fi; \
-	TOTAL=$$(rg '^func [tT]estAcc[A-Z]' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
-	if [ "$$TOTAL" -eq 0 ]; then \
-		echo "Error: No list tests found. Check ripgrep command."; \
-		exit 1; \
-	fi; \
-	UPPERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
-	LOWERCASE=$$(rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:' | wc -l | xargs); \
-	CORRECT=$$((TOTAL - UPPERCASE - LOWERCASE)); \
-	echo "List tests (*_list_test.go): $$CORRECT/$$TOTAL correct"; \
-	if [ "$$UPPERCASE" -gt 0 ]; then \
-		echo "Error: Found $$UPPERCASE tests with uppercase final segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[A-Za-z][^_]*)*_[A-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:'; \
-		exit 1; \
-	fi; \
-	if [ "$$LOWERCASE" -gt 0 ]; then \
-		echo "Error: Found $$LOWERCASE tests with lowercase middle segment:"; \
-		rg '^func [tT]estAcc[A-Z][^_]*(_[a-zA-Z][^_]*)*(_[a-z][^_]*)+(_[a-zA-Z][^_]*)*_[a-zA-Z][^_(]*\(' -t go internal/ 2>/dev/null | grep '_list_test.go:'; \
-		exit 1; \
-	fi; \
-	echo "✓ All test names follow correct convention"
+test-naming: ## Check test naming conventions
+	@.ci/scripts/check-test-naming.sh
 
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
