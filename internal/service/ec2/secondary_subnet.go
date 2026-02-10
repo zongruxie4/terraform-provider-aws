@@ -76,7 +76,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("availability_zone")),
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrAvailabilityZone)),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -87,7 +87,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -139,15 +139,15 @@ func (r *secondarySubnetResource) Create(ctx context.Context, request resource.C
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateSecondarySubnetInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.CreateSecondarySubnetInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecondarySubnet)
 
-	output, err := conn.CreateSecondarySubnet(ctx, input)
+	output, err := conn.CreateSecondarySubnet(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Secondary Subnet", err.Error())
@@ -234,11 +234,11 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	input := &ec2.DeleteSecondarySubnetInput{
+	input := ec2.DeleteSecondarySubnetInput{
 		SecondarySubnetId: data.ID.ValueStringPointer(),
 	}
 
-	_, err = conn.DeleteSecondarySubnet(ctx, input)
+	_, err = conn.DeleteSecondarySubnet(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
 		return
@@ -294,11 +294,11 @@ func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 }
 
 func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondarySubnet, error) {
-	input := &ec2.DescribeSecondarySubnetsInput{
+	input := ec2.DescribeSecondarySubnetsInput{
 		SecondarySubnetIds: []string{id},
 	}
 
-	output, err := findSecondarySubnets(ctx, conn, input)
+	output, err := findSecondarySubnets(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
