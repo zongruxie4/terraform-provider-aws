@@ -824,6 +824,232 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 
+	guardrailLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockGuardrailConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"identifier": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^(([a-z0-9]+)|(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail/[a-z0-9]+))$`),
+							("Must be a lowercase string or a valid Bedrock guardrail ARN"),
+						),
+					},
+				},
+				"version": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^(([1-9][0-9]{0,7})|(DRAFT))$`),
+							("Must be a positive integer or the string 'DRAFT'."),
+						),
+					},
+				},
+			},
+		},
+	}
+
+	bedrockModelConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockModelSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"custom_prompt": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 4000),
+					},
+				},
+				"model_arn": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}::foundation-model\/[a-z0-9-]{1,63}[.]{1}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2}$`),
+							("ARN must match Bedrock foundation model ARN pattern"),
+						),
+					},
+				},
+				"trace_status": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.OneOf("ENABLED", "DISABLED"),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"guardrail": guardrailLNB,
+			},
+		},
+	}
+
+	exactResponseFieldsLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockKnowledgeStoreExactResponseFields](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"answer_field": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	bedrockKnowledgeStoreConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockKnowledgeStoreConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"bedrock_knowledge_base_arn": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 200),
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,40}:[0-9]{12}:knowledge-base\/[A-Za-z0-9]{10}$|^[A-Za-z0-9]{10}$`),
+							("Must be an ARN of the bedrock knowledge base"),
+						),
+					},
+				},
+				"exact_response": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"exact_response_fields": exactResponseFieldsLNB,
+			},
+		},
+	}
+
+	qnaKendraConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[QnAKendraConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"kendra_index": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(32, 2048),
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^arn:aws:kendra:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:index\/[a-zA-Z0-9][a-zA-Z0-9_-]*$`),
+							"Must be a valid Kendra index ARN",
+						),
+					},
+				},
+				"exact_response": schema.BoolAttribute{
+					Optional: true,
+				},
+				"query_filter_string": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 5000),
+					},
+				},
+				"query_filter_string_enabled": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	opensearchExactResponseFieldsLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[OpensearchExactResponseFields](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"answer_field": schema.StringAttribute{
+					Optional: true,
+				},
+				"question_field": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	opensearchConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[OpensearchConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"domain_endpoint": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^(http|https):\/\/+[^\s]+[\w]`),
+							"Must be a valid OpenSearch domain endpoint URL",
+						),
+					},
+				},
+				"index_name": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 255),
+						stringvalidator.RegexMatches(
+							regexache.MustCompile(`^(?![_-])[a-z0-9][a-z0-9_\-]{0,254}$`),
+							"Must be a valid OpenSearch index name",
+						),
+					},
+				},
+				"exact_response": schema.BoolAttribute{
+					Optional: true,
+				},
+				"include_fields": schema.ListAttribute{
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 5),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"exact_response_fields": opensearchExactResponseFieldsLNB,
+			},
+		},
+	}
+
+	dataSourceConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DataSourceConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"bedrock_knowledge_store_configuration": bedrockKnowledgeStoreConfigurationLNB,
+				"kendra_configuration":                  qnaKendraConfigurationLNB,
+				"opensearch_configuration":              opensearchConfigurationLNB,
+			},
+		},
+	}
+
+	qnaIntentConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[QNAIntentConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"bedrock_model_configuration": bedrockModelConfigurationLNB,
+				"data_source_configuration":   dataSourceConfigurationLNB,
+			},
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"bot_id": schema.StringAttribute{
@@ -888,6 +1114,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"output_context":           outputContextLNB,
 			"sample_utterance":         sampleUtteranceLNB,
 			"slot_priority":            slotPriorityLNB,
+			"qna_intent_configuration": qnaIntentConfigurationLNB,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -1494,6 +1721,58 @@ type DialogCodeHookSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
+type QNAIntentConfiguration struct {
+	BedrockModelConfiguration fwtypes.ListNestedObjectValueOf[BedrockModelSpecification] `tfsdk:"bedrock_model_configuration"`
+	dataSourceConfiguration   fwtypes.ListNestedObjectValueOf[DataSourceConfiguration]   `tfsdk:"data_source_configuration"`
+}
+
+type BedrockModelSpecification struct {
+	ModelArn     types.String                                                   `tfsdk:"model_arn"`
+	CustomPrompt types.String                                                   `tfsdk:"custom_prompt"`
+	Guardrail    fwtypes.ListNestedObjectValueOf[BedrockGuardrailConfiguration] `tfsdk:"guardrail"`
+	TraceStatus  types.String                                                   `tfsdk:"trace_status"`
+}
+
+type BedrockGuardrailConfiguration struct {
+	Identifier types.String `tfsdk:"identifier"`
+	Version    types.String `tfsdk:"version"`
+}
+
+type DataSourceConfiguration struct {
+	BedrockKnowledgeStoreConfiguration fwtypes.ListNestedObjectValueOf[BedrockKnowledgeStoreConfiguration] `tfsdk:"bedrock_knowledge_store_configuration"`
+	KendraConfiguration                fwtypes.ListNestedObjectValueOf[QnAKendraConfiguration]             `tfsdk:"kendra_configuration"`
+	OpensearchConfiguration            fwtypes.ListNestedObjectValueOf[OpensearchConfiguration]            `tfsdk:"opensearch_configuration"`
+}
+
+type QnAKendraConfiguration struct {
+	KendraIndex              types.String `tfsdk:"kendra_index"`
+	ExactResponse            types.Bool   `tfssdk:"exact_response"`
+	QueryFilterString        types.String `tfsdk:"query_filtering"`
+	QueryFilterStringEnabled types.Bool   `tfsdk:"query_filter_string_enabled"`
+}
+
+type OpensearchConfiguration struct {
+	DomainEndpoint      types.String                                                   `tfsdk:"domain_endpoint"`
+	IndexName           types.String                                                   `tfsdk:"index_name"`
+	ExactResponse       types.Bool                                                     `tfsdk:"exact_response"`
+	ExactResponseFields fwtypes.ListNestedObjectValueOf[OpensearchExactResponseFields] `tfsdk:"exact_response_fields"`
+	IncludeFields       fwtypes.ListOfString                                           `tfsdk:"include_fields"`
+}
+
+type OpensearchExactResponseFields struct {
+	AnswerField   types.String `tfsdk:"answer_field"`
+	QuestionField types.String `tfsdk:"question_field"`
+}
+type BedrockKnowledgeStoreConfiguration struct {
+	BedrockKnowledgeBaseArn types.String                                                              `tfsdk:"bedrock_knowledge_base_arn"`
+	exactResponse           types.Bool                                                                `tfsdk:"exact_response"`
+	exactResponseFields     fwtypes.ListNestedObjectValueOf[BedrockKnowledgeStoreExactResponseFields] `tfsdk:"exact_response_fields"`
+}
+
+type BedrockKnowledgeStoreExactResponseFields struct {
+	AnswerField types.String `tfsdk:"answer_field"`
+}
+
 type IntentResourceModel struct {
 	framework.WithRegionModel
 	BotID                  types.String                                                 `tfsdk:"bot_id"`
@@ -1517,4 +1796,5 @@ type IntentResourceModel struct {
 	SampleUtterance        fwtypes.ListNestedObjectValueOf[SampleUtterance]             `tfsdk:"sample_utterance"`
 	SlotPriority           fwtypes.ListNestedObjectValueOf[SlotPriority]                `tfsdk:"slot_priority"`
 	Timeouts               timeouts.Value                                               `tfsdk:"timeouts"`
+	QNAIntentConfiguration fwtypes.ListNestedObjectValueOf[QNAIntentConfiguration]      `tfsdk:"qna_intent_configuration"`
 }
