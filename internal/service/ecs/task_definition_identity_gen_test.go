@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECSTaskDefinition_Identity_Basic(t *testing.T) {
+func TestAccECSTaskDefinition_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TaskDefinition
@@ -116,7 +116,7 @@ func TestAccECSTaskDefinition_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_Identity_RegionOverride(t *testing.T) {
+func TestAccECSTaskDefinition_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecs_task_definition.test"
@@ -208,7 +208,7 @@ func TestAccECSTaskDefinition_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.31.0
-func TestAccECSTaskDefinition_Identity_ExistingResource(t *testing.T) {
+func TestAccECSTaskDefinition_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TaskDefinition
@@ -266,7 +266,7 @@ func TestAccECSTaskDefinition_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.31.0
-func TestAccECSTaskDefinition_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccECSTaskDefinition_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TaskDefinition
