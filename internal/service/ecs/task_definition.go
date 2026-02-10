@@ -43,7 +43,10 @@ import (
 // @IdentityAttribute("arn")
 // @CustomImport
 // @Testing(preIdentityVersion="v6.31.0")
+// @Testing(idAttrDuplicates="family")
+// @Testing(importStateIdFunc=testAccTaskDefinitionImportStateIdFunc)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.TaskDefinition")
+// @Testing(importIgnore="skip_destroy;track_latest", plannableImportAction="NoOp")
 func resourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
