@@ -807,10 +807,9 @@ func resourceInstance() *schema.Resource {
 				},
 			},
 			"secondary_network_interface": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"primary_network_interface"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"secondary_subnet_id": {
