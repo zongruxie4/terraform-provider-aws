@@ -876,20 +876,25 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, re
 	if stateHasValue && !configHasValue {
 		// Removing `result_configuration`
 		result.RemoveEncryptionConfiguration = aws.Bool(true)
+		result.RemoveExpectedBucketOwner = aws.Bool(true)
 		result.RemoveOutputLocation = aws.Bool(true)
 	} else if configHasValue {
 		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
 
 		stateEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, state)
 		configEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, config)
-		// encryptionConfigurations := config.GetAttr(names.AttrEncryptionConfiguration)
 		expandWorkGroupEncryptionConfigurationByDiff(stateEncryptionConfiguration, configEncryptionConfiguration, result)
 
-		outputLocation := config.GetAttr("output_location")
-		if outputLocation.IsNull() {
+		if outputLocation := config.GetAttr("output_location"); outputLocation.IsNull() {
 			result.RemoveOutputLocation = aws.Bool(true)
 		} else {
 			result.OutputLocation = aws.String(outputLocation.AsString())
+		}
+
+		if expectedBucketOwner := config.GetAttr(names.AttrExpectedBucketOwner); expectedBucketOwner.IsNull() {
+			result.RemoveExpectedBucketOwner = aws.Bool(true)
+		} else {
+			result.ExpectedBucketOwner = aws.String(expectedBucketOwner.AsString())
 		}
 	}
 }
@@ -1052,12 +1057,6 @@ func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurati
 	m := l[0].(map[string]any)
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
-
-	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
-		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
-	} else {
-		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
-	}
 
 	if v, ok := m["acl_configuration"]; ok {
 		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
