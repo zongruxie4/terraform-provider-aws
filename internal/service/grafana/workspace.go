@@ -357,7 +357,12 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		if d.HasChange("network_access_control") {
 			if v, ok := d.Get("network_access_control").([]any); ok {
 				if len(v) > 0 {
-					input.NetworkAccessControl = expandNetworkAccessControl(v)
+					config := expandNetworkAccessControl(v)
+					if config == nil {
+						input.RemoveNetworkAccessConfiguration = aws.Bool(true)
+					} else {
+						input.NetworkAccessControl = config
+					}
 				} else {
 					input.RemoveNetworkAccessConfiguration = aws.Bool(true)
 				}
@@ -595,11 +600,19 @@ func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfigurati
 		apiObject.VpceIds = flex.ExpandStringValueSet(v)
 	}
 
+	if len(apiObject.PrefixListIds) == 0 && len(apiObject.VpceIds) == 0 {
+		return nil
+	}
+
 	return &apiObject
 }
 
 func flattenNetworkAccessControl(apiObject *awstypes.NetworkAccessConfiguration) []any {
 	if apiObject == nil {
+		return []any{}
+	}
+
+	if len(apiObject.PrefixListIds) == 0 && len(apiObject.VpceIds) == 0 {
 		return []any{}
 	}
 
