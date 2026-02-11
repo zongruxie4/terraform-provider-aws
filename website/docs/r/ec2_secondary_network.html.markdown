@@ -62,6 +62,32 @@ The following attributes are exported in the `ipv4_cidr_block_associations` bloc
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ec2_secondary_network.example
+  identity = {
+    id = "sn-0123456789abcdef0"
+  }
+}
+
+resource "aws_ec2_secondary_network" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the secondary network.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Secondary Networks using the `id`. For example:
 
 ```terraform
