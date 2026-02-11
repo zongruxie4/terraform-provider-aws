@@ -831,7 +831,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockGuardrailConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"identifier": schema.StringAttribute{
+				names.AttrIdentifier: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
@@ -841,7 +841,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						),
 					},
 				},
-				"version": schema.StringAttribute{
+				names.AttrVersion: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(
