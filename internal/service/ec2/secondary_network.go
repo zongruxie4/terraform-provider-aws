@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_secondary_network", name="SecondaryNetwork")
+// @FrameworkResource("aws_ec2_secondary_network", name="SecondaryNetwork")
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)

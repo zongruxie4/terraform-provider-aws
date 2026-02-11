@@ -17,7 +17,7 @@ A secondary subnet is a subnet within a secondary network that provides high-per
 ### Basic Usage
 
 ```terraform
-resource "aws_secondary_network" "example" {
+resource "aws_ec2_secondary_network" "example" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -27,7 +27,7 @@ resource "aws_secondary_network" "example" {
 }
 
 resource "aws_secondary_subnet" "example" {
-  secondary_network_id = aws_secondary_network.example.id
+  secondary_network_id = aws_ec2_secondary_network.example.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone    = "us-west-2a"
 
@@ -49,7 +49,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_secondary_network" "example" {
+resource "aws_ec2_secondary_network" "example" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -59,7 +59,7 @@ resource "aws_secondary_network" "example" {
 }
 
 resource "aws_secondary_subnet" "example" {
-  secondary_network_id = aws_secondary_network.example.id
+  secondary_network_id = aws_ec2_secondary_network.example.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
 

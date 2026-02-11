@@ -10451,7 +10451,7 @@ data "aws_subnet" "selected" {
   id = aws_subnet.test.id
 }
 
-resource "aws_secondary_network" "test" {
+resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -10461,7 +10461,7 @@ resource "aws_secondary_network" "test" {
 }
 
 resource "aws_secondary_subnet" "test" {
-  secondary_network_id = aws_secondary_network.test.id
+  secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone    = data.aws_subnet.selected.availability_zone
 

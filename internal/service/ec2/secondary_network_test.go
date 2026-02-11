@@ -23,7 +23,7 @@ import (
 func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondaryNetwork awstypes.SecondaryNetwork
-	resourceName := "aws_secondary_network.test"
+	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 func TestAccEC2SecondaryNetwork_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondaryNetwork awstypes.SecondaryNetwork
-	resourceName := "aws_secondary_network.test"
+	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func TestAccEC2SecondaryNetwork_disappears(t *testing.T) {
 func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondaryNetwork awstypes.SecondaryNetwork
-	resourceName := "aws_secondary_network.test"
+	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -149,7 +149,7 @@ func testAccCheckSecondaryNetworkDestroy(ctx context.Context) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_secondary_network" {
+			if rs.Type != "aws_ec2_secondary_network" {
 				continue
 			}
 
@@ -172,7 +172,7 @@ func testAccCheckSecondaryNetworkDestroy(ctx context.Context) resource.TestCheck
 
 func testAccSecondaryNetworkConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_secondary_network" "test" {
+resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -185,7 +185,7 @@ resource "aws_secondary_network" "test" {
 
 func testAccSecondaryNetworkConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_secondary_network" "test" {
+resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -198,7 +198,7 @@ resource "aws_secondary_network" "test" {
 
 func testAccSecondaryNetworkConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_secondary_network" "test" {
+resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 

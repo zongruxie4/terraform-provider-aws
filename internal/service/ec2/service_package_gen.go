@@ -133,6 +133,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newSecondaryNetworkResource,
+			TypeName: "aws_ec2_secondary_network",
+			Name:     "SecondaryNetwork",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTransitGatewayDefaultRouteTableAssociationResource,
 			TypeName: "aws_ec2_transit_gateway_default_route_table_association",
 			Name:     "Transit Gateway Default Route Table Association",
@@ -161,6 +174,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_network_interface_permission",
 			Name:     "Network Interface Permission",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newSecondarySubnetResource,
+			TypeName: "aws_secondary_subnet",
+			Name:     "SecondarySubnet",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,
@@ -295,32 +321,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "vpn_concentrator_id",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  newSecondaryNetworkResource,
-			TypeName: "aws_secondary_network",
-			Name:     "SecondaryNetwork",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-			},
-		},
-		{
-			Factory:  newSecondarySubnetResource,
-			TypeName: "aws_secondary_subnet",
-			Name:     "SecondarySubnet",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-			},
 		},
 	}
 }

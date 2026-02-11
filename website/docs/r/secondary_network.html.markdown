@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_secondary_network"
+page_title: "AWS: aws_ec2_secondary_network"
 description: |-
   Provides an EC2 Secondary Network resource.
 ---
 
-# Resource: aws_secondary_network
+# Resource: aws_ec2_secondary_network
 
 Provides an EC2 Secondary Network resource for RDMA networking.
 
@@ -15,7 +15,7 @@ Secondary networks are specialized network resources that enable high-performanc
 ## Example Usage
 
 ```terraform
-resource "aws_secondary_network" "example" {
+resource "aws_ec2_secondary_network" "example" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -65,7 +65,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_secondary_network.example
+  to = aws_ec2_secondary_network.example
   id = "sn-0123456789abcdef0"
 }
 ```
@@ -73,5 +73,5 @@ import {
 Using `terraform import`, import EC2 Secondary Networks using the `id`. For example:
 
 ```console
-% terraform import aws_secondary_network.example sn-0123456789abcdef0
+% terraform import aws_ec2_secondary_network.example sn-0123456789abcdef0
 ```

@@ -234,7 +234,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_secondary_network" "test" {
+resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
 
@@ -250,7 +250,7 @@ func testAccSecondarySubnetConfig_basic(rName string) string {
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_secondary_subnet" "test" {
-  secondary_network_id = aws_secondary_network.test.id
+  secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
 
@@ -266,7 +266,7 @@ func testAccSecondarySubnetConfig_tags1(rName, tagKey1, tagValue1 string) string
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_secondary_subnet" "test" {
-  secondary_network_id = aws_secondary_network.test.id
+  secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
 
@@ -282,7 +282,7 @@ func testAccSecondarySubnetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagV
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_secondary_subnet" "test" {
-  secondary_network_id = aws_secondary_network.test.id
+  secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
 
@@ -299,7 +299,7 @@ func testAccSecondarySubnetConfig_availabilityZoneID(rName string) string {
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_secondary_subnet" "test" {
-  secondary_network_id = aws_secondary_network.test.id
+  secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
 
