@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 )
 
-// PathSafeApply is equivalent to cty.Path.Apply but does not return an error when one of the steps has a null or unkown value.
+// PathSafeApply is equivalent to cty.Path.Apply but does not return an error when one of the steps has a null or unknown value.
 // Instead, it returns the null value and a boolean indicating whether the path was fully applied or not.
 // Other conditions, such as invalid types or non-existent indexes, will still return an error.
 func PathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
