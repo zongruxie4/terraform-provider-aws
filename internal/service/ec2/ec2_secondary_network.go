@@ -131,19 +131,18 @@ func (r *secondaryNetworkResource) Create(ctx context.Context, request resource.
 	}
 	data.ID = fwflex.StringToFramework(ctx, output.SecondaryNetwork.SecondaryNetworkId)
 
-	secondaryNetwork, err := waitSecondaryNetworkResourceCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	waitOutput, err := waitSecondaryNetworkResourceCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Network (%s) create", data.ID.ValueString()), err.Error())
 		return
 	}
 
-	// Set computed values from the SecondaryNetwork
-	response.Diagnostics.Append(fwflex.Flatten(ctx, secondaryNetwork, &data, fwflex.WithFieldNamePrefix("SecondaryNetwork"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, waitOutput, &data, fwflex.WithFieldNamePrefix("SecondaryNetwork"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	setTagsOut(ctx, secondaryNetwork.Tags)
+	setTagsOut(ctx, waitOutput.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }

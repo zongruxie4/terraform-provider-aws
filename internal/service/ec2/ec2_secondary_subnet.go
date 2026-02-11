@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -199,7 +200,7 @@ func (r *secondarySubnetResource) Read(ctx context.Context, request resource.Rea
 
 	// Try to get IPv4 CIDR block from associations if available
 	if len(output.Ipv4CidrBlockAssociations) > 0 && output.Ipv4CidrBlockAssociations[0].CidrBlock != nil {
-		data.IPv4CidrBlock = types.StringValue(*output.Ipv4CidrBlockAssociations[0].CidrBlock)
+		data.IPv4CidrBlock = types.StringValue(aws.ToString(output.Ipv4CidrBlockAssociations[0].CidrBlock))
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -218,7 +219,7 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	id := data.ID.ValueString()
 
 	input := ec2.DeleteSecondarySubnetInput{
-		SecondarySubnetId: data.ID.ValueStringPointer(),
+		SecondarySubnetId: aws.String(id),
 	}
 
 	_, err := conn.DeleteSecondarySubnet(ctx, &input)
