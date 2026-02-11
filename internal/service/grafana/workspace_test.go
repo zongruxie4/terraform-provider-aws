@@ -442,7 +442,7 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
 				),
 			},
@@ -480,7 +480,7 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_networkAccessEmpty(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_access_control.#", "0"),
 				),
 			},
