@@ -73,10 +73,10 @@ resource "aws_ec2_secondary_subnet" "example" {
 
 This resource supports the following arguments:
 
-* `secondary_network_id` - (Required) The ID of the secondary network in which to create the secondary subnet.
-* `ipv4_cidr_block` - (Required) The IPv4 CIDR block for the secondary subnet. The CIDR block size must be between /12 and /28.
-* `availability_zone` - (Optional) The Availability Zone for the secondary subnet. Cannot be specified with `availability_zone_id`.
-* `availability_zone_id` - (Optional) The ID of the Availability Zone for the secondary subnet. This option is preferred over `availability_zone` as it provides a consistent identifier across AWS accounts. Cannot be specified with `availability_zone`.
+* `secondary_network_id` - (Required) ID of the secondary network in which to create the secondary subnet.
+* `ipv4_cidr_block` - (Required) IPv4 CIDR block for the secondary subnet. The CIDR block size must be between `/12` and `/28`.
+* `availability_zone` - (Optional) Availability Zone for the secondary subnet. Cannot be specified with `availability_zone_id`.
+* `availability_zone_id` - (Optional) ID of the Availability Zone for the secondary subnet. This option is preferred over `availability_zone` as it provides a consistent identifier across AWS accounts. Cannot be specified with `availability_zone`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -84,20 +84,20 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the secondary subnet.
-* `id` - The ID of the secondary subnet.
+* `arn` - ARN of the secondary subnet.
+* `id` - ID of the secondary subnet.
 * `ipv4_cidr_block_associations` - A list of IPv4 CIDR block associations for the secondary network.
-* `owner_id` - The ID of the AWS account that owns the secondary subnet.
-* `secondary_network_type` - The type of the secondary network (e.g., `rdma`).
-* `secondary_subnet_id` - The ID of the secondary subnet.
-* `state` - The state of the secondary subnet.
+* `owner_id` - ID of the AWS account that owns the secondary subnet.
+* `secondary_network_type` - Type of the secondary network (e.g., `rdma`).
+* `secondary_subnet_id` - ID of the secondary subnet.
+* `state` - State of the secondary subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 The following attributes are exported in the `ipv4_cidr_block_associations` block:
 
-* `association_id` - The association ID for the IPv4 CIDR block.
-* `cidr_block` - The IPv4 CIDR block.
-* `state` - The state of the IPv4 CIDR block association.
+* `association_id` - Association ID for the IPv4 CIDR block.
+* `cidr_block` - IPv4 CIDR block.
+* `state` - State of the IPv4 CIDR block association.
 
 ## Timeouts
 
