@@ -942,7 +942,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(32, 2048),
 						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^arn:aws:kendra:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:index\/[a-zA-Z0-9][a-zA-Z0-9_-]*$`),
+							regexache.MustCompile(`^arn:aws(-[^:]+)?:kendra:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:index\/[a-zA-Z0-9][a-zA-Z0-9_-]*$`),
 							"Must be a valid Kendra index ARN",
 						),
 					},
