@@ -71,7 +71,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultConfiguration_aclConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -83,6 +83,39 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "athena", "workgroup/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_configurationResultConfigurationACL_remove(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "athena", "workgroup/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
 			{
 				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -2080,6 +2113,19 @@ resource "aws_athena_workgroup" "test" {
       acl_configuration {
         s3_acl_option = "BUCKET_OWNER_FULL_CONTROL"
       }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_configurationResultConfigurationACL_remove(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
     }
   }
 }

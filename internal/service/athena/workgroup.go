@@ -879,8 +879,12 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, re
 		result.RemoveExpectedBucketOwner = aws.Bool(true)
 		result.RemoveOutputLocation = aws.Bool(true)
 	} else if configHasValue {
-		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
+		aclPath := cty.GetAttrPath("acl_configuration").IndexInt(0)
+		stateACLConfiguration, _, _ := ctyPathSafeApply(aclPath, state)
+		configACLConfiguration, _, _ := ctyPathSafeApply(aclPath, config)
+		expandWorkGroupACLConfigurationByDiff(stateACLConfiguration, configACLConfiguration, result)
 
+		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
 		stateEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, state)
 		configEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, config)
 		expandWorkGroupEncryptionConfigurationByDiff(stateEncryptionConfiguration, configEncryptionConfiguration, result)
@@ -1054,15 +1058,7 @@ func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurati
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
-
-	if v, ok := m["acl_configuration"]; ok {
-		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
-	} else {
-		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
-	}
 
 	return resultConfigurationUpdates
 }
@@ -1085,6 +1081,28 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 	}
 
 	return &encryptionConfiguration
+}
+
+func expandWorkGroupACLConfigurationByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
+	stateHasValue := ctyHasValue(state)
+	configHasValue := ctyHasValue(config)
+
+	if stateHasValue && !configHasValue {
+		result.RemoveAclConfiguration = aws.Bool(true)
+		return
+	}
+
+	if !configHasValue {
+		return
+	}
+
+	aclConfiguration := types.AclConfiguration{}
+
+	if v := config.GetAttr("s3_acl_option"); !v.IsNull() && v.AsString() != "" {
+		aclConfiguration.S3AclOption = types.S3AclOption(v.AsString())
+	}
+
+	result.AclConfiguration = &aclConfiguration
 }
 
 func expandWorkGroupEncryptionConfigurationByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
