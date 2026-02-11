@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_odb_network_peering_connections: Fix plan phase failure of listing.
+data-source/aws_odb_network_peering_connections: Fix plan phase failure of listing.
 ```
