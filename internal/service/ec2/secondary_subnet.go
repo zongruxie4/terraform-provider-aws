@@ -37,6 +37,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(tagsTest=false)
 func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondarySubnetResource{}
 
