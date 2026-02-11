@@ -592,7 +592,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					return sdkdiag.AppendErrorf(diags, "reading config value: %s", err)
 				}
 
-				expandWorkGroupResultConfigurationUpdatesByDiff(stateResultConfiguration, configResultConfiguration, input.ConfigurationUpdates.ResultConfigurationUpdates)
+				input.ConfigurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdatesByDiff(stateResultConfiguration, configResultConfiguration)
 			}
 		}
 
@@ -825,10 +825,6 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
-	if v, ok := m["result_configuration"]; ok {
-		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]any))
-	}
-
 	// Depending on other configurations, requester_pays_enabled
 	// must not be specified, even when set to false.
 	// Therefore, the value is set only when it is true to avoid an API error.
@@ -869,16 +865,22 @@ func ctyPathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
 	return val, true, nil
 }
 
-func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
+func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *types.ResultConfigurationUpdates {
 	stateHasValue := ctyHasValue(state)
 	configHasValue := ctyHasValue(config)
 
 	if stateHasValue && !configHasValue {
 		// Removing `result_configuration`
-		result.RemoveEncryptionConfiguration = aws.Bool(true)
-		result.RemoveExpectedBucketOwner = aws.Bool(true)
-		result.RemoveOutputLocation = aws.Bool(true)
+		// Set all `Remove` fields for simplcity
+		return &types.ResultConfigurationUpdates{
+			RemoveAclConfiguration:        aws.Bool(true),
+			RemoveEncryptionConfiguration: aws.Bool(true),
+			RemoveExpectedBucketOwner:     aws.Bool(true),
+			RemoveOutputLocation:          aws.Bool(true),
+		}
 	} else if configHasValue {
+		result := &types.ResultConfigurationUpdates{}
+
 		aclPath := cty.GetAttrPath("acl_configuration").IndexInt(0)
 		stateACLConfiguration, _, _ := ctyPathSafeApply(aclPath, state)
 		configACLConfiguration, _, _ := ctyPathSafeApply(aclPath, config)
@@ -900,7 +902,11 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value, re
 		} else {
 			result.ExpectedBucketOwner = aws.String(expectedBucketOwner.AsString())
 		}
+
+		return result
 	}
+
+	return nil
 }
 
 func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterConfiguration {
@@ -1051,16 +1057,6 @@ func expandWorkGroupMonitoringConfigurationS3LoggingConfiguration(l []any) *type
 		s3LoggingConfiguration.LogLocation = aws.String(v)
 	}
 	return s3LoggingConfiguration
-}
-
-func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurationUpdates {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
-
-	return resultConfigurationUpdates
 }
 
 func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfiguration {
