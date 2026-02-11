@@ -141,36 +141,32 @@ func (r *secondarySubnetResource) Create(ctx context.Context, request resource.C
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := ec2.CreateSecondarySubnetInput{}
+	var input ec2.CreateSecondarySubnetInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecondarySubnet)
 
 	output, err := conn.CreateSecondarySubnet(ctx, &input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Secondary Subnet", err.Error())
 		return
 	}
-
 	data.ID = types.StringValue(*output.SecondarySubnet.SecondarySubnetId)
 
-	secondarySubnet, err := waitSecondarySubnetCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	waitOutput, err := waitSecondarySubnetCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Subnet (%s) create", data.ID.ValueString()), err.Error())
 		return
 	}
 
-	// Set computed values from the SecondarySubnet
-	response.Diagnostics.Append(fwflex.Flatten(ctx, secondarySubnet, &data, fwflex.WithFieldNamePrefix("SecondarySubnet"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, waitOutput, &data, fwflex.WithFieldNamePrefix("SecondarySubnet"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	setTagsOut(ctx, secondarySubnet.Tags)
+	setTagsOut(ctx, waitOutput.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -183,22 +179,19 @@ func (r *secondarySubnetResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	conn := r.Meta().EC2Client(ctx)
-
 	id := data.ID.ValueString()
 
 	output, err := findSecondarySubnetByID(ctx, conn, id)
-
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Subnet (%s)", id), err.Error())
 		return
 	}
-	// Flatten the SecondarySubnet
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("SecondarySubnet"))...)
 	if response.Diagnostics.HasError() {
 		return
@@ -222,9 +215,10 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	}
 
 	conn := r.Meta().EC2Client(ctx)
+	id := data.ID.ValueString()
 
 	// Check if resource still exists and its current state
-	_, err := findSecondarySubnetByID(ctx, conn, data.ID.ValueString())
+	_, err := findSecondarySubnetByID(ctx, conn, id)
 
 	// If resource is not found (NewEmptyResultError), it's already deleted, so return
 	if retry.NotFound(err) {
@@ -232,7 +226,7 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Subnet (%s) before delete", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Subnet (%s) before delete", id), err.Error())
 		return
 	}
 
@@ -241,18 +235,16 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	}
 
 	_, err = conn.DeleteSecondarySubnet(ctx, &input)
-
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
 		return
 	}
-
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Secondary Subnet (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Secondary Subnet (%s)", id), err.Error())
 		return
 	}
 
 	if _, err := waitSecondarySubnetDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Subnet (%s) delete", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Subnet (%s) delete", id), err.Error())
 		return
 	}
 }
@@ -301,13 +293,11 @@ func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (
 	}
 
 	output, err := findSecondarySubnets(ctx, conn, &input)
-
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := tfresource.AssertSingleValueResult(output)
-
 	if err != nil {
 		return nil, err
 	}
