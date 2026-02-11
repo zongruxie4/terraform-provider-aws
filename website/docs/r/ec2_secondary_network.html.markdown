@@ -10,7 +10,8 @@ description: |-
 
 Provides an EC2 Secondary Network resource for RDMA networking.
 
-Secondary networks are specialized network resources that enable high-performance RDMA (Remote Direct Memory Access) networking for compute-intensive workloads. They provide dedicated network infrastructure with low latency and high bandwidth capabilities.
+Secondary networks are specialized network resources that enable high-performance RDMA (Remote Direct Memory Access) networking for compute-intensive workloads.
+They provide dedicated network infrastructure with low latency and high bandwidth capabilities.
 
 ## Example Usage
 
@@ -29,8 +30,8 @@ resource "aws_ec2_secondary_network" "example" {
 
 This resource supports the following arguments:
 
-* `ipv4_cidr_block` - (Required) IPv4 CIDR block for the secondary network. The CIDR block size must be between /12 and /28.
-* `network_type` - (Required) The type of secondary network. Currently only `rdma` is supported.
+* `ipv4_cidr_block` - (Required) IPv4 CIDR block for the secondary network. The CIDR block size must be between `/12` and `/28`.
+* `network_type` - (Required) Type of secondary network. Currently only `rdma` is supported.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -38,18 +39,18 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the secondary network.
-* `id` - The ID of the secondary network.
+* `arn` - ARN of the secondary network.
+* `id` - ID of the secondary network.
 * `ipv4_cidr_block_associations` - A list of IPv4 CIDR block associations for the secondary network.
-* `secondary_network_id` - The ID of the secondary network.
-* `state` - The current state of the secondary network.
+* `secondary_network_id` - ID of the secondary network.
+* `state` - Current state of the secondary network.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 The following attributes are exported in the `ipv4_cidr_block_associations` block:
 
-* `association_id` - The association ID for the IPv4 CIDR block.
-* `cidr_block` - The IPv4 CIDR block.
-* `state` - The state of the IPv4 CIDR block association.
+* `association_id` - Association ID for the IPv4 CIDR block.
+* `cidr_block` - IPv4 CIDR block.
+* `state` - State of the IPv4 CIDR block association.
 
 ## Timeouts
 
