@@ -759,7 +759,76 @@ func TestAccAthenaWorkGroup_Result_outputLocationUpdate_removeEncryption(t *test
 	})
 }
 
-func TestAccAthenaWorkGroup_ResultConfiguration_expectedBucketOwner(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultConfiguration_ExpectedBucketOwner_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"result_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"acl_configuration":               knownvalue.ListExact([]knownvalue.Check{}),
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{}),
+									"output_location":                 knownvalue.StringExact(""),
+									"expected_bucket_owner":           knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("result_configuration").AtSliceIndex(0).AtMapKey("expected_bucket_owner"),
+						"data.aws_caller_identity.current", tfjsonpath.New(names.AttrAccountID),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				Config: testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner_remove(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"result_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"acl_configuration":               knownvalue.ListExact([]knownvalue.Check{}),
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{}),
+									"output_location":                 knownvalue.StringExact(""),
+									"expected_bucket_owner":           knownvalue.StringExact(""),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ResultConfiguration_ExpectedBucketOwner_modify(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workgroup2 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1972,6 +2041,20 @@ resource "aws_athena_workgroup" "test" {
 
 data "aws_caller_identity" "alternate" {
   provider = awsalternate
+}
+`, rName))
+}
+
+func testAccWorkGroupConfig_ResultConfiguration_expectedBucketOwner_remove(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+    }
+  }
 }
 `, rName))
 }
