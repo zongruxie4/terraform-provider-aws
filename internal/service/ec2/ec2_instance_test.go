@@ -8,7 +8,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -3695,11 +3694,11 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 
 func TestAccEC2Instance_SecondaryNetworkInterface_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
+	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_ENABLED")
+	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_INSTANCE_TYPE")
+
 	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
-	isTestEnabled := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_ENABLED")
-	log.Printf("[DEBUG] Secondary Network interface testing enabled flag: (%s)", isTestEnabled)
-	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_INSTANCE_TYPE")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -6589,6 +6588,21 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	}
 
 	return len(subnets)
+}
+
+func testAccPreCheckSecondaryNetworkInterface(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+	input := ec2.DescribeSecondaryNetworksInput{}
+	_, err := conn.DescribeSecondaryNetworks(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 // testAccLatestWindowsServer2016CoreAMIConfig returns the configuration for a data source that
@@ -10425,20 +10439,6 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
-}
-func testAccPreCheckSecondaryNetworkInterface(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-	input := ec2.DescribeSecondaryNetworksInput{}
-	_, err := conn.DescribeSecondaryNetworks(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccInstanceConfig_secondaryNetworkInterface_multiple(rName, instanceType string) string {
