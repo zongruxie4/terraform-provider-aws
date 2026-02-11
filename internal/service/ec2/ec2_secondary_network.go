@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -121,11 +122,9 @@ func (r *secondaryNetworkResource) Create(ctx context.Context, request resource.
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecondaryNetwork)
 
 	output, err := conn.CreateSecondaryNetwork(ctx, &input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Secondary Network", err.Error())
 		return
@@ -157,11 +156,9 @@ func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.Re
 	}
 
 	conn := r.Meta().EC2Client(ctx)
-
 	id := data.ID.ValueString()
 
 	output, err := findSecondaryNetworkResourceByID(ctx, conn, id)
-
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -178,12 +175,11 @@ func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.Re
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	data.NetworkType = types.StringValue(string(output.Type))
 
 	// Try to get IPv4 CIDR block from associations if available
 	if len(output.Ipv4CidrBlockAssociations) > 0 && output.Ipv4CidrBlockAssociations[0].CidrBlock != nil {
-		data.IPv4CidrBlock = types.StringValue(*output.Ipv4CidrBlockAssociations[0].CidrBlock)
+		data.IPv4CidrBlock = types.StringValue(aws.ToString(output.Ipv4CidrBlockAssociations[0].CidrBlock))
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -199,7 +195,6 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 	}
 
 	conn := r.Meta().EC2Client(ctx)
-
 	id := data.ID.ValueString()
 
 	// Secondary networks continue to exist in API response even after deletion for some time
@@ -222,15 +217,13 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 	}
 
 	input := ec2.DeleteSecondaryNetworkInput{
-		SecondaryNetworkId: fwflex.StringFromFramework(ctx, data.ID),
+		SecondaryNetworkId: aws.String(id),
 	}
 
 	_, err = conn.DeleteSecondaryNetwork(ctx, &input)
-
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Secondary Network (%s)", id), err.Error())
 		return
@@ -289,13 +282,11 @@ func findSecondaryNetworkResourceByID(ctx context.Context, conn *ec2.Client, id 
 	}
 
 	output, err := findSecondaryNetworks(ctx, conn, &input)
-
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := tfresource.AssertSingleValueResult(output)
-
 	if err != nil {
 		return nil, err
 	}
