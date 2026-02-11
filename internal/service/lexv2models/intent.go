@@ -1001,7 +1001,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
 						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^(?![_-])[a-z0-9][a-z0-9_\-]{0,254}$`),
+							regexache.MustCompile(`^[a-z0-9][a-z0-9_\-]{0,254}$`),
 							"Must be a valid OpenSearch index name",
 						),
 					},
@@ -1272,6 +1272,9 @@ func (r *intentResource) Update(ctx context.Context, req resource.UpdateRequest,
 		change = true
 	}
 	if !new.SlotPriority.Equal(old.SlotPriority) {
+		change = true
+	}
+	if !new.QNAIntentConfiguration.Equal(old.QNAIntentConfiguration) {
 		change = true
 	}
 
@@ -1723,7 +1726,7 @@ type DialogCodeHookSettings struct {
 
 type QNAIntentConfiguration struct {
 	BedrockModelConfiguration fwtypes.ListNestedObjectValueOf[BedrockModelSpecification] `tfsdk:"bedrock_model_configuration"`
-	dataSourceConfiguration   fwtypes.ListNestedObjectValueOf[DataSourceConfiguration]   `tfsdk:"data_source_configuration"`
+	DataSourceConfiguration   fwtypes.ListNestedObjectValueOf[DataSourceConfiguration]   `tfsdk:"data_source_configuration"`
 }
 
 type BedrockModelSpecification struct {
@@ -1746,8 +1749,8 @@ type DataSourceConfiguration struct {
 
 type QnAKendraConfiguration struct {
 	KendraIndex              types.String `tfsdk:"kendra_index"`
-	ExactResponse            types.Bool   `tfssdk:"exact_response"`
-	QueryFilterString        types.String `tfsdk:"query_filtering"`
+	ExactResponse            types.Bool   `tfsdk:"exact_response"`
+	QueryFilterString        types.String `tfsdk:"query_filter_string"`
 	QueryFilterStringEnabled types.Bool   `tfsdk:"query_filter_string_enabled"`
 }
 
@@ -1763,10 +1766,11 @@ type OpensearchExactResponseFields struct {
 	AnswerField   types.String `tfsdk:"answer_field"`
 	QuestionField types.String `tfsdk:"question_field"`
 }
+
 type BedrockKnowledgeStoreConfiguration struct {
 	BedrockKnowledgeBaseArn types.String                                                              `tfsdk:"bedrock_knowledge_base_arn"`
-	exactResponse           types.Bool                                                                `tfsdk:"exact_response"`
-	exactResponseFields     fwtypes.ListNestedObjectValueOf[BedrockKnowledgeStoreExactResponseFields] `tfsdk:"exact_response_fields"`
+	ExactResponse           types.Bool                                                                `tfsdk:"exact_response"`
+	ExactResponseFields     fwtypes.ListNestedObjectValueOf[BedrockKnowledgeStoreExactResponseFields] `tfsdk:"exact_response_fields"`
 }
 
 type BedrockKnowledgeStoreExactResponseFields struct {
