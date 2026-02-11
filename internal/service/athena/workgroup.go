@@ -579,7 +579,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 
 			if d.HasChanges("configuration.0.result_configuration") {
-				path := cty.GetAttrPath("configuration").IndexInt(0).GetAttr("result_configuration").IndexInt(0)
+				path := cty.GetAttrPath(names.AttrConfiguration).IndexInt(0).GetAttr("result_configuration").IndexInt(0)
 
 				rs := d.GetRawState()
 				stateResultConfiguration, _, err := tfcty.PathSafeApply(path, rs)
@@ -868,7 +868,7 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) (*
 		}
 		expandWorkGroupACLConfigurationByDiff(stateACLConfiguration, configACLConfiguration, result)
 
-		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
+		encryptionPath := cty.GetAttrPath(names.AttrEncryptionConfiguration).IndexInt(0)
 		stateEncryptionConfiguration, _, err := tfcty.PathSafeApply(encryptionPath, state)
 		if err != nil {
 			return nil, fmt.Errorf("reading state value at %q: %w", errs.PathString(encryptionPath), err)
