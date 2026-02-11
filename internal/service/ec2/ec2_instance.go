@@ -812,14 +812,10 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"secondary_subnet_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Required: true,
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 							ForceNew: true,
 						},
 						"device_index": {
@@ -837,10 +833,13 @@ func resourceInstance() *schema.Resource {
 								"secondary",
 							}, false),
 						},
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
+						"mac_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Required: true,
 							ForceNew: true,
 						},
 						"private_ip_address_count": {
@@ -857,7 +856,6 @@ func resourceInstance() *schema.Resource {
 								ValidateFunc: validation.IsIPv4Address,
 							},
 						},
-						// Computed fields from the response
 						"secondary_interface_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -866,16 +864,17 @@ func resourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"mac_address": {
+						"secondary_subnet_id": {
 							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_dest_check": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						names.AttrStatus: {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_dest_check": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -2965,7 +2964,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		}
 	}
 
-	// Process secondary network interfaces
 	if v, ok := d.GetOk("secondary_network_interface"); ok {
 		opts.SecondaryInterfaces = expandSecondaryNetworkInterfaces(v.(*schema.Set).List())
 	}
@@ -3300,6 +3298,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		if err := rd.Set("network_interface", networkInterfaces); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
 		}
+
 		// Set primary network interface details
 		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
 		// need to protect against nil pointer dereferences
@@ -3350,7 +3349,6 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", rd.Id(), err)
 	}
 
-	// Set secondary network interfaces
 	if len(instance.SecondaryInterfaces) > 0 {
 		if err := rd.Set("secondary_network_interface", flattenSecondaryNetworkInterfaces(instance.SecondaryInterfaces)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting secondary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
@@ -4107,14 +4105,12 @@ func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) str
 	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
 }
 
-// expandSecondaryNetworkInterfaces expands secondary network interface specifications
 func expandSecondaryNetworkInterfaces(tfList []any) []awstypes.InstanceSecondaryInterfaceSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var apiObjects []awstypes.InstanceSecondaryInterfaceSpecificationRequest
-
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
@@ -4167,14 +4163,12 @@ func expandSecondaryNetworkInterfaces(tfList []any) []awstypes.InstanceSecondary
 	return apiObjects
 }
 
-// flattenSecondaryNetworkInterfaces flattens secondary network interface specifications
 func flattenSecondaryNetworkInterfaces(apiObjects []awstypes.InstanceSecondaryInterface) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []any
-
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{}
 
