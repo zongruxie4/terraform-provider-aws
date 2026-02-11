@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_secondary_subnet"
+page_title: "AWS: aws_ec2_secondary_subnet"
 description: |-
   Provides an EC2 Secondary Subnet resource.
 ---
 
-# Resource: aws_secondary_subnet
+# Resource: aws_ec2_secondary_subnet
 
 Provides an EC2 Secondary Subnet resource.
 
@@ -26,7 +26,7 @@ resource "aws_ec2_secondary_network" "example" {
   }
 }
 
-resource "aws_secondary_subnet" "example" {
+resource "aws_ec2_secondary_subnet" "example" {
   secondary_network_id = aws_ec2_secondary_network.example.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone    = "us-west-2a"
@@ -58,7 +58,7 @@ resource "aws_ec2_secondary_network" "example" {
   }
 }
 
-resource "aws_secondary_subnet" "example" {
+resource "aws_ec2_secondary_subnet" "example" {
   secondary_network_id = aws_ec2_secondary_network.example.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
@@ -113,7 +113,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_secondary_subnet.example
+  to = aws_ec2_secondary_subnet.example
   id = "ss-0123456789abcdef0"
 }
 ```
@@ -121,5 +121,5 @@ import {
 Using `terraform import`, import EC2 Secondary Subnets using the secondary subnet ID. For example:
 
 ```console
-% terraform import aws_secondary_subnet.example ss-0123456789abcdef0
+% terraform import aws_ec2_secondary_subnet.example ss-0123456789abcdef0
 ```

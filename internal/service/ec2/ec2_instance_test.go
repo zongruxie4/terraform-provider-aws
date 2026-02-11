@@ -10460,7 +10460,7 @@ resource "aws_ec2_secondary_network" "test" {
   }
 }
 
-resource "aws_secondary_subnet" "test" {
+resource "aws_ec2_secondary_subnet" "test" {
   secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.1.0/24"
   availability_zone    = data.aws_subnet.selected.availability_zone
@@ -10493,7 +10493,7 @@ resource "aws_instance" "test" {
     interface_type           = "secondary"
     delete_on_termination    = true
     private_ip_address_count = 1
-    secondary_subnet_id      = aws_secondary_subnet.test.id
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
   }
 
   secondary_network_interface {
@@ -10502,7 +10502,7 @@ resource "aws_instance" "test" {
     interface_type           = "secondary"
     delete_on_termination    = true
     private_ip_address_count = 2
-    secondary_subnet_id      = aws_secondary_subnet.test.id
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
   }
 
   secondary_network_interface {
@@ -10511,7 +10511,7 @@ resource "aws_instance" "test" {
     interface_type           = "secondary"
     delete_on_termination    = true
     private_ip_address_count = 2
-    secondary_subnet_id      = aws_secondary_subnet.test.id
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
   }
   secondary_network_interface {
     network_card_index       = 4
@@ -10519,7 +10519,7 @@ resource "aws_instance" "test" {
     interface_type           = "secondary"
     delete_on_termination    = true
     private_ip_address_count = 2
-    secondary_subnet_id      = aws_secondary_subnet.test.id
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
   }
   tags = {
     Name = %[1]q

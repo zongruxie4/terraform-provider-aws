@@ -177,7 +177,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		},
 		{
 			Factory:  newSecondarySubnetResource,
-			TypeName: "aws_secondary_subnet",
+			TypeName: "aws_ec2_secondary_subnet",
 			Name:     "SecondarySubnet",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,

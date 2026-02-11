@@ -1,11 +1,9 @@
 ```release-note:new-resource
-aws_secondary_network
+aws_ec2_secondary_network
 ```
-
 ```release-note:new-resource
-aws_secondary_subnet
+aws_ec2_secondary_subnet
 ```
-
 ```release-note:enhancement
 resource/aws_instance: Add `secondary_network_interface` attribute
 ```

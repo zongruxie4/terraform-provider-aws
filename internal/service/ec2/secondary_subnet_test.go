@@ -24,7 +24,7 @@ import (
 func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondarySubnet awstypes.SecondarySubnet
-	resourceName := "aws_secondary_subnet.test"
+	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondarySubnet awstypes.SecondarySubnet
-	resourceName := "aws_secondary_subnet.test"
+	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,7 +84,7 @@ func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondarySubnet awstypes.SecondarySubnet
-	resourceName := "aws_secondary_subnet.test"
+	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +130,7 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 func TestAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secondarySubnet awstypes.SecondarySubnet
-	resourceName := "aws_secondary_subnet.test"
+	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -198,7 +198,7 @@ func testAccCheckSecondarySubnetDestroy(ctx context.Context) resource.TestCheckF
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_secondary_subnet" {
+			if rs.Type != "aws_ec2_secondary_subnet" {
 				continue
 			}
 
@@ -249,7 +249,7 @@ func testAccSecondarySubnetConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_secondary_subnet" "test" {
+resource "aws_ec2_secondary_subnet" "test" {
   secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
@@ -265,7 +265,7 @@ func testAccSecondarySubnetConfig_tags1(rName, tagKey1, tagValue1 string) string
 	return acctest.ConfigCompose(
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_secondary_subnet" "test" {
+resource "aws_ec2_secondary_subnet" "test" {
   secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
@@ -281,7 +281,7 @@ func testAccSecondarySubnetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagV
 	return acctest.ConfigCompose(
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_secondary_subnet" "test" {
+resource "aws_ec2_secondary_subnet" "test" {
   secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone    = data.aws_availability_zones.available.names[0]
@@ -298,7 +298,7 @@ func testAccSecondarySubnetConfig_availabilityZoneID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSecondarySubnetConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_secondary_subnet" "test" {
+resource "aws_ec2_secondary_subnet" "test" {
   secondary_network_id = aws_ec2_secondary_network.test.id
   ipv4_cidr_block      = "10.0.0.0/24"
   availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
