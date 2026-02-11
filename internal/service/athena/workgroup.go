@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -581,13 +582,13 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				path := cty.GetAttrPath("configuration").IndexInt(0).GetAttr("result_configuration").IndexInt(0)
 
 				rs := d.GetRawState()
-				stateResultConfiguration, _, err := ctyPathSafeApply(path, rs)
+				stateResultConfiguration, _, err := tfcty.PathSafeApply(path, rs)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "reading state value: %s", err)
 				}
 
 				rc := d.GetRawConfig()
-				configResultConfiguration, _, err := ctyPathSafeApply(path, rc)
+				configResultConfiguration, _, err := tfcty.PathSafeApply(path, rc)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "reading config value: %s", err)
 				}
@@ -837,37 +838,9 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 	return configurationUpdates
 }
 
-func ctyHasValue(value cty.Value) bool {
-	if !value.IsKnown() || value.IsNull() {
-		return false
-	}
-
-	if !value.Type().IsCollectionType() {
-		return true
-	}
-
-	return value.LengthInt() > 0
-}
-
-func ctyPathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
-	var err error
-
-	l := len(p)
-	for i, step := range p {
-		val, err = step.Apply(val)
-		if err != nil {
-			return cty.NilVal, false, fmt.Errorf("at step %d: %s", i, err)
-		}
-		if !ctyHasValue(val) && i < l-1 {
-			return val, false, nil
-		}
-	}
-	return val, true, nil
-}
-
 func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *types.ResultConfigurationUpdates {
-	stateHasValue := ctyHasValue(state)
-	configHasValue := ctyHasValue(config)
+	stateHasValue := tfcty.HasValue(state)
+	configHasValue := tfcty.HasValue(config)
 
 	if stateHasValue && !configHasValue {
 		// Removing `result_configuration`
@@ -882,13 +855,13 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *t
 		result := &types.ResultConfigurationUpdates{}
 
 		aclPath := cty.GetAttrPath("acl_configuration").IndexInt(0)
-		stateACLConfiguration, _, _ := ctyPathSafeApply(aclPath, state)
-		configACLConfiguration, _, _ := ctyPathSafeApply(aclPath, config)
+		stateACLConfiguration, _, _ := tfcty.PathSafeApply(aclPath, state)
+		configACLConfiguration, _, _ := tfcty.PathSafeApply(aclPath, config)
 		expandWorkGroupACLConfigurationByDiff(stateACLConfiguration, configACLConfiguration, result)
 
 		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
-		stateEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, state)
-		configEncryptionConfiguration, _, _ := ctyPathSafeApply(encryptionPath, config)
+		stateEncryptionConfiguration, _, _ := tfcty.PathSafeApply(encryptionPath, state)
+		configEncryptionConfiguration, _, _ := tfcty.PathSafeApply(encryptionPath, config)
 		expandWorkGroupEncryptionConfigurationByDiff(stateEncryptionConfiguration, configEncryptionConfiguration, result)
 
 		if outputLocation := config.GetAttr("output_location"); outputLocation.IsNull() {
@@ -1080,8 +1053,8 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 }
 
 func expandWorkGroupACLConfigurationByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
-	stateHasValue := ctyHasValue(state)
-	configHasValue := ctyHasValue(config)
+	stateHasValue := tfcty.HasValue(state)
+	configHasValue := tfcty.HasValue(config)
 
 	if stateHasValue && !configHasValue {
 		result.RemoveAclConfiguration = aws.Bool(true)
@@ -1102,8 +1075,8 @@ func expandWorkGroupACLConfigurationByDiff(state, config cty.Value, result *type
 }
 
 func expandWorkGroupEncryptionConfigurationByDiff(state, config cty.Value, result *types.ResultConfigurationUpdates) {
-	stateHasValue := ctyHasValue(state)
-	configHasValue := ctyHasValue(config)
+	stateHasValue := tfcty.HasValue(state)
+	configHasValue := tfcty.HasValue(config)
 
 	if stateHasValue && !configHasValue {
 		result.RemoveEncryptionConfiguration = aws.Bool(true)
