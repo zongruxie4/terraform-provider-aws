@@ -584,16 +584,19 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				rs := d.GetRawState()
 				stateResultConfiguration, _, err := tfcty.PathSafeApply(path, rs)
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading state value: %s", err)
+					return sdkdiag.AppendErrorf(diags, "reading state value at %q: %s", errs.PathString(path), err)
 				}
 
 				rc := d.GetRawConfig()
 				configResultConfiguration, _, err := tfcty.PathSafeApply(path, rc)
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading config value: %s", err)
+					return sdkdiag.AppendErrorf(diags, "reading config value at %q: %s", errs.PathString(path), err)
 				}
 
-				input.ConfigurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdatesByDiff(stateResultConfiguration, configResultConfiguration)
+				input.ConfigurationUpdates.ResultConfigurationUpdates, err = expandWorkGroupResultConfigurationUpdatesByDiff(stateResultConfiguration, configResultConfiguration)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "expanding result configuration updates: %s", err)
+				}
 			}
 		}
 
@@ -838,7 +841,7 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 	return configurationUpdates
 }
 
-func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *types.ResultConfigurationUpdates {
+func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) (*types.ResultConfigurationUpdates, error) {
 	stateHasValue := tfcty.HasValue(state)
 	configHasValue := tfcty.HasValue(config)
 
@@ -850,18 +853,30 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *t
 			RemoveEncryptionConfiguration: aws.Bool(true),
 			RemoveExpectedBucketOwner:     aws.Bool(true),
 			RemoveOutputLocation:          aws.Bool(true),
-		}
+		}, nil
 	} else if configHasValue {
 		result := &types.ResultConfigurationUpdates{}
 
 		aclPath := cty.GetAttrPath("acl_configuration").IndexInt(0)
-		stateACLConfiguration, _, _ := tfcty.PathSafeApply(aclPath, state)
-		configACLConfiguration, _, _ := tfcty.PathSafeApply(aclPath, config)
+		stateACLConfiguration, _, err := tfcty.PathSafeApply(aclPath, state)
+		if err != nil {
+			return nil, fmt.Errorf("reading state value at %q: %w", errs.PathString(aclPath), err)
+		}
+		configACLConfiguration, _, err := tfcty.PathSafeApply(aclPath, config)
+		if err != nil {
+			return nil, fmt.Errorf("reading config value at %q: %w", errs.PathString(aclPath), err)
+		}
 		expandWorkGroupACLConfigurationByDiff(stateACLConfiguration, configACLConfiguration, result)
 
 		encryptionPath := cty.GetAttrPath("encryption_configuration").IndexInt(0)
-		stateEncryptionConfiguration, _, _ := tfcty.PathSafeApply(encryptionPath, state)
-		configEncryptionConfiguration, _, _ := tfcty.PathSafeApply(encryptionPath, config)
+		stateEncryptionConfiguration, _, err := tfcty.PathSafeApply(encryptionPath, state)
+		if err != nil {
+			return nil, fmt.Errorf("reading state value at %q: %w", errs.PathString(encryptionPath), err)
+		}
+		configEncryptionConfiguration, _, err := tfcty.PathSafeApply(encryptionPath, config)
+		if err != nil {
+			return nil, fmt.Errorf("reading config value at %q: %w", errs.PathString(encryptionPath), err)
+		}
 		expandWorkGroupEncryptionConfigurationByDiff(stateEncryptionConfiguration, configEncryptionConfiguration, result)
 
 		if outputLocation := config.GetAttr("output_location"); outputLocation.IsNull() {
@@ -876,10 +891,10 @@ func expandWorkGroupResultConfigurationUpdatesByDiff(state, config cty.Value) *t
 			result.ExpectedBucketOwner = aws.String(expectedBucketOwner.AsString())
 		}
 
-		return result
+		return result, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterConfiguration {
