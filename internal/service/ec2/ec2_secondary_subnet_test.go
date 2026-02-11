@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +22,7 @@ import (
 
 func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondarySubnet awstypes.SecondarySubnet
+
 	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,7 +35,7 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/24"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`secondary-subnet/ss-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -59,7 +58,7 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 
 func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondarySubnet awstypes.SecondarySubnet
+
 	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -72,7 +71,7 @@ func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecondarySubnet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,7 +82,7 @@ func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 
 func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondarySubnet awstypes.SecondarySubnet
+
 	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -96,7 +95,7 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -109,7 +108,7 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -118,7 +117,7 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -129,7 +128,7 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 
 func TestAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondarySubnet awstypes.SecondarySubnet
+
 	resourceName := "aws_ec2_secondary_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -142,7 +141,7 @@ func TestAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
 			{
 				Config: testAccSecondarySubnetConfig_availabilityZoneID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName, &secondarySubnet),
+					testAccCheckSecondarySubnetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/24"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -172,7 +171,7 @@ func testAccPreCheckSecondarySubnet(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckSecondarySubnetExists(ctx context.Context, n string, v *awstypes.SecondarySubnet) resource.TestCheckFunc {
+func testAccCheckSecondarySubnetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -181,13 +180,10 @@ func testAccCheckSecondarySubnetExists(ctx context.Context, n string, v *awstype
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindSecondarySubnetByID(ctx, conn, rs.Primary.ID)
-
+		_, err := tfec2.FindSecondarySubnetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-
-		*v = *output
 
 		return nil
 	}

@@ -38,6 +38,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondaryNetworkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondaryNetworkResource{}
 

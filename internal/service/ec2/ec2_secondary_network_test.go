@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,7 @@ import (
 
 func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondaryNetwork awstypes.SecondaryNetwork
+
 	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,7 +34,7 @@ func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 			{
 				Config: testAccSecondaryNetworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
+					testAccCheckSecondaryNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_cidr_block", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "rdma"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`secondary-network/sn-.+`)),
@@ -55,7 +54,7 @@ func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 
 func TestAccEC2SecondaryNetwork_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondaryNetwork awstypes.SecondaryNetwork
+
 	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -68,7 +67,7 @@ func TestAccEC2SecondaryNetwork_disappears(t *testing.T) {
 			{
 				Config: testAccSecondaryNetworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
+					testAccCheckSecondaryNetworkExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecondaryNetwork, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,7 +78,7 @@ func TestAccEC2SecondaryNetwork_disappears(t *testing.T) {
 
 func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var secondaryNetwork awstypes.SecondaryNetwork
+
 	resourceName := "aws_ec2_secondary_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -92,7 +91,7 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 			{
 				Config: testAccSecondaryNetworkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
+					testAccCheckSecondaryNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -105,7 +104,7 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 			{
 				Config: testAccSecondaryNetworkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
+					testAccCheckSecondaryNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -114,7 +113,7 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 			{
 				Config: testAccSecondaryNetworkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecondaryNetworkExists(ctx, resourceName, &secondaryNetwork),
+					testAccCheckSecondaryNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -123,7 +122,7 @@ func TestAccEC2SecondaryNetwork_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSecondaryNetworkExists(ctx context.Context, n string, v *awstypes.SecondaryNetwork) resource.TestCheckFunc {
+func testAccCheckSecondaryNetworkExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -132,13 +131,10 @@ func testAccCheckSecondaryNetworkExists(ctx context.Context, n string, v *awstyp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindSecondaryNetworkResourceByID(ctx, conn, rs.Primary.ID)
-
+		_, err := tfec2.FindSecondaryNetworkResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-
-		*v = *output
 
 		return nil
 	}
