@@ -23,7 +23,7 @@ func PathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
 	for i, step := range p {
 		val, err = step.Apply(val)
 		if err != nil {
-			return cty.NilVal, false, fmt.Errorf("at step %d: %s", i, err)
+			return cty.NilVal, false, fmt.Errorf("at step %d: %w", i, err)
 		}
 		if !HasValue(val) && i < l-1 {
 			return cty.NilVal, false, nil
