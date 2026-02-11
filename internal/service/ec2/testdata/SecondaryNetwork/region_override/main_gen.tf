@@ -8,11 +8,6 @@ resource "aws_ec2_secondary_network" "test" {
   network_type    = "rdma"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"
