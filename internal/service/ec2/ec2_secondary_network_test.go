@@ -141,11 +141,7 @@ func testAccCheckSecondaryNetworkExists(ctx context.Context, n string) resource.
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		_, err := tfec2.FindSecondaryNetworkResourceByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -190,11 +190,7 @@ func testAccCheckSecondarySubnetExists(ctx context.Context, n string) resource.T
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		_, err := tfec2.FindSecondarySubnetByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -207,18 +203,12 @@ func testAccCheckSecondarySubnetDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			output, err := tfec2.FindSecondarySubnetByID(ctx, conn, rs.Primary.ID)
-
+			_, err := tfec2.FindSecondarySubnetByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				continue
 			}
-
 			if err != nil {
 				return err
-			}
-
-			if output.State == tfec2.SecondarySubnetStateDeleteComplete {
-				continue
 			}
 
 			return fmt.Errorf("EC2 Secondary Subnet %s still exists", rs.Primary.ID)
