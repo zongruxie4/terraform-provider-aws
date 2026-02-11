@@ -217,25 +217,15 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().EC2Client(ctx)
 	id := data.ID.ValueString()
 
-	// Check if resource still exists and its current state
-	_, err := findSecondarySubnetByID(ctx, conn, id)
-
-	// If resource is not found (NewEmptyResultError), it's already deleted, so return
-	if retry.NotFound(err) {
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Subnet (%s) before delete", id), err.Error())
-		return
-	}
-
 	input := ec2.DeleteSecondarySubnetInput{
 		SecondarySubnetId: data.ID.ValueStringPointer(),
 	}
 
-	_, err = conn.DeleteSecondarySubnet(ctx, &input)
+	_, err := conn.DeleteSecondarySubnet(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
+		return
+	}
+	if tfawserr.ErrMessageContains(err, errCodeInvalidState, "is not in a modifiable state") {
 		return
 	}
 	if err != nil {
