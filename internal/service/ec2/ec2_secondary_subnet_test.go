@@ -229,16 +229,9 @@ func testAccCheckSecondarySubnetDestroy(ctx context.Context) resource.TestCheckF
 }
 
 func testAccSecondarySubnetConfig_base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_ec2_secondary_network" "test" {
   ipv4_cidr_block = "10.0.0.0/16"
   network_type    = "rdma"
@@ -247,7 +240,7 @@ resource "aws_ec2_secondary_network" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccSecondarySubnetConfig_basic(rName string) string {
