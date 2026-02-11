@@ -71,7 +71,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAthenaWorkGroup_ResultConfiguration_aclConfig(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultConfiguration_ACLConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -126,6 +126,54 @@ func TestAccAthenaWorkGroup_ResultConfiguration_aclConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ResultConfiguration_ACLConfig_toManagedQueryResultsConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "athena", "workgroup/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
