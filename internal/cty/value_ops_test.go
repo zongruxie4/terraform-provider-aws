@@ -21,9 +21,17 @@ func TestHasValue(t *testing.T) {
 			value:    cty.NilVal,
 			expected: false,
 		},
+		"List": {
+			value:    cty.ListVal([]cty.Value{cty.StringVal("test")}),
+			expected: true,
+		},
 		"EmptyList": {
 			value:    cty.ListValEmpty(cty.String),
 			expected: false,
+		},
+		"Map": {
+			value:    cty.MapVal(map[string]cty.Value{"key": cty.StringVal("value")}),
+			expected: true,
 		},
 		"EmptyMap": {
 			value:    cty.MapValEmpty(cty.String),
