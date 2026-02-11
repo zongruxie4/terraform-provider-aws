@@ -15,6 +15,10 @@ import (
 func PathSafeApply(p cty.Path, val cty.Value) (cty.Value, bool, error) {
 	var err error
 
+	if val.IsNull() {
+		return cty.NilVal, false, nil
+	}
+
 	l := len(p)
 	for i, step := range p {
 		val, err = step.Apply(val)

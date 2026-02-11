@@ -4,8 +4,6 @@
 package cty_test
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -29,28 +27,28 @@ func TestPathSafeApply_NilValue(t *testing.T) {
 			value:         cty.NilVal,
 			expectedValue: cty.NilVal,
 			expectedFound: false,
-			expectedErr:   fmt.Errorf("at step %d: %s", 0, errors.New("cannot access attributes on a null value")),
+			expectedErr:   nil,
 		},
 		"string index path": {
 			path:          cty.IndexStringPath("some_key"),
 			value:         cty.NilVal,
 			expectedValue: cty.NilVal,
 			expectedFound: false,
-			expectedErr:   fmt.Errorf("at step %d: %s", 0, errors.New("cannot index a null value")),
+			expectedErr:   nil,
 		},
 		"number index path": {
 			path:          cty.IndexIntPath(0),
 			value:         cty.NilVal,
 			expectedValue: cty.NilVal,
 			expectedFound: false,
-			expectedErr:   fmt.Errorf("at step %d: %s", 0, errors.New("cannot index a null value")),
+			expectedErr:   nil,
 		},
 		"attr path multiple steps": {
 			path:          cty.GetAttrPath("some_attribute").IndexInt(0),
 			value:         cty.NilVal,
 			expectedValue: cty.NilVal,
 			expectedFound: false,
-			expectedErr:   fmt.Errorf("at step %d: %s", 0, errors.New("cannot access attributes on a null value")),
+			expectedErr:   nil,
 		},
 	}
 	for name, tt := range tests {
@@ -99,12 +97,14 @@ func TestPathSafeApply_AttrAndIndex(t *testing.T) {
 			value:         emptyVal,
 			expectedValue: cty.NilVal,
 			expectedFound: false,
+			expectedErr:   nil,
 		},
 		"list with value": {
 			path:          cty.GetAttrPath("some_attribute").IndexInt(0),
 			value:         listVal,
 			expectedValue: cty.StringVal("test"),
 			expectedFound: true,
+			expectedErr:   nil,
 		},
 	}
 	for name, tt := range tests {
