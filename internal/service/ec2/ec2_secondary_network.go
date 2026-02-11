@@ -164,13 +164,11 @@ func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.Re
 		response.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Network (%s)", id), err.Error())
 		return
 	}
 
-	// Flatten the SecondaryNetwork
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("SecondaryNetwork"))...)
 	if response.Diagnostics.HasError() {
 		return
@@ -197,31 +195,15 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 	conn := r.Meta().EC2Client(ctx)
 	id := data.ID.ValueString()
 
-	// Secondary networks continue to exist in API response even after deletion for some time
-	// Check if resource still exists and its current state
-	output, err := findSecondaryNetworkResourceByID(ctx, conn, id)
-
-	// If resource is not found (NewEmptyResultError), it's already deleted, so return
-	if retry.NotFound(err) {
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Secondary Network (%s) before delete", id), err.Error())
-		return
-	}
-
-	// If resource exists but is already in delete-complete state, return
-	if output.State == SecondaryNetworkStateDeleteComplete {
-		return
-	}
-
 	input := ec2.DeleteSecondaryNetworkInput{
 		SecondaryNetworkId: aws.String(id),
 	}
 
-	_, err = conn.DeleteSecondaryNetwork(ctx, &input)
+	_, err := conn.DeleteSecondaryNetwork(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
+		return
+	}
+	if tfawserr.ErrMessageContains(err, errCodeInvalidState, "is not in a modifiable state") {
 		return
 	}
 	if err != nil {
