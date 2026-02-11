@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_odb_network_peering_connections: Fix plan phase failure of listing. ([#46384](https://github.com/hashicorp/terraform-provider-aws/issues/46384))
 * resource/aws_cloudfront_multitenant_distribution: Fix the "inconsistent result" error when `custom_error_response` is configured and `custom_error_response.response_code` and `custom_error_response.response_page_path` are omitted ([#46375](https://github.com/hashicorp/terraform-provider-aws/issues/46375))
 
 ## 6.31.0 (February 4, 2026)

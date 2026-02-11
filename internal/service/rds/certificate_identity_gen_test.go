@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccRDSCertificate_IdentitySerial(t *testing.T) {
+func testAccRDSCertificate_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccRDSCertificate_Identity_Basic,
-		"ExistingResource":          testAccRDSCertificate_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccRDSCertificate_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccRDSCertificate_Identity_RegionOverride,
+		acctest.CtBasic:             testAccRDSCertificate_Identity_basic,
+		"ExistingResource":          testAccRDSCertificate_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccRDSCertificate_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccRDSCertificate_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccRDSCertificate_Identity_Basic(t *testing.T) {
+func testAccRDSCertificate_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Certificate
@@ -111,7 +111,7 @@ func testAccRDSCertificate_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
+func testAccRDSCertificate_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_rds_certificate.test"
@@ -221,7 +221,7 @@ func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccRDSCertificate_Identity_ExistingResource(t *testing.T) {
+func testAccRDSCertificate_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Certificate
@@ -294,7 +294,7 @@ func testAccRDSCertificate_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccRDSCertificate_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccRDSCertificate_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Certificate
