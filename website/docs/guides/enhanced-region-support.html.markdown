@@ -54,7 +54,11 @@ See the [examples](#before-and-after-examples-using-region) below for a comparis
 
 ## How `region` works
 
-The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). **Changing the value of `region` will force resource replacement.**
+The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html).
+
+**Changing the value of `region` will force resource replacement.**
+
+**Removing `region` does not force resource replacement. The prior value of `region` stored in Terraform state will be used.**
 
 To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region, append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id)—for example:
 
