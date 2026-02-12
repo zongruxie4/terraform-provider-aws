@@ -81,7 +81,7 @@ func TestAccS3BucketPolicy_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketPolicy_List_IncludeResource(t *testing.T) {
+func TestAccS3BucketPolicy_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
@@ -195,7 +195,7 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketPolicy_List_DirectoryBucket(t *testing.T) {
+func TestAccS3BucketPolicy_List_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
