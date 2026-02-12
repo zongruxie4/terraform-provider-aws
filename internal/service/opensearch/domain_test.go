@@ -1253,9 +1253,10 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth_versionValidat
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rName := testAccRandomDomainName()
 
-			resource.ParallelTest(t, resource.TestCase{
+			resource.Test(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
