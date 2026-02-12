@@ -1,5 +1,9 @@
 ## 6.33.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Fix `couldn't find resource` error during creation when waiting for capacity to be satisfied ([#46452](https://github.com/hashicorp/terraform-provider-aws/issues/46452))
+
 ## 6.32.0 (February 11, 2026)
 
 FEATURES:
