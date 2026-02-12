@@ -3593,7 +3593,7 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() {
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}
