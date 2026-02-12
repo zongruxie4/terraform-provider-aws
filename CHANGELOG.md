@@ -23,6 +23,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_odb_network_peering_connections: Fix plan phase failure of listing. ([#46384](https://github.com/hashicorp/terraform-provider-aws/issues/46384))
+* list-resource/aws_s3_bucket_policy: Now supports listing Bucket Policies for S3 Directory Buckets ([#46401](https://github.com/hashicorp/terraform-provider-aws/issues/46401))
 * resource/aws_athena_workgroup: Allows unsetting `configuration.result_configuration` or child attributes. ([#46427](https://github.com/hashicorp/terraform-provider-aws/issues/46427))
 * resource/aws_cloudfront_multitenant_distribution: Fix the "inconsistent result" error when `custom_error_response` is configured and `custom_error_response.response_code` and `custom_error_response.response_page_path` are omitted ([#46375](https://github.com/hashicorp/terraform-provider-aws/issues/46375))
 * resource/aws_grafana_workspace: Fix perpetual diff when `network_access_control` is configured with empty `prefix_list_ids` and `vpce_ids` ([#45637](https://github.com/hashicorp/terraform-provider-aws/issues/45637))
