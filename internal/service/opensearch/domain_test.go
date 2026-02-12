@@ -6,6 +6,7 @@ package opensearch_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -1223,6 +1224,51 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) 
 			},
 		},
 	})
+}
+
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth_versionValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	testCases := map[string]struct {
+		engineType  string
+		version     string
+		expectError *regexp.Regexp
+	}{
+		"opensearch_2.9": {
+			engineType:  "OpenSearch",
+			version:     "2.9",
+			expectError: regexache.MustCompile(`jwt_options requires OpenSearch 2\.11 or later`),
+		},
+		"opensearch_2.10": {
+			engineType:  "OpenSearch",
+			version:     "2.10",
+			expectError: regexache.MustCompile(`jwt_options requires OpenSearch 2\.11 or later`),
+		},
+		"elasticsearch_7.10": {
+			engineType:  "Elasticsearch",
+			version:     "7.10",
+			expectError: regexache.MustCompile(`jwt_options is not supported with Elasticsearch`),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			rName := testAccRandomDomainName()
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+				Steps: []resource.TestStep{
+					{
+						Config:      testAccDomainConfig_advancedSecurityOptionsJWTTokenAuthVersion(rName, tc.engineType, tc.version),
+						ExpectError: tc.expectError,
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
@@ -4374,6 +4420,63 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_advancedSecurityOptionsJWTTokenAuthVersion(rName, engineType, version string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description              = %[1]q
+  deletion_window_in_days  = 7
+  customer_master_key_spec = "RSA_2048"
+  key_usage                = "SIGN_VERIFY"
+}
+
+data "aws_kms_public_key" "test" {
+  key_id = aws_kms_key.test.arn
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "%[2]s_%[3]s"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+    jwt_options {
+      enabled     = true
+      public_key  = data.aws_kms_public_key.test.public_key_pem
+      subject_key = "sub"
+      roles_key   = "roles"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, engineType, version)
 }
 
 func testAccDomainConfig_advancedSecurityOptionsDisabled(rName string) string {

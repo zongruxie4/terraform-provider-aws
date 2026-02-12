@@ -89,6 +89,7 @@ func resourceDomain() *schema.Resource {
 				}
 				return !slices.Contains(resp.CompatibleVersions[0].TargetVersions, newVersion)
 			}),
+			validateJWTOptionsVersion,
 			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
 				if o.(bool) && !n.(bool) {
@@ -1444,6 +1445,33 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	}
 
 	return false
+}
+
+// validateJWTOptionsVersion validates that JWT options are only used with OpenSearch 2.11 or later.
+func validateJWTOptionsVersion(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if v, ok := d.GetOk("advanced_security_options"); ok {
+		options := v.([]any)
+		if len(options) > 0 && options[0] != nil {
+			m := options[0].(map[string]any)
+			if jwtOptions, ok := m["jwt_options"].([]any); ok && len(jwtOptions) > 0 && jwtOptions[0] != nil {
+				jwtMap := jwtOptions[0].(map[string]any)
+				if enabled, ok := jwtMap[names.AttrEnabled].(bool); ok && enabled {
+					engineVersion := d.Get(names.AttrEngineVersion).(string)
+					if engineType, version, err := parseEngineVersion(engineVersion); err == nil {
+						switch engineType {
+						case string(awstypes.EngineTypeElasticsearch):
+							return fmt.Errorf("jwt_options is not supported with Elasticsearch. Use OpenSearch 2.11 or later")
+						case string(awstypes.EngineTypeOpenSearch):
+							if semver.LessThan(version, "2.11") {
+								return fmt.Errorf("jwt_options requires OpenSearch 2.11 or later, got %s", engineVersion)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {
