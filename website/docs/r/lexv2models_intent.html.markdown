@@ -160,10 +160,10 @@ resource "aws_lexv2models_intent" "example" {
 
 ```terraform
 resource "aws_lexv2models_intent" "qna_example" {
-  bot_id      = aws_lexv2models_bot.test.id
-  bot_version = aws_lexv2models_bot_locale.test.bot_version
-  name        = "qna_intent"
-  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = aws_lexv2models_bot_locale.test.bot_version
+  name                    = "qna_intent"
+  locale_id               = aws_lexv2models_bot_locale.test.locale_id
   parent_intent_signature = "AMAZON.QnAIntent"
 
   qna_intent_configuration {

@@ -2772,7 +2772,7 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
 
 resource "aws_lexv2models_intent" "test" {
   bot_id                  = aws_lexv2models_bot.test.id
-  bot_version.            = "DRAFT"
+  bot_version             = "DRAFT"
   locale_id               = "en_US"
   name                    = %[1]q
   parent_intent_signature = "AMAZON.QnAIntent"
@@ -2780,9 +2780,9 @@ resource "aws_lexv2models_intent" "test" {
   qna_intent_configuration {
     data_source_configuration {
       kendra_configuration {
-        kendra_index                  = aws_kendra_index.test.arn
-        exact_response                = false
-        query_filter_string_enabled   = false
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = false
+        query_filter_string_enabled = false
       }
     }
   }
