@@ -147,6 +147,35 @@ func resourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"jwt_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									names.AttrPublicKey: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										DiffSuppressFunc: suppressPublicKeyDiff,
+									},
+									"subject_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"roles_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"master_user_options": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1422,6 +1451,14 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func suppressPublicKeyDiff(k, old, new string, d *schema.ResourceData) bool {
+	// AWS returns the public key without newlines, but users may provide it with newlines.
+	// Normalize both values by removing newlines before comparison.
+	oldNormalized := strings.ReplaceAll(old, "\n", "")
+	newNormalized := strings.ReplaceAll(new, "\n", "")
+	return oldNormalized == newNormalized
 }
 
 func getDashboardEndpoint(endpoint string) string {

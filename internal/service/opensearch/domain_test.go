@@ -1184,6 +1184,47 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsJWTTokenAuth(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.subject_key", "sub"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.roles_key", "roles"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4254,6 +4295,63 @@ resource "aws_opensearch_domain" "test" {
     internal_user_database_enabled = false
     master_user_options {
       master_user_arn = aws_iam_user.test.arn
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName)
+}
+
+func testAccDomainConfig_advancedSecurityOptionsJWTTokenAuth(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description              = %[1]q
+  deletion_window_in_days  = 7
+  customer_master_key_spec = "RSA_2048"
+  key_usage                = "SIGN_VERIFY"
+}
+
+data "aws_kms_public_key" "test" {
+  key_id = aws_kms_key.test.arn
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_2.11"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+    jwt_options {
+      enabled     = true
+      public_key  = data.aws_kms_public_key.test.public_key_pem
+      subject_key = "sub"
+      roles_key   = "roles"
     }
   }
 
