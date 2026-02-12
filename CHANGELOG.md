@@ -1,5 +1,9 @@
 ## 6.33.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Fix perpetual diff when using `key_schema` with a single range key on a global secondary index ([#46335](https://github.com/hashicorp/terraform-provider-aws/issues/46335))
+
 ## 6.32.0 (February 11, 2026)
 
 FEATURES:

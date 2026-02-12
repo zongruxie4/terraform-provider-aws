@@ -3601,6 +3601,15 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 					return nil
 				}
 
+			case "range_key":
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
 			case "key_schema":
 				// key_schema is a block nested list, so the zero-value is an empty list
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
