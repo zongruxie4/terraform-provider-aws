@@ -116,7 +116,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				ConflictsWith: []string{"customer_owned_ipv4_pool"},
 			},
 			"ipv4_netmask_length": {
 				Type:          schema.TypeInt,
