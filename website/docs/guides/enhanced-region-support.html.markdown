@@ -528,6 +528,7 @@ The following regional resources and data sources had a top-level `region` prior
 All resources for the following services are considered _global_:
 
 * Account Management (`aws_account_*`)
+* ARC Region Switch (`aws_arcregionswitch_*`)
 * Billing (`aws_billing_*`)
 * Billing and Cost Management Data Exports (`aws_bcmdataexports_*`)
 * Budgets (`aws_budgets_*`)
@@ -537,11 +538,13 @@ All resources for the following services are considered _global_:
 * Cost and Usage Report (`aws_cur_*`)
 * Global Accelerator (`aws_globalaccelerator_*`)
 * IAM (`aws_iam_*`, `aws_rolesanywhere_*` and `aws_caller_identity`)
+* Invoicing (`aws_invoicing_*`)
 * Network Manager (`aws_networkmanager_*`)
 * Organizations (`aws_organizations_*`)
 * Price List (`aws_pricing_*`)
 * Route 53 (`aws_route53_*` and `aws_route53domains_*`)
 * Route 53 ARC (`aws_route53recoverycontrolconfig_*` and `aws_route53recoveryreadiness_*`)
+* Savings Plans (`aws_savingsplans_*`)
 * Shield Advanced (`aws_shield_*`)
 * User Notifications (`aws_notifications_*`)
 * User Notifications Contacts (`aws_notificationscontacts_*`)
