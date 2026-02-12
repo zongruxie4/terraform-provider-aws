@@ -558,10 +558,8 @@ Some regional services have a subset of resources that are global:
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
 | Direct Connect | Resource | `aws_dx_gateway` |
 | Direct Connect | Data Source | `aws_dx_gateway` |
-| EC2 | Resource | `aws_ec2_image_block_public_access` |
 | Firewall Manager | Resource | `aws_fms_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
-| QuickSight | Resource | `aws_quicksight_account_settings` |
 | Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
 | S3 | Data Source | `aws_canonical_user_id` |
 | S3 | Resource | `aws_s3_account_public_access_block` |
