@@ -40,7 +40,10 @@ import (
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("arn")
+// @IdentityAttribute("family")
+// @IdentityAttribute("revision")
+// @MutableIdentity
+// @ImportIDHandler("taskDefinitionImportID")
 // @CustomImport
 // @Testing(preIdentityVersion="v6.31.0")
 // @Testing(idAttrDuplicates="family")
@@ -1260,4 +1263,29 @@ func taskDefinitionARNStripRevision(s string) string {
 		tdArn.Resource = parts[0]
 	}
 	return tdArn.String()
+}
+
+type taskDefinitionImportID struct{}
+
+func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (taskDefinitionImportID) Parse(id string) (string, map[string]string, error) {
+	resARN, err := arn.Parse(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+	familyRevisionParts := strings.Split(familyRevision, ":")
+	if len(familyRevisionParts) != 2 {
+		return "", nil, fmt.Errorf("expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", id)
+	}
+
+	result := map[string]string{
+		names.AttrFamily: familyRevisionParts[0],
+		"revision":       familyRevisionParts[1],
+	}
+	return id, result, nil
 }

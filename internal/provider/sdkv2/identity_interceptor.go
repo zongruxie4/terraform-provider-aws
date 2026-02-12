@@ -5,6 +5,7 @@ package sdkv2
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -129,7 +130,14 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if v, ok := d.GetOk(name); !ok {
 		return "", false
 	} else {
-		return v.(string), true
+		switch v.(type) {
+		case string:
+			return v.(string), true
+		case int:
+			return strconv.Itoa(v.(int)), true
+		default:
+			return "", false
+		}
 	}
 }
 
