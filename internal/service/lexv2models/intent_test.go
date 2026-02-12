@@ -2900,11 +2900,6 @@ resource "aws_lexv2models_intent" "test" {
         index_name      = "test-index"
         exact_response  = false
         include_fields  = ["answer", "question"]
-
-        exact_response_fields {
-          answer_field   = "answer"
-          question_field = "question"
-        }
       }
     }
   }
