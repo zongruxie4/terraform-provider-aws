@@ -137,9 +137,9 @@ func resourceSubnet() *schema.Resource {
 				Computed: true,
 			},
 			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
