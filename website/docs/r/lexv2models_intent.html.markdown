@@ -569,6 +569,11 @@ The following arguments are optional:
 
 * `bedrock_knowledge_base_arn` - (Required) ARN of the Bedrock Knowledge Base.
 * `exact_response` - (Optional) Whether to return exact responses from the knowledge base. Defaults to `false`.
+* `exact_response_fields` - (Optional) Configuration block for exact response fields. See [`exact_response_fields`](#exact_response_fields-bedrock).
+
+###### `exact_response_fields` (Bedrock)
+
+* `answer_field` - (Optional) Field name for the answer.
 
 ##### `kendra_configuration`
 

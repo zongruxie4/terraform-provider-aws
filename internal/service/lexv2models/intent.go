@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -882,7 +883,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"trace_status": schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
-						stringvalidator.OneOf("ENABLED", "DISABLED"),
+						enum.FrameworkValidate[awstypes.BedrockTraceStatus](),
 					},
 				},
 			},
@@ -989,10 +990,10 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"answer_field": schema.StringAttribute{
-					Optional: true,
+					Required: true,
 				},
 				"question_field": schema.StringAttribute{
-					Optional: true,
+					Required: true,
 				},
 			},
 		},
