@@ -64,19 +64,13 @@ func resourceTaskDefinition() *schema.Resource {
 					return nil, err
 				}
 
-				d.Set(names.AttrARN, d.Id())
-
-				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
-				resARN, err := arn.Parse(d.Id())
+				family, _, err := parseRevisionParts(d.Id())
 				if err != nil {
-					return nil, idErr
+					return nil, err
 				}
-				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
-				familyRevisionParts := strings.Split(familyRevision, ":")
-				if len(familyRevisionParts) != 2 {
-					return nil, idErr
-				}
-				d.SetId(familyRevisionParts[0])
+
+				d.Set(names.AttrARN, d.Id())
+				d.SetId(family)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -1265,6 +1259,21 @@ func taskDefinitionARNStripRevision(s string) string {
 	return tdArn.String()
 }
 
+func parseRevisionParts(id string) (string, string, error) {
+	resARN, err := arn.Parse(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+	familyRevisionParts := strings.Split(familyRevision, ":")
+	if len(familyRevisionParts) != 2 {
+		return "", "", fmt.Errorf("expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", id)
+	}
+
+	return familyRevisionParts[0], familyRevisionParts[1], nil
+}
+
 type taskDefinitionImportID struct{}
 
 func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
@@ -1272,20 +1281,14 @@ func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
 }
 
 func (taskDefinitionImportID) Parse(id string) (string, map[string]string, error) {
-	resARN, err := arn.Parse(id)
+	family, revision, err := parseRevisionParts(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
-	familyRevisionParts := strings.Split(familyRevision, ":")
-	if len(familyRevisionParts) != 2 {
-		return "", nil, fmt.Errorf("expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", id)
-	}
-
 	result := map[string]string{
-		names.AttrFamily: familyRevisionParts[0],
-		"revision":       familyRevisionParts[1],
+		names.AttrFamily: family,
+		"revision":       revision,
 	}
 	return id, result, nil
 }
