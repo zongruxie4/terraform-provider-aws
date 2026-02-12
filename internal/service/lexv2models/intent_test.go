@@ -2642,6 +2642,8 @@ func testAccIntentConfig_qnaIntentBasic(rName string) string {
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "kendra_role" {
   name = %[1]q
   assume_role_policy = jsonencode({
@@ -2658,7 +2660,7 @@ resource "aws_iam_role" "kendra_role" {
 
 resource "aws_iam_role_policy_attachment" "kendra_attach" {
   role       = aws_iam_role.kendra_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonKendraFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonKendraFullAccess"
 }
 
 resource "aws_kendra_index" "test" {
@@ -2686,18 +2688,18 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
 }
 
 resource "aws_lexv2models_intent" "test" {
-  bot_id      = aws_lexv2models_bot.test.id
-  bot_version = "DRAFT"
-  locale_id   = "en_US"
-  name        = %[1]q
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
   parent_intent_signature = "AMAZON.QnAIntent"
 
   qna_intent_configuration {
     data_source_configuration {
       kendra_configuration {
-        kendra_index                  = aws_kendra_index.test.arn
-        exact_response                = true
-        query_filter_string_enabled   = false
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = true
+        query_filter_string_enabled = false
       }
     }
   }
@@ -2741,7 +2743,7 @@ resource "aws_iam_role" "kendra_role" {
 
 resource "aws_iam_role_policy_attachment" "kendra_attach" {
   role       = aws_iam_role.kendra_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonKendraFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonKendraFullAccess"
 }
 
 resource "aws_kendra_index" "test" {
@@ -2769,10 +2771,10 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
 }
 
 resource "aws_lexv2models_intent" "test" {
-  bot_id      = aws_lexv2models_bot.test.id
-  bot_version = "DRAFT"
-  locale_id   = "en_US"
-  name        = %[1]q
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version.            = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
   parent_intent_signature = "AMAZON.QnAIntent"
 
   qna_intent_configuration {
@@ -2838,7 +2840,7 @@ resource "aws_iam_role" "opensearch_role" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr("%[1]s-os", 0, 28)
+  domain_name    = substr("%[1]s-os", 0, 28)
   engine_version = "OpenSearch_2.11"
 
   cluster_config {
@@ -2887,10 +2889,10 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
 }
 
 resource "aws_lexv2models_intent" "test" {
-  bot_id      = aws_lexv2models_bot.test.id
-  bot_version = "DRAFT"
-  locale_id   = "en_US"
-  name        = %[1]q
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
   parent_intent_signature = "AMAZON.QnAIntent"
 
   qna_intent_configuration {
