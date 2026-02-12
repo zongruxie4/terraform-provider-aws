@@ -140,7 +140,6 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"ipv6_cidr_block"},
 			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
