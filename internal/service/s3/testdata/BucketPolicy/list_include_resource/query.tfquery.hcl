@@ -3,4 +3,6 @@
 
 list "aws_s3_bucket_policy" "test" {
   provider = aws
+
+  include_resource = true
 }
