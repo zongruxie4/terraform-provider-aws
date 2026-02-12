@@ -22,8 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -108,6 +110,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	kendraConfigurationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(path.MatchRoot("qna_intent_configuration")),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[KendraConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -906,6 +909,10 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	bedrockKnowledgeStoreConfigurationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRelative().AtParent().AtName("kendra_configuration"),
+				path.MatchRelative().AtParent().AtName("opensearch_configuration"),
+			),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockKnowledgeStoreConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -922,6 +929,8 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
+					Default:  booldefault.StaticBool(false),
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -933,6 +942,10 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	qnaKendraConfigurationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRelative().AtParent().AtName("bedrock_knowledge_store_configuration"),
+				path.MatchRelative().AtParent().AtName("opensearch_configuration"),
+			),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[QnAKendraConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -949,6 +962,8 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
+					Default:  booldefault.StaticBool(false),
 				},
 				"query_filter_string": schema.StringAttribute{
 					Optional: true,
@@ -966,6 +981,9 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	opensearchExactResponseFieldsLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRelative().AtParent().AtName("include_fields"),
+			),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[OpensearchExactResponseFields](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -983,6 +1001,10 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	opensearchConfigurationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRelative().AtParent().AtName("bedrock_knowledge_store_configuration"),
+				path.MatchRelative().AtParent().AtName("kendra_configuration"),
+			),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[OpensearchConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -1008,12 +1030,17 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
+					Default:  booldefault.StaticBool(false),
 				},
 				"include_fields": schema.ListAttribute{
 					ElementType: types.StringType,
 					Optional:    true,
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 5),
+						listvalidator.ConflictsWith(
+							path.MatchRelative().AtParent().AtName("exact_response_fields"),
+						),
 					},
 				},
 			},
@@ -1040,6 +1067,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	qnaIntentConfigurationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(path.MatchRoot("kendra_configuration")),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[QNAIntentConfiguration](ctx),
 		NestedObject: schema.NestedBlockObject{
