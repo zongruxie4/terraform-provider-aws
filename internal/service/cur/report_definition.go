@@ -13,7 +13,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -177,7 +176,8 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.CURClient(ctx)
 
 	reportDefinition, err := findReportDefinitionByName(ctx, conn, d.Id())
 
@@ -195,14 +195,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(reportName)
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.CUR,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "definition/" + reportName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, c.RegionalARN(ctx, "cur", "definition/"+reportName))
 	d.Set("compression", reportDefinition.Compression)
 	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
