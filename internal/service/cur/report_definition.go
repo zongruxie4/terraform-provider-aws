@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -109,9 +110,9 @@ func resourceReportDefinition() *schema.Resource {
 				),
 			},
 			"s3_region": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AWSRegion](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -386,4 +387,8 @@ func findReportDefinitions(ctx context.Context, conn *cur.Client, input *cur.Des
 	}
 
 	return output, nil
+}
+
+func awsRegion_Values() []string {
+	return tfslices.AppendUnique(enum.Values[types.AWSRegion](), endpoints.EuscDeEast1RegionID)
 }
