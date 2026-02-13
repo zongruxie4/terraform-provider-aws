@@ -382,6 +382,6 @@ func findReportDefinitions(ctx context.Context, conn *cur.Client, input *cur.Des
 	return output, nil
 }
 
-func awsRegion_Values() []string {
+func awsRegion_Values() []string { // nosemgrep:ci.aws-in-func-name
 	return tfslices.AppendUnique(enum.Values[types.AWSRegion](), endpoints.ApSoutheast5RegionID, endpoints.EuscDeEast1RegionID)
 }
