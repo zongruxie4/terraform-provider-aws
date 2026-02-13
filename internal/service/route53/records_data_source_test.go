@@ -45,6 +45,28 @@ func TestAccRoute53RecordsDataSource_basic(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/46426.
+func TestAccRoute53RecordsDataSource_wildcardRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_route53_records.test"
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordsDataSourceConfig_wildcardRegex(zoneName.String(), recordName.String()),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("resource_record_sets"), knownvalue.ListSizeExact(1)),
+				},
+			},
+		},
+	})
+}
+
 func testAccRecordsDataSourceConfig_basic(zName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
@@ -62,6 +84,27 @@ resource "aws_route53_record" "test" {
 data "aws_route53_records" "test" {
   zone_id    = aws_route53_record.test.zone_id
   name_regex = "^%[2]s"
+}
+`, zName, rName)
+}
+
+func testAccRecordsDataSourceConfig_wildcardRegex(zName, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = "%[1]s."
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
+}
+
+data "aws_route53_records" "test" {
+  zone_id    = aws_route53_record.test.zone_id
+  name_regex = "*.%[1]s"
 }
 `, zName, rName)
 }
