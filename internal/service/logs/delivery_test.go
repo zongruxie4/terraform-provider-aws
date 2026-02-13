@@ -197,6 +197,10 @@ func testAccDelivery_update(t *testing.T) {
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
 					})),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"),
+						knownvalue.StringExact("{region}/{yyyy}/{MM}/")),
 				},
 			},
 			{
@@ -224,6 +228,10 @@ func testAccDelivery_update(t *testing.T) {
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
 					})),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"),
+						knownvalue.StringExact("{region}/{yyyy}/{MM}/{dd}/")),
 				},
 			},
 			{
