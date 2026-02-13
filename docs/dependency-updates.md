@@ -7,11 +7,11 @@ Generally, dependency updates are handled by maintainers.
 
 ## Changelog Entries for Dependency Updates
 
-Dependency updates that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
+While being careful to avoid Changelog noise, dependency updates (including Go version updates) that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
 
 ``````
 ```release-note:note
-provider: Updated `github.com/example/package` to v1.2.3 (addresses CVE-XXXX-YYYY)
+provider: Updated Go version to v1.25.7 (addresses GO-2026-4337, Unexpected session resumption)
 ```
 ``````
 
