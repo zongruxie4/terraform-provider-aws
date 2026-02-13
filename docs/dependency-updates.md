@@ -9,13 +9,11 @@ Generally, dependency updates are handled by maintainers.
 
 Dependency updates that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
 
-<!-- markdownlint-disable MD046 -->
 ``````
 ```release-note:note
 provider: Updated `github.com/example/package` to v1.2.3 (addresses CVE-XXXX-YYYY)
 ```
 ``````
-<!-- markdownlint-enable MD046 -->
 
 For updates without security implications, a changelog entry is optional but encouraged for significant changes (e.g., AWS SDK authentication changes).
 
@@ -25,9 +23,13 @@ The Terraform AWS provider is written in Go and is compiled into an executable b
 
 A new version of Go is [released every 6 months](https://go.dev/wiki/Go-Release-Cycle#overview). [Minor releases](https://go.dev/wiki/MinorReleases), fixing serious problems and security issues, are done [regularly](https://go.dev/doc/devel/release) for the current and previous versions.
 
+<!-- markdownlint-disable MD046 -->
+
 !!! note
 
     Go versions differ from [semver](https://semver.org/spec/v2.0.0.html). Major versions of Go differ in the second component (upgrading from 1.24.11 to 1.25.5 is a major version upgrade), while minor versions of Go differ just in the third component (upgrading from 1.24.10 to 1.24.11 is a minor version upgrade).
+
+<!-- markdownlint-enable MD046 -->
 
 ### When To Upgrade Major Version
 
