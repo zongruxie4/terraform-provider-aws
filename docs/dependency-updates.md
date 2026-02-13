@@ -7,13 +7,15 @@ Generally, dependency updates are handled by maintainers.
 
 ## Changelog Entries for Dependency Updates
 
-Dependency updates (including Go version updates) that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
+Dependency updates that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
 
-````
+<!-- markdownlint-disable MD046 -->
+``````
 ```release-note:note
 provider: Updated `github.com/example/package` to v1.2.3 (addresses CVE-XXXX-YYYY)
 ```
-````
+``````
+<!-- markdownlint-enable MD046 -->
 
 For updates without security implications, a changelog entry is optional but encouraged for significant changes (e.g., AWS SDK authentication changes).
 
