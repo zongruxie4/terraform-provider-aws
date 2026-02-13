@@ -129,14 +129,6 @@ func getAttributeOk(d schemaResourceData, name string) (any, bool) {
 	if v, ok := d.GetOk(name); !ok {
 		return "", false
 	} else {
-		//switch v.(type) {
-		//case string:
-		//	return v.(string), true
-		//case int:
-		//	return strconv.Itoa(v.(int)), true
-		//default:
-		//	return "", false
-		//}
 		return v, true
 	}
 }

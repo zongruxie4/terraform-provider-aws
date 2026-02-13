@@ -331,7 +331,8 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ecs_task_definition.example
   identity = {
-    arn = "arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123"
+    family   = "mytaskfamily"
+    revision = "123"
   }
 }
 
@@ -344,7 +345,8 @@ resource "aws_ecs_task_definition" "example" {
 
 #### Required
 
-* `arn` (String) ARN of the ECS Task Definition.
+* `family` (String) The unique name for your task definition.
+* `revision` (Integer) The revision of the task in a particular family.
 
 #### Optional
 
