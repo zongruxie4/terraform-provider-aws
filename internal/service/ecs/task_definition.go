@@ -1287,15 +1287,20 @@ func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
 	return d.Id()
 }
 
-func (taskDefinitionImportID) Parse(id string) (string, map[string]string, error) {
+func (taskDefinitionImportID) Parse(id string) (string, map[string]any, error) {
 	family, revision, err := parseRevisionParts(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	rev, err := strconv.Atoi(revision)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
 		names.AttrFamily: family,
-		"revision":       revision,
+		"revision":       rev,
 	}
 	return id, result, nil
 }

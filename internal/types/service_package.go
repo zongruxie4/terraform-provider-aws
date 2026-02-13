@@ -501,7 +501,7 @@ func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) Id
 }
 
 type ImportIDParser interface {
-	Parse(id string) (string, map[string]string, error)
+	Parse(id string) (string, map[string]any, error)
 }
 
 type FrameworkImportIDCreator interface {
