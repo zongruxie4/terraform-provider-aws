@@ -53,7 +53,7 @@ func (t regexpType) ValueFromString(_ context.Context, in types.String) (basetyp
 	}
 
 	// The ValidateAttribute method will surface errors if the value is an invalid
-	// Regexp. This method simply passes the value through.
+	// regexp. This method simply passes the value through.
 	return RegexpValue(in.ValueString()), diags
 }
 
