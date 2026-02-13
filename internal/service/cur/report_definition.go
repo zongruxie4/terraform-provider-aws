@@ -146,7 +146,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &cur.PutReportDefinitionInput{
+	input := cur.PutReportDefinitionInput{
 		ReportDefinition: &types.ReportDefinition{
 			AdditionalArtifacts:      additionalArtifacts,
 			AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -163,7 +163,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		Tags: getTagsIn(ctx),
 	}
 
-	_, err := conn.PutReportDefinition(ctx, input)
+	_, err := conn.PutReportDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
@@ -230,7 +230,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &cur.ModifyReportDefinitionInput{
+		input := cur.ModifyReportDefinitionInput{
 			ReportDefinition: &types.ReportDefinition{
 				AdditionalArtifacts:      additionalArtifacts,
 				AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -247,7 +247,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			ReportName: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyReportDefinition(ctx, input)
+		_, err := conn.ModifyReportDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
@@ -344,9 +344,9 @@ func checkReportDefinitionPropertyCombination(additionalArtifacts []types.Additi
 }
 
 func findReportDefinitionByName(ctx context.Context, conn *cur.Client, name string) (*types.ReportDefinition, error) {
-	input := &cur.DescribeReportDefinitionsInput{}
+	var input cur.DescribeReportDefinitionsInput
 
-	return findReportDefinition(ctx, conn, input, func(v *types.ReportDefinition) bool {
+	return findReportDefinition(ctx, conn, &input, func(v *types.ReportDefinition) bool {
 		return aws.ToString(v.ReportName) == name
 	})
 }
