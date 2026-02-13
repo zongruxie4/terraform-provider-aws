@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -931,7 +930,6 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
 					Computed: true,
-					Default:  booldefault.StaticBool(false),
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -964,7 +962,6 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
 					Computed: true,
-					Default:  booldefault.StaticBool(false),
 				},
 				"query_filter_string": schema.StringAttribute{
 					Optional: true,
@@ -1032,7 +1029,6 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"exact_response": schema.BoolAttribute{
 					Optional: true,
 					Computed: true,
-					Default:  booldefault.StaticBool(false),
 				},
 				"include_fields": schema.ListAttribute{
 					ElementType: types.StringType,
