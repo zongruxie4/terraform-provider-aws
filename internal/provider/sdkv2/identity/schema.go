@@ -17,12 +17,12 @@ func NewIdentitySchema(identitySpec inttypes.Identity) map[string]*schema.Schema
 }
 
 func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
-	attr := &schema.Schema{}
+	attr := &schema.Schema{
+		Type: schema.TypeString,
+	}
 	switch attribute.IdentityType() {
 	case inttypes.IntIdentityType:
 		attr.Type = schema.TypeInt
-	default:
-		attr.Type = schema.TypeString
 	}
 
 	if attribute.Required() {
