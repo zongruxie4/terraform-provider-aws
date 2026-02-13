@@ -41,11 +41,11 @@ import (
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("family")
-// @IdentityAttribute("revision")
+// @IdentityAttribute("revision", valueType="int")
 // @MutableIdentity
 // @ImportIDHandler("taskDefinitionImportID")
 // @CustomImport
-// @Testing(preIdentityVersion="v6.31.0")
+// @Testing(preIdentityVersion="v6.32.0")
 // @Testing(idAttrDuplicates="family")
 // @Testing(importStateIdFunc=testAccTaskDefinitionImportStateIdFunc)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.TaskDefinition")
@@ -64,12 +64,17 @@ func resourceTaskDefinition() *schema.Resource {
 					return nil, err
 				}
 
-				family, _, err := parseRevisionParts(d.Id())
-				if err != nil {
-					return nil, err
+				client := meta.(*conns.AWSClient)
+
+				family, revision := d.Get(names.AttrFamily).(string), d.Get("revision").(int)
+
+				region := client.Region(ctx)
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					region = v.(string)
 				}
 
-				d.Set(names.AttrARN, d.Id())
+				taskDefinitionARN := client.RegionalARNWithRegion(ctx, names.ECS, region, "task-definition/"+family+":"+strconv.Itoa(revision))
+				d.Set(names.AttrARN, taskDefinitionARN)
 				d.SetId(family)
 
 				return []*schema.ResourceData{d}, nil
@@ -1277,6 +1282,8 @@ func parseRevisionParts(id string) (string, string, error) {
 type taskDefinitionImportID struct{}
 
 func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
+	// pass through an unset id since it is not used and will be
+	// parsed in the custom import
 	return d.Id()
 }
 

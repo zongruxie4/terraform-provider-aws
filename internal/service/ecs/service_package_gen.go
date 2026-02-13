@@ -146,7 +146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrFamily, true),
-				inttypes.StringIdentityAttribute("revision", true),
+				inttypes.IntIdentityAttribute("revision", true),
 			},
 				inttypes.WithMutableIdentity(),
 			),
