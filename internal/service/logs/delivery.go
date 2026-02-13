@@ -101,6 +101,16 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 
 var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{}
 
+// normalizeS3SuffixPath strips AWS-added prefixes from the API-returned suffix path.
+// AWS automatically prepends "AWSLogs/{account-id}/CloudFront/" for CloudFront sources.
+// This normalization ensures the state matches the user's configuration value.
+func normalizeS3SuffixPath(apiPath, configPath string) string {
+	if strings.HasSuffix(apiPath, configPath) && apiPath != configPath {
+		return configPath
+	}
+	return apiPath
+}
+
 func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data deliveryResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -158,7 +168,9 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 		}
 	}
 
-	// Normalize S3DeliveryConfiguration.SuffixPath - strip AWS-added prefix.
+	// Normalize S3DeliveryConfiguration.SuffixPath to match user configuration.
+	// AWS modifies the suffix_path by prepending account/service-specific prefixes.
+	// We normalize after Create to ensure state consistency with the configuration.
 	if delivery.S3DeliveryConfiguration != nil && aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath) != "" {
 		if !data.S3DeliveryConfiguration.IsNull() {
 			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
@@ -169,11 +181,7 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
 				configPath := s3DeliveryConfiguration.SuffixPath.ValueString()
 				apiPath := aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath)
-				// AWS prepends "AWSLogs/{account-id}/CloudFront/" for CloudFront sources.
-				// Strip this prefix if the API path ends with the config path.
-				if strings.HasSuffix(apiPath, configPath) && apiPath != configPath {
-					delivery.S3DeliveryConfiguration.SuffixPath = aws.String(configPath)
-				}
+				delivery.S3DeliveryConfiguration.SuffixPath = aws.String(normalizeS3SuffixPath(apiPath, configPath))
 			}
 		}
 	}
@@ -230,7 +238,9 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 		}
 	}
 
-	// Normalize S3DeliveryConfiguration.SuffixPath - strip AWS-added prefix.
+	// Normalize S3DeliveryConfiguration.SuffixPath to match user configuration.
+	// AWS modifies the suffix_path by prepending account/service-specific prefixes.
+	// We normalize during Read to ensure state consistency across refreshes and updates.
 	if output.S3DeliveryConfiguration != nil && aws.ToString(output.S3DeliveryConfiguration.SuffixPath) != "" {
 		if !data.S3DeliveryConfiguration.IsNull() {
 			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
@@ -241,11 +251,7 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
 				configPath := s3DeliveryConfiguration.SuffixPath.ValueString()
 				apiPath := aws.ToString(output.S3DeliveryConfiguration.SuffixPath)
-				// AWS prepends "AWSLogs/{account-id}/CloudFront/" for CloudFront sources.
-				// Strip this prefix if the API path ends with the config path.
-				if strings.HasSuffix(apiPath, configPath) && apiPath != configPath {
-					output.S3DeliveryConfiguration.SuffixPath = aws.String(configPath)
-				}
+				output.S3DeliveryConfiguration.SuffixPath = aws.String(normalizeS3SuffixPath(apiPath, configPath))
 			}
 		}
 	}
