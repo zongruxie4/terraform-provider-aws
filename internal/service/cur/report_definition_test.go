@@ -375,6 +375,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/43153.
 func testAccReportDefinition_upgradeNoPrefixFromV5(t *testing.T) {
+	acctest.Skip(t, `ValidationException: 1 validation error detected: Value '' at 'reportDefinition.s3Prefix' failed to satisfy constraint: Member must satisfy regular expression pattern: ^.+[^/|.]$`)
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
