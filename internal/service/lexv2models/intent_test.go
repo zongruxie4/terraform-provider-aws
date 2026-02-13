@@ -2636,12 +2636,10 @@ resource "aws_lexv2models_intent" "test" {
 `, rName, utter1, utter2, utter3, utter4))
 }
 
-func testAccIntentConfig_qnaIntentBasic(rName string) string {
+func testAccIntentConfig_qnaIntentBase_Kendra(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "kendra_role" {
@@ -2686,7 +2684,13 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
   locale_id                        = "en_US"
   n_lu_intent_confidence_threshold = 0.4
 }
+`, rName))
+}
 
+func testAccIntentConfig_qnaIntentBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
+		fmt.Sprintf(`
 resource "aws_lexv2models_intent" "test" {
   bot_id                  = aws_lexv2models_bot.test.id
   bot_version             = "DRAFT"
@@ -2719,57 +2723,8 @@ resource "aws_lexv2models_intent" "test" {
 
 func testAccIntentConfig_qnaIntentWithKendraUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 1),
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "kendra_role" {
-  name = %[1]q
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "kendra.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "kendra_attach" {
-  role       = aws_iam_role.kendra_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonKendraFullAccess"
-}
-
-resource "aws_kendra_index" "test" {
-  name       = %[1]q
-  edition    = "DEVELOPER_EDITION"
-  role_arn   = aws_iam_role.kendra_role.arn
-  depends_on = [aws_iam_role.kendra_role]
-}
-
-resource "aws_lexv2models_bot" "test" {
-  name        = %[1]q
-  description = "Test bot for QnA intent"
-  role_arn    = aws_iam_role.kendra_role.arn
-  data_privacy {
-    child_directed = false
-  }
-  idle_session_ttl_in_seconds = 300
-}
-
-resource "aws_lexv2models_bot_locale" "test_en_us" {
-  bot_id                           = aws_lexv2models_bot.test.id
-  bot_version                      = "DRAFT"
-  locale_id                        = "en_US"
-  n_lu_intent_confidence_threshold = 0.4
-}
-
 resource "aws_lexv2models_intent" "test" {
   bot_id                  = aws_lexv2models_bot.test.id
   bot_version             = "DRAFT"
@@ -2800,12 +2755,10 @@ resource "aws_lexv2models_intent" "test" {
 `, rName))
 }
 
-func testAccIntentConfig_qnaIntentWithOpenSearch(rName string) string {
+func testAccIntentConfig_qnaIntentBase_OpenSearch(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
 resource "aws_security_group" "opensearch" {
   name   = "%[1]s-os"
   vpc_id = aws_vpc.test.id
@@ -2887,7 +2840,13 @@ resource "aws_lexv2models_bot_locale" "test_en_us" {
   locale_id                        = "en_US"
   n_lu_intent_confidence_threshold = 0.4
 }
+`, rName))
+}
 
+func testAccIntentConfig_qnaIntentWithOpenSearch(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_OpenSearch(rName),
+		fmt.Sprintf(`
 resource "aws_lexv2models_intent" "test" {
   bot_id                  = aws_lexv2models_bot.test.id
   bot_version             = "DRAFT"
