@@ -1884,3 +1884,19 @@ func statusRouteServerPropagation(ctx context.Context, conn *ec2.Client, routeSe
 		return output, string(output.State), nil
 	}
 }
+
+func statusSecondaryNetwork(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSecondaryNetworkByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
