@@ -32,7 +32,8 @@ func newAttachmentRoutingPolicyLabelResource(_ context.Context) (resource.Resour
 }
 
 const (
-	ResNameAttachmentRoutingPolicyLabel = "Attachment Routing Policy Label"
+	ResNameAttachmentRoutingPolicyLabel          = "Attachment Routing Policy Label"
+	attachmentRoutingPolicyLabelAvailableTimeout = 20 * time.Minute
 )
 
 type attachmentRoutingPolicyLabelResource struct {
@@ -103,7 +104,7 @@ func (r *attachmentRoutingPolicyLabelResource) Create(ctx context.Context, req r
 
 	plan.ID = types.StringValue(attachmentRoutingPolicyLabelCreateResourceID(coreNetworkID, attachmentID))
 
-	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, 20*time.Minute); err != nil {
+	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, attachmentRoutingPolicyLabelAvailableTimeout); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("waiting for Network Manager Attachment (%s) to become available after applying routing policy label", attachmentID),
 			err.Error(),
@@ -165,7 +166,7 @@ func (r *attachmentRoutingPolicyLabelResource) Delete(ctx context.Context, req r
 		return
 	}
 
-	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, 20*time.Minute); err != nil {
+	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, attachmentRoutingPolicyLabelAvailableTimeout); err != nil {
 		// If the attachment itself is gone, nothing to delete.
 		if !retry.NotFound(err) {
 			resp.Diagnostics.AddError(
@@ -193,7 +194,7 @@ func (r *attachmentRoutingPolicyLabelResource) Delete(ctx context.Context, req r
 		return
 	}
 
-	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, 20*time.Minute); err != nil {
+	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, attachmentRoutingPolicyLabelAvailableTimeout); err != nil {
 		// If the attachment itself is gone after remove, that's fine.
 		if !retry.NotFound(err) {
 			resp.Diagnostics.AddError(
@@ -264,7 +265,7 @@ func statusAttachment(ctx context.Context, conn *networkmanager.Client, coreNetw
 	}
 }
 
-func waitAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string, timeout time.Duration) (*awstypes.Attachment, error) {
+func waitAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string, timeout time.Duration) (*awstypes.Attachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
