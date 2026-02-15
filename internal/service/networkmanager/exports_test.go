@@ -45,7 +45,7 @@ var (
 	FindTransitGatewayRouteTableAttachmentByID           = findTransitGatewayRouteTableAttachmentByID
 	FindVPCAttachmentByID                                = findVPCAttachmentByID
 
-	AttachmentRoutingPolicyLabelParseResourceID          = attachmentRoutingPolicyLabelParseResourceID
+	AttachmentRoutingPolicyLabelParseResourceID         = attachmentRoutingPolicyLabelParseResourceID
 	CustomerGatewayAssociationParseResourceID           = customerGatewayAssociationParseResourceID
 	LinkAssociationParseResourceID                      = linkAssociationParseResourceID
 	TransitGatewayConnectPeerAssociationParseResourceID = transitGatewayConnectPeerAssociationParseResourceID

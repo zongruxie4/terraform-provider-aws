@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_networkmanager_attachment_routing_policy_label", name="Attachment Routing Policy Label")
@@ -37,6 +37,7 @@ const (
 
 type attachmentRoutingPolicyLabelResource struct {
 	framework.ResourceWithModel[attachmentRoutingPolicyLabelResourceModel]
+	framework.WithImportByID
 }
 
 type attachmentRoutingPolicyLabelResourceModel struct {
@@ -44,10 +45,6 @@ type attachmentRoutingPolicyLabelResourceModel struct {
 	CoreNetworkID      types.String `tfsdk:"core_network_id"`
 	ID                 types.String `tfsdk:"id"`
 	RoutingPolicyLabel types.String `tfsdk:"routing_policy_label"`
-}
-
-func (r *attachmentRoutingPolicyLabelResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_networkmanager_attachment_routing_policy_label"
 }
 
 func (r *attachmentRoutingPolicyLabelResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -65,7 +62,7 @@ func (r *attachmentRoutingPolicyLabelResource) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"routing_policy_label": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -170,13 +167,12 @@ func (r *attachmentRoutingPolicyLabelResource) Delete(ctx context.Context, req r
 
 	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, 20*time.Minute); err != nil {
 		// If the attachment itself is gone, nothing to delete.
-		if retry.NotFound(err) {
-			return
+		if !retry.NotFound(err) {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("waiting for Network Manager Attachment (%s) to become available before removing routing policy label", attachmentID),
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for Network Manager Attachment (%s) to become available before removing routing policy label", attachmentID),
-			err.Error(),
-		)
 		return
 	}
 
@@ -199,27 +195,14 @@ func (r *attachmentRoutingPolicyLabelResource) Delete(ctx context.Context, req r
 
 	if _, err := waitAttachmentAvailable(ctx, conn, coreNetworkID, attachmentID, 20*time.Minute); err != nil {
 		// If the attachment itself is gone after remove, that's fine.
-		if retry.NotFound(err) {
-			return
+		if !retry.NotFound(err) {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("waiting for Network Manager Attachment (%s) to become available after removing routing policy label", attachmentID),
+				err.Error(),
+			)
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for Network Manager Attachment (%s) to become available after removing routing policy label", attachmentID),
-			err.Error(),
-		)
 		return
 	}
-}
-
-func (r *attachmentRoutingPolicyLabelResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	coreNetworkID, attachmentID, err := attachmentRoutingPolicyLabelParseResourceID(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("parsing import ID", err.Error())
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("core_network_id"), coreNetworkID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attachment_id"), attachmentID)...)
 }
 
 const attachmentRoutingPolicyLabelIDSeparator = ","
@@ -266,7 +249,7 @@ func findAttachmentByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 }
 
 func statusAttachment(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string) retry.StateRefreshFunc {
-	return func(_ context.Context) (interface{}, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findAttachmentByTwoPartKey(ctx, conn, coreNetworkID, attachmentID)
 
 		if retry.NotFound(err) {
