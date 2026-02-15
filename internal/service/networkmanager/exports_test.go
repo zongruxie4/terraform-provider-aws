@@ -6,6 +6,7 @@ package networkmanager
 // Exports for use in tests only.
 var (
 	ResourceAttachmentAccepter                   = resourceAttachmentAccepter
+	ResourceAttachmentRoutingPolicyLabel         = newAttachmentRoutingPolicyLabelResource
 	ResourceConnectAttachment                    = resourceConnectAttachment
 	ResourceConnectPeer                          = resourceConnectPeer
 	ResourceConnection                           = resourceConnection
@@ -26,6 +27,7 @@ var (
 
 	FindConnectAttachmentByID                            = findConnectAttachmentByID
 	FindConnectionByTwoPartKey                           = findConnectionByTwoPartKey
+	FindRoutingPolicyLabelByTwoPartKey                   = findRoutingPolicyLabelByTwoPartKey
 	FindConnectPeerByID                                  = findConnectPeerByID
 	FindCoreNetworkByID                                  = findCoreNetworkByID
 	FindCoreNetworkPolicyByTwoPartKey                    = findCoreNetworkPolicyByTwoPartKey
@@ -43,6 +45,7 @@ var (
 	FindTransitGatewayRouteTableAttachmentByID           = findTransitGatewayRouteTableAttachmentByID
 	FindVPCAttachmentByID                                = findVPCAttachmentByID
 
+	AttachmentRoutingPolicyLabelParseResourceID          = attachmentRoutingPolicyLabelParseResourceID
 	CustomerGatewayAssociationParseResourceID           = customerGatewayAssociationParseResourceID
 	LinkAssociationParseResourceID                      = linkAssociationParseResourceID
 	TransitGatewayConnectPeerAssociationParseResourceID = transitGatewayConnectPeerAssociationParseResourceID
