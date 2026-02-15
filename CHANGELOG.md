@@ -1,5 +1,9 @@
 ## 6.33.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
+
 BUG FIXES:
 
 * data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression ([#46478](https://github.com/hashicorp/terraform-provider-aws/issues/46478))
