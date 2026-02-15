@@ -1812,18 +1812,32 @@ func testAccDomain_trustedIdentityPropagation(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_trustedIdentityPropagation(rName),
+				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "ENABLED"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "ENABLED"),
+				),
 			},
 		},
 	})
@@ -3368,7 +3382,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, efsName))
 }
 
-func testAccDomainConfig_trustedIdentityPropagation(rName string) string {
+func testAccDomainConfig_trustedIdentityPropagation(rName, status string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -3381,8 +3395,10 @@ resource "aws_sagemaker_domain" "test" {
   }
 
   domain_settings {
-    trusted_identity_propagation_enabled = true
+    trusted_identity_propagation_settings {
+      status = %[2]q
+    }
   }
 }
-`, rName))
+`, rName, status))
 }
