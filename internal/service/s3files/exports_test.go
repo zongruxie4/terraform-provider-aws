@@ -5,7 +5,9 @@ package s3files
 
 // Exports for use in tests only.
 var (
-	ResourceFileSystem = newFileSystemResource
+	ResourceFileSystem  = newFileSystemResource
+	ResourceMountTarget = newMountTargetResource
 
-	FindFileSystemByID = findFileSystemByID
+	FindFileSystemByID  = findFileSystemByID
+	FindMountTargetByID = findMountTargetByID
 )
