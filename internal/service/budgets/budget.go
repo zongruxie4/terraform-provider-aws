@@ -310,8 +310,9 @@ func resourceBudget() *schema.Resource {
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"cost_filter"},
-				// max depth is set to 5 from provider side as AWS does not have a limit
-				Elem: filterExpressionElem(5),
+				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2"
+				// Schema level 3 = AWS depth 2 (because operators added when level > 1)
+				Elem: filterExpressionElem(3),
 			},
 		},
 	}
@@ -323,6 +324,7 @@ func filterExpressionElem(level int) *schema.Resource {
 		"cost_categories": {
 			Type:     schema.TypeList,
 			Optional: true,
+			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					names.AttrKey: {
@@ -352,6 +354,7 @@ func filterExpressionElem(level int) *schema.Resource {
 		"dimensions": {
 			Type:     schema.TypeList,
 			Optional: true,
+			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					names.AttrKey: {
@@ -382,6 +385,7 @@ func filterExpressionElem(level int) *schema.Resource {
 		"tags": {
 			Type:     schema.TypeList,
 			Optional: true,
+			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					names.AttrKey: {
@@ -539,6 +543,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set("time_unit", budget.TimeUnit)
 
+	if err := d.Set("filter_expression", flattenFilterExpression(budget.FilterExpression)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter_expression: %s", err)
+	}
+
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if retry.NotFound(err) {
@@ -597,10 +605,6 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if err := d.Set("notification", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting notification: %s", err)
-	}
-
-	if err := d.Set("filter_expression", flattenFilterExpression(budget.FilterExpression)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting filter_expression: %s", err)
 	}
 
 	return diags
@@ -1001,10 +1005,12 @@ func flattenFilterExpressions(apiObjects []awstypes.Expression) []map[string]any
 	if len(apiObjects) == 0 {
 		return nil
 	}
-	result := make([]map[string]any, len(apiObjects))
-	for i, expr := range apiObjects {
-		result[i] = flattenFilterExpression(&expr)[0]
+
+	result := make([]map[string]any, 0, len(apiObjects))
+	for i := range apiObjects {
+		result = append(result, flattenFilterExpression(&apiObjects[i])[0])
 	}
+
 	return result
 }
 
@@ -1224,65 +1230,35 @@ func expandFilterExpression(tfMap map[string]any) *awstypes.Expression {
 	}
 
 	apiObject := &awstypes.Expression{}
-	var expressions []awstypes.Expression
 
 	if v, ok := tfMap["dimensions"].([]any); ok && len(v) > 0 {
-		for _, dim := range v {
-			expressions = append(expressions, awstypes.Expression{Dimensions: expandExpressionDimensionValues(dim.(map[string]any))})
-		}
+		apiObject.Dimensions = expandExpressionDimensionValues(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["tags"].([]any); ok && len(v) > 0 {
-		for _, tag := range v {
-			expressions = append(expressions, awstypes.Expression{Tags: expandTagValues(tag.(map[string]any))})
-		}
+		apiObject.Tags = expandTagValues(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["cost_categories"].([]any); ok && len(v) > 0 {
-		for _, cc := range v {
-			expressions = append(expressions, awstypes.Expression{CostCategories: expandCostCategoryValues(cc.(map[string]any))})
-		}
+		apiObject.CostCategories = expandCostCategoryValues(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["and"].([]any); ok && len(v) > 0 {
 		apiObject.And = make([]awstypes.Expression, 0, len(v))
 		for _, sub := range v {
-			subExpr := expandFilterExpression(sub.(map[string]any))
-			if len(subExpr.And) > 0 {
-				apiObject.And = append(apiObject.And, subExpr.And...)
-			} else {
-				apiObject.And = append(apiObject.And, *subExpr)
-			}
+			apiObject.And = append(apiObject.And, *expandFilterExpression(sub.(map[string]any)))
 		}
 	}
 
 	if v, ok := tfMap["or"].([]any); ok && len(v) > 0 {
 		apiObject.Or = make([]awstypes.Expression, 0, len(v))
 		for _, sub := range v {
-			subExpr := expandFilterExpression(sub.(map[string]any))
-			if len(subExpr.And) > 0 {
-				apiObject.Or = append(apiObject.Or, subExpr.And...)
-			} else {
-				apiObject.Or = append(apiObject.Or, *subExpr)
-			}
+			apiObject.Or = append(apiObject.Or, *expandFilterExpression(sub.(map[string]any)))
 		}
 	}
 
 	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
-		subExpr := expandFilterExpression(v[0].(map[string]any))
-		if len(subExpr.And) == 1 {
-			apiObject.Not = &subExpr.And[0]
-		} else {
-			apiObject.Not = subExpr
-		}
-	}
-
-	if apiObject.And == nil && apiObject.Or == nil && apiObject.Not == nil {
-		if len(expressions) == 1 {
-			*apiObject = expressions[0]
-		} else if len(expressions) > 1 {
-			apiObject.And = expressions
-		}
+		apiObject.Not = expandFilterExpression(v[0].(map[string]any))
 	}
 
 	return apiObject
