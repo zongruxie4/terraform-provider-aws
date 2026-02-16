@@ -41,6 +41,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newFileSystemPolicyResource,
+			TypeName: "aws_s3files_file_system_policy",
+			Name:     "File System Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
