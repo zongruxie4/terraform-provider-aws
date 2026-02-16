@@ -11,8 +11,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1799,7 +1801,7 @@ func testAccDomain_spaceSettingsCustomFileSystemConfigs(t *testing.T) {
 	})
 }
 
-func testAccDomain_trustedIdentityPropagation(t *testing.T) {
+func testAccDomain_trustedIdentityPropagationSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1812,32 +1814,43 @@ func testAccDomain_trustedIdentityPropagation(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "ENABLED"),
+				Config: testAccDomainConfig_trustedIdentityPropagationSettings(rName, awstypes.FeatureStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auth_mode", string(awstypes.AuthModeSso)),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", string(awstypes.FeatureStatusEnabled)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "DISABLED"),
+				Config: testAccDomainConfig_trustedIdentityPropagationSettings(rName, awstypes.FeatureStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", string(awstypes.FeatureStatusDisabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config: testAccDomainConfig_trustedIdentityPropagation(rName, "ENABLED"),
+				Config: testAccDomainConfig_trustedIdentityPropagationSettings(rName, awstypes.FeatureStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.trusted_identity_propagation_settings.0.status", string(awstypes.FeatureStatusEnabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -3382,7 +3395,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, efsName))
 }
 
-func testAccDomainConfig_trustedIdentityPropagation(rName, status string) string {
+func testAccDomainConfig_trustedIdentityPropagationSettings(rName string, status awstypes.FeatureStatus) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -3398,6 +3411,10 @@ resource "aws_sagemaker_domain" "test" {
     trusted_identity_propagation_settings {
       status = %[2]q
     }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 }
 `, rName, status))
