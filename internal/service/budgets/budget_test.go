@@ -596,6 +596,20 @@ func TestAccBudgetsBudget_filterExpression(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccBudgetConfig_filterExpressionUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.tags.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.tags.0.values.*", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.cost_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.cost_categories.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.cost_categories.0.values.*", "staging"),
+				),
+			},
 		},
 	})
 }
@@ -934,6 +948,33 @@ resource "aws_budgets_budget" "test" {
   }
 }
 `, rName, acctest.Region())
+}
+
+func testAccBudgetConfig_filterExpressionUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  filter_expression {
+    or {
+      tags {
+        key    = "Environment"
+        values = ["staging"]
+      }
+    }
+    or {
+      cost_categories {
+        key    = "Environment"
+        values = ["staging"]
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
