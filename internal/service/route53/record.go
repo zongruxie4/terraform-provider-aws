@@ -1133,7 +1133,7 @@ func (recordImportID) Create(d *schema.ResourceData) string {
 	return createRecordImportID(d)
 }
 
-func (recordImportID) Parse(id string) (string, map[string]string, error) {
+func (recordImportID) Parse(id string) (string, map[string]any, error) {
 	parts := recordParseResourceID(id)
 	// We check that we have parsed the id into the correct number of segments.
 	// We need at least 3 segments!
@@ -1143,7 +1143,7 @@ func (recordImportID) Parse(id string) (string, map[string]string, error) {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"zone_id":      parts[0],
 		names.AttrName: parts[1],
 		names.AttrType: parts[2],

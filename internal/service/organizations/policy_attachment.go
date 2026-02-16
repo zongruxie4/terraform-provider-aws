@@ -206,11 +206,11 @@ func (policyAttachmentImportID) Create(d *schema.ResourceData) string {
 	return policyAttachmentCreateResourceID(d.Get("target_id").(string), d.Get("policy_id").(string))
 }
 
-func (policyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (policyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			"target_id": parts[0],
 			"policy_id": parts[1],
 		}
