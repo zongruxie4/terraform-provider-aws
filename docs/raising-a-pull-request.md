@@ -104,6 +104,12 @@ For greater detail, the following Go language resources provide common coding pr
 - [Effective Go](https://golang.org/doc/effective_go.html)
 - [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
+### AI-Assisted Changes
+
+AI-assisted changes are permitted, but any AI-generated code should be thoroughly reviewed before opening a pull request.
+
+See the [AI Policy](ai-policy.md) for additional details.
+
 ### Resource Contribution Guidelines
 
 The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. Some of these are not handled by the automated code testing that occurs during submission, so reviewers (even those outside the maintainers) are encouraged to reach out to contributors about any issues to save time.
