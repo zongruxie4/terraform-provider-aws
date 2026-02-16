@@ -41,6 +41,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newSynchronizationResource,
+			TypeName: "aws_s3files_synchronization",
+			Name:     "Synchronization",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrFileSystemID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
@@ -55,6 +65,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newSynchronizationResourceAsListResource,
+			TypeName: "aws_s3files_synchronization",
+			Name:     "Synchronization",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrFileSystemID),
 		},
 	})
 }
