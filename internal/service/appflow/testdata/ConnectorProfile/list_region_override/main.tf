@@ -1,6 +1,36 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_appflow_connector_profile" "test" {
+  region = var.region
+
+  count = var.resource_count
+
+  name            = "${var.rName}-${count.index}"
+  connector_type  = "Redshift"
+  connection_mode = "Public"
+
+  connector_profile_config {
+    connector_profile_credentials {
+      redshift {
+        password = aws_redshift_cluster.test.master_password
+        username = aws_redshift_cluster.test.master_username
+      }
+    }
+
+    connector_profile_properties {
+      redshift {
+        bucket_name        = var.rName
+        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+        database_name      = "dev"
+        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        data_api_role_arn  = aws_iam_role.test.arn
+        role_arn           = aws_iam_role.test.arn
+      }
+    }
+  }
+}
+
 data "aws_availability_zones" "available" {
   region = var.region
 
@@ -114,36 +144,6 @@ resource "aws_redshift_cluster" "test" {
   node_type           = "ra3.large"
   skip_final_snapshot = true
   encrypted           = true
-}
-
-resource "aws_appflow_connector_profile" "test" {
-  region = var.region
-
-  count = var.resource_count
-
-  name            = "${var.rName}-${count.index}"
-  connector_type  = "Redshift"
-  connection_mode = "Public"
-
-  connector_profile_config {
-    connector_profile_credentials {
-      redshift {
-        password = aws_redshift_cluster.test.master_password
-        username = aws_redshift_cluster.test.master_username
-      }
-    }
-
-    connector_profile_properties {
-      redshift {
-        bucket_name        = var.rName
-        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
-        database_name      = "dev"
-        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-        data_api_role_arn  = aws_iam_role.test.arn
-        role_arn           = aws_iam_role.test.arn
-      }
-    }
-  }
 }
 
 variable "rName" {
