@@ -5,7 +5,9 @@ package s3files
 
 // Exports for use in tests only.
 var (
-	ResourceFileSystem = newFileSystemResource
+	ResourceFileSystem      = newFileSystemResource
+	ResourceSynchronization = newSynchronizationResource
 
-	FindFileSystemByID = findFileSystemByID
+	FindFileSystemByID                = findFileSystemByID
+	FindSynchronizationByFileSystemID = findSynchronizationByFileSystemID
 )
