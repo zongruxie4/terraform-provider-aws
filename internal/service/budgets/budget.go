@@ -384,7 +384,7 @@ func filterExpressionElem(level int) *schema.Resource {
 				},
 			},
 		},
-		"tags": {
+		names.AttrTags: {
 			Type:     schema.TypeList,
 			Optional: true,
 			MaxItems: 1,
@@ -997,7 +997,7 @@ func flattenFilterExpression(apiObject *awstypes.Expression) []map[string]any {
 		tfMap["or"] = flattenFilterExpressions(apiObject.Or)
 	}
 	if apiObject.Tags != nil {
-		tfMap["tags"] = []map[string]any{flattenTagValues(apiObject.Tags)}
+		tfMap[names.AttrTags] = []map[string]any{flattenTagValues(apiObject.Tags)}
 	}
 
 	return []map[string]any{tfMap}
@@ -1237,7 +1237,7 @@ func expandFilterExpression(tfMap map[string]any) *awstypes.Expression {
 		apiObject.Dimensions = expandExpressionDimensionValues(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["tags"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].([]any); ok && len(v) > 0 {
 		apiObject.Tags = expandTagValues(v[0].(map[string]any))
 	}
 
@@ -1511,7 +1511,7 @@ func validateFilterExpressionForAbsent(expr map[string]any, path string) error {
 		}
 	}
 
-	if tags, ok := expr["tags"].([]any); ok {
+	if tags, ok := expr[names.AttrTags].([]any); ok {
 		for i, tag := range tags {
 			if tagMap, ok := tag.(map[string]any); ok {
 				if matchOpts, ok := tagMap["match_options"].([]any); ok {

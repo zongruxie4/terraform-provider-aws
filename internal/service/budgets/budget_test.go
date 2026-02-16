@@ -588,7 +588,7 @@ func TestAccBudgetsBudget_filterExpression(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.key", "REGION"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.values.*", "us-west-2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.values.*", acctest.Region()),
 				),
 			},
 			{
@@ -895,8 +895,6 @@ resource "aws_budgets_budget" "test" {
 
 func testAccBudgetConfig_filterExpression(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
   budget_type  = "COST"
@@ -929,13 +927,13 @@ resource "aws_budgets_budget" "test" {
       not {
         dimensions {
           key    = "REGION"
-          values = [data.aws_region.current.name]
+          values = [%[2]q]
         }
       }
     }
   }
 }
-`, rName)
+`, rName, acctest.Region())
 }
 
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
