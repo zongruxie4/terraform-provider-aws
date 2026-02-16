@@ -1,0 +1,287 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package s3files_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3files"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccS3FilesSynchronization_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var synchronization s3files.GetSynchronizationConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3files_synchronization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSynchronizationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttr(resourceName, "import_data_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "30"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrFileSystemID),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrFileSystemID,
+			},
+		},
+	})
+}
+
+func TestAccS3FilesSynchronization_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var synchronization s3files.GetSynchronizationConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3files_synchronization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSynchronizationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "30"),
+				),
+			},
+			{
+				Config: testAccSynchronizationConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "60"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckSynchronizationExists(ctx context.Context, n string, v *s3files.GetSynchronizationConfigurationOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+
+		output, err := tfs3files.FindSynchronizationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckSynchronizationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3files_synchronization" {
+				continue
+			}
+
+			_, err := tfs3files.FindSynchronizationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
+
+			if err == nil {
+				return fmt.Errorf("S3 Files Synchronization %s still exists", rs.Primary.Attributes[names.AttrFileSystemID])
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccSynchronizationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "s3files-private-beta-2025-%[1]s"
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "elasticfilesystem.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3files_file_system" "test" {
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
+resource "aws_s3files_synchronization" "test" {
+  file_system_id = aws_s3files_file_system.test.arn
+
+  import_data_rule {
+    prefix         = ""
+    size_less_than = 52673613135872
+    trigger        = "ON_FILE_ACCESS"
+  }
+
+  import_data_rule {
+    prefix         = "data/"
+    size_less_than = 1048576
+    trigger        = "ON_FILE_ACCESS"
+  }
+
+  expiration_data_rule {
+    days_after_last_access = 30
+  }
+}
+`, rName)
+}
+
+func testAccSynchronizationConfig_updated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "s3files-private-beta-2025-%[1]s"
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "elasticfilesystem.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3files_file_system" "test" {
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
+resource "aws_s3files_synchronization" "test" {
+  file_system_id = aws_s3files_file_system.test.arn
+
+  import_data_rule {
+    prefix         = ""
+    size_less_than = 52673613135872
+    trigger        = "ON_FILE_ACCESS"
+  }
+
+  import_data_rule {
+    prefix         = "data/"
+    size_less_than = 1048576
+    trigger        = "ON_FILE_ACCESS"
+  }
+
+  expiration_data_rule {
+    days_after_last_access = 60
+  }
+}
+`, rName)
+}
