@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
 * resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
 
 BUG FIXES:
