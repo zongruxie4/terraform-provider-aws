@@ -5,7 +5,9 @@ package s3files
 
 // Exports for use in tests only.
 var (
-	ResourceFileSystem = newFileSystemResource
+	ResourceAccessPoint = newAccessPointResource
+	ResourceFileSystem  = newFileSystemResource
 
-	FindFileSystemByID = findFileSystemByID
+	FindAccessPointByID = findAccessPointByID
+	FindFileSystemByID  = findFileSystemByID
 )
