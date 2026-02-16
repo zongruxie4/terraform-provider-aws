@@ -173,27 +173,141 @@ resource "aws_budgets_budget" "cost" {
 }
 ```
 
-Create a budget with filter expression
+Create a budget with a simple dimension filter
 
 ```terraform
-resource "aws_budgets_budget" "filter_example" {
-  name              = "budget-filter-example"
-  budget_type       = "COST"
-  limit_amount      = "1200"
-  limit_unit        = "USD"
-  time_period_end   = "2087-06-15_00:00"
-  time_period_start = "2017-07-01_00:00"
-  time_unit         = "MONTHLY"
+resource "aws_budgets_budget" "simple" {
+  name         = "budget-ec2-filter"
+  budget_type  = "COST"
+  limit_amount = "500"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
 
+  filter_expression {
+    dimensions {
+      key    = "SERVICE"
+      values = ["Amazon Elastic Compute Cloud - Compute"]
+    }
+  }
+}
+```
+
+Create a budget with AND filter
+
+```terraform
+resource "aws_budgets_budget" "and_example" {
+  name         = "budget-and-filter"
+  budget_type  = "COST"
+  limit_amount = "1200"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  # Each `and` block is one operand. AND requires at least 2 operands.
   filter_expression {
     and {
       dimensions {
         key    = "SERVICE"
         values = ["Amazon Elastic Compute Cloud - Compute"]
       }
+    }
+    and {
       tags {
         key    = "Environment"
         values = ["Production"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with OR filter
+
+```terraform
+resource "aws_budgets_budget" "or_example" {
+  name         = "budget-or-filter"
+  budget_type  = "COST"
+  limit_amount = "2000"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  # Each `or` block is one operand. OR requires at least 2 operands.
+  filter_expression {
+    or {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Elastic Compute Cloud - Compute"]
+      }
+    }
+    or {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Relational Database Service"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with NOT filter
+
+```terraform
+resource "aws_budgets_budget" "not_example" {
+  name         = "budget-not-filter"
+  budget_type  = "COST"
+  limit_amount = "1000"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  filter_expression {
+    not {
+      dimensions {
+        key    = "REGION"
+        values = ["us-west-2"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with a compound filter
+
+```terraform
+resource "aws_budgets_budget" "compound_example" {
+  name         = "budget-compound-filter"
+  budget_type  = "COST"
+  limit_amount = "1500"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  filter_expression {
+    # First OR operand: an AND expression
+    or {
+      and {
+        dimensions {
+          key    = "SERVICE"
+          values = ["Amazon Elastic Compute Cloud - Compute"]
+        }
+      }
+      and {
+        tags {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+      and {
+        cost_categories {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+    }
+    # Second OR operand: a NOT expression
+    or {
+      not {
+        dimensions {
+          key    = "REGION"
+          values = ["us-west-2"]
+        }
       }
     }
   }
@@ -305,14 +419,16 @@ Valid keys for `planned_limit` parameter.
 
 ### Filter Expression
 
-Valid keys for `filter_expression` parameter. This allows for more complex filtering using logical operators and multiple filter types.
+The `filter_expression` block maps directly to the [AWS Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Expression.html) object. Each expression block must have **exactly one root** — you can set one of `and`, `or`, `not`, `dimensions`, `tags`, or `cost_categories`, but not multiple at the same level.
 
-* `and` - (Optional) A list of filter expressions to combine with AND logic. Can be nested up to 5 levels.
-* `or` - (Optional) A list of filter expressions to combine with OR logic. Can be nested up to 5 levels.
-* `not` - (Optional) A filter expression to negate.
-* `dimensions` - (Optional) A list of [Dimension Filters](#dimension-filters).
-* `tags` - (Optional) A list of [Tag Filters](#tag-filters).
-* `cost_categories` - (Optional) A list of [Cost Category Filters](#cost-category-filters).
+~> **Important:** `and` and `or` require **at least 2 operands**. Each operand is a separate `and` or `or` block within the parent. Do not place multiple leaf filters (e.g., `dimensions` and `tags`) inside a single `and`/`or` block — instead, use one block per leaf. The maximum expression nesting depth allowed by the AWS API is 2.
+
+* `and` - (Optional) A list of filter expressions to combine with AND logic. Each `and` block is one operand and must itself contain exactly one root.
+* `or` - (Optional) A list of filter expressions to combine with OR logic. Each `or` block is one operand and must itself contain exactly one root.
+* `not` - (Optional) A single filter expression to negate. Must contain exactly one root.
+* `dimensions` - (Optional) A [Dimension Filter](#dimension-filters) block.
+* `tags` - (Optional) A [Tag Filter](#tag-filters) block.
+* `cost_categories` - (Optional) A [Cost Category Filter](#cost-category-filters) block.
 
 #### Dimension Filters
 

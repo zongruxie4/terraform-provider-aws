@@ -574,9 +574,7 @@ func TestAccBudgetsBudget_filterExpression(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
-					// Test OR operator at top level with 2 expressions
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.#", "2"),
-					// First OR expression: AND of dimensions, tags, cost_categories
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.0.key", "SERVICE"),
@@ -587,7 +585,6 @@ func TestAccBudgetsBudget_filterExpression(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.key", "Environment"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.values.*", "production"),
-					// Second OR expression: NOT dimensions
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.key", "REGION"),
