@@ -1,0 +1,102 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package s3files_test
+
+import (
+	"testing"
+
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/querycheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_s3files_synchronization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	identity := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity.GetIdentity(resourceName),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization.test", identity.Checks()),
+					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_s3files_synchronization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	identity := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity.GetIdentity(resourceName),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization.test", identity.Checks()),
+					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+				},
+			},
+		},
+	})
+}
