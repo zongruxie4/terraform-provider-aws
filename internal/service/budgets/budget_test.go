@@ -895,6 +895,8 @@ resource "aws_budgets_budget" "test" {
 
 func testAccBudgetConfig_filterExpression(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
   budget_type  = "COST"
@@ -927,7 +929,7 @@ resource "aws_budgets_budget" "test" {
       not {
         dimensions {
           key    = "REGION"
-          values = ["us-west-2"]
+          values = [data.aws_region.current.name]
         }
       }
     }
