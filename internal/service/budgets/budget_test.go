@@ -552,6 +552,57 @@ func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudget_filterExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_filterExpression(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "1000.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					// Test OR operator at top level with 2 expressions
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.#", "2"),
+					// First OR expression: AND of dimensions, tags, cost_categories
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.0.key", "SERVICE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.0.values.*", "Amazon Elastic Compute Cloud - Compute"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.1.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.1.tags.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.1.tags.0.values.*", "production"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.values.*", "production"),
+					// Second OR expression: NOT dimensions
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.key", "REGION"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.values.*", "us-west-2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBudgetExists(ctx context.Context, t *testing.T, n string, v *awstypes.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -841,6 +892,49 @@ resource "aws_budgets_budget" "test" {
 
   billing_view_arn = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
 
+}
+`, rName)
+}
+
+func testAccBudgetConfig_filterExpression(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  filter_expression {
+    or {
+      and {
+        dimensions {
+          key    = "SERVICE"
+          values = ["Amazon Elastic Compute Cloud - Compute"]
+        }
+      }
+      and {
+        tags {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+      and {
+        cost_categories {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+    }
+    or {
+      not {
+        dimensions {
+          key    = "REGION"
+          values = ["us-west-2"]
+        }
+      }
+    }
+  }
 }
 `, rName)
 }
