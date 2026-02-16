@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,42 +40,7 @@ func resourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-				domainSettings := diff.Get("domain_settings").([]any)
-				if len(domainSettings) == 0 {
-					return nil
-				}
-
-				settings := domainSettings[0].(map[string]any)
-				if settings == nil {
-					return nil
-				}
-
-				tipSettings, ok := settings["trusted_identity_propagation_settings"].([]any)
-				if !ok || len(tipSettings) == 0 {
-					return nil
-				}
-
-				tip := tipSettings[0].(map[string]any)
-				if tip == nil {
-					return nil
-				}
-
-				status, ok := tip[names.AttrStatus].(string)
-				if !ok || status != string(awstypes.FeatureStatusEnabled) {
-					return nil
-				}
-
-				authMode := diff.Get("auth_mode").(string)
-				if authMode != string(awstypes.AuthModeSso) {
-					return fmt.Errorf("trusted_identity_propagation_settings status can only be 'ENABLED' when auth_mode is 'SSO'")
-				}
-
-				return nil
-			},
-		),
+		CustomizeDiff: trustedIdentityPropagationSettingsCustomizeDiffFunc,
 
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
@@ -1508,6 +1472,40 @@ func resourceDomain() *schema.Resource {
 			},
 		},
 	}
+}
+
+func trustedIdentityPropagationSettingsCustomizeDiffFunc(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	domainSettings := diff.Get("domain_settings").([]any)
+	if len(domainSettings) == 0 {
+		return nil
+	}
+
+	settings := domainSettings[0].(map[string]any)
+	if settings == nil {
+		return nil
+	}
+
+	tipSettings, ok := settings["trusted_identity_propagation_settings"].([]any)
+	if !ok || len(tipSettings) == 0 {
+		return nil
+	}
+
+	tip := tipSettings[0].(map[string]any)
+	if tip == nil {
+		return nil
+	}
+
+	status, ok := tip[names.AttrStatus].(string)
+	if !ok || status != string(awstypes.FeatureStatusEnabled) {
+		return nil
+	}
+
+	authMode := diff.Get("auth_mode").(string)
+	if authMode != string(awstypes.AuthModeSso) {
+		return fmt.Errorf("trusted_identity_propagation_settings status can only be 'ENABLED' when auth_mode is 'SSO'")
+	}
+
+	return nil
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
