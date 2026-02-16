@@ -18,7 +18,6 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_s3files_file_system", sweepFileSystems, "aws_s3files_access_point", "aws_s3files_mount_target")
 	awsv2.Register("aws_s3files_access_point", sweepAccessPoints)
-	awsv2.Register("aws_s3files_mount_target", sweepMountTargets)
 }
 
 func sweepAccessPoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
