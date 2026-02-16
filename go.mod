@@ -228,6 +228,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rum v1.30.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.4
+	github.com/aws/aws-sdk-go-v2/service/s3files v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.6
@@ -395,3 +396,5 @@ require (
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+replace github.com/aws/aws-sdk-go-v2/service/s3files => /Volumes/develop/go/src/github.com/aws/aws-sdk-go-v2/service/s3files
