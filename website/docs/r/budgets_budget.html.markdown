@@ -173,6 +173,41 @@ resource "aws_budgets_budget" "cost" {
 }
 ```
 
+Create a budget with filter expression
+
+```terraform
+resource "aws_budgets_budget" "filter_example" {
+  name              = "budget-filter-example"
+  budget_type       = "COST"
+  limit_amount      = "1200"
+  limit_unit        = "USD"
+  time_period_end   = "2087-06-15_00:00"
+  time_period_start = "2017-07-01_00:00"
+  time_unit         = "MONTHLY"
+
+  filter_expression {
+    and {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Elastic Compute Cloud - Compute"]
+      }
+      tags {
+        key    = "Environment"
+        values = ["Production"]
+      }
+    }
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = ["test@example.com"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -185,8 +220,9 @@ The following arguments are optional:
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
 * `billing_view_arn` - (Optional) ARN of the billing view.
-* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
+* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget. Conflicts with `filter_expression`.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
+* `filter_expression` - (Optional) Object containing [Filter Expression](#filter-expression) to apply to budget. Conflicts with `cost_filter`.
 * `limit_amount` - (Optional) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Optional) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `name` - (Optional) The name of a budget. Unique within accounts.
@@ -266,6 +302,37 @@ Valid keys for `planned_limit` parameter.
 * `start_time` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `amount` - (Required) The amount of cost or usage being measured for a budget.
 * `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+
+### Filter Expression
+
+Valid keys for `filter_expression` parameter. This allows for more complex filtering using logical operators and multiple filter types.
+
+* `and` - (Optional) A list of filter expressions to combine with AND logic. Can be nested up to 5 levels.
+* `or` - (Optional) A list of filter expressions to combine with OR logic. Can be nested up to 5 levels.
+* `not` - (Optional) A filter expression to negate.
+* `dimensions` - (Optional) A list of [Dimension Filters](#dimension-filters).
+* `tags` - (Optional) A list of [Tag Filters](#tag-filters).
+* `cost_categories` - (Optional) A list of [Cost Category Filters](#cost-category-filters).
+
+#### Dimension Filters
+
+* `key` - (Required) The dimension to filter on. Valid values include `AZ`, `INSTANCE_TYPE`, `LINKED_ACCOUNT`, `OPERATION`, `PURCHASE_TYPE`, `REGION`, `SERVICE`, `USAGE_TYPE`, `USAGE_TYPE_GROUP`, `RECORD_TYPE`, `OPERATING_SYSTEM`, `TENANCY`, `SCOPE`, `PLATFORM`, `SUBSCRIPTION_ID`, `LEGAL_ENTITY_NAME`, `DEPLOYMENT_OPTION`, `DATABASE_ENGINE`, `CACHE_ENGINE`, `INSTANCE_TYPE_FAMILY`, `BILLING_ENTITY`, `RESERVATION_ID`, `RESOURCE_ID`, `RIGHTSIZING_TYPE`, `SAVINGS_PLANS_TYPE`, `SAVINGS_PLAN_ARN`, `PAYMENT_OPTION`, and `AGREEMENT_END_DATE_TIME_AFTER`, `AGREEMENT_END_DATE_TIME_BEFORE`.
+* `match_options` - (Optional) The match options for the dimension filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Required) A list of values to match against the dimension. At least one value is required.
+
+#### Tag Filters
+
+* `key` - (Optional) The tag key to filter on.
+* `match_options` - (Optional) The match options for the tag filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Optional) A list of tag values to match. At least one value is required.
+
+#### Cost Category Filters
+
+* `key` - (Optional) The cost category key to filter on.
+* `match_options` - (Optional) The match options for the cost category filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Optional) A list of cost category values to match. At least one value is required.
+
+Refer to [AWS Expression documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Expression.html) for further detail.
 
 ## Import
 
