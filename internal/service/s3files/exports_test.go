@@ -5,7 +5,9 @@ package s3files
 
 // Exports for use in tests only.
 var (
-	ResourceFileSystem = newFileSystemResource
+	ResourceFileSystem       = newFileSystemResource
+	ResourceFileSystemPolicy = newFileSystemPolicyResource
 
-	FindFileSystemByID = findFileSystemByID
+	FindFileSystemByID       = findFileSystemByID
+	FindFileSystemPolicyByID = findFileSystemPolicyByID
 )
