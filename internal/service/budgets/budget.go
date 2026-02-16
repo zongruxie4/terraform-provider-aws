@@ -36,6 +36,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const filterExpressionDepth = 3
+
 // @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
@@ -310,9 +312,9 @@ func resourceBudget() *schema.Resource {
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"cost_filter"},
-				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2"
+				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2" which is not mentioned in docs
 				// Schema level 3 = AWS depth 2 (because operators added when level > 1)
-				Elem: filterExpressionElem(3),
+				Elem: filterExpressionElem(filterExpressionDepth),
 			},
 		},
 	}
