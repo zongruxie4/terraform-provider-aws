@@ -167,18 +167,18 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	result, err := conn.CreateImageVersion(ctx, &input)
+	out, err := conn.CreateImageVersion(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
-	version := ExtractVersionFromARN(aws.ToString(result.ImageVersionArn))
-	out, err := waitImageVersionCreated(ctx, conn, name, version)
+	version := imageVersionFromARN(aws.ToString(out.ImageVersionArn))
+	waitOut, err := waitImageVersionCreated(ctx, conn, name, version)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
-	parts := []string{name, flex.Int32ToStringValue(out.Version)}
+	parts := []string{name, flex.Int32ToStringValue(waitOut.Version)}
 	id, err := flex.FlattenResourceId(parts, imageVersionResourcePartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
@@ -200,7 +200,7 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	image, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
-	if !d.IsNewResource() && errs.IsA[*retry.NotFoundError](err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
 		log.Printf("[WARN] Unable to find SageMaker AI Image Version (%s); removing from state", d.Id())
 		return diags
@@ -386,9 +386,10 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	return output.SageMakerImageVersionAliases, nil
 }
 
-// ExtractVersionFromARN extracts the version number from an ImageVersionArn
+// imageVersionFromARN extracts the version number from an ImageVersionArn
+//
 // ARN format: arn:aws:sagemaker:region:account:image-version/image-name/version
-func ExtractVersionFromARN(arn string) int32 {
+func imageVersionFromARN(arn string) int32 {
 	parts := strings.Split(arn, "/")
 	if len(parts) >= 3 {
 		if version, err := strconv.ParseInt(parts[len(parts)-1], 10, 32); err == nil {

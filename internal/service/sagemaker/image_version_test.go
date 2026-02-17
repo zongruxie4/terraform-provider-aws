@@ -480,47 +480,46 @@ resource "aws_sagemaker_image_version" "test" {
 `, baseImage))
 }
 
-func TestExtractVersionFromARN(t *testing.T) {
+func TestImageVersionFromARN(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name     string
-		arn      string
-		expected int32
+		name string
+		arn  string
+		want int32
 	}{
 		{
-			name:     "valid ARN with version",
-			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012:image-version/my-image/42", acctest.Partition(), acctest.Region()),
-			expected: 42,
+			name: "valid ARN with version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42", //lintignore:AWSAT003,AWSAT005
+			want: 42,
 		},
 		{
-			name:     "valid ARN with large version",
-			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:987654321098:image-version/test-image/999999", acctest.Partition(), acctest.Region()),
-			expected: 999999,
+			name: "valid ARN with large version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/999999", //lintignore:AWSAT003,AWSAT005
+			want: 999999,
 		},
 		{
-			name:     "invalid ARN - too few parts",
-			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012", acctest.Partition(), acctest.Region()),
-			expected: 0,
+			name: "invalid ARN - too few parts",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012", //lintignore:AWSAT003,AWSAT005
+			want: 0,
 		},
 		{
-			name:     "invalid ARN - non-numeric version",
-			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012:image-version/my-image/latest", acctest.Partition(), acctest.Region()),
-			expected: 0,
+			name: "invalid ARN - non-numeric version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest", //lintignore:AWSAT003,AWSAT005
+			want: 0,
 		},
 		{
-			name:     "empty ARN",
-			arn:      "",
-			expected: 0,
+			name: "empty ARN",
+			arn:  "",
+			want: 0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			result := tfsagemaker.ExtractVersionFromARN(tt.arn)
-			if result != tt.expected {
-				t.Errorf("extractVersionFromARN(%q) = %d, want %d", tt.arn, result, tt.expected)
+			if got := tfsagemaker.ImageVersionFromARN(tt.arn); got != tt.want {
+				t.Errorf("ImageVersionFromARN(%q) = %d, want %d", tt.arn, got, tt.want)
 			}
 		})
 	}
