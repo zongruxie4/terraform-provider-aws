@@ -19,11 +19,40 @@ func NewIdentitySchema(identitySpec inttypes.Identity) identityschema.Schema {
 }
 
 func newIdentityAttribute(attribute inttypes.IdentityAttribute) identityschema.Attribute {
-	attr := identityschema.StringAttribute{}
-	if attribute.Required() {
-		attr.RequiredForImport = true
-	} else {
-		attr.OptionalForImport = true
+	required := attribute.Required()
+
+	switch attribute.IdentityType() {
+	case inttypes.BoolIdentityType:
+		attr := identityschema.BoolAttribute{}
+		if required {
+			attr.RequiredForImport = true
+		} else {
+			attr.OptionalForImport = true
+		}
+		return attr
+	case inttypes.FloatIdentityType:
+		attr := identityschema.Float32Attribute{}
+		if required {
+			attr.RequiredForImport = true
+		} else {
+			attr.OptionalForImport = true
+		}
+		return attr
+	case inttypes.IntIdentityType:
+		attr := identityschema.Int32Attribute{}
+		if required {
+			attr.RequiredForImport = true
+		} else {
+			attr.OptionalForImport = true
+		}
+		return attr
+	default:
+		attr := identityschema.StringAttribute{}
+		if required {
+			attr.RequiredForImport = true
+		} else {
+			attr.OptionalForImport = true
+		}
+		return attr
 	}
-	return attr
 }
