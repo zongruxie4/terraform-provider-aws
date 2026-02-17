@@ -40,9 +40,11 @@ func TestAccNetworkManagerAttachmentRoutingPolicyLabel_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "attachment_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "attachment_id"),
 			},
 		},
 	})
@@ -119,12 +121,7 @@ func testAccCheckAttachmentRoutingPolicyLabelDestroy(ctx context.Context, t *tes
 				continue
 			}
 
-			coreNetworkID, attachmentID, err := tfnetworkmanager.AttachmentRoutingPolicyLabelParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfnetworkmanager.FindRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, attachmentID)
+			_, err := tfnetworkmanager.FindAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, rs.Primary.Attributes["core_network_id"], rs.Primary.Attributes["attachment_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -134,7 +131,7 @@ func testAccCheckAttachmentRoutingPolicyLabelDestroy(ctx context.Context, t *tes
 				return err
 			}
 
-			return fmt.Errorf("Network Manager Attachment Routing Policy Label %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Network Manager Attachment Routing Policy Label %s still exists", rs.Primary.Attributes["attachment_id"])
 		}
 
 		return nil
@@ -150,12 +147,7 @@ func testAccCheckAttachmentRoutingPolicyLabelExists(ctx context.Context, t *test
 
 		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
-		coreNetworkID, attachmentID, err := tfnetworkmanager.AttachmentRoutingPolicyLabelParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = tfnetworkmanager.FindRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, attachmentID)
+		_, err := tfnetworkmanager.FindAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, rs.Primary.Attributes["core_network_id"], rs.Primary.Attributes["attachment_id"])
 
 		return err
 	}
