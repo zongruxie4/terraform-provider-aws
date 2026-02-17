@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -417,12 +418,163 @@ func resourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"access_alternate_directly": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"add_supplemental_logging": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"additional_archived_log_dest_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"allow_selected_nested_tables": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"archived_log_dest_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"archived_logs_only": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"asm_password": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"asm_server": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"asm_user": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"authentication_method": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OracleAuthenticationMethod](),
 							ConflictsWith:    []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+						},
+						"char_length_semantics": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CharLengthSemantics](),
+						},
+						"convert_timestamp_with_zone_to_utc": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"direct_path_no_log": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"direct_path_parallel_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"enable_homogenous_tablespace": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"extra_archived_log_dest_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeInt,
+							},
+						},
+						"fail_task_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"number_datatype_scale": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"open_transaction_window": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"oracle_path_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"parallel_asm_read_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"read_ahead_blocks": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"read_table_space_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"replace_path_prefix": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"retry_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"secrets_manager_oracle_asm_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"secrets_manager_oracle_asm_secret_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"security_db_encryption": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"security_db_encryption_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"spatial_data_option_to_geo_json_function_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"standby_delay_time": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"trim_space_in_char": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_alternate_folder_for_online": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_bfile": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_direct_path_full_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_logminer_reader": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_path_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -779,13 +931,15 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		input.MongoDbSettings = settings
 	case engineNameOracle:
-		var settings = &awstypes.OracleSettings{
-			DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-		}
+		var settings *awstypes.OracleSettings
 
 		if v, ok := d.GetOk("oracle_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			settings.AuthenticationMethod = expandOracleSettings(v.([]any)).AuthenticationMethod
+			settings = expandOracleSettings(v.([]any)[0].(map[string]any))
+		} else {
+			settings = &awstypes.OracleSettings{}
 		}
+		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
@@ -1126,13 +1280,15 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					names.AttrDatabaseName, "oracle_settings",
 					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
 					"secrets_manager_access_role_arn", "secrets_manager_arn") {
-					var settings = &awstypes.OracleSettings{
-						DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-					}
+					var settings *awstypes.OracleSettings
 
 					if v, ok := d.GetOk("oracle_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-						settings.AuthenticationMethod = expandOracleSettings(v.([]any)).AuthenticationMethod
+						settings = expandOracleSettings(v.([]any)[0].(map[string]any))
+					} else {
+						settings = &awstypes.OracleSettings{}
 					}
+					settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
 						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
@@ -1658,7 +1814,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 }
 
 func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, arn string) ([]awstypes.ReplicationTask, error) {
-	input := &dms.DescribeReplicationTasksInput{
+	input := dms.DescribeReplicationTasksInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("endpoint-arn"),
@@ -1667,23 +1823,23 @@ func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, ar
 		},
 	}
 
-	return findReplicationTasks(ctx, conn, input)
+	return findReplicationTasks(ctx, conn, &input)
 }
 
-func flattenElasticsearchSettings(settings *awstypes.ElasticsearchSettings) []map[string]any {
-	if settings == nil {
+func flattenElasticsearchSettings(apiObject *awstypes.ElasticsearchSettings) []map[string]any {
+	if apiObject == nil {
 		return []map[string]any{}
 	}
 
-	m := map[string]any{
-		"endpoint_uri":               aws.ToString(settings.EndpointUri),
-		"error_retry_duration":       aws.ToInt32(settings.ErrorRetryDuration),
-		"full_load_error_percentage": aws.ToInt32(settings.FullLoadErrorPercentage),
-		"service_access_role_arn":    aws.ToString(settings.ServiceAccessRoleArn),
-		"use_new_mapping_type":       aws.ToBool(settings.UseNewMappingType),
+	tfMap := map[string]any{
+		"endpoint_uri":               aws.ToString(apiObject.EndpointUri),
+		"error_retry_duration":       aws.ToInt32(apiObject.ErrorRetryDuration),
+		"full_load_error_percentage": aws.ToInt32(apiObject.FullLoadErrorPercentage),
+		"service_access_role_arn":    aws.ToString(apiObject.ServiceAccessRoleArn),
+		"use_new_mapping_type":       aws.ToBool(apiObject.UseNewMappingType),
 	}
 
-	return []map[string]any{m}
+	return []map[string]any{tfMap}
 }
 
 func expandKafkaSettings(tfMap map[string]any) *awstypes.KafkaSettings {
@@ -1696,75 +1852,57 @@ func expandKafkaSettings(tfMap map[string]any) *awstypes.KafkaSettings {
 	if v, ok := tfMap["broker"].(string); ok && v != "" {
 		apiObject.Broker = aws.String(v)
 	}
-
 	if v, ok := tfMap["include_control_details"].(bool); ok {
 		apiObject.IncludeControlDetails = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_null_and_empty"].(bool); ok {
 		apiObject.IncludeNullAndEmpty = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_partition_value"].(bool); ok {
 		apiObject.IncludePartitionValue = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_table_alter_operations"].(bool); ok {
 		apiObject.IncludeTableAlterOperations = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_transaction_details"].(bool); ok {
 		apiObject.IncludeTransactionDetails = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["message_format"].(string); ok && v != "" {
 		apiObject.MessageFormat = awstypes.MessageFormatValue(v)
 	}
-
 	if v, ok := tfMap["message_max_bytes"].(int); ok && v != 0 {
 		apiObject.MessageMaxBytes = aws.Int32(int32(v))
 	}
-
 	if v, ok := tfMap["no_hex_prefix"].(bool); ok {
 		apiObject.NoHexPrefix = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["partition_include_schema_table"].(bool); ok {
 		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["sasl_mechanism"].(string); ok && v != "" {
 		apiObject.SaslMechanism = awstypes.KafkaSaslMechanism(v)
 	}
-
 	if v, ok := tfMap["sasl_password"].(string); ok && v != "" {
 		apiObject.SaslPassword = aws.String(v)
 	}
-
 	if v, ok := tfMap["sasl_username"].(string); ok && v != "" {
 		apiObject.SaslUsername = aws.String(v)
 	}
-
 	if v, ok := tfMap["security_protocol"].(string); ok && v != "" {
 		apiObject.SecurityProtocol = awstypes.KafkaSecurityProtocol(v)
 	}
-
 	if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
 		apiObject.SslCaCertificateArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["ssl_client_certificate_arn"].(string); ok && v != "" {
 		apiObject.SslClientCertificateArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["ssl_client_key_arn"].(string); ok && v != "" {
 		apiObject.SslClientKeyArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["ssl_client_key_password"].(string); ok && v != "" {
 		apiObject.SslClientKeyPassword = aws.String(v)
 	}
-
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
 	}
@@ -1782,69 +1920,51 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]any {
 	if v := apiObject.Broker; v != nil {
 		tfMap["broker"] = aws.ToString(v)
 	}
-
 	if v := apiObject.IncludeControlDetails; v != nil {
 		tfMap["include_control_details"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeNullAndEmpty; v != nil {
 		tfMap["include_null_and_empty"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludePartitionValue; v != nil {
 		tfMap["include_partition_value"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeTableAlterOperations; v != nil {
 		tfMap["include_table_alter_operations"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeTransactionDetails; v != nil {
 		tfMap["include_transaction_details"] = aws.ToBool(v)
 	}
-
 	tfMap["message_format"] = apiObject.MessageFormat
-
 	if v := apiObject.MessageMaxBytes; v != nil {
 		tfMap["message_max_bytes"] = aws.ToInt32(v)
 	}
-
 	if v := apiObject.NoHexPrefix; v != nil {
 		tfMap["no_hex_prefix"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.PartitionIncludeSchemaTable; v != nil {
 		tfMap["partition_include_schema_table"] = aws.ToBool(v)
 	}
-
 	tfMap["sasl_mechanism"] = apiObject.SaslMechanism
-
 	if v := apiObject.SaslPassword; v != nil {
 		tfMap["sasl_password"] = aws.ToString(v)
 	}
-
 	if v := apiObject.SaslUsername; v != nil {
 		tfMap["sasl_username"] = aws.ToString(v)
 	}
-
 	tfMap["security_protocol"] = apiObject.SecurityProtocol
-
 	if v := apiObject.SslCaCertificateArn; v != nil {
 		tfMap["ssl_ca_certificate_arn"] = aws.ToString(v)
 	}
-
 	if v := apiObject.SslClientCertificateArn; v != nil {
 		tfMap["ssl_client_certificate_arn"] = aws.ToString(v)
 	}
-
 	if v := apiObject.SslClientKeyArn; v != nil {
 		tfMap["ssl_client_key_arn"] = aws.ToString(v)
 	}
-
 	if v := apiObject.SslClientKeyPassword; v != nil {
 		tfMap["ssl_client_key_password"] = aws.ToString(v)
 	}
-
 	if v := apiObject.Topic; v != nil {
 		tfMap["topic"] = aws.ToString(v)
 	}
@@ -1862,39 +1982,30 @@ func expandKinesisSettings(tfMap map[string]any) *awstypes.KinesisSettings {
 	if v, ok := tfMap["include_control_details"].(bool); ok {
 		apiObject.IncludeControlDetails = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_null_and_empty"].(bool); ok {
 		apiObject.IncludeNullAndEmpty = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_partition_value"].(bool); ok {
 		apiObject.IncludePartitionValue = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_table_alter_operations"].(bool); ok {
 		apiObject.IncludeTableAlterOperations = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["include_transaction_details"].(bool); ok {
 		apiObject.IncludeTransactionDetails = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["message_format"].(string); ok && v != "" {
 		apiObject.MessageFormat = awstypes.MessageFormatValue(v)
 	}
-
 	if v, ok := tfMap["partition_include_schema_table"].(bool); ok {
 		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
-
 	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["use_large_integer_value"].(bool); ok {
 		apiObject.UseLargeIntegerValue = aws.Bool(v)
 	}
@@ -1912,37 +2023,28 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any 
 	if v := apiObject.IncludeControlDetails; v != nil {
 		tfMap["include_control_details"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeNullAndEmpty; v != nil {
 		tfMap["include_null_and_empty"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludePartitionValue; v != nil {
 		tfMap["include_partition_value"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeTableAlterOperations; v != nil {
 		tfMap["include_table_alter_operations"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.IncludeTransactionDetails; v != nil {
 		tfMap["include_transaction_details"] = aws.ToBool(v)
 	}
-
 	tfMap["message_format"] = string(apiObject.MessageFormat)
-
 	if v := apiObject.PartitionIncludeSchemaTable; v != nil {
 		tfMap["partition_include_schema_table"] = aws.ToBool(v)
 	}
-
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
 		tfMap["service_access_role_arn"] = aws.ToString(v)
 	}
-
 	if v := apiObject.StreamArn; v != nil {
 		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
-
 	if v := apiObject.UseLargeIntegerValue; v != nil {
 		tfMap["use_large_integer_value"] = aws.ToBool(v)
 	}
@@ -1950,21 +2052,21 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any 
 	return tfMap
 }
 
-func flattenMongoDBSettings(settings *awstypes.MongoDbSettings) []map[string]any {
-	if settings == nil {
-		return []map[string]any{}
+func flattenMongoDBSettings(apiObject *awstypes.MongoDbSettings) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]any{
-		"auth_type":           string(settings.AuthType),
-		"auth_mechanism":      string(settings.AuthMechanism),
-		"nesting_level":       string(settings.NestingLevel),
-		"extract_doc_id":      aws.ToString(settings.ExtractDocId),
-		"docs_to_investigate": aws.ToString(settings.DocsToInvestigate),
-		"auth_source":         aws.ToString(settings.AuthSource),
+	tfMap := map[string]any{
+		"auth_type":           apiObject.AuthType,
+		"auth_mechanism":      apiObject.AuthMechanism,
+		"nesting_level":       apiObject.NestingLevel,
+		"extract_doc_id":      aws.ToString(apiObject.ExtractDocId),
+		"docs_to_investigate": aws.ToString(apiObject.DocsToInvestigate),
+		"auth_source":         aws.ToString(apiObject.AuthSource),
 	}
 
-	return []map[string]any{m}
+	return []any{tfMap}
 }
 
 func expandRedisSettings(tfMap map[string]any) *awstypes.RedisSettings {
@@ -2009,7 +2111,7 @@ func flattenRedisSettings(apiObject *awstypes.RedisSettings) map[string]any {
 	if v := apiObject.AuthPassword; v != nil {
 		tfMap["auth_password"] = aws.ToString(v)
 	}
-	tfMap["auth_type"] = string(apiObject.AuthType)
+	tfMap["auth_type"] = apiObject.AuthType
 	if v := apiObject.AuthUserName; v != nil {
 		tfMap["auth_user_name"] = aws.ToString(v)
 	}
@@ -2021,23 +2123,24 @@ func flattenRedisSettings(apiObject *awstypes.RedisSettings) map[string]any {
 		tfMap["ssl_ca_certificate_arn"] = aws.ToString(v)
 	}
 	tfMap["ssl_security_protocol"] = string(apiObject.SslSecurityProtocol)
+
 	return tfMap
 }
 
-func flattenRedshiftSettings(settings *awstypes.RedshiftSettings) []map[string]any {
-	if settings == nil {
-		return []map[string]any{}
+func flattenRedshiftSettings(apiObject *awstypes.RedshiftSettings) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]any{
-		"bucket_folder":                     aws.ToString(settings.BucketFolder),
-		names.AttrBucketName:                aws.ToString(settings.BucketName),
-		"encryption_mode":                   string(settings.EncryptionMode),
-		"server_side_encryption_kms_key_id": aws.ToString(settings.ServerSideEncryptionKmsKeyId),
-		"service_access_role_arn":           aws.ToString(settings.ServiceAccessRoleArn),
+	tfMap := map[string]any{
+		"bucket_folder":                     aws.ToString(apiObject.BucketFolder),
+		names.AttrBucketName:                aws.ToString(apiObject.BucketName),
+		"encryption_mode":                   apiObject.EncryptionMode,
+		"server_side_encryption_kms_key_id": aws.ToString(apiObject.ServerSideEncryptionKmsKeyId),
+		"service_access_role_arn":           aws.ToString(apiObject.ServiceAccessRoleArn),
 	}
 
-	return []map[string]any{m}
+	return []any{tfMap}
 }
 
 func expandMySQLSettings(tfMap map[string]any) *awstypes.MySQLSettings {
@@ -2146,7 +2249,7 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 	return apiObject
 }
 
-func flattenMySQLSettings(apiObject *awstypes.MySQLSettings) []map[string]any {
+func flattenMySQLSettings(apiObject *awstypes.MySQLSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -2184,10 +2287,10 @@ func flattenMySQLSettings(apiObject *awstypes.MySQLSettings) []map[string]any {
 		tfMap["target_db_type"] = string(v)
 	}
 
-	return []map[string]any{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[string]any {
+func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -2241,7 +2344,247 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 		tfMap["slot_name"] = aws.ToString(v)
 	}
 
-	return []map[string]any{tfMap}
+	return []any{tfMap}
+}
+
+func expandOracleSettings(tfMap map[string]any) *awstypes.OracleSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OracleSettings{}
+
+	if v, ok := tfMap["access_alternate_directly"].(bool); ok {
+		apiObject.AccessAlternateDirectly = aws.Bool(v)
+	}
+	if v, ok := tfMap["add_supplemental_logging"].(bool); ok {
+		apiObject.AddSupplementalLogging = aws.Bool(v)
+	}
+	if v, ok := tfMap["additional_archived_log_dest_id"].(int); ok {
+		apiObject.AdditionalArchivedLogDestId = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["allow_selected_nested_tables"].(bool); ok {
+		apiObject.AllowSelectNestedTables = aws.Bool(v)
+	}
+	if v, ok := tfMap["archived_log_dest_id"].(int); ok {
+		apiObject.ArchivedLogDestId = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["archived_logs_only"].(bool); ok {
+		apiObject.ArchivedLogsOnly = aws.Bool(v)
+	}
+	if v, ok := tfMap["asm_password"].(string); ok && v != "" {
+		apiObject.AsmPassword = aws.String(v)
+	}
+	if v, ok := tfMap["asm_server"].(string); ok && v != "" {
+		apiObject.AsmServer = aws.String(v)
+	}
+	if v, ok := tfMap["asm_user"].(string); ok && v != "" {
+		apiObject.AsmUser = aws.String(v)
+	}
+	if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
+		apiObject.AuthenticationMethod = awstypes.OracleAuthenticationMethod(v)
+	}
+	if v, ok := tfMap["char_length_semantics"].(string); ok && v != "" {
+		apiObject.CharLengthSemantics = awstypes.CharLengthSemantics(v)
+	}
+	if v, ok := tfMap["convert_timestamp_with_zone_to_utc"].(bool); ok {
+		apiObject.ConvertTimestampWithZoneToUTC = aws.Bool(v)
+	}
+	if v, ok := tfMap["direct_path_no_log"].(bool); ok {
+		apiObject.DirectPathNoLog = aws.Bool(v)
+	}
+	if v, ok := tfMap["direct_path_parallel_load"].(bool); ok {
+		apiObject.DirectPathParallelLoad = aws.Bool(v)
+	}
+	if v, ok := tfMap["enable_homogenous_tablespace"].(bool); ok {
+		apiObject.EnableHomogenousTablespace = aws.Bool(v)
+	}
+	if v, ok := tfMap["extra_archived_log_dest_ids"].([]any); ok {
+		apiObject.ExtraArchivedLogDestIds = flex.ExpandInt32ValueList(v)
+	}
+	if v, ok := tfMap["fail_task_on_lob_truncation"].(bool); ok {
+		apiObject.FailTasksOnLobTruncation = aws.Bool(v)
+	}
+	if v, ok := tfMap["number_datatype_scale"].(int); ok {
+		apiObject.NumberDatatypeScale = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["open_transaction_window"].(int); ok {
+		apiObject.OpenTransactionWindow = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["oracle_path_prefix"].(string); ok && v != "" {
+		apiObject.OraclePathPrefix = aws.String(v)
+	}
+	if v, ok := tfMap["parallel_asm_read_threads"].(int); ok {
+		apiObject.ParallelAsmReadThreads = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["read_ahead_blocks"].(int); ok {
+		apiObject.ReadAheadBlocks = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["read_table_space_name"].(bool); ok {
+		apiObject.ReadTableSpaceName = aws.Bool(v)
+	}
+	if v, ok := tfMap["replace_path_prefix"].(bool); ok {
+		apiObject.ReplacePathPrefix = aws.Bool(v)
+	}
+	if v, ok := tfMap["retry_interval"].(int); ok {
+		apiObject.RetryInterval = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["secrets_manager_oracle_asm_access_role_arn"].(string); ok && v != "" {
+		apiObject.SecretsManagerOracleAsmAccessRoleArn = aws.String(v)
+	}
+	if v, ok := tfMap["secrets_manager_oracle_asm_secret_id"].(string); ok && v != "" {
+		apiObject.SecretsManagerOracleAsmSecretId = aws.String(v)
+	}
+	if v, ok := tfMap["security_db_encryption"].(string); ok && v != "" {
+		apiObject.SecurityDbEncryption = aws.String(v)
+	}
+	if v, ok := tfMap["security_db_encryption_name"].(string); ok && v != "" {
+		apiObject.SecurityDbEncryptionName = aws.String(v)
+	}
+	if v, ok := tfMap["spatial_data_option_to_geo_json_function_name"].(string); ok && v != "" {
+		apiObject.SpatialDataOptionToGeoJsonFunctionName = aws.String(v)
+	}
+	if v, ok := tfMap["standby_delay_time"].(int); ok {
+		apiObject.StandbyDelayTime = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["trim_space_in_char"].(bool); ok {
+		apiObject.TrimSpaceInChar = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_alternate_folder_for_online"].(bool); ok {
+		apiObject.UseAlternateFolderForOnline = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_bfile"].(bool); ok {
+		apiObject.UseBFile = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_direct_path_full_load"].(bool); ok {
+		apiObject.UseDirectPathFullLoad = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_logminer_reader"].(bool); ok {
+		apiObject.UseLogminerReader = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_path_prefix"].(string); ok && v != "" {
+		apiObject.UsePathPrefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenOracleSettings(apiObject *awstypes.OracleSettings) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AccessAlternateDirectly; v != nil {
+		tfMap["access_alternate_directly"] = aws.ToBool(v)
+	}
+	if v := apiObject.AddSupplementalLogging; v != nil {
+		tfMap["add_supplemental_logging"] = aws.ToBool(v)
+	}
+	if v := apiObject.AdditionalArchivedLogDestId; v != nil {
+		tfMap["additional_archived_log_dest_id"] = aws.ToInt32(v)
+	}
+	if v := apiObject.AllowSelectNestedTables; v != nil {
+		tfMap["allow_selected_nested_tables"] = aws.ToBool(v)
+	}
+	if v := apiObject.ArchivedLogDestId; v != nil {
+		tfMap["archived_log_dest_id"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ArchivedLogsOnly; v != nil {
+		tfMap["archived_logs_only"] = aws.ToBool(v)
+	}
+	if v := apiObject.AsmPassword; v != nil {
+		tfMap["asm_password"] = aws.ToString(v)
+	}
+	if v := apiObject.AsmServer; v != nil {
+		tfMap["asm_server"] = aws.ToString(v)
+	}
+	if v := apiObject.AsmUser; v != nil {
+		tfMap["asm_user"] = aws.ToString(v)
+	}
+	tfMap["authentication_method"] = apiObject.AuthenticationMethod
+	tfMap["char_length_semantics"] = apiObject.CharLengthSemantics
+	if v := apiObject.ConvertTimestampWithZoneToUTC; v != nil {
+		tfMap["convert_timestamp_with_zone_to_utc"] = aws.ToBool(v)
+	}
+	if v := apiObject.DirectPathNoLog; v != nil {
+		tfMap["direct_path_no_log"] = aws.ToBool(v)
+	}
+	if v := apiObject.DirectPathParallelLoad; v != nil {
+		tfMap["direct_path_parallel_load"] = aws.ToBool(v)
+	}
+	if v := apiObject.EnableHomogenousTablespace; v != nil {
+		tfMap["enable_homogenous_tablespace"] = aws.ToBool(v)
+	}
+	if v := apiObject.ExtraArchivedLogDestIds; v != nil {
+		tfMap["extra_archived_log_dest_ids"] = v
+	}
+	if v := apiObject.FailTasksOnLobTruncation; v != nil {
+		tfMap["fail_task_on_lob_truncation"] = aws.ToBool(v)
+	}
+	if v := apiObject.NumberDatatypeScale; v != nil {
+		tfMap["number_datatype_scale"] = aws.ToInt32(v)
+	}
+	if v := apiObject.OpenTransactionWindow; v != nil {
+		tfMap["open_transaction_window"] = aws.ToInt32(v)
+	}
+	if v := apiObject.OraclePathPrefix; v != nil {
+		tfMap["oracle_path_prefix"] = aws.ToString(v)
+	}
+	if v := apiObject.ParallelAsmReadThreads; v != nil {
+		tfMap["parallel_asm_read_threads"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ReadAheadBlocks; v != nil {
+		tfMap["read_ahead_blocks"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ReadTableSpaceName; v != nil {
+		tfMap["read_table_space_name"] = aws.ToBool(v)
+	}
+	if v := apiObject.ReplacePathPrefix; v != nil {
+		tfMap["replace_path_prefix"] = aws.ToBool(v)
+	}
+	if v := apiObject.RetryInterval; v != nil {
+		tfMap["retry_interval"] = aws.ToInt32(v)
+	}
+	if v := apiObject.SecretsManagerOracleAsmAccessRoleArn; v != nil {
+		tfMap["secrets_manager_oracle_asm_access_role_arn"] = aws.ToString(v)
+	}
+	if v := apiObject.SecretsManagerOracleAsmSecretId; v != nil {
+		tfMap["secrets_manager_oracle_asm_secret_id"] = aws.ToString(v)
+	}
+	if v := apiObject.SecurityDbEncryption; v != nil {
+		tfMap["security_db_encryption"] = aws.ToString(v)
+	}
+	if v := apiObject.SecurityDbEncryptionName; v != nil {
+		tfMap["security_db_encryption_name"] = aws.ToString(v)
+	}
+	if v := apiObject.SpatialDataOptionToGeoJsonFunctionName; v != nil {
+		tfMap["spatial_data_option_to_geo_json_function_name"] = aws.ToString(v)
+	}
+	if v := apiObject.StandbyDelayTime; v != nil {
+		tfMap["standby_delay_time"] = aws.ToInt32(v)
+	}
+	if v := apiObject.TrimSpaceInChar; v != nil {
+		tfMap["trim_space_in_char"] = aws.ToBool(v)
+	}
+	if v := apiObject.UseAlternateFolderForOnline; v != nil {
+		tfMap["use_alternate_folder_for_online"] = aws.ToBool(v)
+	}
+	if v := apiObject.UseBFile; v != nil {
+		tfMap["use_bfile"] = aws.ToBool(v)
+	}
+	if v := apiObject.UseDirectPathFullLoad; v != nil {
+		tfMap["use_direct_path_full_load"] = aws.ToBool(v)
+	}
+	if v := apiObject.UseLogminerReader; v != nil {
+		tfMap["use_logminer_reader"] = aws.ToBool(v)
+	}
+	if v := apiObject.UsePathPrefix; v != nil {
+		tfMap["use_path_prefix"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
@@ -2297,12 +2640,12 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 
 // engineSettingsToSet accepts the {engine}_settings block as a list
 // and returns the Set representation, with each element being the key/value pair
-func engineSettingsToSet(l []any) *schema.Set {
-	if len(l) == 0 || l[0] == nil {
+func engineSettingsToSet(tfList []any) *schema.Set {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]any)
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -2357,42 +2700,8 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *awstypes.En
 	d.Set(names.AttrDatabaseName, endpoint.DatabaseName)
 }
 
-func expandOracleSettings(tfList []any) *awstypes.OracleSettings {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObject awstypes.OracleSettings
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-
-		if !ok {
-			continue
-		}
-
-		if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
-			apiObject.AuthenticationMethod = awstypes.OracleAuthenticationMethod(v)
-		}
-	}
-
-	return &apiObject
-}
-
-func flattenOracleSettings(oracleSettings *awstypes.OracleSettings) []any {
-	if oracleSettings == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"authentication_method": oracleSettings.AuthenticationMethod,
-	}
-
-	return []any{tfMap}
-}
-
 func findEndpointByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Endpoint, error) {
-	input := &dms.DescribeEndpointsInput{
+	input := dms.DescribeEndpointsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("endpoint-id"),
@@ -2401,7 +2710,7 @@ func findEndpointByID(ctx context.Context, conn *dms.Client, id string) (*awstyp
 		},
 	}
 
-	return findEndpoint(ctx, conn, input)
+	return findEndpoint(ctx, conn, &input)
 }
 
 func findEndpoint(ctx context.Context, conn *dms.Client, input *dms.DescribeEndpointsInput) (*awstypes.Endpoint, error) {
