@@ -10,8 +10,18 @@ inttypes.StringIdentityAttributeWithMappedName(
 	{{- if .Optional }}false{{ else }}true{{ end -}},
 	{{- .ResourceAttributeName -}}
 ),
-{{- else if and .ValueType (eq .ValueType "int") -}}
+{{- else if and .ValueType (or (eq .ValueType "int") (eq .ValueType "int32")) -}}
 inttypes.IntIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "float") -}}
+inttypes.FloatIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "bool") -}}
+inttypes.BoolIdentityAttribute(
 	{{- .Name }},
 	{{- if .Optional }}false{{ else }}true{{ end -}}
 ),
