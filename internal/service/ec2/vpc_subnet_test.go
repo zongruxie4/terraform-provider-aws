@@ -1570,7 +1570,7 @@ resource "aws_vpc_ipam_pool_cidr" "vpc" {
 resource "aws_subnet" "test" {
   vpc_id              = aws_vpc.test.id
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.vpc.id
-  cidr_block = %[1]q
+  cidr_block          = %[1]q
   availability_zone   = data.aws_availability_zones.available.names[0]
 
   depends_on = [aws_vpc_ipam_pool_cidr.vpc]
