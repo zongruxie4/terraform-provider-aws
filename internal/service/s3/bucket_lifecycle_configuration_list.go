@@ -103,16 +103,10 @@ func (r *bucketLifecycleConfigurationListResource) list(ctx context.Context, req
 
 			var data bucketLifecycleConfigurationResourceModel
 
-			// Value not included in `GetBucketLifecycleConfigurationOutput`
-			data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
-			data.ID = data.Bucket
-
 			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, item, &data); diags.HasError() {
-					result.Diagnostics.Append(diags...)
-					yield(result)
-					return
-				}
+				flattenBucketLifecycleConfigurationResource(ctx, item, &data, &result.Diagnostics)
+				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
+				data.ID = data.Bucket
 
 				result.DisplayName = bucketName
 			})

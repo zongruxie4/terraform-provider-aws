@@ -486,7 +486,7 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -611,6 +611,10 @@ func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, 
 	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+}
+
+func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, bucket, data)...)
 }
 
 func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
