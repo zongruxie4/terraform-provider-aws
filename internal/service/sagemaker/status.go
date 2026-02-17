@@ -17,7 +17,7 @@ func statusNotebookInstance(ctx context.Context, conn *sagemaker.Client, noteboo
 	return func() (any, string, error) {
 		output, err := findNotebookInstanceByName(ctx, conn, notebookName)
 
-		if errs.IsA[*retry.NotFoundError](err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

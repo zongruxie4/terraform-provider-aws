@@ -479,3 +479,49 @@ resource "aws_sagemaker_image_version" "test" {
 }
 `, baseImage))
 }
+
+func TestExtractVersionFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		arn      string
+		expected int32
+	}{
+		{
+			name:     "valid ARN with version",
+			arn:      "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42",
+			expected: 42,
+		},
+		{
+			name:     "valid ARN with large version",
+			arn:      "arn:aws:sagemaker:eu-west-1:987654321098:image-version/test-image/999999",
+			expected: 999999,
+		},
+		{
+			name:     "invalid ARN - too few parts",
+			arn:      "arn:aws:sagemaker:us-west-2:123456789012",
+			expected: 0,
+		},
+		{
+			name:     "invalid ARN - non-numeric version",
+			arn:      "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest",
+			expected: 0,
+		},
+		{
+			name:     "empty ARN",
+			arn:      "",
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := tfsagemaker.ExtractVersionFromARN(tt.arn)
+			if result != tt.expected {
+				t.Errorf("extractVersionFromARN(%q) = %d, want %d", tt.arn, result, tt.expected)
+			}
+		})
+	}
+}
