@@ -10,7 +10,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/s3files"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3files/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,12 +27,17 @@ import (
 )
 
 // @FrameworkResource("aws_s3files_file_system_policy", name="File System Policy")
+// @IdentityAttribute("file_system_id")
+// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="file_system_id")
 func newFileSystemPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &fileSystemPolicyResource{}, nil
 }
 
 type fileSystemPolicyResource struct {
 	framework.ResourceWithModel[fileSystemPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *fileSystemPolicyResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -97,14 +102,18 @@ func (r *fileSystemPolicyResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	flattenFileSystemPolicyResource(ctx, output, &data, &response.Diagnostics)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+}
+
+func flattenFileSystemPolicyResource(ctx context.Context, output *s3files.GetFileSystemPolicyOutput, data *fileSystemPolicyResourceModel, diags *diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), *output.Policy)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.FileSystemID.ValueString())
+		smerr.AddError(ctx, diags, err, smerr.ID, data.FileSystemID.ValueString())
 		return
 	}
 	data.Policy = types.StringValue(policyToSet)
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *fileSystemPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -152,10 +161,6 @@ func (r *fileSystemPolicyResource) Delete(ctx context.Context, request resource.
 		}
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.FileSystemID.ValueString())
 	}
-}
-
-func (r *fileSystemPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrFileSystemID), request, response)
 }
 
 type fileSystemPolicyResourceModel struct {
