@@ -1667,9 +1667,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	// DEBUG: Log the source struct fields for the first element
 	if n > 0 {
 		firstElem := vFrom.Index(0)
-		tflog.SubsystemDebug(ctx, subsystemName, "DEBUG: First element of nested object collection", map[string]any{
-			"element_type": firstElem.Type().String(),
-		})
+		tflog.SubsystemDebug(ctx, subsystemName, "DEBUG: First element of nested object collection")
 
 		// Log exported fields only
 		if firstElem.Kind() == reflect.Struct {

@@ -171,8 +171,7 @@
     "autoflex.source.path": "Field4",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleInt64Value",
     "autoflex.target.path": "Field4",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]",
-    "element_type": "flex.awsSingleInt64Value"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]"
   },
   {
     "@level": "debug",
