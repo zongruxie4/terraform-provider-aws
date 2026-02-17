@@ -1970,10 +1970,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
-		"source_type": vFrom.Type(ctx).String(),
-		"target_type": vTo.Type().String(),
-	})
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper")
 
 	// Get the nested Objects as a slice
 	from, d := vFrom.ToObjectSlice(ctx)
