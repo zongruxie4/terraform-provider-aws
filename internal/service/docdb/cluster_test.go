@@ -1141,7 +1141,7 @@ func TestAccDocDBCluster_serverless(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					// AWS still has the serverless config, and DiffSuppressFunc accepts it
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "1"),
@@ -1162,7 +1162,7 @@ func TestAccDocDBCluster_serverlessAddToExisting(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_serverlessRemoved(rName),
@@ -1196,7 +1196,7 @@ func TestAccDocDBCluster_serverlessAddToExisting(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "4"),
