@@ -73,11 +73,12 @@
     "@level": "trace",
     "@message": "Starting XML wrapper flatten",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
     "autoflex.target.path": "",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "wrapper_field": "Items"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "trace",

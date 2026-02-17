@@ -73,11 +73,12 @@
     "@level": "trace",
     "@message": "Starting XML wrapper flatten",
     "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
+    "autoflex.target.fieldname": "Headers",
     "autoflex.target.path": "",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
-    "wrapper_field": "Items"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]"
   },
   {
     "@level": "trace",
