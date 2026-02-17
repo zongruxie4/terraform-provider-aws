@@ -1954,7 +1954,6 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Creating list value", map[string]any{
 			"element_count": len(elements),
-			"element_type":  elementType.String(),
 		})
 
 		list, d := types.ListValue(elementType, elements)
@@ -2119,7 +2118,6 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Creating set value", map[string]any{
 			"element_count": len(elements),
-			"element_type":  elementType.String(),
 		})
 
 		set, d := types.SetValue(elementType, elements)

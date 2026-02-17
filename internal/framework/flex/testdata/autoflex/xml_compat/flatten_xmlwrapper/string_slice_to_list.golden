@@ -146,8 +146,7 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsHeadersForFlatten",
     "autoflex.target.path": "",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
-    "element_count": 2,
-    "element_type": "basetypes.StringType"
+    "element_count": 2
   },
   {
     "@level": "trace",
