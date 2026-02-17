@@ -14,7 +14,7 @@ Generally, dependency updates are handled by maintainers.
 
 ### Go Updates
 
-Go is transparent about disclosing security fixes and significant changes in updates. To find specifics, see the version milestone. For example, the [Go 1.25.7 milestone](https://github.com/golang/go/issues?q=milestone%3AGo1.25.7) lists four security updates. NOTE: Security updates don't always include the "Security" label. Highlights can also be found in the [Release History](https://go.dev/doc/devel/release).
+Go is transparent about disclosing security fixes and significant changes in updates. To find specifics, see the version milestone. For example, the [Go 1.25.7 milestone](https://github.com/golang/go/issues?q=milestone%3AGo1.25.7) lists four security updates. NOTE: Security updates don't always include the "Security" label. Highlights and links to milestones can also be found in the [Release History](https://go.dev/doc/devel/release).
 
 ### AWS SDK for Go V2 and Other Dependency Updates
 
