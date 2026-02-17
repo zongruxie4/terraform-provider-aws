@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -428,7 +427,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -1110,9 +1109,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1144,9 +1141,8 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1164,8 +1160,8 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1181,7 +1177,7 @@ func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretr
 }
 
 func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusCreating,
 			clusterStatusBackingUp,
@@ -1208,7 +1204,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, 
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusDeleting,
