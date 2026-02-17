@@ -52,7 +52,7 @@ import (
 )
 
 // @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
-// @IdentityAttribute("bucket", identityDuplicateAttributes="id")
+// @IdentityAttribute("bucket")
 // @Testing(importStateIdAttribute="bucket")
 // @Testing(preIdentityVersion="6.32.0")
 // @Testing(existsTakesT=false, destroyTakesT=false)
@@ -611,6 +611,7 @@ func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, 
 	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), types.StringValue(createResourceID(bucket, expectedBucketOwner)))...)
 }
 
 func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {

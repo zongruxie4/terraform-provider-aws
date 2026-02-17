@@ -58,9 +58,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-			),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -101,8 +99,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
 		},
 		{
 			Factory:  newDirectoryBucketResourceAsListResource,
