@@ -134,11 +134,6 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 				result.DisplayName = name
 			})
 
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
 			if !yield(result) {
 				return
 			}
