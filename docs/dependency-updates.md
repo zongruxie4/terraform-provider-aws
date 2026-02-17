@@ -7,15 +7,26 @@ Generally, dependency updates are handled by maintainers.
 
 ## Changelog Entries for Dependency Updates
 
-While being careful to avoid Changelog noise, dependency updates (including Go version updates) that address security vulnerabilities or contain bug fixes affecting operators should include a changelog entry. Use the `release-note:note` header with a `provider` prefix:
+**Inlcude a changelog entry for dependency updates that address:**
+
+1. Security vulnerabilities
+2. Significant changes (e.g., AWS SDK authentication changes)
+
+### Go Updates
+
+Go is transparent about disclosing security fixes and significant changes in updates. To find specifics, see the version milestone. For example, the [Go 1.25.7 milestone](https://github.com/golang/go/issues?q=milestone%3AGo1.25.7) lists four security updates. NOTE: Security updates don't always include the "Security" label. Highlights can also be found in the [Release History](https://go.dev/doc/devel/release).
+
+### AWS SDK for Go V2 and Other Dependency Updates
+
+Other teams aren't as transparent as Go about security fixes. But, a quick way to find disclosed fixes is reviewing the Release Notes and commits in dependabot PRs. For the AWS SDK, you can also review the [CHANGELOG](https://raw.githubusercontent.com/aws/aws-sdk-go-v2/refs/heads/main/CHANGELOG.md).
+
+### Changelog Format
 
 ``````
 ```release-note:note
 provider: Updated Go version to v1.25.7 (addresses GO-2026-4337, Unexpected session resumption)
 ```
 ``````
-
-For updates without security implications, a changelog entry is optional but encouraged for significant changes (e.g., AWS SDK authentication changes).
 
 ## Go Version Update
 
