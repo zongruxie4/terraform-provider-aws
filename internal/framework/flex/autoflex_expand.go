@@ -1975,11 +1975,6 @@ func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Con
 		"target_type": vTo.Type().String(),
 	})
 
-	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
-		"source_type": vFrom.Type(ctx).String(),
-		"target_type": vTo.Type().String(),
-	})
-
 	// Get the nested Objects as a slice
 	from, d := vFrom.ToObjectSlice(ctx)
 	diags.Append(d...)
