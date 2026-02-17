@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -37,6 +36,11 @@ import (
 )
 
 // @FrameworkResource("aws_s3_bucket_metadata_configuration", name="Bucket Metadata Configuration")
+// @IdentityAttribute("bucket")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;awstypes;awstypes.MetadataConfigurationResult")
+// @Testing(importStateIdAttribute="bucket")
+// @Testing(preIdentityVersion="6.32.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBucketMetadataConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketMetadataConfigurationResource{}
 
@@ -47,6 +51,7 @@ func newBucketMetadataConfigurationResource(_ context.Context) (resource.Resourc
 
 type bucketMetadataConfigurationResource struct {
 	framework.ResourceWithModel[bucketMetadataConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -451,20 +456,6 @@ func (r *bucketMetadataConfigurationResource) Delete(ctx context.Context, reques
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata Configuration (%s) delete", bucket), err.Error())
 
 		return
-	}
-}
-
-func (r *bucketMetadataConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
-	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
-	if expectedBucketOwner != "" {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
 	}
 }
 

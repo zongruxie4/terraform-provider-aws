@@ -1,9 +1,26 @@
+## 6.33.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_budgets_budget: Add `filter_expression` attribute ([#46501](https://github.com/hashicorp/terraform-provider-aws/issues/46501))
+* resource/aws_dms_endpoint: Add `access_alternate_directly`, `add_supplemental_logging`, `additional_archived_log_dest_id`, `allow_selected_nested_tables`, `archived_log_dest_id`, `archived_logs_only`, `asm_password`, `asm_server`, `asm_user`, `authentication_method`, `char_length_semantics`, `convert_timestamp_with_zone_to_utc`, `direct_path_no_log`, `direct_path_parallel_load`, `enable_homogenous_tablespace`, `extra_archived_log_dest_ids`, `fail_task_on_lob_truncation`, `number_datatype_scale`, `open_transaction_window`, `oracle_path_prefix`, `parallel_asm_read_threads`, `read_ahead_blocks`, `read_table_space_name`, `replace_path_prefix`, `retry_interval`, `secrets_manager_oracle_asm_access_role_arn`, `secrets_manager_oracle_asm_secret_id`, `security_db_encryption`, `security_db_encryption_name`, `spatial_data_option_to_geo_json_function_name`, `standby_delay_time`, `trim_space_in_char`, `use_alternate_folder_for_online, `use_bfile`, `use_direct_path_full_load`, `use_logminer_reader`, and `use_path_prefix` arguments to the `oracle_settings` configuration block ([#46516](https://github.com/hashicorp/terraform-provider-aws/issues/46516))
+* resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
+* resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
+* resource/aws_sagemaker_domain: Add `domain_settings.trusted_identity_propagation_settings` argument ([#44965](https://github.com/hashicorp/terraform-provider-aws/issues/44965))
+
+BUG FIXES:
+
+* data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression ([#46478](https://github.com/hashicorp/terraform-provider-aws/issues/46478))
+* resource/aws_cur_report_definition: Support `ap-southeast-5` and `eusc-de-east-1` as valid values for `s3_region` ([#46475](https://github.com/hashicorp/terraform-provider-aws/issues/46475))
+* resource/aws_lb: Fix `ValidationError ... Member must have length less than or equal to 20` errors when more than 20 load balancer attributes are being modified ([#46496](https://github.com/hashicorp/terraform-provider-aws/issues/46496))
+
 ## 6.32.1 (February 13, 2026)
 
 BUG FIXES:
 
 * resource/aws_autoscaling_group: Fix `couldn't find resource` error during creation when waiting for capacity to be satisfied ([#46452](https://github.com/hashicorp/terraform-provider-aws/issues/46452))
 * resource/aws_cloudwatch_log_delivery: Fix `s3_delivery_configuration.suffix_path` losing AWS-added prefix on update ([#46455](https://github.com/hashicorp/terraform-provider-aws/issues/46455))
+* resource/aws_dynamodb_table: Fix perpetual diff when using `key_schema` with a single range key on a global secondary index ([#46442](https://github.com/hashicorp/terraform-provider-aws/issues/46442))
 * resource/aws_elasticache_replication_group: Fix false validation error when `auth_token` references another resource ([#46454](https://github.com/hashicorp/terraform-provider-aws/issues/46454))
 
 ## 6.32.0 (February 11, 2026)

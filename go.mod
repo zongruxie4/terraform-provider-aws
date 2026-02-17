@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.25.6
+go 1.25.7
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8
@@ -62,7 +62,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.5
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.9
@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/connect v1.161.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.162.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
@@ -105,8 +105,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.287.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.289.1
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10
@@ -141,13 +141,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.16
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.10
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/iot v1.72.1
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.10
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.16
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.47.0
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0
@@ -155,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.4
-	github.com/aws/aws-sdk-go-v2/service/kms v1.49.5
+	github.com/aws/aws-sdk-go-v2/service/kms v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.0
@@ -231,12 +231,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.232.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.233.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.18
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.3
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.9
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.8
