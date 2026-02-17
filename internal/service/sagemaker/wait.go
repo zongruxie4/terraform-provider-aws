@@ -17,33 +17,31 @@ import (
 )
 
 const (
-	notebookInstanceInServiceTimeout   = 60 * time.Minute
-	notebookInstanceStoppedTimeout     = 10 * time.Minute
-	notebookInstanceDeletedTimeout     = 10 * time.Minute
-	modelPackageGroupCompletedTimeout  = 10 * time.Minute
-	modelPackageGroupDeletedTimeout    = 10 * time.Minute
-	imageCreatedTimeout                = 10 * time.Minute
-	imageDeletedTimeout                = 10 * time.Minute
-	imageVersionCreatedTimeout         = 10 * time.Minute
-	imageVersionDeletedTimeout         = 10 * time.Minute
-	domainInServiceTimeout             = 20 * time.Minute
-	domainDeletedTimeout               = 20 * time.Minute
-	featureGroupCreatedTimeout         = 20 * time.Minute
-	featureGroupDeletedTimeout         = 10 * time.Minute
-	appInServiceTimeout                = 10 * time.Minute
-	appDeletedTimeout                  = 10 * time.Minute
-	flowDefinitionActiveTimeout        = 2 * time.Minute
-	flowDefinitionDeletedTimeout       = 2 * time.Minute
-	projectCreatedTimeout              = 15 * time.Minute
-	projectDeletedTimeout              = 15 * time.Minute
-	workforceActiveTimeout             = 10 * time.Minute
-	workforceDeletedTimeout            = 10 * time.Minute
-	spaceDeletedTimeout                = 10 * time.Minute
-	spaceInServiceTimeout              = 10 * time.Minute
-	monitoringScheduleScheduledTimeout = 2 * time.Minute
-	monitoringScheduleStoppedTimeout   = 2 * time.Minute
-	mlflowTrackingServerTimeout        = 45 * time.Minute
-	hubTimeout                         = 10 * time.Minute
+	notebookInstanceInServiceTimeout  = 60 * time.Minute
+	notebookInstanceStoppedTimeout    = 10 * time.Minute
+	notebookInstanceDeletedTimeout    = 10 * time.Minute
+	modelPackageGroupCompletedTimeout = 10 * time.Minute
+	modelPackageGroupDeletedTimeout   = 10 * time.Minute
+	imageCreatedTimeout               = 10 * time.Minute
+	imageDeletedTimeout               = 10 * time.Minute
+	imageVersionCreatedTimeout        = 10 * time.Minute
+	imageVersionDeletedTimeout        = 10 * time.Minute
+	domainInServiceTimeout            = 20 * time.Minute
+	domainDeletedTimeout              = 20 * time.Minute
+	featureGroupCreatedTimeout        = 20 * time.Minute
+	featureGroupDeletedTimeout        = 10 * time.Minute
+	appInServiceTimeout               = 10 * time.Minute
+	appDeletedTimeout                 = 10 * time.Minute
+	flowDefinitionActiveTimeout       = 2 * time.Minute
+	flowDefinitionDeletedTimeout      = 2 * time.Minute
+	projectCreatedTimeout             = 15 * time.Minute
+	projectDeletedTimeout             = 15 * time.Minute
+	workforceActiveTimeout            = 10 * time.Minute
+	workforceDeletedTimeout           = 10 * time.Minute
+	spaceDeletedTimeout               = 10 * time.Minute
+	spaceInServiceTimeout             = 10 * time.Minute
+	mlflowTrackingServerTimeout       = 45 * time.Minute
+	hubTimeout                        = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
