@@ -325,8 +325,10 @@ func resourceCluster() *schema.Resource {
 							),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								config := d.GetRawConfig()
+								if config.IsNull() || !config.IsKnown() {
+									return false
+								}
 								raw := config.GetAttr("serverless_v2_scaling_configuration")
-
 								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
 									return true
 								}
@@ -342,8 +344,10 @@ func resourceCluster() *schema.Resource {
 							),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								config := d.GetRawConfig()
+								if config.IsNull() || !config.IsKnown() {
+									return false
+								}
 								raw := config.GetAttr("serverless_v2_scaling_configuration")
-
 								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
 									return true
 								}
