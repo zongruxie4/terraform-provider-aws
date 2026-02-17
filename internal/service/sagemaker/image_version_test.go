@@ -490,22 +490,22 @@ func TestExtractVersionFromARN(t *testing.T) {
 	}{
 		{
 			name:     "valid ARN with version",
-			arn:      "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42",
+			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012:image-version/my-image/42", acctest.Partition(), acctest.Region()),
 			expected: 42,
 		},
 		{
 			name:     "valid ARN with large version",
-			arn:      "arn:aws:sagemaker:eu-west-1:987654321098:image-version/test-image/999999",
+			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:987654321098:image-version/test-image/999999", acctest.Partition(), acctest.Region()),
 			expected: 999999,
 		},
 		{
 			name:     "invalid ARN - too few parts",
-			arn:      "arn:aws:sagemaker:us-west-2:123456789012",
+			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012", acctest.Partition(), acctest.Region()),
 			expected: 0,
 		},
 		{
 			name:     "invalid ARN - non-numeric version",
-			arn:      "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest",
+			arn:      fmt.Sprintf("arn:%s:sagemaker:%s:123456789012:image-version/my-image/latest", acctest.Partition(), acctest.Region()),
 			expected: 0,
 		},
 		{
