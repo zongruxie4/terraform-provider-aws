@@ -96,7 +96,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	policyName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	roleName := d.Get(names.AttrRole).(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
@@ -238,13 +238,13 @@ func (rolePolicyImportID) Create(d *schema.ResourceData) string {
 	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
 }
 
-func (rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyImportID) Parse(id string) (string, map[string]any, error) {
 	roleName, policyName, err := rolePolicyParseID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrRole: roleName,
 		names.AttrName: policyName,
 	}

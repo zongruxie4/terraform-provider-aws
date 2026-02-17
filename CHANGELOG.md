@@ -1,8 +1,99 @@
-## 6.31.0 (Unreleased)
+## 6.33.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_budgets_budget: Add `filter_expression` attribute ([#46501](https://github.com/hashicorp/terraform-provider-aws/issues/46501))
+* resource/aws_dms_endpoint: Add `access_alternate_directly`, `add_supplemental_logging`, `additional_archived_log_dest_id`, `allow_selected_nested_tables`, `archived_log_dest_id`, `archived_logs_only`, `asm_password`, `asm_server`, `asm_user`, `authentication_method`, `char_length_semantics`, `convert_timestamp_with_zone_to_utc`, `direct_path_no_log`, `direct_path_parallel_load`, `enable_homogenous_tablespace`, `extra_archived_log_dest_ids`, `fail_task_on_lob_truncation`, `number_datatype_scale`, `open_transaction_window`, `oracle_path_prefix`, `parallel_asm_read_threads`, `read_ahead_blocks`, `read_table_space_name`, `replace_path_prefix`, `retry_interval`, `secrets_manager_oracle_asm_access_role_arn`, `secrets_manager_oracle_asm_secret_id`, `security_db_encryption`, `security_db_encryption_name`, `spatial_data_option_to_geo_json_function_name`, `standby_delay_time`, `trim_space_in_char`, `use_alternate_folder_for_online, `use_bfile`, `use_direct_path_full_load`, `use_logminer_reader`, and `use_path_prefix` arguments to the `oracle_settings` configuration block ([#46516](https://github.com/hashicorp/terraform-provider-aws/issues/46516))
+* resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
+* resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
+* resource/aws_sagemaker_domain: Add `domain_settings.trusted_identity_propagation_settings` argument ([#44965](https://github.com/hashicorp/terraform-provider-aws/issues/44965))
+
+BUG FIXES:
+
+* data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression ([#46478](https://github.com/hashicorp/terraform-provider-aws/issues/46478))
+* resource/aws_cur_report_definition: Support `ap-southeast-5` and `eusc-de-east-1` as valid values for `s3_region` ([#46475](https://github.com/hashicorp/terraform-provider-aws/issues/46475))
+* resource/aws_lb: Fix `ValidationError ... Member must have length less than or equal to 20` errors when more than 20 load balancer attributes are being modified ([#46496](https://github.com/hashicorp/terraform-provider-aws/issues/46496))
+
+## 6.32.1 (February 13, 2026)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Fix `couldn't find resource` error during creation when waiting for capacity to be satisfied ([#46452](https://github.com/hashicorp/terraform-provider-aws/issues/46452))
+* resource/aws_cloudwatch_log_delivery: Fix `s3_delivery_configuration.suffix_path` losing AWS-added prefix on update ([#46455](https://github.com/hashicorp/terraform-provider-aws/issues/46455))
+* resource/aws_dynamodb_table: Fix perpetual diff when using `key_schema` with a single range key on a global secondary index ([#46442](https://github.com/hashicorp/terraform-provider-aws/issues/46442))
+* resource/aws_elasticache_replication_group: Fix false validation error when `auth_token` references another resource ([#46454](https://github.com/hashicorp/terraform-provider-aws/issues/46454))
+
+## 6.32.0 (February 11, 2026)
 
 FEATURES:
 
+* **New List Resource:** `aws_ecr_repository` ([#46344](https://github.com/hashicorp/terraform-provider-aws/issues/46344))
+* **New List Resource:** `aws_lambda_permission` ([#46341](https://github.com/hashicorp/terraform-provider-aws/issues/46341))
+* **New List Resource:** `aws_route` ([#46370](https://github.com/hashicorp/terraform-provider-aws/issues/46370))
+* **New List Resource:** `aws_route53_resolver_rule_association` ([#46349](https://github.com/hashicorp/terraform-provider-aws/issues/46349))
+* **New List Resource:** `aws_route_table` ([#46337](https://github.com/hashicorp/terraform-provider-aws/issues/46337))
+* **New List Resource:** `aws_s3_directory_bucket` ([#46373](https://github.com/hashicorp/terraform-provider-aws/issues/46373))
+* **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
+* **New List Resource:** `aws_secretsmanager_secret_version` ([#46342](https://github.com/hashicorp/terraform-provider-aws/issues/46342))
+* **New List Resource:** `aws_vpc_security_group_egress_rule` ([#46368](https://github.com/hashicorp/terraform-provider-aws/issues/46368))
+* **New List Resource:** `aws_vpc_security_group_ingress_rule` ([#46367](https://github.com/hashicorp/terraform-provider-aws/issues/46367))
+* **New Resource:** `aws_ec2_secondary_network` ([#46408](https://github.com/hashicorp/terraform-provider-aws/issues/46408))
+* **New Resource:** `aws_ec2_secondary_subnet` ([#46408](https://github.com/hashicorp/terraform-provider-aws/issues/46408))
+
+ENHANCEMENTS:
+
+* resource/aws_instance: Add `secondary_network_interface` argument ([#46408](https://github.com/hashicorp/terraform-provider-aws/issues/46408))
+* resource/aws_quicksight_data_set: Support `use_as` property to create special RLS rules dataset ([#42687](https://github.com/hashicorp/terraform-provider-aws/issues/42687))
+
+BUG FIXES:
+
+* data-source/aws_odb_network_peering_connections: Fix plan phase failure of listing. ([#46384](https://github.com/hashicorp/terraform-provider-aws/issues/46384))
+* list-resource/aws_s3_bucket_policy: Now supports listing Bucket Policies for S3 Directory Buckets ([#46401](https://github.com/hashicorp/terraform-provider-aws/issues/46401))
+* resource/aws_athena_workgroup: Allows unsetting `configuration.result_configuration` or child attributes. ([#46427](https://github.com/hashicorp/terraform-provider-aws/issues/46427))
+* resource/aws_cloudfront_multitenant_distribution: Fix the "inconsistent result" error when `custom_error_response` is configured and `custom_error_response.response_code` and `custom_error_response.response_page_path` are omitted ([#46375](https://github.com/hashicorp/terraform-provider-aws/issues/46375))
+* resource/aws_grafana_workspace: Fix perpetual diff when `network_access_control` is configured with empty `prefix_list_ids` and `vpce_ids` ([#45637](https://github.com/hashicorp/terraform-provider-aws/issues/45637))
+
+## 6.31.0 (February 4, 2026)
+
+NOTES:
+
+* resource/aws_s3_bucket_abac: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_abac: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_accelerate_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_accelerate_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_acl: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_acl: Removes `expected_bucket_owner` and `acl` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_cors_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_cors_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_lifecycle_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_lifecycle_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_logging: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_logging: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_metadata_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_metadata_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_object_lock_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_object_lock_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_request_payment_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_request_payment_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_versioning: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_versioning: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+* resource/aws_s3_bucket_website_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_website_configuration: Removes `expected_bucket_owner` attribute from Resource Identity. ([#46272](https://github.com/hashicorp/terraform-provider-aws/issues/46272))
+
+FEATURES:
+
+* **New Data Source:** `aws_account_regions` ([#41746](https://github.com/hashicorp/terraform-provider-aws/issues/41746))
 * **New Ephemeral Resource:** `aws_ecrpublic_authorization_token` ([#45841](https://github.com/hashicorp/terraform-provider-aws/issues/45841))
+* **New List Resource:** `aws_cloudwatch_event_rule` ([#46304](https://github.com/hashicorp/terraform-provider-aws/issues/46304))
+* **New List Resource:** `aws_cloudwatch_event_target` ([#46297](https://github.com/hashicorp/terraform-provider-aws/issues/46297))
+* **New List Resource:** `aws_cloudwatch_metric_alarm` ([#46268](https://github.com/hashicorp/terraform-provider-aws/issues/46268))
+* **New List Resource:** `aws_iam_role_policy` ([#46293](https://github.com/hashicorp/terraform-provider-aws/issues/46293))
+* **New List Resource:** `aws_lambda_function` ([#46295](https://github.com/hashicorp/terraform-provider-aws/issues/46295))
+* **New List Resource:** `aws_s3_bucket_acl` ([#46305](https://github.com/hashicorp/terraform-provider-aws/issues/46305))
+* **New List Resource:** `aws_s3_bucket_policy` ([#46312](https://github.com/hashicorp/terraform-provider-aws/issues/46312))
+* **New List Resource:** `aws_s3_bucket_public_access_block` ([#46309](https://github.com/hashicorp/terraform-provider-aws/issues/46309))
 * **New Resource:** `aws_ssoadmin_customer_managed_policy_attachments_exclusive` ([#46191](https://github.com/hashicorp/terraform-provider-aws/issues/46191))
 
 ENHANCEMENTS:
@@ -12,6 +103,11 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* list-resource/aws_s3_bucket: Restricts listed buckets to expected region. ([#46305](https://github.com/hashicorp/terraform-provider-aws/issues/46305))
+* resource/aws_elasticache_replication_group: Fixed AUTH to RBAC migration. Previously, `auth_token_update_strategy` always required `auth_token`, which caused an error when migrating from AUTH to RBAC. Now, `auth_token_update_strategy` still requires `auth_token` except when `auth_token_update_strategy` is `DELETE`. ([#45518](https://github.com/hashicorp/terraform-provider-aws/issues/45518))
+* resource/aws_elasticache_replication_group: Fixed an issue with downscaling `aws_elasticache_replication_group` when `cluster_mode="enabled"` and `num_node_groups` is reduced. Previously, downscaling could fail in certain scenarios; for example, if nodes `0001`, `0002`, `0003`, `0004`, and `0005` exist, and a user manually removes `0003` and `0005`, then sets `num_node_groups = 2`, terraform would attempt to delete `0003`, `0004`, and `0005`. This is now fixed, after this fix terraform will retrieve the current node groups before resizing. ([#45893](https://github.com/hashicorp/terraform-provider-aws/issues/45893))
+* resource/aws_elasticache_serverless_cache: Fix `user_group_id` removal during modification. ([#45571](https://github.com/hashicorp/terraform-provider-aws/issues/45571))
+* resource/aws_elasticache_serverless_cache: Fix forced replacement when upgrading Valkey major version or switching engine between redis and valkey ([#45087](https://github.com/hashicorp/terraform-provider-aws/issues/45087))
 * resource/aws_network_interface: Fix `UnauthorizedOperation` error when detaching resource that does not have an attachment ([#46211](https://github.com/hashicorp/terraform-provider-aws/issues/46211))
 
 ## 6.30.0 (January 28, 2026)

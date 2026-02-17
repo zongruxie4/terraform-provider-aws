@@ -28,7 +28,6 @@ import (
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.AliasListEntry")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
@@ -78,7 +77,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if namePrefix == "" {
 		namePrefix = aliasNamePrefix
 	}
-	name := create.Name(d.Get(names.AttrName).(string), namePrefix)
+	name := create.Name(ctx, d.Get(names.AttrName).(string), namePrefix)
 	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
