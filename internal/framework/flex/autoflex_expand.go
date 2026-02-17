@@ -1388,10 +1388,9 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	}
 
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-			"from": valFrom.Type(),
-			"to":   valTo.Kind(),
-		})
+		tflog.SubsystemError(ctx, subsystemName, "Expanding to incompatible interface")
+		// TODO: Should continue failing silently for now
+		// diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 		return diags
 	}
 
