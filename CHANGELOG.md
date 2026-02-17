@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_budgets_budget: Add `filter_expression` attribute ([#46501](https://github.com/hashicorp/terraform-provider-aws/issues/46501))
 * resource/aws_dms_endpoint: Add `access_alternate_directly`, `add_supplemental_logging`, `additional_archived_log_dest_id`, `allow_selected_nested_tables`, `archived_log_dest_id`, `
 archived_logs_only`, `asm_password`, `asm_server`, `asm_user`, `authentication_method`, `char_length_semantics`, `convert_timestamp_with_zone_to_utc`, `
 direct_path_no_log`, `direct_path_parallel_load`, `enable_homogenous_tablespace`, `extra_archived_log_dest_ids`, `fail_task_on_lob_truncation`, `
@@ -11,6 +12,7 @@ security_db_encryption_name`, `spatial_data_option_to_geo_json_function_name`, `
 use_bfile`, `use_direct_path_full_load`, `use_logminer_reader`, and `use_path_prefix` arguments to the `oracle_settings` configuration block ([#46516](https://github.com/hashicorp/terraform-provider-aws/issues/46516))
 * resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
 * resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
+* resource/aws_sagemaker_domain: Add `domain_settings.trusted_identity_propagation_settings` argument ([#44965](https://github.com/hashicorp/terraform-provider-aws/issues/44965))
 
 BUG FIXES:
 
