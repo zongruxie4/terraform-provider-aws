@@ -96,7 +96,7 @@ action "aws_codebuild_start_build" "container" {
 
 resource "terraform_data" "build_trigger" {
   input = filemd5("Dockerfile")
-  
+
   lifecycle {
     action_trigger {
       events  = [before_create, before_update]
@@ -108,7 +108,7 @@ resource "terraform_data" "build_trigger" {
 resource "aws_ecs_service" "app" {
   # ... configuration ...
   task_definition = aws_ecs_task_definition.app.arn
-  
+
   depends_on = [terraform_data.build_trigger]
 }
 
@@ -130,8 +130,8 @@ When dependent resources need artifacts produced by the build (e.g., S3 objects,
 
 ```terraform
 resource "terraform_data" "build_trigger" {
-  input = filemd5("src/app.py")  # Trigger on source changes
-  
+  input = filemd5("src/app.py") # Trigger on source changes
+
   lifecycle {
     action_trigger {
       events  = [before_create, before_update]
@@ -142,8 +142,8 @@ resource "terraform_data" "build_trigger" {
 
 resource "aws_lambda_function" "app" {
   s3_bucket = "my-bucket"
-  s3_key    = "artifact.zip"  # Uploaded by CodeBuild
-  
+  s3_key    = "artifact.zip" # Uploaded by CodeBuild
+
   depends_on = [terraform_data.build_trigger]
 }
 ```
@@ -162,14 +162,14 @@ With `after_create`, the trigger resource completes before the action runs. This
 resource "terraform_data" "build_trigger" {
   lifecycle {
     action_trigger {
-      events  = [after_create]  # ⚠️ Resource completes first
+      events  = [after_create] # ⚠️ Resource completes first
       actions = [action.aws_codebuild_start_build.example]
     }
   }
 }
 
 resource "aws_lambda_function" "app" {
-  depends_on = [terraform_data.build_trigger]  # ⚠️ Doesn't wait for action
+  depends_on = [terraform_data.build_trigger] # ⚠️ Doesn't wait for action
 }
 ```
 
