@@ -152,7 +152,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
