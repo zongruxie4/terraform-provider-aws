@@ -210,8 +210,10 @@ type IdentityType uint16
 const (
 	StringIdentityType IdentityType = iota
 	IntIdentityType
+	Int64IdentityType
 	BoolIdentityType
 	FloatIdentityType
+	Float64IdentityType
 )
 
 type IdentityAttribute struct {
@@ -247,6 +249,7 @@ func BoolIdentityAttribute(name string, required bool) IdentityAttribute {
 		identityType: BoolIdentityType,
 	}
 }
+
 func FloatIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
 		name:         name,
@@ -255,11 +258,27 @@ func FloatIdentityAttribute(name string, required bool) IdentityAttribute {
 	}
 }
 
+func Float64IdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: Float64IdentityType,
+	}
+}
+
 func IntIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
 		name:         name,
 		required:     required,
 		identityType: IntIdentityType,
+	}
+}
+
+func Int64IdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: Int64IdentityType,
 	}
 }
 

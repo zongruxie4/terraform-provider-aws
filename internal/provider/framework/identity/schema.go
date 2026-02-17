@@ -20,39 +20,37 @@ func NewIdentitySchema(identitySpec inttypes.Identity) identityschema.Schema {
 
 func newIdentityAttribute(attribute inttypes.IdentityAttribute) identityschema.Attribute {
 	required := attribute.Required()
-
-	switch attribute.IdentityType() {
-	case inttypes.BoolIdentityType:
-		attr := identityschema.BoolAttribute{}
-		if required {
-			attr.RequiredForImport = true
-		} else {
-			attr.OptionalForImport = true
-		}
-		return attr
-	case inttypes.FloatIdentityType:
-		attr := identityschema.Float32Attribute{}
-		if required {
-			attr.RequiredForImport = true
-		} else {
-			attr.OptionalForImport = true
-		}
-		return attr
-	case inttypes.IntIdentityType:
-		attr := identityschema.Int32Attribute{}
-		if required {
-			attr.RequiredForImport = true
-		} else {
-			attr.OptionalForImport = true
-		}
-		return attr
-	default:
-		attr := identityschema.StringAttribute{}
-		if required {
-			attr.RequiredForImport = true
-		} else {
-			attr.OptionalForImport = true
-		}
-		return attr
+	var optional bool
+	if !required {
+		optional = true
 	}
+
+	identityAttributes := map[inttypes.IdentityType]identityschema.Attribute{
+		inttypes.BoolIdentityType: identityschema.BoolAttribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+		inttypes.FloatIdentityType: identityschema.Float32Attribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+		inttypes.Float64IdentityType: identityschema.Float64Attribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+		inttypes.IntIdentityType: identityschema.Int32Attribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+		inttypes.Int64IdentityType: identityschema.Int64Attribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+		inttypes.StringIdentityType: identityschema.StringAttribute{
+			RequiredForImport: required,
+			OptionalForImport: optional,
+		},
+	}
+
+	return identityAttributes[attribute.IdentityType()]
 }

@@ -15,8 +15,18 @@ inttypes.IntIdentityAttribute(
 	{{- .Name }},
 	{{- if .Optional }}false{{ else }}true{{ end -}}
 ),
+{{- else if and .ValueType (eq .ValueType "int64") -}}
+inttypes.Int64IdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
 {{- else if and .ValueType (or (eq .ValueType "float") (eq .ValueType "float32")) -}}
 inttypes.FloatIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "float64") -}}
+inttypes.Float64IdentityAttribute(
 	{{- .Name }},
 	{{- if .Optional }}false{{ else }}true{{ end -}}
 ),
