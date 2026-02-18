@@ -342,7 +342,7 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
-	if aws.ToBool(advancedSecurityOptions.Enabled) && advancedSecurityOptions.JWTOptions != nil {
+	if advancedSecurityOptions.JWTOptions != nil && aws.ToBool(advancedSecurityOptions.JWTOptions.Enabled) {
 		m["jwt_options"] = flattenJWTOptionsOutput(advancedSecurityOptions.JWTOptions)
 	}
 

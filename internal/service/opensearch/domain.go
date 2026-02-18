@@ -1066,6 +1066,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if v := ds.AdvancedSecurityOptions; v != nil && aws.ToBool(v.Enabled) {
 		advSecOpts := flattenAdvancedSecurityOptions(v)
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
+
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
@@ -1208,6 +1209,20 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+
+			// When jwt_options block is removed from config, explicitly disable JWT
+			// authentication. Without this, AWS keeps JWT enabled because a nil
+			// JWTOptions in the API request is treated as "no change".
+			if input.AdvancedSecurityOptions.JWTOptions == nil {
+				if oldRaw, _ := d.GetChange("advanced_security_options"); len(oldRaw.([]any)) > 0 && oldRaw.([]any)[0] != nil {
+					oldMap := oldRaw.([]any)[0].(map[string]any)
+					if oldJwt, ok := oldMap["jwt_options"].([]any); ok && len(oldJwt) > 0 && oldJwt[0] != nil {
+						input.AdvancedSecurityOptions.JWTOptions = &awstypes.JWTOptionsInput{
+							Enabled: aws.Bool(false),
+						}
+					}
+				}
+			}
 		}
 
 		if d.HasChange("aiml_options") {
