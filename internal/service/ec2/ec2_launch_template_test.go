@@ -3349,24 +3349,15 @@ func TestAccEC2LaunchTemplate_secondaryInterfaces(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_secondaryInterfaces(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.device_index", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.delete_on_termination", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.interface_type", "secondary"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.network_card_index", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.secondary_subnet_id", "ss-01234512345123452"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.private_ip_addresses.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_interfaces.0.private_ip_addresses.*", map[string]string{
-						"private_ip_address": "10.1.0.10",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_interfaces.0.private_ip_addresses.*", map[string]string{
-						"private_ip_address": "10.1.0.11",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.device_index", "2"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.secondary_subnet_id", "ss-01234512345123451"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.private_ip_address_count", "3"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.delete_on_termination", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secondary_interfaces"), knownvalue.SetSizeExact(2)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -4825,32 +4816,46 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccLaunchTemplateConfig_secondaryInterfaces(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_ec2_secondary_network" "test" {
+  ipv4_cidr_block = "10.0.0.0/16"
+  network_type    = "rdma"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_secondary_subnet" "test" {
+  secondary_network_id = aws_ec2_secondary_network.test.id
+  ipv4_cidr_block      = "10.0.1.0/24"
+  availability_zone    = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   secondary_interfaces {
-    device_index           = 1
-    delete_on_termination  = true
-    interface_type         = "secondary"
-    network_card_index     = 1
-    secondary_subnet_id    = "ss-01234512345123452"
-    private_ip_addresses {
-      private_ip_address = "10.1.0.10"
-    }
-    private_ip_addresses {
-      private_ip_address = "10.1.0.11"
-    }
+    device_index          = 1
+    delete_on_termination = true
+    interface_type        = "secondary"
+    network_card_index    = 1
+    secondary_subnet_id   = aws_ec2_secondary_subnet.test.id
+    private_ip_addresses  = ["10.0.1.10", "10.1.0.11"]
   }
 
   secondary_interfaces {
-    delete_on_termination  = true
-    device_index              = 2
-    secondary_subnet_id       = "ss-01234512345123451"
-    private_ip_address_count  = 3
+    delete_on_termination    = true
+    device_index             = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+    private_ip_address_count = 3
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName string) string {
