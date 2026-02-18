@@ -69,8 +69,7 @@ func (l *listResourceBucketServerSideEncryptionConfiguration) List(ctx context.C
 		dirInput := s3.ListDirectoryBucketsInput{
 			MaxDirectoryBuckets: aws.Int32(int32(limit)),
 		}
-		for result := range l.list(ctx, request, gpConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			count++
+		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
 			if !yield(result) {
 				return
 			}
@@ -96,13 +95,14 @@ func (l *listResourceBucketServerSideEncryptionConfiguration) list(ctx context.C
 			rd.Set(names.AttrBucket, bucketName)
 
 			tflog.Info(ctx, "Reading S3 Bucket Server Side Encryption Configuration")
-			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, l.Meta().AccountID(ctx))
+			// TODO: expectedBucketOwner cannot be set for Directory Buckets
+			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, "")
 			if retry.NotFound(err) {
 				tflog.Debug(ctx, "Bucket has no policy, skipping")
 				continue
 			}
 			if err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
+				tflog.Error(ctx, "Reading S3 Bucket Server Side Encryption Configuration", map[string]any{
 					"error": err.Error(),
 				})
 				continue
