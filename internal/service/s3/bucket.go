@@ -51,6 +51,10 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
+
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")

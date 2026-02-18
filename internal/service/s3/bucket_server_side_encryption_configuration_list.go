@@ -95,8 +95,11 @@ func (l *listResourceBucketServerSideEncryptionConfiguration) list(ctx context.C
 			rd.Set(names.AttrBucket, bucketName)
 
 			tflog.Info(ctx, "Reading S3 Bucket Server Side Encryption Configuration")
-			// TODO: expectedBucketOwner cannot be set for Directory Buckets
-			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, "")
+			var expectedOwner string
+			if isGeneralPurposeBucket(bucketName) {
+				expectedOwner = l.Meta().AccountID(ctx)
+			}
+			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, expectedOwner)
 			if retry.NotFound(err) {
 				tflog.Debug(ctx, "Bucket has no policy, skipping")
 				continue
