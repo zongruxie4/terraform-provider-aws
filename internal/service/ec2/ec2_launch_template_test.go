@@ -74,6 +74,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -3291,6 +3292,50 @@ func TestAccEC2LaunchTemplate_networkPerformanceOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_secondaryInterfaces(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_secondaryInterfaces(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.device_index", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.delete_on_termination", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.interface_type", "secondary"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.network_card_index", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.secondary_subnet_id", "ss-01234512345123452"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.0.private_ip_addresses.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_interfaces.0.private_ip_addresses.*", map[string]string{
+						"private_ip_address": "10.1.0.10",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_interfaces.0.private_ip_addresses.*", map[string]string{
+						"private_ip_address": "10.1.0.11",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.device_index", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.secondary_subnet_id", "ss-01234512345123451"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.private_ip_address_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.1.delete_on_termination", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4721,6 +4766,35 @@ resource "aws_launch_template" "test" {
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
     http_protocol_ipv6          = "enabled"
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_secondaryInterfaces(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  secondary_interfaces {
+    device_index           = 1
+    delete_on_termination  = true
+    interface_type         = "secondary"
+    network_card_index     = 1
+    secondary_subnet_id    = "ss-01234512345123452"
+    private_ip_addresses {
+      private_ip_address = "10.1.0.10"
+    }
+    private_ip_addresses {
+      private_ip_address = "10.1.0.11"
+    }
+  }
+
+  secondary_interfaces {
+    delete_on_termination  = true
+    device_index              = 2
+    secondary_subnet_id       = "ss-01234512345123451"
+    private_ip_address_count  = 3
   }
 }
 `, rName)

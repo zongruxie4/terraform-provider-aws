@@ -789,6 +789,50 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"secondary_interfaces": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"private_ip_addresses": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"private_ip_address": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"private_ip_address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrSecondarySubnetID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }

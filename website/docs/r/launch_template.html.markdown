@@ -89,6 +89,18 @@ resource "aws_launch_template" "foo" {
 
   ram_disk_id = "test"
 
+  secondary_interfaces {
+    delete_on_termination = true
+    network_card_index = 1
+    device_index = 0
+    interface_type = "secondary"
+    private_ip_address_count = 1
+    private_ip_addresses {
+      private_ip_address = "192.168.1.1"
+    }
+    secondary_subnet_id = "ss-12345678"
+  }
+
   vpc_security_group_ids = ["sg-12345678"]
 
   tag_specifications {
@@ -486,6 +498,24 @@ The `private_dns_name_options` block supports the following:
 * `enable_resource_name_dns_aaaa_record` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enable_resource_name_dns_a_record` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `hostname_type` - (Optional) The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
+
+### Secondary Interfaces
+
+The [Secondary Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest.html) to associate with instances launched from the template.
+
+Each `secondary_interfaces` block supports the following:
+
+* `delete_on_termination` - (Optional) Indicates whether the secondary interface is deleted when the instance is terminated. The only supported value is `true`.
+* `device_index` - (Optional) The device index for the secondary interface attachment.
+* `private_ip_addresses` - (Optional) The private IPv4 addresses to assign to the secondary interface.
+* `private_ip_address_count` - (Optional) The number of private IPv4 addresses to assign to the secondary interface.
+* `secondary_subnet_id` - (Optional) The ID of the secondary subnet.
+* `interface_type` - (Optional) The type of secondary interface. The only supported values are: `secondary`.
+* `network_card_index` - (Optional) The index of the network card.
+
+When specifying `private_ip_addresses`, this is done as its own block. Each `private_ip_addresses` block supports the following:
+
+* `private_ip_address` - (Optional) Describes a private IPv4 address specification for a secondary interface request.
 
 ### Tag Specifications
 

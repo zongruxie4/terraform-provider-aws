@@ -175,6 +175,7 @@ const (
 	AttrScheduleExpression         = "schedule_expression"
 	AttrSchema                     = "schema"
 	AttrScope                      = "scope"
+	AttrSecondarySubnetID          = "secondary_subnet_id"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
