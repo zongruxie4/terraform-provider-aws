@@ -345,6 +345,11 @@ func resourceEndpoint() *schema.Resource {
 							Default:          awstypes.NestingLevelValueNone,
 							ValidateDiagFunc: enum.Validate[awstypes.NestingLevelValue](),
 						},
+						"use_update_lookup": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -905,29 +910,31 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	case engineNameKinesis:
 		input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]any)[0].(map[string]any))
 	case engineNameMongodb:
-		var settings = &awstypes.MongoDbSettings{}
+		var settings *awstypes.MongoDbSettings
+
+		if v, ok := d.GetOk("mongodb_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			settings = expandMongoDBSettings(v.([]any)[0].(map[string]any))
+		} else {
+			settings = &awstypes.MongoDbSettings{}
+		}
+		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+		settings.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
+
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, &input)
 		}
-
-		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
-		settings.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
-		settings.AuthType = awstypes.AuthTypeValue(d.Get("mongodb_settings.0.auth_type").(string))
-		settings.AuthMechanism = awstypes.AuthMechanismValue(d.Get("mongodb_settings.0.auth_mechanism").(string))
-		settings.NestingLevel = awstypes.NestingLevelValue(d.Get("mongodb_settings.0.nesting_level").(string))
-		settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
-		settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
-		settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
 
 		input.MongoDbSettings = settings
 	case engineNameOracle:
@@ -1246,10 +1253,18 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			case engineNameMongodb:
 				if d.HasChanges(
+					names.AttrDatabaseName, "mongodb_settings",
 					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
-					names.AttrDatabaseName, names.AttrKMSKeyARN, "mongodb_settings.0.auth_type", "mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id", "mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source",
-					"secrets_manager_access_role_arn", "secrets_manager_arn") {
-					var settings = &awstypes.MongoDbSettings{}
+					"secrets_manager_access_role_arn", "secrets_manager_arn", names.AttrKMSKeyARN) {
+					var settings *awstypes.MongoDbSettings
+
+					if v, ok := d.GetOk("mongodb_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						settings = expandMongoDBSettings(v.([]any)[0].(map[string]any))
+					} else {
+						settings = &awstypes.MongoDbSettings{}
+					}
+					settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+					settings.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
 						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
@@ -1263,15 +1278,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
-
-					settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
-					settings.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
-					settings.AuthType = awstypes.AuthTypeValue(d.Get("mongodb_settings.0.auth_type").(string))
-					settings.AuthMechanism = awstypes.AuthMechanismValue(d.Get("mongodb_settings.0.auth_mechanism").(string))
-					settings.NestingLevel = awstypes.NestingLevelValue(d.Get("mongodb_settings.0.nesting_level").(string))
-					settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
-					settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
-					settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
 
 					input.MongoDbSettings = settings
 				}
@@ -1574,13 +1580,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 
 	switch aws.ToString(endpoint.EngineName) {
 	case engineNameAurora, engineNameMariadb, engineNameMySQL:
-		if endpoint.MySQLSettings != nil {
-			d.Set(names.AttrUsername, endpoint.MySQLSettings.Username)
-			d.Set("server_name", endpoint.MySQLSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.MySQLSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.MySQLSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.MySQLSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.MySQLSettings.SecretsManagerSecretId)
+		if v := endpoint.MySQLSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1588,13 +1594,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting mysql_settings: %w", err)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
-		if endpoint.PostgreSQLSettings != nil {
-			d.Set(names.AttrUsername, endpoint.PostgreSQLSettings.Username)
-			d.Set("server_name", endpoint.PostgreSQLSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.PostgreSQLSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.PostgreSQLSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.PostgreSQLSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.PostgreSQLSettings.SecretsManagerSecretId)
+		if v := endpoint.PostgreSQLSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1602,8 +1608,8 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting postgres_settings: %w", err)
 		}
 	case engineNameDynamoDB:
-		if endpoint.DynamoDbSettings != nil {
-			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
+		if v := endpoint.DynamoDbSettings; v != nil {
+			d.Set("service_access_role", v.ServiceAccessRoleArn)
 		} else {
 			d.Set("service_access_role", "")
 		}
@@ -1612,9 +1618,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting elasticsearch_settings: %w", err)
 		}
 	case engineNameKafka:
-		if endpoint.KafkaSettings != nil {
+		if v := endpoint.KafkaSettings; v != nil {
 			// SASL password isn't returned in API. Propagate state value.
-			tfMap := flattenKafkaSettings(endpoint.KafkaSettings)
+			tfMap := flattenKafkaSettings(v)
 			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
 
 			if err := d.Set("kafka_settings", []any{tfMap}); err != nil {
@@ -1628,13 +1634,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting kinesis_settings: %w", err)
 		}
 	case engineNameMongodb:
-		if endpoint.MongoDbSettings != nil {
-			d.Set(names.AttrUsername, endpoint.MongoDbSettings.Username)
-			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.MongoDbSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.MongoDbSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.MongoDbSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.MongoDbSettings.SecretsManagerSecretId)
+		if v := endpoint.MongoDbSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1642,13 +1648,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting mongodb_settings: %w", err)
 		}
 	case engineNameOracle:
-		if endpoint.OracleSettings != nil {
-			d.Set(names.AttrUsername, endpoint.OracleSettings.Username)
-			d.Set("server_name", endpoint.OracleSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.OracleSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.OracleSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.OracleSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
+		if v := endpoint.OracleSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1664,13 +1670,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting redis_settings: %w", err)
 		}
 	case engineNameRedshift:
-		if endpoint.RedshiftSettings != nil {
-			d.Set(names.AttrUsername, endpoint.RedshiftSettings.Username)
-			d.Set("server_name", endpoint.RedshiftSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.RedshiftSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.RedshiftSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.RedshiftSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.RedshiftSettings.SecretsManagerSecretId)
+		if v := endpoint.RedshiftSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1678,35 +1684,35 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
 	case engineNameSQLServer, engineNameBabelfish:
-		if endpoint.MicrosoftSQLServerSettings != nil {
-			d.Set(names.AttrUsername, endpoint.MicrosoftSQLServerSettings.Username)
-			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.MicrosoftSQLServerSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.MicrosoftSQLServerSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerSecretId)
+		if v := endpoint.MicrosoftSQLServerSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
 	case engineNameSybase:
-		if endpoint.SybaseSettings != nil {
-			d.Set(names.AttrUsername, endpoint.SybaseSettings.Username)
-			d.Set("server_name", endpoint.SybaseSettings.ServerName)
-			d.Set(names.AttrPort, endpoint.SybaseSettings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.SybaseSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.SybaseSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.SybaseSettings.SecretsManagerSecretId)
+		if v := endpoint.SybaseSettings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
 	case engineNameDB2, engineNameDB2zOS:
-		if endpoint.IBMDb2Settings != nil {
-			d.Set(names.AttrUsername, endpoint.IBMDb2Settings.Username)
-			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
-			d.Set(names.AttrPort, endpoint.IBMDb2Settings.Port)
-			d.Set(names.AttrDatabaseName, endpoint.IBMDb2Settings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.IBMDb2Settings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.IBMDb2Settings.SecretsManagerSecretId)
+		if v := endpoint.IBMDb2Settings; v != nil {
+			d.Set(names.AttrUsername, v.Username)
+			d.Set("server_name", v.ServerName)
+			d.Set(names.AttrPort, v.Port)
+			d.Set(names.AttrDatabaseName, v.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -2052,18 +2058,51 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any 
 	return tfMap
 }
 
+func expandMongoDBSettings(tfMap map[string]any) *awstypes.MongoDbSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MongoDbSettings{}
+
+	if v, ok := tfMap["auth_mechanism"].(string); ok && v != "" {
+		apiObject.AuthMechanism = awstypes.AuthMechanismValue(v)
+	}
+	if v, ok := tfMap["auth_source"].(string); ok && v != "" {
+		apiObject.AuthSource = aws.String(v)
+	}
+	if v, ok := tfMap["auth_type"].(string); ok && v != "" {
+		apiObject.AuthType = awstypes.AuthTypeValue(v)
+	}
+	if v, ok := tfMap["docs_to_investigate"].(string); ok && v != "" {
+		apiObject.DocsToInvestigate = aws.String(v)
+	}
+	if v, ok := tfMap["extract_doc_id"].(string); ok && v != "" {
+		apiObject.ExtractDocId = aws.String(v)
+	}
+	if v, ok := tfMap["nesting_level"].(string); ok && v != "" {
+		apiObject.NestingLevel = awstypes.NestingLevelValue(v)
+	}
+	if v, ok := tfMap["use_update_lookup"].(bool); ok {
+		apiObject.UseUpdateLookUp = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenMongoDBSettings(apiObject *awstypes.MongoDbSettings) []any {
 	if apiObject == nil {
 		return []any{}
 	}
 
 	tfMap := map[string]any{
-		"auth_type":           apiObject.AuthType,
 		"auth_mechanism":      apiObject.AuthMechanism,
-		"nesting_level":       apiObject.NestingLevel,
-		"extract_doc_id":      aws.ToString(apiObject.ExtractDocId),
-		"docs_to_investigate": aws.ToString(apiObject.DocsToInvestigate),
 		"auth_source":         aws.ToString(apiObject.AuthSource),
+		"auth_type":           apiObject.AuthType,
+		"docs_to_investigate": aws.ToString(apiObject.DocsToInvestigate),
+		"extract_doc_id":      aws.ToString(apiObject.ExtractDocId),
+		"nesting_level":       apiObject.NestingLevel,
+		"use_update_lookup":   aws.ToBool(apiObject.UseUpdateLookUp),
 	}
 
 	return []any{tfMap}
