@@ -4,7 +4,7 @@
     "@message": "Flattening",
     "@module": "provider.autoflex",
     "autoflex.source.type": "*github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -13,7 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "info",
@@ -22,7 +22,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -32,7 +32,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.Origins",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
   },
   {
@@ -42,7 +42,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.Origins",
     "autoflex.target.path": "",
-    "autoflex.target.type": "flex.targetStruct"
+    "autoflex.target.type": "flex.tfModel"
   },
   {
     "@level": "trace",
@@ -52,7 +52,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.Aliases",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
   },
   {
@@ -62,7 +62,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.Aliases",
     "autoflex.target.path": "",
-    "autoflex.target.type": "flex.targetStruct"
+    "autoflex.target.type": "flex.tfModel"
   },
   {
     "@level": "trace",
@@ -72,7 +72,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.CacheBehaviors",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
   },
   {
@@ -82,7 +82,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.CacheBehaviors",
     "autoflex.target.path": "",
-    "autoflex.target.type": "flex.targetStruct"
+    "autoflex.target.type": "flex.tfModel"
   },
   {
     "@level": "trace",
@@ -92,7 +92,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.CustomErrorResponses",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
   },
   {
@@ -102,7 +102,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.CustomErrorResponses",
     "autoflex.target.path": "",
-    "autoflex.target.type": "flex.targetStruct"
+    "autoflex.target.type": "flex.tfModel"
   },
   {
     "@level": "trace",
@@ -112,7 +112,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.OriginGroups",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
   },
   {
@@ -122,7 +122,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "types.OriginGroups",
     "autoflex.target.path": "",
-    "autoflex.target.type": "flex.targetStruct"
+    "autoflex.target.type": "flex.tfModel"
   },
   {
     "@level": "debug",
@@ -132,7 +132,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -142,7 +142,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -153,7 +153,7 @@
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.fieldname": "DefaultCacheBehavior",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "info",
@@ -543,7 +543,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -553,7 +553,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -563,7 +563,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -573,7 +573,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -583,7 +583,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -593,7 +593,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -603,7 +603,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -613,7 +613,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -623,7 +623,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -633,7 +633,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -643,7 +643,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -653,7 +653,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -663,7 +663,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "trace",
@@ -673,7 +673,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -683,7 +683,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -693,7 +693,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -703,7 +703,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -713,7 +713,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -723,7 +723,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -733,7 +733,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -743,6 +743,6 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   }
 ]
