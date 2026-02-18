@@ -75,6 +75,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -782,7 +783,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m1.small", "standard"),
+				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m7gd.medium", "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 				),
@@ -3332,6 +3333,41 @@ func TestAccEC2LaunchTemplate_networkPerformanceOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_secondaryInterfaces(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_secondaryInterfaces(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secondary_interfaces"), knownvalue.ListSizeExact(2)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4777,6 +4813,49 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName)
+}
+
+func testAccLaunchTemplateConfig_secondaryInterfaces(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_ec2_secondary_network" "test" {
+  ipv4_cidr_block = "10.0.0.0/16"
+  network_type    = "rdma"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_secondary_subnet" "test" {
+  secondary_network_id = aws_ec2_secondary_network.test.id
+  ipv4_cidr_block      = "10.0.1.0/24"
+  availability_zone    = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  secondary_interfaces {
+    device_index          = 1
+    delete_on_termination = true
+    interface_type        = "secondary"
+    network_card_index    = 1
+    secondary_subnet_id   = aws_ec2_secondary_subnet.test.id
+    private_ip_addresses  = ["10.0.1.10", "10.1.0.11"]
+  }
+
+  secondary_interfaces {
+    delete_on_termination    = true
+    device_index             = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+    private_ip_address_count = 3
+  }
+}
+`, rName))
 }
 
 func testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName string) string {
