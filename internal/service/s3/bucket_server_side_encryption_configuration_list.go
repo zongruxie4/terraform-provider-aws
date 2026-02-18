@@ -101,7 +101,7 @@ func (l *listResourceBucketServerSideEncryptionConfiguration) list(ctx context.C
 			}
 			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, expectedOwner)
 			if retry.NotFound(err) {
-				tflog.Debug(ctx, "Bucket has no policy, skipping")
+				tflog.Debug(ctx, "Bucket has no Server Side Encryption Configuration, skipping")
 				continue
 			}
 			if err != nil {
