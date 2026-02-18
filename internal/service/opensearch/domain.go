@@ -159,10 +159,11 @@ func resourceDomain() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"public_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+									names.AttrPublicKey: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										DiffSuppressFunc: suppressPublicKeyDiff,
 									},
 									"roles_key": {
 										Type:         schema.TypeString,
