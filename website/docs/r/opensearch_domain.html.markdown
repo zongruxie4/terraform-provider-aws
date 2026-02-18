@@ -354,7 +354,7 @@ The following arguments are optional:
 
 #### jwt_options
 
-* `enabled` - (Required) Whether JWT authentication is enabled.
+* `enabled` - (Optional) Whether JWT authentication is enabled.
 * `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
 * `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
 * `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
