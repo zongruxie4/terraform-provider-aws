@@ -3054,10 +3054,9 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 	}
 
 	// Map each field in the source struct to corresponding target fields
-	for i := 0; i < sourceStructType.NumField(); i++ {
-		sourceField := sourceStructType.Field(i)
+	for sourceField := range tfreflect.ExportedStructFields(sourceStructType) {
 		sourceFieldName := sourceField.Name
-		sourceFieldVal := sourceStructVal.Field(i)
+		sourceFieldVal := sourceStructVal.FieldByName(sourceFieldName)
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Processing source field for split", map[string]any{
 			"source_field": sourceFieldName,
