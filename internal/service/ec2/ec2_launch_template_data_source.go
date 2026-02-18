@@ -793,13 +793,8 @@ func dataSourceLaunchTemplate() *schema.Resource {
 						"private_ip_addresses": {
 							Type:     schema.TypeSet,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"secondary_subnet_id": {

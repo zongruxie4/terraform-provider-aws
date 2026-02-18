@@ -13,8 +13,8 @@ Provides an EC2 launch template resource. Can be used to create instances or aut
 ## Example Usage
 
 ```terraform
-resource "aws_launch_template" "foo" {
-  name = "foo"
+resource "aws_launch_template" "example" {
+  name = "example"
 
   block_device_mappings {
     device_name = "/dev/sdf"
@@ -89,18 +89,6 @@ resource "aws_launch_template" "foo" {
 
   ram_disk_id = "test"
 
-  secondary_interfaces {
-    delete_on_termination = true
-    network_card_index = 1
-    device_index = 0
-    interface_type = "secondary"
-    private_ip_address_count = 1
-    private_ip_addresses {
-      private_ip_address = "192.168.1.1"
-    }
-    secondary_subnet_id = "ss-12345678"
-  }
-
   vpc_security_group_ids = ["sg-12345678"]
 
   tag_specifications {
@@ -156,6 +144,8 @@ This resource supports the following arguments:
 * `placement` - (Optional) The placement of the instance. See [Placement](#placement) below for more details.
 * `private_dns_name_options` - (Optional) The options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
+* `secondary_interfaces` - (Optional) Secondary interfaces to associate with instances launched from the template. See [Secondary
+  Interfaces](#secondary-interfaces) below for more details.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
 * `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
@@ -508,15 +498,11 @@ Each `secondary_interfaces` block supports the following:
 
 * `delete_on_termination` - (Optional) Indicates whether the secondary interface is deleted when the instance is terminated. The only supported value is `true`.
 * `device_index` - (Optional) The device index for the secondary interface attachment.
-* `private_ip_addresses` - (Optional) The private IPv4 addresses to assign to the secondary interface.
-* `private_ip_address_count` - (Optional) The number of private IPv4 addresses to assign to the secondary interface.
-* `secondary_subnet_id` - (Optional) The ID of the secondary subnet.
-* `interface_type` - (Optional) The type of secondary interface. The only supported values are: `secondary`.
+* `interface_type` - (Optional) The type of secondary interface. The only supported value is: `secondary`.
 * `network_card_index` - (Optional) The index of the network card.
-
-When specifying `private_ip_addresses`, this is done as its own block. Each `private_ip_addresses` block supports the following:
-
-* `private_ip_address` - (Optional) Describes a private IPv4 address specification for a secondary interface request.
+* `private_ip_address_count` - (Optional) The number of private IPv4 addresses to assign to the secondary interface.
+* `private_ip_addresses` - (Optional) The private IPv4 addresses to assign to the secondary interface.
+* `secondary_subnet_id` - (Optional) The ID of the secondary subnet.
 
 ### Tag Specifications
 

@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1012,13 +1013,9 @@ func resourceLaunchTemplate() *schema.Resource {
 						"private_ip_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
 							},
 						},
 						"secondary_subnet_id": {
@@ -2173,15 +2170,11 @@ func expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap ma
 	}
 
 	if v, ok := tfMap["private_ip_addresses"].(*schema.Set); ok && v.Len() > 0 {
-		for _, item := range v.List() {
-			if m, ok := item.(map[string]any); ok {
-				privateIpAddressObj := awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest{}
-				if ipAddr, ok := m["private_ip_address"].(string); ok && ipAddr != "" {
-					privateIpAddressObj.PrivateIpAddress = aws.String(ipAddr)
-				}
-				apiObject.PrivateIpAddresses = append(apiObject.PrivateIpAddresses, privateIpAddressObj)
+		apiObject.PrivateIpAddresses = tfslices.ApplyToAll(flex.ExpandStringValueSet(v), func(v string) awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest {
+			return awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest{
+				PrivateIpAddress: aws.String(v),
 			}
-		}
+		})
 	}
 
 	if v, ok := tfMap["secondary_subnet_id"].(string); ok && v != "" {
@@ -2429,13 +2422,6 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	} else {
 		d.Set("network_performance_options", nil)
 	}
-	if apiObject.SecondaryInterfaces != nil {
-		if err := d.Set("secondary_interfaces", flattenLaunchTemplateSecondaryInterfaces(apiObject.SecondaryInterfaces)); err != nil {
-			return fmt.Errorf("setting secondary_interface: %w", err)
-		}
-	} else {
-		d.Set("secondary_interfaces", nil)
-	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
 			return fmt.Errorf("setting placement: %w", err)
@@ -2451,6 +2437,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		d.Set("private_dns_name_options", nil)
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
+	if apiObject.SecondaryInterfaces != nil {
+		if err := d.Set("secondary_interfaces", flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObject.SecondaryInterfaces)); err != nil {
+			return fmt.Errorf("setting secondary_interfaces: %w", err)
+		}
+	} else {
+		d.Set("secondary_interfaces", nil)
+	}
 	d.Set("security_group_names", apiObject.SecurityGroups)
 	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
 		return fmt.Errorf("setting tag_specifications: %w", err)
@@ -3039,13 +3032,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
-		var ipv4Addresses []string
-
-		for _, v := range v {
-			ipv4Addresses = append(ipv4Addresses, aws.ToString(v.PrivateIpAddress))
-		}
-
-		tfMap["ipv4_addresses"] = ipv4Addresses
+		tfMap["ipv4_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.PrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
 	}
 
 	if v := apiObject.Ipv4PrefixCount; v != nil {
@@ -3053,13 +3042,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv4Prefixes; v != nil {
-		var ipv4Prefixes []string
-
-		for _, v := range v {
-			ipv4Prefixes = append(ipv4Prefixes, aws.ToString(v.Ipv4Prefix))
-		}
-
-		tfMap["ipv4_prefixes"] = ipv4Prefixes
+		tfMap["ipv4_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv4PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv4Prefix)
+		})
 	}
 
 	if v := apiObject.Ipv6AddressCount; v != nil {
@@ -3067,13 +3052,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Addresses; len(v) > 0 {
-		var ipv6Addresses []string
-
-		for _, v := range v {
-			ipv6Addresses = append(ipv6Addresses, aws.ToString(v.Ipv6Address))
-		}
-
-		tfMap["ipv6_addresses"] = ipv6Addresses
+		tfMap["ipv6_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.InstanceIpv6Address) string {
+			return aws.ToString(v.Ipv6Address)
+		})
 	}
 
 	if v := apiObject.Ipv6PrefixCount; v != nil {
@@ -3081,13 +3062,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Prefixes; v != nil {
-		var ipv6Prefixes []string
-
-		for _, v := range v {
-			ipv6Prefixes = append(ipv6Prefixes, aws.ToString(v.Ipv6Prefix))
-		}
-
-		tfMap["ipv6_prefixes"] = ipv6Prefixes
+		tfMap["ipv6_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv6PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv6Prefix)
+		})
 	}
 
 	if v := apiObject.NetworkCardIndex; v != nil {
@@ -3400,13 +3377,9 @@ func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awst
 	}
 
 	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
-		var privateIPs []map[string]any
-		for _, ip := range v {
-			privateIPs = append(privateIPs, map[string]any{
-				"private_ip_address": aws.ToString(ip.PrivateIpAddress),
-			})
-		}
-		tfMap["private_ip_addresses"] = privateIPs
+		tfMap["private_ip_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.SecondaryInterfacePrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
 	}
 
 	if v := apiObject.SecondarySubnetId; v != nil {
@@ -3416,7 +3389,7 @@ func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awst
 	return tfMap
 }
 
-func flattenLaunchTemplateSecondaryInterfaces(apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) []any {
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -3453,6 +3426,7 @@ func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTempl
 
 	return tfMap
 }
+
 func launchTemplateARN(ctx context.Context, c *conns.AWSClient, templateID string) string {
 	return c.RegionalARN(ctx, names.EC2, "launch-template/"+templateID)
 }
