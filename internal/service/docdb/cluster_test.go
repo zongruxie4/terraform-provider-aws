@@ -1132,21 +1132,15 @@ func TestAccDocDBCluster_serverless(t *testing.T) {
 				),
 			},
 			{
-				// Remove serverless config from Terraform code
-				// DiffSuppressFunc should prevent drift warning
+				// Remove serverless config from Terraform code.
+				// Since AWS does not support removing serverless_v2_scaling_configuration,
+				// the cluster must be recreated.
 				Config: testAccClusterConfig_serverlessRemoved(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
-					// AWS still has the serverless config, and DiffSuppressFunc accepts it
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "1.5"),
-				),
 			},
 		},
 	})
