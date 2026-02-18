@@ -3004,8 +3004,8 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 	var diags diag.Diagnostics
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split", map[string]any{
-		logAttrKeySourceType: sourceStructType.String(),
-		logAttrKeyTargetType: typeTo.String(),
+		logAttrKeySourceType: fullTypeName(sourceStructType),
+		logAttrKeyTargetType: fullTypeName(typeTo),
 	})
 
 	// If source is nil, find and set the matching target field to null

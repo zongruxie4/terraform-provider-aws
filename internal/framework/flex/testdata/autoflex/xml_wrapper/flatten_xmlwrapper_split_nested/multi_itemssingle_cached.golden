@@ -222,9 +222,9 @@
     "@message": "Handling XML wrapper split",
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods",
-    "autoflex.source.type": "types.CachedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
-    "autoflex.target.type": "flex.allowedMethodsModel"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel"
   },
   {
     "@level": "trace",
