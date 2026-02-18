@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -184,7 +185,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -407,4 +408,11 @@ func flattenBlockedEncryptionTypes(bet *awstypes.BlockedEncryptionTypes) []any {
 	}
 
 	return result
+}
+
+func resourceBucketServerSideEncryptionConfigurationFlatten(_ context.Context, sse *awstypes.ServerSideEncryptionConfiguration, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
+		return fmt.Errorf("setting rule: %w", err)
+	}
+	return nil
 }
