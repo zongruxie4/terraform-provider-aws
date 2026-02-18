@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_launch_template: Add `cpu_options.nested_virtualization` and `network_performance_options` attributes ([#46540](https://github.com/hashicorp/terraform-provider-aws/issues/46540))
 * data/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block ([#46487](https://github.com/hashicorp/terraform-provider-aws/issues/46487))
 * resource/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block ([#46487](https://github.com/hashicorp/terraform-provider-aws/issues/46487))
 * resource/aws_budgets_budget: Add `filter_expression` attribute ([#46501](https://github.com/hashicorp/terraform-provider-aws/issues/46501))
@@ -14,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
 * resource/aws_instance: Add `nested_virtualization` attribute to `cpu_options` configuration block ([#46533](https://github.com/hashicorp/terraform-provider-aws/issues/46533))
 * resource/aws_launch_template: Add `nested_virtualization` attribute to `cpu_options` configuration block ([#46533](https://github.com/hashicorp/terraform-provider-aws/issues/46533))
+* resource/aws_launch_template: Add `secondary_interfaces` configuration block ([#46540](https://github.com/hashicorp/terraform-provider-aws/issues/46540))
 * resource/aws_lexv2models_intent: Add `qna_intent_configuration` attribute ([#46419](https://github.com/hashicorp/terraform-provider-aws/issues/46419))
 * resource/aws_sagemaker_domain: Add `domain_settings.trusted_identity_propagation_settings` argument ([#44965](https://github.com/hashicorp/terraform-provider-aws/issues/44965))
 
@@ -21,7 +23,9 @@ BUG FIXES:
 
 * data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression ([#46478](https://github.com/hashicorp/terraform-provider-aws/issues/46478))
 * resource/aws_cur_report_definition: Support `ap-southeast-5` and `eusc-de-east-1` as valid values for `s3_region` ([#46475](https://github.com/hashicorp/terraform-provider-aws/issues/46475))
+* resource/aws_docdb_cluster: Allow adding and modifying `serverless_v2_scaling_configuration` without forcing cluster replacement ([#45049](https://github.com/hashicorp/terraform-provider-aws/issues/45049))
 * resource/aws_lb: Fix `ValidationError ... Member must have length less than or equal to 20` errors when more than 20 load balancer attributes are being modified ([#46496](https://github.com/hashicorp/terraform-provider-aws/issues/46496))
+* resource/aws_sagemaker_image_version: Fix race condition when creating multiple versions concurrently ([#44960](https://github.com/hashicorp/terraform-provider-aws/issues/44960))
 * resource/aws_subnet: Allows providing a `cidr_block` when allocating a subnet from an IPAM resource pool. ([#46453](https://github.com/hashicorp/terraform-provider-aws/issues/46453))
 * resource/aws_subnet: Fix `expected ipv6_netmask_length to be one of [44 48 52 56 60], got 64` validation error ([#46515](https://github.com/hashicorp/terraform-provider-aws/issues/46515))
 
