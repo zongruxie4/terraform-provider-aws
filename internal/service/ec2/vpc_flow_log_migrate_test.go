@@ -100,7 +100,8 @@ func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
 	if _, ok := result[names.AttrLogGroupName]; ok {
 		t.Errorf("expected log_group_name to be removed, but it is still present")
 	}
-	if result["log_destination"] != "arn:aws:logs:us-east-1:123456789012:log-group:/my/log-group" { //lintignore:AWSAT003
+	//lintignore:AWSAT003,AWSAT005
+	if result["log_destination"] != "arn:aws:logs:us-east-1:123456789012:log-group:/my/log-group" {
 		t.Errorf("expected log_destination to be preserved, got: %v", result["log_destination"])
 	}
 }
