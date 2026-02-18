@@ -25,104 +25,54 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Origins",
     "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Origins",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "types.Origins",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "flex.tfModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Aliases",
     "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Aliases",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "types.Aliases",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "flex.tfModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CacheBehaviors",
     "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CacheBehaviors",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "types.CacheBehaviors",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "flex.tfModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CustomErrorResponses",
     "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CustomErrorResponses",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "types.CustomErrorResponses",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "flex.tfModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "OriginGroups",
     "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.OriginGroups",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
-    "is_nil": true
-  },
-  {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "types.OriginGroups",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "flex.tfModel"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
   },
   {
     "@level": "debug",
@@ -176,84 +126,44 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel"
   },
   {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "FunctionAssociations",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.FunctionAssociations",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DefaultCacheBehavior",
     "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.FunctionAssociations",
-    "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "flex.defaultCacheBehaviorModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "LambdaFunctionAssociations",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.LambdaFunctionAssociations",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DefaultCacheBehavior",
     "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.LambdaFunctionAssociations",
-    "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "flex.defaultCacheBehaviorModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "TrustedKeyGroups",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.TrustedKeyGroups",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DefaultCacheBehavior",
     "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
-    "is_nil": true
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel"
   },
   {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.TrustedKeyGroups",
-    "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "flex.defaultCacheBehaviorModel"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found XML wrapper split source",
+    "@level": "debug",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "TrustedSigners",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.TrustedSigners",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DefaultCacheBehavior",
     "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
-    "is_nil": true
-  },
-  {
-    "@level": "trace",
-    "@message": "Handling XML wrapper split",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.TrustedSigners",
-    "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "flex.defaultCacheBehaviorModel"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel"
   },
   {
     "@level": "debug",

@@ -2918,18 +2918,28 @@ func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sou
 		// Before splitting, check if there's a direct field match in the target
 		// If the target has a field with the same name that can accept this XML wrapper,
 		// skip the split and let normal field matching handle it
-		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flattener); ok {
-			if targetFieldVal := valTo.FieldByIndex(targetField.Index); targetFieldVal.CanSet() {
-				// Check if target field is a NestedObjectCollection that can accept this wrapper
-				if targetAttr, ok := targetFieldVal.Interface().(attr.Value); ok {
-					if _, isNestedObjCollection := targetAttr.Type(ctx).(fwtypes.NestedObjectCollectionType); isNestedObjCollection {
-						// Skip split - let normal field matching handle this as a direct wrapper-to-wrapper mapping
-						tflog.SubsystemTrace(ctx, subsystemName, "Skipping XML wrapper split - direct field match found", map[string]any{
-							logAttrKeySourceFieldname: fromFieldName,
-							logAttrKeyTargetFieldname: targetField.Name,
-						})
-						continue
-					}
+		targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flattener)
+		if !ok {
+			// Corresponding field not found in target.
+			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+			})
+
+			// Mark the source field as processed
+			processedFields[fromFieldName] = true
+			continue
+		}
+
+		if targetFieldVal := valTo.FieldByIndex(targetField.Index); targetFieldVal.CanSet() {
+			// Check if target field is a NestedObjectCollection that can accept this wrapper
+			if targetAttr, ok := targetFieldVal.Interface().(attr.Value); ok {
+				if _, isNestedObjCollection := targetAttr.Type(ctx).(fwtypes.NestedObjectCollectionType); isNestedObjCollection {
+					// Skip split - let normal field matching handle this as a direct wrapper-to-wrapper mapping
+					tflog.SubsystemTrace(ctx, subsystemName, "Skipping XML wrapper split - direct field match found", map[string]any{
+						logAttrKeySourceFieldname: fromFieldName,
+						logAttrKeyTargetFieldname: targetField.Name,
+					})
+					continue
 				}
 			}
 		}
