@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceMigrateState(t *testing.T) {
@@ -309,14 +310,11 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 	}
 }
 
-// TestInstanceStateUpgradeV1_jsonState simulates state as decoded from a JSON state file,
-// where numbers are float64 as produced by encoding/json.
-// This matches what Terraform passes to state upgraders in practice (issue #46014).
-func TestInstanceStateUpgradeV1_jsonState(t *testing.T) {
+// TestInstanceStateUpgradeV1_complexState simulates state as decoded from a JSON state file.
+// This is to ensure nothing in a complex state prevents state upgrading.
+func TestInstanceStateUpgradeV1_complexState(t *testing.T) {
 	t.Parallel()
 
-	// Simulate a v5 state JSON for aws_instance with cpu_core_count and cpu_threads_per_core.
-	// encoding/json decodes all numbers as float64.
 	stateJSON := `{
 		"ami": "ami-XXXXXXXXXXXXXXXXX",
 		"arn": "arn:aws:ec2:eu-central-1:XXXXXXXXXXXX:instance/i-XXXXXXXXXXXXXXXXX",
@@ -352,7 +350,9 @@ func TestInstanceStateUpgradeV1_jsonState(t *testing.T) {
 		}],
 		"ebs_optimized": false,
 		"enable_primary_ipv6": null,
-		"enclave_options": [{ "enabled": false }],
+		"enclave_options": [{
+			"enabled": false
+		}],
 		"ephemeral_block_device": [],
 		"get_password_data": false,
 		"hibernation": false,
@@ -369,7 +369,9 @@ func TestInstanceStateUpgradeV1_jsonState(t *testing.T) {
 		"ipv6_addresses": [],
 		"key_name": "xxx",
 		"launch_template": [],
-		"maintenance_options": [{ "auto_recovery": "default" }],
+		"maintenance_options": [{
+			"auto_recovery": "default"
+		}],
 		"metadata_options": [{
 			"http_endpoint": "enabled",
 			"http_protocol_ipv6": "disabled",
@@ -420,7 +422,7 @@ func TestInstanceStateUpgradeV1_jsonState(t *testing.T) {
 		"user_data_replace_on_change": false,
 		"volume_tags": null,
 		"vpc_security_group_ids": ["sg-XXXXXXXXXXXXXXXXX"]
-	}`
+	}` //lintignore:AWSAT003,AWSAT005
 
 	var rawState map[string]any
 	if err := json.Unmarshal([]byte(stateJSON), &rawState); err != nil {
@@ -438,7 +440,7 @@ func TestInstanceStateUpgradeV1_jsonState(t *testing.T) {
 	if _, ok := result["cpu_threads_per_core"]; ok {
 		t.Errorf("expected cpu_threads_per_core to be removed, but it is still present")
 	}
-	if result["instance_type"] != "m6g.large" {
-		t.Errorf("expected instance_type to be preserved, got: %v", result["instance_type"])
+	if result[names.AttrInstanceType] != "m6g.large" {
+		t.Errorf("expected instance_type to be preserved, got: %v", result[names.AttrInstanceType])
 	}
 }

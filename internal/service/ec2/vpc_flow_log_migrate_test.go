@@ -61,14 +61,11 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 	}
 }
 
-// TestFlowLogStateUpgradeV0_jsonState simulates state as decoded from a JSON state file,
-// where all values are strings/floats/etc. as produced by encoding/json.
-// This matches what Terraform passes to state upgraders in practice.
-func TestFlowLogStateUpgradeV0_jsonState(t *testing.T) {
+// TestFlowLogStateUpgradeV0_complexState simulates state as decoded from a JSON state file.
+// This is to ensure nothing in a complex state prevents state upgrading.
+func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
 	t.Parallel()
 
-	// Simulate a v5 state JSON for aws_flow_log with log_group_name present.
-	// encoding/json decodes all numbers as float64 and all objects as map[string]any.
 	stateJSON := `{
 		"arn": "arn:aws:ec2:us-east-1:123456789012:vpc-flow-log/fl-12345678",
 		"deliver_cross_account_role": "",
@@ -88,7 +85,7 @@ func TestFlowLogStateUpgradeV0_jsonState(t *testing.T) {
 		"transit_gateway_attachment_id": null,
 		"transit_gateway_id": null,
 		"vpc_id": null
-	}`
+	}` //lintignore:AWSAT003,AWSAT005
 
 	var rawState map[string]any
 	if err := json.Unmarshal([]byte(stateJSON), &rawState); err != nil {
