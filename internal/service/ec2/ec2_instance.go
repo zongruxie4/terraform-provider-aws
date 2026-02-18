@@ -182,6 +182,21 @@ func resourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
+						"nested_virtualization": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.NestedVirtualizationSpecification](),
+							// prevents ForceNew for the case where users launch EC2 instances without cpu_options
+							// then in a second apply set cpu_options.0.nested_virtualization to "disabled"
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Id() != "" && old == "" && new == string(awstypes.NestedVirtualizationSpecificationDisabled) {
+									return true
+								}
+								return false
+							},
+						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -3595,6 +3610,10 @@ func expandCPUOptions(l []any) *awstypes.CpuOptionsRequest {
 		opts.AmdSevSnp = awstypes.AmdSevSnpSpecification(v)
 	}
 
+	if v, ok := m["nested_virtualization"].(string); ok && v != "" {
+		opts.NestedVirtualization = awstypes.NestedVirtualizationSpecification(v)
+	}
+
 	if v, ok := m["core_count"].(int); ok && v > 0 {
 		tc := m["threads_per_core"].(int)
 		if tc < 0 {
@@ -3656,7 +3675,8 @@ func flattenCPUOptions(opts *awstypes.CpuOptions) []any {
 	}
 
 	m := map[string]any{
-		"amd_sev_snp": opts.AmdSevSnp,
+		"amd_sev_snp":            opts.AmdSevSnp,
+		"nested_virtualization": opts.NestedVirtualization,
 	}
 
 	if v := opts.CoreCount; v != nil {
