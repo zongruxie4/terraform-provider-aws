@@ -690,6 +690,7 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.docs_to_investigate", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.use_update_lookup", acctest.CtTrue),
 				),
 			},
 			{
@@ -3097,6 +3098,7 @@ resource "aws_dms_endpoint" "test" {
     nesting_level       = "one"
     extract_doc_id      = "true"
     docs_to_investigate = "1001"
+    use_update_lookup   = true
   }
 }
 `, rName)

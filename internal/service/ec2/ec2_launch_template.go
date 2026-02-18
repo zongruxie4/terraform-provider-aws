@@ -182,6 +182,11 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"nested_virtualization": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.NestedVirtualizationSpecification](),
+						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -1557,6 +1562,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]any) *awstypes.Launc
 		apiObject.CoreCount = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["nested_virtualization"].(string); ok && v != "" {
+		apiObject.NestedVirtualization = awstypes.NestedVirtualizationSpecification(v)
+	}
+
 	if v, ok := tfMap["threads_per_core"].(int); ok && v != 0 {
 		apiObject.ThreadsPerCore = aws.Int32(int32(v))
 	}
@@ -2565,6 +2574,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOption
 
 	if v := apiObject.CoreCount; v != nil {
 		tfMap["core_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.NestedVirtualization; v != "" {
+		tfMap["nested_virtualization"] = v
 	}
 
 	if v := apiObject.ThreadsPerCore; v != nil {

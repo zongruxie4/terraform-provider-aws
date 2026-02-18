@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -723,6 +724,46 @@ func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 					resource.TestCheckResourceAttr(resName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
 					resource.TestCheckResourceAttr(resName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_cpuOptionsNestedVirtualization(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, string(awstypes.NestedVirtualizationSpecificationEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.nested_virtualization", string(awstypes.NestedVirtualizationSpecificationEnabled)),
+				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, string(awstypes.NestedVirtualizationSpecificationDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.nested_virtualization", string(awstypes.NestedVirtualizationSpecificationDisabled)),
 				),
 			},
 		},
@@ -4161,6 +4202,18 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, amdSevSnp, coreCount, threadsPerCore)
+}
+
+func testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, nestedVirtualization string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  cpu_options {
+    nested_virtualization = %[2]q
+  }
+}
+`, rName, nestedVirtualization)
 }
 
 func testAccLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
