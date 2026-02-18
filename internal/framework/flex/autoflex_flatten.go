@@ -2307,7 +2307,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					logAttrKeySourceFieldname: fromFieldName,
 					logAttrKeyTargetFieldname: toFieldName,
 					"wrapper_field":           wrapperField,
-					"flexer_type":             fmt.Sprintf("%T", flexer),
 				})
 
 				valTo, ok := toFieldVal.Interface().(attr.Value)
@@ -2323,9 +2322,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 				} else if f, ok := flexer.(*autoFlattener); ok {
 					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), toFieldName, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
 				} else {
-					tflog.SubsystemError(ctx, subsystemName, "Type assertion to autoFlattener failed for wrapper tag", map[string]any{
-						"flexer_type": fmt.Sprintf("%T", flexer),
-					})
+					tflog.SubsystemError(ctx, subsystemName, "Type assertion to autoFlattener failed for wrapper tag")
 					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
 				}
 				if diags.HasError() {
