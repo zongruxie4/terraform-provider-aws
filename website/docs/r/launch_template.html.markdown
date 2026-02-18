@@ -496,13 +496,13 @@ The [Secondary Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/APIReferenc
 
 Each `secondary_interfaces` block supports the following:
 
-* `delete_on_termination` - (Optional) Indicates whether the secondary interface is deleted when the instance is terminated. The only supported value is `true`.
-* `device_index` - (Optional) The device index for the secondary interface attachment.
-* `interface_type` - (Optional) The type of secondary interface. The only supported value is: `secondary`.
-* `network_card_index` - (Optional) The index of the network card.
-* `private_ip_address_count` - (Optional) The number of private IPv4 addresses to assign to the secondary interface.
-* `private_ip_addresses` - (Optional) The private IPv4 addresses to assign to the secondary interface.
-* `secondary_subnet_id` - (Optional) The ID of the secondary subnet.
+* `delete_on_termination` - (Optional) Whether the secondary interface is deleted when the instance is terminated. The only supported value is `true`.
+* `device_index` - (Optional) Device index for the secondary interface attachment.
+* `interface_type` - (Optional) Type of secondary interface. The only supported value is: `secondary`.
+* `network_card_index` - (Optional) Index of the network card.
+* `private_ip_address_count` - (Optional) Number of private IPv4 addresses to assign to the secondary interface.
+* `private_ip_addresses` - (Optional) Private IPv4 addresses to assign to the secondary interface.
+* `secondary_subnet_id` - (Optional) ID of the secondary subnet.
 
 ### Tag Specifications
 
