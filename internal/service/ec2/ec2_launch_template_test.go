@@ -783,7 +783,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m1.small", "standard"),
+				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m7gd.medium", "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 				),
