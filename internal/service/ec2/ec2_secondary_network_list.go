@@ -64,11 +64,6 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 				result.DisplayName = id
 			})
 
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
 			if !yield(result) {
 				return
 			}
@@ -86,7 +81,7 @@ func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.Des
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.SecondaryNetwork{}, fmt.Errorf("listing EC2 (Elastic Compute Cloud) Secondary Network resources: %w", err))
+				yield(awstypes.SecondaryNetwork{}, fmt.Errorf("listing EC2 Secondary Network resources: %w", err))
 				return
 			}
 
