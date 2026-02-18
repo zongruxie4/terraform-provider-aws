@@ -156,23 +156,25 @@ func resourceDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
-									names.AttrPublicKey: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										DiffSuppressFunc: suppressPublicKeyDiff,
-									},
-									"subject_key": {
+									"public_key": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
 									"roles_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+									"subject_key": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
 								},
 							},
