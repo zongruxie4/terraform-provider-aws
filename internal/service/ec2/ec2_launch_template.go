@@ -989,7 +989,7 @@ func resourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -2149,7 +2149,7 @@ func expandLaunchTemplateSecondaryInterfacesRequests(tfList []any) []awstypes.La
 func expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
 	apiObject := awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest{}
 
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -3357,7 +3357,7 @@ func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awst
 	tfMap := map[string]any{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = aws.ToBool(v)
+		tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
 	}
 
 	if v := apiObject.DeviceIndex; v != nil {
