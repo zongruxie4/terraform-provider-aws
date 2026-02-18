@@ -204,6 +204,7 @@ The `cpu_options` block supports the following:
 
 * `amd_sev_snp` - Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
 * `core_count` - The number of CPU cores for the instance.
+* `nested_virtualization` - Indicates whether to enable the instance for nested virtualization. Nested virtualization is supported on 8th generation Intel-based instance types (C8i, M8i, R8i, and their flex variants) only. When nested virtualization is enabled, Virtual Secure Mode (VSM) is automatically disabled for the instance. Valid values are `enabled` and `disabled`.
 * `threads_per_core` - The number of threads per CPU core.
   To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
   Otherwise, specify the default value of 2.
