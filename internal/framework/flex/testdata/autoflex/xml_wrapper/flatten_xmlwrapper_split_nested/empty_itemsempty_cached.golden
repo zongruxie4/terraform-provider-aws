@@ -30,7 +30,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Origins",
     "autoflex.source.path": "",
-    "autoflex.source.type": "types.Origins",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Origins",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
@@ -50,7 +50,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Aliases",
     "autoflex.source.path": "",
-    "autoflex.source.type": "types.Aliases",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Aliases",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
@@ -70,7 +70,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CacheBehaviors",
     "autoflex.source.path": "",
-    "autoflex.source.type": "types.CacheBehaviors",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CacheBehaviors",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
@@ -90,7 +90,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CustomErrorResponses",
     "autoflex.source.path": "",
-    "autoflex.source.type": "types.CustomErrorResponses",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CustomErrorResponses",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
@@ -110,7 +110,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "OriginGroups",
     "autoflex.source.path": "",
-    "autoflex.source.type": "types.OriginGroups",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.OriginGroups",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel",
     "is_nil": true
@@ -181,7 +181,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "FunctionAssociations",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.FunctionAssociations",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.FunctionAssociations",
     "autoflex.target.path": "DefaultCacheBehavior",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
     "is_nil": true
@@ -201,7 +201,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "LambdaFunctionAssociations",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.LambdaFunctionAssociations",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.LambdaFunctionAssociations",
     "autoflex.target.path": "DefaultCacheBehavior",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
     "is_nil": true
@@ -221,7 +221,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "TrustedKeyGroups",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.TrustedKeyGroups",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.TrustedKeyGroups",
     "autoflex.target.path": "DefaultCacheBehavior",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
     "is_nil": true
@@ -241,7 +241,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "TrustedSigners",
     "autoflex.source.path": "DefaultCacheBehavior",
-    "autoflex.source.type": "types.TrustedSigners",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.TrustedSigners",
     "autoflex.target.path": "DefaultCacheBehavior",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel",
     "is_nil": true
@@ -301,7 +301,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CachedMethods",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods",
-    "autoflex.source.type": "types.CachedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "is_nil": false
