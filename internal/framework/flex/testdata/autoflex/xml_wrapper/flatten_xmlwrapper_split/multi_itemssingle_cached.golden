@@ -62,6 +62,7 @@
     "autoflex.source.fieldname": "CachedMethods",
     "autoflex.source.path": "AllowedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.target.fieldname": "CachedMethods",
     "autoflex.target.path": "AllowedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "is_nil": false
