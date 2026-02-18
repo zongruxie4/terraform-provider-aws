@@ -211,12 +211,12 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 				WantTarget: &awsModel{Field: nil},
 			},
 			"empty set": {
-				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{})},
+				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{})},
 				Target:     &awsModel{},
 				WantTarget: &awsModel{Field: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)}},
 			},
 			"single item": {
-				Source: &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+				Source: &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 					{
 						Name:  types.StringValue("test"),
 						Value: types.Int32Value(42),
@@ -316,7 +316,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 			"empty items": {
 				Source:     &sourceStruct{XMLWrapper: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)}},
 				Target:     &targetStruct{},
-				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{})},
+				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{})},
 			},
 			"single item": {
 				Source: &sourceStruct{
@@ -329,7 +329,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 				},
 				Target: &targetStruct{},
 				WantTarget: &targetStruct{
-					XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+					XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 						{Name: types.StringValue("test"), Value: types.Int32Value(42)},
 					}),
 				},
@@ -414,7 +414,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 		// Original Terraform value
 		original := tfSource{
-			XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+			XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 				{Name: types.StringValue("test"), Value: types.Int32Value(42)},
 			}),
 		}
@@ -491,7 +491,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 				WantTarget: &awsModel{Field: nil},
 			},
 			"empty items, enabled false": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
 						Enabled: types.BoolValue(false),
@@ -501,7 +501,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 				WantTarget: &awsModel{Field: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)}},
 			},
 			"with items, enabled true": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
@@ -513,7 +513,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		},
 		"TestXMLWrapperRule2DifferentOrder": {
 			"different field order": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
@@ -597,7 +597,7 @@ func TestXMLWrapperRule2Symmetry(t *testing.T) {
 
 		// Original Terraform value (Rule 2 pattern)
 		original := tfSource{
-			XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+			XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 				{
 					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("signer1"), types.StringValue("signer2")}),
 					Enabled: types.BoolValue(true),
@@ -660,7 +660,7 @@ func TestXMLWrapperRealCloudFrontTypes(t *testing.T) {
 		}
 
 		source := tfSource{
-			TrustedSigners: fwtypes.NewListNestedObjectValueOfValueSliceMust[trustedSignersModel](ctx, []trustedSignersModel{
+			TrustedSigners: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []trustedSignersModel{
 				{
 					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("AKIAIOSFODNN7EXAMPLE")}),
 					Enabled: types.BoolValue(true),
