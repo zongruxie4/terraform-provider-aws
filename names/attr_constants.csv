@@ -166,7 +166,6 @@ schedule,Schedule
 schedule_expression,ScheduleExpression
 schema,Schema
 scope,Scope
-secondary_subnet_id,SecondarySubnetID
 secret_key,SecretKey
 security_group_ids,SecurityGroupIDs
 security_groups,SecurityGroups

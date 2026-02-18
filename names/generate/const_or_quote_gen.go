@@ -187,7 +187,6 @@ func ConstOrQuote(constant string) string {
 		"schedule_expression":           "AttrScheduleExpression",
 		"schema":                        "AttrSchema",
 		"scope":                         "AttrScope",
-		"secondary_subnet_id":           "AttrSecondarySubnetID",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",

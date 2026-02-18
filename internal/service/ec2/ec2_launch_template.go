@@ -991,6 +991,19 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"interface_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SecondaryInterfaceType](),
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"private_ip_address_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"private_ip_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -1003,21 +1016,8 @@ func resourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
-						"private_ip_address_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrSecondarySubnetID: {
+						"secondary_subnet_id": {
 							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"interface_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SecondaryInterfaceType](),
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
 							Optional: true,
 						},
 					},
@@ -2134,13 +2134,13 @@ func expandLaunchTemplateSecondaryInterfacesRequests(tfList []any) []awstypes.La
 			continue
 		}
 
-		apiObjects = append(apiObjects, expandLaunchTemplateSecondaryInterfacesRequest(tfMap))
+		apiObjects = append(apiObjects, expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandLaunchTemplateSecondaryInterfacesRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
+func expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
 	apiObject := awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest{}
 
 	if v, ok := tfMap["delete_on_termination"].(bool); ok {
@@ -2149,6 +2149,18 @@ func expandLaunchTemplateSecondaryInterfacesRequest(tfMap map[string]any) awstyp
 
 	if v, ok := tfMap["device_index"].(int); ok {
 		apiObject.DeviceIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
+		apiObject.InterfaceType = awstypes.SecondaryInterfaceType(v)
+	}
+
+	if v, ok := tfMap["network_card_index"].(int); ok {
+		apiObject.NetworkCardIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["private_ip_address_count"].(int); ok && v != 0 {
+		apiObject.PrivateIpAddressCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["private_ip_addresses"].(*schema.Set); ok && v.Len() > 0 {
@@ -2163,20 +2175,8 @@ func expandLaunchTemplateSecondaryInterfacesRequest(tfMap map[string]any) awstyp
 		}
 	}
 
-	if v, ok := tfMap["private_ip_address_count"].(int); ok && v != 0 {
-		apiObject.PrivateIpAddressCount = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap[names.AttrSecondarySubnetID].(string); ok && v != "" {
+	if v, ok := tfMap["secondary_subnet_id"].(string); ok && v != "" {
 		apiObject.SecondarySubnetId = aws.String(v)
-	}
-
-	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
-		apiObject.InterfaceType = awstypes.SecondaryInterfaceType(v)
-	}
-
-	if v, ok := tfMap["network_card_index"].(int); ok {
-		apiObject.NetworkCardIndex = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -3363,7 +3363,7 @@ func flattenLaunchTemplateEnaSrdSpecification(apiObject *awstypes.LaunchTemplate
 	return tfMap
 }
 
-func flattenLaunchTemplateSecondaryInterface(apiObject awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) map[string]any {
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
@@ -3372,6 +3372,18 @@ func flattenLaunchTemplateSecondaryInterface(apiObject awstypes.LaunchTemplateIn
 
 	if v := apiObject.DeviceIndex; v != nil {
 		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.InterfaceType; v != "" {
+		tfMap["interface_type"] = v
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PrivateIpAddressCount; v != nil {
+		tfMap["private_ip_address_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
@@ -3384,20 +3396,8 @@ func flattenLaunchTemplateSecondaryInterface(apiObject awstypes.LaunchTemplateIn
 		tfMap["private_ip_addresses"] = privateIPs
 	}
 
-	if v := apiObject.PrivateIpAddressCount; v != nil {
-		tfMap["private_ip_address_count"] = aws.ToInt32(v)
-	}
-
 	if v := apiObject.SecondarySubnetId; v != nil {
-		tfMap[names.AttrSecondarySubnetID] = aws.ToString(v)
-	}
-
-	if v := apiObject.InterfaceType; v != "" {
-		tfMap["interface_type"] = string(v)
-	}
-
-	if v := apiObject.NetworkCardIndex; v != nil {
-		tfMap["network_card_index"] = aws.ToInt32(v)
+		tfMap["secondary_subnet_id"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -3411,7 +3411,7 @@ func flattenLaunchTemplateSecondaryInterfaces(apiObjects []awstypes.LaunchTempla
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenLaunchTemplateSecondaryInterface(apiObject))
+		tfList = append(tfList, flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject))
 	}
 
 	return tfList

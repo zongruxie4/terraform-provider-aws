@@ -3046,24 +3046,6 @@ rules:
     options:
       constant_propagation: false
 
-  - id: literal-secondary_subnet_id-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrSecondarySubnetID` for the string literal "secondary_subnet_id"
-    paths:
-      include:
-        - "/internal/service/**/*.go"
-    patterns:
-      - pattern: '"secondary_subnet_id"'
-      - pattern-not-regex: '"secondary_subnet_id":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrSecondarySubnetID"
-    options:
-      constant_propagation: false
-
   - id: literal-secret_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrSecretKey` for the string literal "secret_key"
