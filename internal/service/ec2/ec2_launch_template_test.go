@@ -3356,7 +3356,7 @@ func TestAccEC2LaunchTemplate_secondaryInterfaces(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secondary_interfaces"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secondary_interfaces"), knownvalue.ListSizeExact(2)),
 				},
 			},
 			{
