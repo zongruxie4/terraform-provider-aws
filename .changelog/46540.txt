@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `secondary_interfaces` structure to aws_launch_template configuration block
+```
