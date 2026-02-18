@@ -142,6 +142,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"nested_virtualization": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
 							Computed: true,
