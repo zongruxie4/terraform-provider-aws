@@ -1035,7 +1035,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 
 	ctx := context.Background()
 
-	type sourceStruct = awstypes.DistributionConfig
+	type awsModel = awstypes.DistributionConfig
 
 	type allowedMethodsModel struct {
 		Items         fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"items" autoflex:",xmlwrapper=Items"`
@@ -1046,17 +1046,17 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 		AllowedMethods fwtypes.ListNestedObjectValueOf[allowedMethodsModel] `tfsdk:"allowed_methods"`
 	}
 
-	type targetStruct struct {
+	type tfModel struct {
 		DefaultCacheBehavior fwtypes.ListNestedObjectValueOf[defaultCacheBehaviorModel] `tfsdk:"default_cache_behavior"`
 	}
 
 	testCases := autoFlexTestCases{
 		"nil source": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: nil,
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfNull[allowedMethodsModel](ctx),
@@ -1065,15 +1065,15 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 			},
 		},
 		"empty items,nil cached": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: &awstypes.AllowedMethods{
 					Items:         []awstypes.Method{},
 					Quantity:      aws.Int32(0),
 					CachedMethods: nil,
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
@@ -1087,14 +1087,14 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 			},
 		},
 		"multi items,nil cached": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: &awstypes.AllowedMethods{
 					Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
 					Quantity: aws.Int32(2),
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
@@ -1111,7 +1111,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 			},
 		},
 		"multi items,single cached": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: &awstypes.AllowedMethods{
 					Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
 					Quantity: aws.Int32(2),
@@ -1121,8 +1121,8 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 					},
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
@@ -1142,7 +1142,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 		},
 
 		"empty items,empty cached": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: &awstypes.AllowedMethods{
 					Items:    []awstypes.Method{},
 					Quantity: aws.Int32(0),
@@ -1152,8 +1152,8 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 					},
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
@@ -1168,7 +1168,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 		},
 
 		"empty items,single cached": {
-			Source: &sourceStruct{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
 				AllowedMethods: &awstypes.AllowedMethods{
 					Items:    []awstypes.Method{},
 					Quantity: aws.Int32(0),
@@ -1178,8 +1178,8 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 					},
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
 					{
 						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
@@ -1202,8 +1202,8 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 
 	ctx := context.Background()
 
-	// type sourceStruct = awstypes.DefaultCacheBehavior
-	type sourceStruct struct {
+	// type awsModel = awstypes.DefaultCacheBehavior
+	type awsModel struct {
 		AllowedMethods *awstypes.AllowedMethods
 	}
 
@@ -1212,26 +1212,26 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 		CachedMethods fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"cached_methods" autoflex:",xmlwrapper=Items"`
 	}
 
-	type targetStruct struct {
+	type tfModel struct {
 		AllowedMethods fwtypes.ListNestedObjectValueOf[allowedMethodsModel] `tfsdk:"allowed_methods"`
 	}
 
 	testCases := autoFlexTestCases{
 		"nil source": {
-			Source: &sourceStruct{AllowedMethods: nil},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Source: &awsModel{AllowedMethods: nil},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfNull[allowedMethodsModel](ctx),
 			},
 		},
 		"empty items,nil cached": {
-			Source: &sourceStruct{AllowedMethods: &awstypes.AllowedMethods{
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
 				Items:         []awstypes.Method{},
 				Quantity:      aws.Int32(0),
 				CachedMethods: nil,
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
 					{
 						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
@@ -1241,12 +1241,12 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 			},
 		},
 		"multi items,nil cached": {
-			Source: &sourceStruct{AllowedMethods: &awstypes.AllowedMethods{
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
 				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
 				Quantity: aws.Int32(2),
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
 					{
 						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
@@ -1259,7 +1259,7 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 			},
 		},
 		"multi items,single cached": {
-			Source: &sourceStruct{AllowedMethods: &awstypes.AllowedMethods{
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
 				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
 				Quantity: aws.Int32(2),
 				CachedMethods: &awstypes.CachedMethods{
@@ -1267,8 +1267,8 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 					Quantity: aws.Int32(1),
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
 					{
 						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
@@ -1284,7 +1284,7 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 		},
 
 		"empty items,empty cached": {
-			Source: &sourceStruct{AllowedMethods: &awstypes.AllowedMethods{
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
 				Items:    []awstypes.Method{},
 				Quantity: aws.Int32(0),
 				CachedMethods: &awstypes.CachedMethods{
@@ -1292,8 +1292,8 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 					Quantity: aws.Int32(0),
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
 					{
 						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
@@ -1304,7 +1304,7 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 		},
 
 		"empty items,single cached": {
-			Source: &sourceStruct{AllowedMethods: &awstypes.AllowedMethods{
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
 				Items:    []awstypes.Method{},
 				Quantity: aws.Int32(0),
 				CachedMethods: &awstypes.CachedMethods{
@@ -1312,8 +1312,8 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 					Quantity: aws.Int32(1),
 				},
 			}},
-			Target: &targetStruct{},
-			WantTarget: &targetStruct{
+			Target: &tfModel{},
+			WantTarget: &tfModel{
 				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
 					{
 						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
