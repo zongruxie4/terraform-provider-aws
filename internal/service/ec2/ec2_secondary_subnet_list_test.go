@@ -199,3 +199,58 @@ func TestAccEC2SecondarySubnet_List_includeResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccEC2SecondarySubnet_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_ec2_secondary_subnet.test[0]"
+	resourceName2 := "aws_ec2_secondary_subnet.test[1]"
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSecondaryNetwork(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "secondary-subnet/{id}"),
+
+					identity2.GetIdentity(resourceName2),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "secondary-subnet/{id}"),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_subnet.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_subnet.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}

@@ -60,8 +60,8 @@ func (l *secondarySubnetListResource) ListResourceConfigSchema(ctx context.Conte
 	}
 }
 
-func (r *secondarySubnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := r.Meta().EC2Client(ctx)
+func (l *secondarySubnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	conn := l.Meta().EC2Client(ctx)
 
 	var query listSecondarySubnetModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
@@ -88,7 +88,7 @@ func (r *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 
 			var data secondarySubnetResourceModel
 
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("SecondarySubnet")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

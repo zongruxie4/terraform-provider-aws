@@ -36,6 +36,7 @@ list "aws_subnet" "example" {
   }
 }
 ```
+
 ## Argument Reference
 
 This list resource supports the following arguments:
