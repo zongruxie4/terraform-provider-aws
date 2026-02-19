@@ -2948,7 +2948,6 @@ func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sou
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Found XML wrapper split source", map[string]any{
 			logAttrKeySourceFieldname: fromFieldName,
-			logAttrKeySourceType:      fullTypeName(sourceStructType),
 			logAttrKeyTargetFieldname: toFieldName,
 			"is_nil":                  isNil,
 		})

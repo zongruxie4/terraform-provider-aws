@@ -21,11 +21,11 @@ New logging keys should follow the same pattern.
 
 | Key                         | Description |
 +-----------------------------+-------------+
-| `autoflex.source.type`      | The fully qualified type of the source |
+| `autoflex.source.type`      | The fully qualified type of the source at `path` |
 | `autoflex.source.fieldname` | When flattening or expanding within a struct or object value, the current field in the source |
 | `autoflex.source.path`      | The current path within the source |
 | `autoflex.source.size`      | When flattening or expanding a collection type, the size of the source collection |
-| `autoflex.target.type`      | The fully qualified type of the target |
+| `autoflex.target.type`      | The fully qualified type of the target at `path` |
 | `autoflex.target.fieldname` | When flattening or expanding within a struct or object value, the current field in the target |
 | `autoflex.target.path`      | The current path within the target |
 | `error`                     | Error value for any errors |
