@@ -91,3 +91,11 @@ func equalEmptyJSONStrings(old, new string) bool {
 	old, new = strings.TrimSpace(old), strings.TrimSpace(new)
 	return (old == "" || old == "{}") && (new == "" || new == "{}")
 }
+
+// SuppressNewStringValueEquivalentToUnset provides custom difference suppression
+// for string values that are equivalent to the unset (unconfigured) value.
+func SuppressNewStringValueEquivalentToUnset[T ~string](v T) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, _ *schema.ResourceData) bool {
+		return old == "" && T(new) == v
+	}
+}

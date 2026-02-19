@@ -144,3 +144,32 @@ func TestSuppressEquivalentTime(t *testing.T) {
 		}
 	}
 }
+
+func TestSuppressNewStringValueEquivalentToUnset(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old  string
+		new  string
+		want bool
+	}{
+		{
+			old:  "",
+			new:  "THEDEFAULT",
+			want: true,
+		},
+		{
+			old: "CONFIGURED",
+			new: "THEDEFAULT",
+		},
+		{
+			old: "",
+			new: "CONFIGURED",
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := SuppressNewStringValueEquivalentToUnset("THEDEFAULT")("test_property", testCase.old, testCase.new, nil), testCase.want; got != want {
+			t.Errorf("SuppressNewStringValueEquivalentToUnset(%q, %q) = %v, want %v", testCase.old, testCase.new, got, want)
+		}
+	}
+}
