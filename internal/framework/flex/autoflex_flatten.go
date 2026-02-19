@@ -123,7 +123,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 							logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
 							logAttrKeyTargetFieldname: toField.Name,
 						})
-						diags.Append(handleDirectXMLWrapperStruct(ctx, sourcePath, valFrom, valTo, typFrom, typTo, flexer)...)
+						diags.Append(handleDirectXMLWrapperStruct(ctx, sourcePath, valFrom, valTo, typFrom, typTo, toField.Name, flexer)...)
 						return diags
 					}
 				}
@@ -2816,7 +2816,7 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 }
 
 // handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
-func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, flexer autoFlexer) diag.Diagnostics {
+func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetFieldName string, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	wrapperFieldName := getXMLWrapperSliceFieldName(typeFrom)
@@ -2830,6 +2830,7 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, val
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
 		logAttrKeySourceFieldname: wrapperFieldName,
+		logAttrKeyTargetFieldname: targetFieldName,
 	})
 
 	// Find target fields with matching xmlwrapper tags and map the source Items field to them
