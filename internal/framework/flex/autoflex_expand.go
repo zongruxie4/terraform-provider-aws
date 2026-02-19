@@ -1443,7 +1443,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
-			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
+			tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
 				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
