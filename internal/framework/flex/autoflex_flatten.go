@@ -2158,6 +2158,12 @@ func handleXMLWrapperRule1(ctx context.Context, valFrom, valTo reflect.Value, ty
 		if wrapperField := toOpts.XMLWrapperField(); wrapperField != "" {
 			toFieldVal := valTo.FieldByIndex(toField.Index)
 			if !toFieldVal.CanSet() {
+				// TODO:
+				// // Corresponding field value can't be changed.
+				// tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
+				// 	logAttrKeySourceFieldname: sourceFieldName,
+				// 	logAttrKeyTargetFieldname: toFieldName,
+				// })
 				continue
 			}
 
@@ -2942,6 +2948,12 @@ func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sou
 					continue
 				}
 			}
+		} else {
+			// Corresponding field value can't be changed.
+			tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+				logAttrKeyTargetFieldname: targetField.Name,
+			})
 		}
 
 		toFieldName := targetField.Name
@@ -3045,6 +3057,12 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 					}
 				}
 			}
+		} else {
+			// Corresponding field value can't be changed.
+			tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
+				logAttrKeySourceFieldname: sourceFieldName,
+				logAttrKeyTargetFieldname: targetFieldName,
+			})
 		}
 		return diags
 	}
@@ -3088,6 +3106,12 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 								return diags
 							}
 						}
+					} else {
+						// Corresponding field value can't be changed.
+						tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
+							logAttrKeySourceFieldname: sourceFieldName,
+							logAttrKeyTargetFieldname: targetFieldName,
+						})
 					}
 				}
 			}
@@ -3112,6 +3136,12 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 					if diags.HasError() {
 						return diags
 					}
+				} else {
+					// Corresponding field value can't be changed.
+					tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
+						logAttrKeySourceFieldname: sourceFieldName,
+						logAttrKeyTargetFieldname: targetFieldName,
+					})
 				}
 			}
 		}
