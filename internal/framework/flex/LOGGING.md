@@ -1,4 +1,6 @@
 # AutoFlex Logging
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
 Logging in AutoFlex is intended to assist in debugging flattening and expanding values.
 
