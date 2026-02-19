@@ -3074,13 +3074,18 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceFieldname, sourceFieldName)
 
+		if sourceFieldName == xmlWrapperFieldQuantity {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field")
+			continue
+		}
+
 		tflog.SubsystemTrace(ctx, subsystemName, "Processing source field for split", map[string]any{
 			"source_type": sourceField.Type.String(),
 		})
 
 		// Map the source field to target field(s)
 		wrapperFieldName := getXMLWrapperSliceFieldName(sourceStructType)
-		if sourceFieldName == wrapperFieldName || sourceFieldName == xmlWrapperFieldQuantity {
+		if sourceFieldName == wrapperFieldName {
 			// Items and Quantity should map to the main collection field
 			// Find a target field that matches the parent source field name
 			mainTargetFieldName := flattener.findMainTargetFieldForSplit(ctx, sourcePath, typeTo)
@@ -3092,19 +3097,16 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 							"target_field": mainTargetFieldName,
 						})
 
-						// Only process this for the Items field, skip Quantity
-						if sourceFieldName == wrapperFieldName {
-							// Extract tagOptions from target field
-							opts := tagOptions("")
-							if targetField, ok := typeTo.FieldByName(mainTargetFieldName); ok {
-								if tag := targetField.Tag.Get("autoflex"); tag != "" {
-									_, opts = parseTag(tag)
-								}
+						// Extract tagOptions from target field
+						opts := tagOptions("")
+						if targetField, ok := typeTo.FieldByName(mainTargetFieldName); ok {
+							if tag := targetField.Tag.Get("autoflex"); tag != "" {
+								_, opts = parseTag(tag)
 							}
-							diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath, sourceStructVal, targetPath.AtName(mainTargetFieldName), toFieldVal, opts)...)
-							if diags.HasError() {
-								return diags
-							}
+						}
+						diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath, sourceStructVal, targetPath.AtName(mainTargetFieldName), toFieldVal, opts)...)
+						if diags.HasError() {
+							return diags
 						}
 					} else {
 						// Corresponding field value can't be changed.

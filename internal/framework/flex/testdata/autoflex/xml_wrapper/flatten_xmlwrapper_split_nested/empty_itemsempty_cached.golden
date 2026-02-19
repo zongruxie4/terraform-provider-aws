@@ -321,25 +321,13 @@
   },
   {
     "@level": "trace",
-    "@message": "Processing source field for split",
+    "@message": "Skipping ignored source field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Quantity",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
-    "source_type": "*int32"
-  },
-  {
-    "@level": "trace",
-    "@message": "Mapping Items/Quantity to main target field",
-    "@module": "provider.autoflex",
-    "autoflex.source.fieldname": "Quantity",
-    "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
-    "target_field": "CachedMethods"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
   },
   {
     "@level": "trace",
