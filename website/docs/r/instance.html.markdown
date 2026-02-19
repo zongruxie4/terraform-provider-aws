@@ -292,9 +292,9 @@ This `capacity_reservation_target` block supports the following:
 
 ### CPU Options
 
--> **NOTE:** Changing any of `amd_sev_snp`, `core_count`, `nested_virtualization`, `threads_per_core` will cause the resource to be destroyed and re-created.
+-> **NOTE:** Changing `amd_sev_snp` will cause the resource to be destroyed and re-created. Changes to `core_count`, `nested_virtualization`, and `threads_per_core` can be made in-place but require the instance to be stopped and restarted.
 
-CPU options apply to the instance at launch time.
+CPU options can be modified after launch for `core_count`, `nested_virtualization`, and `threads_per_core` (requires instance stop/start). Other CPU options apply only at launch time.
 
 The `cpu_options` block supports the following:
 
