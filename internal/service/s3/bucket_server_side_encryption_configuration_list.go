@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -21,22 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
-// @SDKListResource("aws_s3_bucket_policy")
-func newBucketPolicyResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBucketPolicy{}
-	l.SetResourceSchema(resourceBucketPolicy())
+// @SDKListResource("aws_s3_bucket_server_side_encryption_configuration")
+func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
+	l := listResourceBucketServerSideEncryptionConfiguration{}
+	l.SetResourceSchema(resourceBucketServerSideEncryptionConfiguration())
 	return &l
 }
 
-var _ list.ListResource = &listResourceBucketPolicy{}
+var _ list.ListResource = &listResourceBucketServerSideEncryptionConfiguration{}
 
-type listResourceBucketPolicy struct {
+type listResourceBucketServerSideEncryptionConfiguration struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketPolicyModel
+func (l *listResourceBucketServerSideEncryptionConfiguration) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	var query listBucketServerSideEncryptionConfigurationModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -44,7 +43,7 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Policy")
+	tflog.Info(ctx, "Listing S3 Bucket Server Side Encryption Configuration")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		tflog.Info(ctx, "Listing General Purpose Buckets")
 		gpConn := l.Meta().S3Client(ctx)
@@ -78,11 +77,11 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 	}
 }
 
-func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
+func (l *listResourceBucketServerSideEncryptionConfiguration) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Bucket Policy resources: %w", err))
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Bucket Server Side Encryption Configuration resources: %w", err))
 				yield(result)
 				return
 			}
@@ -95,23 +94,25 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
-			// So always try to read it to see if it is present.
-			tflog.Info(ctx, "Reading S3 Bucket Policy")
-			policy, err := findBucketPolicy(ctx, conn, bucketName)
+			tflog.Info(ctx, "Reading S3 Bucket Server Side Encryption Configuration")
+			var expectedOwner string
+			if isGeneralPurposeBucket(bucketName) {
+				expectedOwner = l.Meta().AccountID(ctx)
+			}
+			sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucketName, expectedOwner)
 			if retry.NotFound(err) {
-				tflog.Debug(ctx, "Bucket has no policy, skipping")
+				tflog.Debug(ctx, "Bucket has no Server Side Encryption Configuration, skipping")
 				continue
 			}
 			if err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
+				tflog.Error(ctx, "Reading S3 Bucket Server Side Encryption Configuration", map[string]any{
 					"error": err.Error(),
 				})
 				continue
 			}
 
-			if err := resourceBucketPolicyFlatten(ctx, policy, rd); err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
+			if err := resourceBucketServerSideEncryptionConfigurationFlatten(ctx, sse, rd); err != nil {
+				tflog.Error(ctx, "Reading S3 Bucket Server Side Encryption Configuration", map[string]any{
 					"error": err.Error(),
 				})
 				continue
@@ -132,6 +133,6 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 	}
 }
 
-type listBucketPolicyModel struct {
+type listBucketServerSideEncryptionConfigurationModel struct {
 	framework.WithRegionModel
 }
