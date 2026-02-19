@@ -122,7 +122,7 @@ func TestAccBatchJobDefinition_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_batch_job_definition.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("batch", "job-definition/"+rName+"-0:1")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("type"), knownvalue.StringExact("container")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.StringExact("container")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("revision"), knownvalue.NotNull()),
 					}),
 				},
