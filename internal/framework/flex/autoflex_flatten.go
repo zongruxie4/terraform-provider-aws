@@ -1781,11 +1781,11 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 	}
 
 	// Rule 1: Flatten Items field directly to collection
-	return flattener.xmlWrapperFlattenRule1(ctx, sourceFieldName, vFrom, tTo, vTo)
+	return flattener.xmlWrapperFlattenRule1(ctx, sourcePath, sourceFieldName, vFrom, tTo, vTo)
 }
 
 // xmlWrapperFlattenRule1 handles Rule 1: flatten Items field directly to collection
-func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, sourceFieldName string, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, sourcePath path.Path, sourceFieldName string, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	itemsField := vFrom.FieldByName(sourceFieldName)
@@ -1841,9 +1841,10 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, sour
 		})
 
 		for i, item := range validItems {
+			sourcePath := sourcePath.AtListIndex(i)
+			ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 			// TODO: source type and target type should be set to element types
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
-				"index":      i,
 				"item_kind":  item.Kind().String(),
 				"item_value": item.Interface(),
 			})
