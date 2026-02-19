@@ -3076,15 +3076,14 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 		sourceFieldName := sourceField.Name
 		sourceFieldVal := sourceStructVal.FieldByName(sourceFieldName)
 
-		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceFieldname, sourceFieldName)
-
 		if sourceFieldName == xmlWrapperFieldQuantity {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field")
 			continue
 		}
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Processing source field for split", map[string]any{
-			"source_type": sourceField.Type.String(),
+			logAttrKeySourceFieldname: sourceFieldName,
+			"source_type":             sourceField.Type.String(),
 		})
 
 		// Map the source field to target field(s)
