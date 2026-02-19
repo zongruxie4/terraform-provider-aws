@@ -116,7 +116,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				ConflictsWith: []string{"customer_owned_ipv4_pool"},
 			},
 			"ipv4_netmask_length": {
 				Type:          schema.TypeInt,
@@ -137,10 +137,9 @@ func resourceSubnet() *schema.Resource {
 				Computed: true,
 			},
 			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
@@ -152,7 +151,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},

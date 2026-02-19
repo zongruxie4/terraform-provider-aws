@@ -8,6 +8,8 @@ package sagemaker
 import (
 	"context"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -166,16 +167,18 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if _, err := conn.CreateImageVersion(ctx, &input); err != nil {
+	out, err := conn.CreateImageVersion(ctx, &input)
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
-	out, err := waitImageVersionCreated(ctx, conn, name)
+	version := imageVersionFromARN(aws.ToString(out.ImageVersionArn))
+	waitOut, err := waitImageVersionCreated(ctx, conn, name, version)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
-	parts := []string{name, flex.Int32ToStringValue(out.Version)}
+	parts := []string{name, flex.Int32ToStringValue(waitOut.Version)}
 	id, err := flex.FlattenResourceId(parts, imageVersionResourcePartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
@@ -331,36 +334,6 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-// findImageVersionByName is used immediately after creation to poll for status of
-// the most recently created image version
-//
-// findImageVersionByTwoPartKey should be used for all subsequent operations once the
-// version number is assigned.
-func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
-	input := sagemaker.DescribeImageVersionInput{
-		ImageName: aws.String(name),
-	}
-
-	output, err := conn.DescribeImageVersion(ctx, &input)
-
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return output, nil
-}
-
 // findImageVersionByTwoPartKey is used to fetch a specific version once a version number
 // is assigned
 func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
@@ -372,9 +345,8 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	output, err := conn.DescribeImageVersion(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -398,9 +370,8 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	output, err := conn.ListAliases(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -413,6 +384,19 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	}
 
 	return output.SageMakerImageVersionAliases, nil
+}
+
+// imageVersionFromARN extracts the version number from an ImageVersionArn
+//
+// ARN format: arn:aws:sagemaker:region:account:image-version/image-name/version
+func imageVersionFromARN(arn string) int32 {
+	parts := strings.Split(arn, "/")
+	if len(parts) >= 3 {
+		if version, err := strconv.ParseInt(parts[len(parts)-1], 10, 32); err == nil {
+			return int32(version)
+		}
+	}
+	return 0
 }
 
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion
