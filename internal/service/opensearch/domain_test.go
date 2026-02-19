@@ -1185,7 +1185,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) {
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1202,7 +1202,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) 
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_advancedSecurityOptionsJWTTokenAuth(rName, "sub", "roles"),
+				Config: testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, "OpenSearch", "2.11", "sub", "roles"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
@@ -1213,13 +1213,13 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccDomainConfig_advancedSecurityOptionsJWTTokenAuth(rName, "email", "groups"),
+				Config: testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, "OpenSearch", "2.11", names.AttrEmail, "groups"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
 					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.subject_key", "email"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.subject_key", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.roles_key", "groups"),
 				),
 			},
@@ -1237,7 +1237,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth(t *testing.T) 
 	})
 }
 
-func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth_versionValidation(t *testing.T) {
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions_versionValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	testCases := map[string]struct {
@@ -1282,7 +1282,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtTokenAuth_versionValidat
 				CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 				Steps: []resource.TestStep{
 					{
-						Config:             testAccDomainConfig_advancedSecurityOptionsJWTTokenAuthVersion(rName, tc.engineType, tc.version, "sub", "roles"),
+						Config:             testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, tc.engineType, tc.version, "sub", "roles"),
 						ExpectError:        tc.expectError,
 						PlanOnly:           tc.expectError == nil,
 						ExpectNonEmptyPlan: tc.expectError == nil,
@@ -4387,11 +4387,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_advancedSecurityOptionsJWTTokenAuth(rName, subjectKey, rolesKey string) string {
-	return testAccDomainConfig_advancedSecurityOptionsJWTTokenAuthVersion(rName, "OpenSearch", "2.11", subjectKey, rolesKey)
-}
-
-func testAccDomainConfig_advancedSecurityOptionsJWTTokenAuthVersion(rName, engineType, version, subjectKey, rolesKey string) string {
+func testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, engineType, version, subjectKey, rolesKey string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q
