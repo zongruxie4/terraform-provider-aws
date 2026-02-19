@@ -59,10 +59,10 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 				return
 			}
 
-			if item.Status == aws.String(jobDefinitionStatusInactive) {
+			if status := aws.ToString(item.Status); status == jobDefinitionStatusInactive {
 				continue
 			}
-			
+
 			arn := aws.ToString(item.JobDefinitionArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
