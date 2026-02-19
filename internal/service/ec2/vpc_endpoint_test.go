@@ -15,9 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -1459,17 +1463,23 @@ func TestAccVPCEndpoint_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(t 
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, true),
+				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, "s3", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", string(awstypes.VpcEndpointTypeInterface)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dns_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"private_dns_only_for_inbound_resolver_endpoint": knownvalue.Bool(true),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_dns_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrServiceName), knownvalue.StringExact(fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region()))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_type"), tfknownvalue.StringExact(awstypes.VpcEndpointTypeInterface)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1477,17 +1487,20 @@ func TestAccVPCEndpoint_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(t 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, false),
+				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, "s3", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", string(awstypes.VpcEndpointTypeInterface)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dns_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"private_dns_only_for_inbound_resolver_endpoint": knownvalue.Bool(false),
+					})})),
+				},
 			},
 		},
 	})
@@ -2913,7 +2926,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName string, privateDNSOnlyForInboundResolverEndpoint bool) string {
+func testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, serviceName string, privateDNSOnlyForInboundResolverEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -2930,7 +2943,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "gateway" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.%[2]s"
 
   tags = {
     Name = "%[1]s-gateway"
@@ -2939,18 +2952,20 @@ resource "aws_vpc_endpoint" "gateway" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.%[2]s"
   vpc_endpoint_type = "Interface"
 
   private_dns_enabled = true
 
   dns_options {
-    private_dns_only_for_inbound_resolver_endpoint = %[2]t
+    private_dns_only_for_inbound_resolver_endpoint = %[3]t
   }
+
   tags = {
     Name = "%[1]s-interface"
   }
+
   depends_on = [aws_vpc_endpoint.gateway]
 }
-`, rName, privateDNSOnlyForInboundResolverEndpoint)
+`, rName, serviceName, privateDNSOnlyForInboundResolverEndpoint)
 }
