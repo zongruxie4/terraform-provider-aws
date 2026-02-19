@@ -117,13 +117,13 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 				// Check if target has any fields with xmlwrapper tags
 				for toField := range tfreflect.ExportedStructFields(typTo) {
 					_, toOpts := autoflexTags(toField)
-					if toOpts.XMLWrapperField() != "" {
+					if sourceFieldName := toOpts.XMLWrapperField(); sourceFieldName != "" {
 						// Found xmlwrapper tag, handle direct XML wrapper conversion
 						tflog.SubsystemTrace(ctx, subsystemName, "Direct XML wrapper struct conversion", map[string]any{
-							logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
+							logAttrKeySourceFieldname: sourceFieldName,
 							logAttrKeyTargetFieldname: toField.Name,
 						})
-						diags.Append(handleDirectXMLWrapperStruct(ctx, sourcePath, valFrom, valTo, typFrom, typTo, toField.Name, flexer)...)
+						diags.Append(handleDirectXMLWrapperStruct(ctx, sourcePath, sourceFieldName, valFrom, valTo, typFrom, typTo, toField.Name, flexer)...)
 						return diags
 					}
 				}
@@ -2816,20 +2816,19 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 }
 
 // handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
-func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetFieldName string, flexer autoFlexer) diag.Diagnostics {
+func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sourceFieldName string, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, targetFieldName string, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	wrapperFieldName := getXMLWrapperSliceFieldName(typeFrom)
-	sourceItemsField := valFrom.FieldByName(wrapperFieldName)
+	sourceItemsField := valFrom.FieldByName(sourceFieldName)
 	if !sourceItemsField.IsValid() {
 		tflog.SubsystemError(ctx, subsystemName, "Source Items field not valid", map[string]any{
-			logAttrKeySourceFieldname: wrapperFieldName,
+			logAttrKeySourceFieldname: sourceFieldName,
 		})
 		return diags
 	}
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
-		logAttrKeySourceFieldname: wrapperFieldName,
+		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetFieldname: targetFieldName,
 	})
 
@@ -2844,7 +2843,7 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, val
 		})
 
 		// Check if this target field expects the wrapper field from source
-		if toOpts.XMLWrapperField() == wrapperFieldName {
+		if toOpts.XMLWrapperField() == sourceFieldName {
 			toFieldVal := valTo.FieldByName(toFieldName)
 			if !toFieldVal.IsValid() || !toFieldVal.CanSet() {
 				tflog.SubsystemError(ctx, subsystemName, "Target field not valid or settable", map[string]any{
@@ -2853,7 +2852,7 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, val
 				continue
 			}
 
-			sourcePath = sourcePath.AtName(wrapperFieldName)
+			sourcePath = sourcePath.AtName(sourceFieldName)
 
 			tflog.SubsystemTrace(ctx, subsystemName, "Found matching xmlwrapper field", map[string]any{
 				logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
