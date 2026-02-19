@@ -2953,7 +2953,7 @@ func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sou
 		})
 
 		// Handle the XML wrapper split
-		diags.Append(flattener.handleXMLWrapperSplit(ctx, sourcePath, sourceStructVal, fromFieldName, targetPath, valTo, sourceStructType, typeTo, isNil)...)
+		diags.Append(flattener.handleXMLWrapperSplit(ctx, sourcePath, sourceStructVal, fromFieldName, targetPath, valTo, sourceStructType, typeTo, toFieldName, isNil)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -2999,13 +2999,15 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 }
 
 // handleXMLWrapperSplit splits a complex AWS XML wrapper structure into multiple Terraform fields
-func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, sourcePath path.Path, sourceStructVal reflect.Value, sourceFieldName string, targetPath path.Path, valTo reflect.Value, sourceStructType, typeTo reflect.Type, isNil bool) diag.Diagnostics {
+func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, sourcePath path.Path, sourceStructVal reflect.Value, sourceFieldName string, targetPath path.Path, valTo reflect.Value, sourceStructType, typeTo reflect.Type, targetFieldName string, isNil bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourcePath = sourcePath.AtName(sourceFieldName)
+	targetPath = targetPath.AtName(targetFieldName)
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(sourceStructType))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split", map[string]any{
 		logAttrKeyTargetType: fullTypeName(typeTo),

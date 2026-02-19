@@ -223,7 +223,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel"
   },
   {
@@ -232,7 +232,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "source_field": "Items",
     "source_type": "[]types.Method"
@@ -243,7 +243,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "source_field": "Items",
     "target_field": "CachedMethods"
@@ -254,7 +254,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "source_type": "types.CachedMethods",
     "wrapper_field": "Items"
@@ -267,7 +267,7 @@
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
     "autoflex.target.fieldname": "XXX",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
   },
   {
@@ -276,7 +276,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "items_is_nil": false,
     "items_kind": "slice",
@@ -289,7 +289,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "element_type": "StringEnumType[types.Method]"
   },
@@ -299,7 +299,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "items_count": 0,
     "valid_count": 0
@@ -310,7 +310,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "element_count": 0
   },
@@ -320,7 +320,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "source_field": "Quantity",
     "source_type": "*int32"
@@ -331,7 +331,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
-    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
     "source_field": "Quantity",
     "target_field": "CachedMethods"
