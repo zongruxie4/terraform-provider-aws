@@ -287,7 +287,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	_, cidrExists := d.GetOk("ipv6_cidr_block")
 
 	if !cidrExists {
-		if v, ok := d.GetOk("ipv6_native"); ok && v.(bool) {
+		if _, ok := d.GetOk("ipv6_native"); ok {
 			computedIPv6CidrBlock = true
 		}
 		if _, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
