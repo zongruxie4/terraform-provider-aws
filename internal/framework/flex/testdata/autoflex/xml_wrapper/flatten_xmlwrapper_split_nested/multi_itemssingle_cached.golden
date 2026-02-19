@@ -289,11 +289,10 @@
     "@level": "trace",
     "@message": "Processing item",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods.Items",
+    "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods.Items[0]",
     "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
-    "index": 0,
     "item_kind": "string",
     "item_value": "GET"
   },
