@@ -20,10 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// The default quota is 5 secondary networks per region. As other resources
-// (e.g. secondary subnet) also provision networks as part of their setup,
-// serialize at the resource test level to ensure the total number of networks
-// will not exceed the quota, even when run in parallel.
+// The default quota is 5 secondary networks per region. Serialize at the
+// resource test level to ensure the total number of networks will not exceed
+// the quota, even when run in parallel with other resource tests.
 func TestAccEC2SecondaryNetwork_serial(t *testing.T) {
 	t.Parallel()
 

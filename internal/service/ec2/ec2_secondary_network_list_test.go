@@ -24,7 +24,7 @@ func testAccEC2SecondaryNetwork_listSerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:           testAccEC2SecondaryNetwork_List_basic,
+		acctest.CtBasic:   testAccEC2SecondaryNetwork_List_basic,
 		"includeResource": testAccEC2SecondaryNetwork_List_includeResource,
 		"regionOverride":  testAccEC2SecondaryNetwork_List_regionOverride,
 	}

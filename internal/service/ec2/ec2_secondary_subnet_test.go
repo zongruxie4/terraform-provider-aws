@@ -19,11 +19,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2SecondarySubnet_basic(t *testing.T) {
+// The default quota is 5 secondary networks per region. Serialize at the
+// resource test level to ensure the total number of networks will not exceed
+// the quota, even when run in parallel with other resource tests.
+func TestAccEC2SecondarySubnet_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccEC2SecondarySubnet_basic,
+		acctest.CtDisappears: testAccEC2SecondarySubnet_disappears,
+		"tags":               testAccEC2SecondarySubnet_tags,
+		"availabilityZoneID": testAccEC2SecondarySubnet_availabilityZoneID,
+		"Identity":           testAccEC2SecondarySubnet_identitySerial,
+		"List":               testAccEC2SecondarySubnet_listSerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEC2SecondarySubnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecondaryNetwork(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,11 +71,11 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
+func testAccEC2SecondarySubnet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecondaryNetwork(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,11 +101,11 @@ func TestAccEC2SecondarySubnet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecondarySubnet_tags(t *testing.T) {
+func testAccEC2SecondarySubnet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecondaryNetwork(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -127,11 +145,11 @@ func TestAccEC2SecondarySubnet_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
+func testAccEC2SecondarySubnet_availabilityZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecondaryNetwork(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
