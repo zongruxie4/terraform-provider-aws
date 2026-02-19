@@ -2424,14 +2424,10 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							}
 						}
 
-						// Determine wrapper field based on target type
-						// For NestedObjectCollection, the wrapper field doesn't matter as Rule 2 will be used
-						wrapperField := getXMLWrapperSliceFieldName(fromFieldVal.Type().Elem())
-
 						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting pointer to XML wrapper struct to collection", map[string]any{
 							logAttrKeySourceFieldname: fromFieldName,
 							logAttrKeyTargetFieldname: toFieldName,
-							"wrapper_field":           wrapperField,
+							"wrapper_field":           wrapperFieldName,
 						})
 
 						// Try both value and pointer type assertions
