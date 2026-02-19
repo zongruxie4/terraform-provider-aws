@@ -169,6 +169,7 @@ func TestAccS3BucketACL_List_regionOverride(t *testing.T) {
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-1")),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -179,7 +180,7 @@ func TestAccS3BucketACL_List_regionOverride(t *testing.T) {
 			{
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketACL/list_basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/BucketACL/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
