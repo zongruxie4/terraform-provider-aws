@@ -3072,9 +3072,10 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 		sourceFieldName := sourceField.Name
 		sourceFieldVal := sourceStructVal.FieldByName(sourceFieldName)
 
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceFieldname, sourceFieldName)
+
 		tflog.SubsystemTrace(ctx, subsystemName, "Processing source field for split", map[string]any{
-			"source_field": sourceFieldName,
-			"source_type":  sourceField.Type.String(),
+			"source_type": sourceField.Type.String(),
 		})
 
 		// Map the source field to target field(s)
@@ -3088,7 +3089,6 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 					toFieldVal := valTo.FieldByName(mainTargetFieldName)
 					if toFieldVal.CanSet() {
 						tflog.SubsystemTrace(ctx, subsystemName, "Mapping Items/Quantity to main target field", map[string]any{
-							"source_field": sourceFieldName,
 							"target_field": mainTargetFieldName,
 						})
 
