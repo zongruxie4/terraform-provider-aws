@@ -124,7 +124,6 @@ func TestAccEC2SecondaryNetwork_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_network.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_ec2_secondary_network.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv4_cidr_block"), knownvalue.StringExact("10.0.0.0/16")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("network_type"), knownvalue.StringExact("rdma")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),

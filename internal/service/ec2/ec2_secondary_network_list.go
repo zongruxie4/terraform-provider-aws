@@ -62,6 +62,9 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 				id := aws.ToString(item.SecondaryNetworkId)
 				data.ID = fwflex.StringValueToFramework(ctx, id)
 				result.DisplayName = id
+
+				// Fields with mismatched names missed by AutoFlex
+				data.NetworkType = fwflex.StringValueToFramework(ctx, item.Type)
 			})
 
 			if !yield(result) {
