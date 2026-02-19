@@ -3,4 +3,6 @@
 
 list "aws_s3_bucket_acl" "test" {
   provider = aws
+
+  include_resource = true
 }
