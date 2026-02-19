@@ -3180,11 +3180,8 @@ func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Co
 
 	// Check if source is an XML wrapper struct (has slice field + Quantity)
 	if sourceFieldVal.Kind() == reflect.Struct && potentialXMLWrapperStruct(sourceFieldVal.Type()) {
-		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type())
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
 			logAttrKeySourcePath: sourcePath.AtName(sourceFieldName).String(),
-			"source_type":        sourceFieldVal.Type().String(),
-			"wrapper_field":      wrapperFieldName,
 		})
 
 		// Use existing XML wrapper flatten logic
