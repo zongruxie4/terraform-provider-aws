@@ -89,6 +89,9 @@ func TestAccS3Object_List_directoryBucket(t *testing.T) {
 	resourceName2 := "aws_s3_object.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
@@ -108,7 +111,12 @@ func TestAccS3Object_List_directoryBucket(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(directoryBucketFullNameRegex(rName))),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(directoryBucketFullNameRegex(rName))),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName+"-1")),
 				},
 			},
@@ -122,18 +130,13 @@ func TestAccS3Object_List_directoryBucket(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_s3_object.test", map[string]knownvalue.Check{
-						names.AttrBucket:    knownvalue.NotNull(),
-						names.AttrKey:       knownvalue.StringExact(rName + "-0"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-					querycheck.ExpectIdentity("aws_s3_object.test", map[string]knownvalue.Check{
-						names.AttrBucket:    knownvalue.NotNull(),
-						names.AttrKey:       knownvalue.StringExact(rName + "-1"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
