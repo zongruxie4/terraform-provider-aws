@@ -3009,9 +3009,12 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(sourceStructType))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split", map[string]any{
-		logAttrKeyTargetType: fullTypeName(typeTo),
-	})
+	targetField, found := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener)
+	if found { // Redundant, this was already checked in `handleXMLWrapperCollapse`
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(targetField.Type))
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split")
 
 	// If source is nil, find and set the matching target field to null
 	if isNil {
