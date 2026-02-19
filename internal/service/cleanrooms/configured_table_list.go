@@ -71,7 +71,7 @@ func (l *listResourceConfiguredTable) List(ctx context.Context, request list.Lis
 				})
 				continue
 			}
-			
+
 			resourceConfiguredTableFlatten(ctx, rd, output)
 
 			result.DisplayName = aws.ToString(item.Name)
