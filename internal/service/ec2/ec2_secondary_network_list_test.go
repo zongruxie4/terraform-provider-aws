@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -27,8 +26,8 @@ func TestAccEC2SecondaryNetwork_List_basic(t *testing.T) {
 	resourceName1 := "aws_ec2_secondary_network.test[0]"
 	resourceName2 := "aws_ec2_secondary_network.test[1]"
 
-	id1 := tfstatecheck.StateValue()
-	id2 := tfstatecheck.StateValue()
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -49,10 +48,10 @@ func TestAccEC2SecondaryNetwork_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
+					identity1.GetIdentity(resourceName1),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "secondary-network/{id}"),
 
-					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
+					identity2.GetIdentity(resourceName2),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "secondary-network/{id}"),
 				},
 			},
@@ -66,16 +65,8 @@ func TestAccEC2SecondaryNetwork_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_ec2_secondary_network.test", map[string]knownvalue.Check{
-						names.AttrID:        id1.Value(),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-					querycheck.ExpectIdentity("aws_ec2_secondary_network.test", map[string]knownvalue.Check{
-						names.AttrID:        id2.Value(),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_network.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_network.test", identity2.Checks()),
 				},
 			},
 		},
@@ -127,6 +118,61 @@ func TestAccEC2SecondaryNetwork_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("network_type"), knownvalue.StringExact("rdma")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2SecondaryNetwork_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_ec2_secondary_network.test[0]"
+	resourceName2 := "aws_ec2_secondary_network.test[1]"
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSecondaryNetwork(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckSecondaryNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecondaryNetwork/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "secondary-network/{id}"),
+
+					identity2.GetIdentity(resourceName2),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "secondary-network/{id}"),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecondaryNetwork/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_network.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_ec2_secondary_network.test", identity2.Checks()),
 				},
 			},
 		},
