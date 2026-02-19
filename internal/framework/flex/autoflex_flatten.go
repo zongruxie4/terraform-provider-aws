@@ -3110,7 +3110,7 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 								_, opts = parseTag(tag)
 							}
 						}
-						diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath, sourceStructVal, targetPath.AtName(mainTargetFieldName), toFieldVal, opts)...)
+						diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath, sourceFieldName, sourceStructVal, targetPath.AtName(mainTargetFieldName), toFieldVal, opts)...)
 						if diags.HasError() {
 							return diags
 						}
@@ -3140,7 +3140,7 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 					}
 
 					// Convert the source field to target field
-					diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath.AtName(sourceFieldName), sourceFieldVal, targetPath.AtName(sourceFieldName), toFieldVal, opts)...)
+					diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath.AtName(sourceFieldName), "AAA", sourceFieldVal, targetPath.AtName(sourceFieldName), toFieldVal, opts)...)
 					if diags.HasError() {
 						return diags
 					}
@@ -3175,15 +3175,16 @@ func (flattener autoFlattener) findMainTargetFieldForSplit(ctx context.Context, 
 }
 
 // convertXMLWrapperFieldToCollection converts a source field (either XML wrapper or simple field) to a target collection
-func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Context, sourcePath path.Path, sourceFieldVal reflect.Value, targetPath path.Path, toFieldVal reflect.Value, opts tagOptions) diag.Diagnostics {
+func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Context, sourcePath path.Path, sourceFieldName string, sourceFieldVal reflect.Value, targetPath path.Path, toFieldVal reflect.Value, opts tagOptions) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Check if source is an XML wrapper struct (has slice field + Quantity)
 	if sourceFieldVal.Kind() == reflect.Struct && potentialXMLWrapperStruct(sourceFieldVal.Type()) {
 		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type())
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
-			"source_type":   sourceFieldVal.Type().String(),
-			"wrapper_field": wrapperFieldName,
+			logAttrKeySourcePath: sourcePath.AtName(sourceFieldName).String(),
+			"source_type":        sourceFieldVal.Type().String(),
+			"wrapper_field":      wrapperFieldName,
 		})
 
 		// Use existing XML wrapper flatten logic

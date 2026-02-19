@@ -252,7 +252,7 @@
     "@message": "Converting XML wrapper struct to collection",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
-    "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
+    "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods.Items",
     "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
