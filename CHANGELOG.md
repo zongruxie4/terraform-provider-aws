@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_instance: Allow `cpu_options.core_count`, `cpu_options.nested_virtualization`, and `cpu_options.threads_per_core` to be updated in-place ([#46568](https://github.com/hashicorp/terraform-provider-aws/issues/46568))
 * resource/aws_opensearch_domain: Add `jwt_options` attribute ([#46439](https://github.com/hashicorp/terraform-provider-aws/issues/46439))
 
 BUG FIXES:
