@@ -125,8 +125,8 @@ func TestAccCloudWatchMetricAlarm_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_cloudwatch_metric_alarm.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("alarm_name"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("comparison_operator"), knownvalue.StringExact("GreaterThanThreshold")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("metric_name"), knownvalue.StringExact("CPUUtilization")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("namespace"), knownvalue.StringExact("AWS/EC2")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrMetricName), knownvalue.StringExact("CPUUtilization")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact("AWS/EC2")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("statistic"), knownvalue.StringExact("Average")),
 					}),
 				},
