@@ -125,7 +125,7 @@ func TestAccCleanRoomsConfiguredTable_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_cleanrooms_configured_table.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("description"), knownvalue.StringExact("test description")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("analysis_method"), knownvalue.StringExact("DIRECT_QUERY")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("allowed_columns"), knownvalue.NotNull()),
 					}),

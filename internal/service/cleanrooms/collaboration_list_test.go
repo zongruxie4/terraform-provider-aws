@@ -128,7 +128,7 @@ func TestAccCleanRoomsCollaboration_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_cleanrooms_collaboration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cleanrooms", regexache.MustCompile(`collaboration/.+`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("description"), knownvalue.StringExact("Test collaboration 0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Test collaboration 0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("query_log_status"), knownvalue.StringExact("ENABLED")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("analytics_engine"), knownvalue.StringExact("SPARK")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("creator_display_name"), knownvalue.StringExact("Creator")),
