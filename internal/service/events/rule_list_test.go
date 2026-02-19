@@ -125,7 +125,7 @@ func TestAccEventsRule_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_cloudwatch_event_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("events", "rule/"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("schedule_expression"), knownvalue.StringExact("rate(5 minutes)")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrScheduleExpression), knownvalue.StringExact("rate(5 minutes)")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrState), knownvalue.NotNull()),
 					}),
 				},
