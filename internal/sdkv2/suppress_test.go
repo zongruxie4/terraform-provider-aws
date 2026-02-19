@@ -150,7 +150,7 @@ func TestSuppressEquivalentTime(t *testing.T) {
 func TestSuppressNewStringValueEquivalentToUnset(t *testing.T) {
 	t.Parallel()
 
-	var dNew, dOld *schema.ResourceData = &schema.ResourceData{}, &schema.ResourceData{}
+	dNew, dOld := &schema.ResourceData{}, &schema.ResourceData{}
 	dOld.SetId("THE-ID")
 
 	testCases := []struct {
