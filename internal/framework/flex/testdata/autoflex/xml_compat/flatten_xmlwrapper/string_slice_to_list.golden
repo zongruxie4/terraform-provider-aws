@@ -105,22 +105,18 @@
     "@message": "Processing item",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items[0]",
-    "autoflex.source.type": "[]string",
+    "autoflex.source.type": "string",
     "autoflex.target.path": "Headers",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
-    "item_kind": "string",
-    "item_value": "accept"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]"
   },
   {
     "@level": "trace",
     "@message": "Processing item",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items[1]",
-    "autoflex.source.type": "[]string",
+    "autoflex.source.type": "string",
     "autoflex.target.path": "Headers",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
-    "item_kind": "string",
-    "item_value": "content-type"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]"
   },
   {
     "@level": "trace",

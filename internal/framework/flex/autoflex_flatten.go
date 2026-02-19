@@ -1843,11 +1843,8 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, sour
 		for i, item := range validItems {
 			sourcePath := sourcePath.AtListIndex(i)
 			ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-			// TODO: source type and target type should be set to element types
-			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
-				"item_kind":  item.Kind().String(),
-				"item_value": item.Interface(),
-			})
+			ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(item.Type()))
+			tflog.SubsystemTrace(ctx, subsystemName, "Processing item")
 
 			// Convert each item based on its type
 			switch item.Kind() {
