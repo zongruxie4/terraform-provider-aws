@@ -2954,7 +2954,7 @@ func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sou
 		})
 
 		// Handle the XML wrapper split
-		diags.Append(flattener.handleXMLWrapperSplit(ctx, sourcePath.AtName(fromFieldName), sourceStructVal, targetPath, valTo, sourceStructType, typeTo, isNil)...)
+		diags.Append(flattener.handleXMLWrapperSplit(ctx, sourcePath, sourceStructVal, fromFieldName, targetPath, valTo, sourceStructType, typeTo, isNil)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -3000,23 +3000,20 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 }
 
 // handleXMLWrapperSplit splits a complex AWS XML wrapper structure into multiple Terraform fields
-func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, sourcePath path.Path, sourceStructVal reflect.Value, targetPath path.Path, valTo reflect.Value, sourceStructType, typeTo reflect.Type, isNil bool) diag.Diagnostics {
+func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, sourcePath path.Path, sourceStructVal reflect.Value, sourceFieldName string, targetPath path.Path, valTo reflect.Value, sourceStructType, typeTo reflect.Type, isNil bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	sourcePath = sourcePath.AtName(sourceFieldName)
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(sourceStructType))
+
 	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split", map[string]any{
-		logAttrKeySourceType: fullTypeName(sourceStructType),
 		logAttrKeyTargetType: fullTypeName(typeTo),
 	})
 
 	// If source is nil, find and set the matching target field to null
 	if isNil {
-		// Extract source field name from path
-		sourceFieldName := ""
-		sourcePathStr := sourcePath.String()
-		if lastDot := strings.LastIndex(sourcePathStr, "."); lastDot >= 0 {
-			sourceFieldName = sourcePathStr[lastDot+1:]
-		}
-
 		// Find matching target field
 		if sourceFieldName != "" {
 			if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener); ok {
