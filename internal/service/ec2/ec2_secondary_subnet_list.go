@@ -100,11 +100,6 @@ func (r *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 				result.DisplayName = id
 			})
 
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
 			if !yield(result) {
 				return
 			}
