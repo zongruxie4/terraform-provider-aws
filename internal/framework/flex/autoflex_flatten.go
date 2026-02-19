@@ -3018,35 +3018,30 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 
 	// If source is nil, find and set the matching target field to null
 	if isNil {
-		// Find matching target field
-		if sourceFieldName != "" {
-			if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener); ok {
-				toFieldVal := valTo.FieldByIndex(targetField.Index)
-				if toFieldVal.CanSet() {
-					if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
-						switch tTo := valTo.Type(ctx).(type) {
-						case basetypes.SetTypable, basetypes.ListTypable:
-							tflog.SubsystemTrace(ctx, subsystemName, "Setting target collection field to null", map[string]any{
-								logAttrKeyTargetFieldname: targetField.Name,
-							})
+		toFieldVal := valTo.FieldByIndex(targetField.Index)
+		if toFieldVal.CanSet() {
+			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+				switch tTo := valTo.Type(ctx).(type) {
+				case basetypes.SetTypable, basetypes.ListTypable:
+					tflog.SubsystemTrace(ctx, subsystemName, "Setting target collection field to null", map[string]any{
+						logAttrKeyTargetFieldname: targetField.Name,
+					})
 
-							var elemType attr.Type = types.StringType
-							if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
-								elemType = tToWithElem.ElementType()
-							}
+					var elemType attr.Type = types.StringType
+					if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+						elemType = tToWithElem.ElementType()
+					}
 
-							var nullVal attr.Value
-							var d diag.Diagnostics
-							if setType, ok := tTo.(basetypes.SetTypable); ok {
-								nullVal, d = setType.ValueFromSet(ctx, types.SetNull(elemType))
-							} else if listType, ok := tTo.(basetypes.ListTypable); ok {
-								nullVal, d = listType.ValueFromList(ctx, types.ListNull(elemType))
-							}
-							diags.Append(d...)
-							if !diags.HasError() {
-								toFieldVal.Set(reflect.ValueOf(nullVal))
-							}
-						}
+					var nullVal attr.Value
+					var d diag.Diagnostics
+					if setType, ok := tTo.(basetypes.SetTypable); ok {
+						nullVal, d = setType.ValueFromSet(ctx, types.SetNull(elemType))
+					} else if listType, ok := tTo.(basetypes.ListTypable); ok {
+						nullVal, d = listType.ValueFromList(ctx, types.ListNull(elemType))
+					}
+					diags.Append(d...)
+					if !diags.HasError() {
+						toFieldVal.Set(reflect.ValueOf(nullVal))
 					}
 				}
 			}
