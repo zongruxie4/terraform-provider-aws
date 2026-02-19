@@ -134,14 +134,9 @@
     "@message": "Processing item",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items[0]",
-    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
     "autoflex.target.path": "FunctionAssociations",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "item_kind": "struct",
-    "item_value": {
-      "EventType": "viewer-request",
-      "FunctionARN": "arn:aws:cloudfront::123456789012:function/example-function"
-    }
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "info",
@@ -197,14 +192,9 @@
     "@message": "Processing item",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items[1]",
-    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
     "autoflex.target.path": "FunctionAssociations",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "item_kind": "struct",
-    "item_value": {
-      "EventType": "viewer-response",
-      "FunctionARN": "arn:aws:cloudfront::123456789012:function/another-function"
-    }
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "info",
