@@ -1,5 +1,13 @@
 ## 6.34.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_opensearch_domain: Add `jwt_options` attribute ([#46439](https://github.com/hashicorp/terraform-provider-aws/issues/46439))
+
+BUG FIXES:
+
+* resource/aws_subnet: Fixed IPv6 CIDR block validation and assignment to IPAM-provisioned subnets. ([#46556](https://github.com/hashicorp/terraform-provider-aws/issues/46556))
+
 ## 6.33.0 (February 18, 2026)
 
 FEATURES:
