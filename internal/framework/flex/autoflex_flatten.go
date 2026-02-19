@@ -1741,9 +1741,7 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, sourcePat
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
 
-	wrapperField := opts.XMLWrapperField()
 	tflog.SubsystemTrace(ctx, subsystemName, "Starting XML wrapper flatten", map[string]any{
-		logAttrKeySourceFieldname: wrapperField,
 		logAttrKeyTargetFieldname: targetFieldName,
 	})
 
@@ -2854,7 +2852,7 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, val
 				continue
 			}
 
-			// sourcePath = sourcePath.AtName(wrapperFieldName)
+			sourcePath = sourcePath.AtName(wrapperFieldName)
 
 			tflog.SubsystemTrace(ctx, subsystemName, "Found matching xmlwrapper field", map[string]any{
 				logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
@@ -2868,6 +2866,9 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, val
 						logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
 						logAttrKeyTargetFieldname: toFieldName,
 					})
+
+					typ := sourceItemsField.Type()
+					ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(typ))
 					// Use XML wrapper flattening to convert the source Items field to the target collection
 					diags.Append(f.xmlWrapperFlatten(ctx, sourcePath, valFrom, toFieldName, toAttr.Type(ctx), toFieldVal, toOpts)...)
 				} else {
@@ -3183,8 +3184,9 @@ func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Co
 
 	// Check if source is an XML wrapper struct (has slice field + Quantity)
 	if sourceFieldVal.Kind() == reflect.Struct && potentialXMLWrapperStruct(sourceFieldVal.Type()) {
+		sourcePath = sourcePath.AtName(sourceFieldName)
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
-			logAttrKeySourcePath: sourcePath.AtName(sourceFieldName).String(),
+			logAttrKeySourcePath: sourcePath.String(),
 		})
 
 		// Use existing XML wrapper flatten logic
@@ -3195,8 +3197,9 @@ func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Co
 			}
 		}
 	} else if sourceFieldVal.Kind() == reflect.Pointer && !sourceFieldVal.IsNil() && potentialXMLWrapperStruct(sourceFieldVal.Type().Elem()) {
+		sourcePath = sourcePath.AtName(sourceFieldName)
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting pointer to XML wrapper struct to collection", map[string]any{
-			logAttrKeySourcePath: sourcePath.AtName(sourceFieldName).String(),
+			logAttrKeySourcePath: sourcePath.String(),
 		})
 
 		// Use existing XML wrapper flatten logic
