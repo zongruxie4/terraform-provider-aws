@@ -3097,10 +3097,10 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 						// `convertXMLWrapperFieldToCollection` calls on to `convert` with sourcePath, and there's no test to confirm that it works
 						// sourcePath = sourcePath.AtName(sourceFieldName)
 						// ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+						ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(sourceField.Type))
 
 						tflog.SubsystemTrace(ctx, subsystemName, "Mapping Items to main target field", map[string]any{
 							logAttrKeySourcePath: sourcePath.AtName(sourceFieldName).String(),
-							"target_field":       mainTargetFieldName,
 						})
 
 						// Extract tagOptions from target field

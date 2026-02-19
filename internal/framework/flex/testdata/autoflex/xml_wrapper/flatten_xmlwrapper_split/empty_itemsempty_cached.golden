@@ -93,10 +93,9 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods.Items",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
-    "target_field": "CachedMethods"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
   },
   {
     "@level": "trace",
@@ -104,7 +103,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "source_type": "types.CachedMethods",
@@ -116,7 +115,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.fieldname": "XXX",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
@@ -127,7 +126,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "items_is_nil": false,
@@ -141,7 +140,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "element_type": "StringEnumType[types.Method]"
@@ -152,7 +151,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "items_count": 0,
@@ -164,7 +163,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]",
     "element_count": 0
@@ -175,7 +174,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Quantity",
     "autoflex.source.path": "AllowedMethods.CachedMethods",
-    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
     "autoflex.target.path": "AllowedMethods.CachedMethods",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
   },
