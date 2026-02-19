@@ -76,8 +76,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.fieldname": "StatusCodes",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]"
   },
   {
@@ -86,7 +85,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "items_is_nil": false,
     "items_kind": "slice",
@@ -99,7 +98,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "element_type": "basetypes.Int64Type"
   },
@@ -109,7 +108,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "items_count": 2,
     "valid_count": 2
@@ -120,7 +119,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "index": 0,
     "item_kind": "int32",
@@ -132,7 +131,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "index": 1,
     "item_kind": "int32",
@@ -144,7 +143,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]int32",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "StatusCodes",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value]",
     "element_count": 2
   }

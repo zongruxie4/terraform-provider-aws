@@ -76,8 +76,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.fieldname": "FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
@@ -86,7 +85,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
@@ -95,7 +94,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "field_count": 2,
     "is_rule2": false
@@ -106,7 +105,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
@@ -115,7 +114,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "items_is_nil": false,
     "items_kind": "slice",
@@ -128,7 +127,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_type": "ObjectTypeOf[flex.FunctionAssociationTF]"
   },
@@ -138,7 +137,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "items_count": 2,
     "valid_count": 2
@@ -149,7 +148,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "index": 0,
     "item_kind": "struct",
@@ -213,7 +212,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "index": 1,
     "item_kind": "struct",
@@ -277,7 +276,7 @@
     "@module": "provider.autoflex",
     "autoflex.source.path": "Items",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "autoflex.target.path": "",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_count": 2
   }
