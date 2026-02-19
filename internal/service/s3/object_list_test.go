@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -152,6 +151,11 @@ func TestAccS3Object_List_prefix(t *testing.T) {
 	resourceName4 := "aws_s3_object.other[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+	identity3 := tfstatecheck.Identity()
+	identity4 := tfstatecheck.Identity()
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
@@ -171,12 +175,19 @@ func TestAccS3Object_List_prefix(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("prefix-"+rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("prefix-"+rName+"-1")),
+
+					identity3.GetIdentity(resourceName3),
 					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("other-"+rName+"-0")),
+
+					identity4.GetIdentity(resourceName4),
 					statecheck.ExpectKnownValue(resourceName4, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName4, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("other-"+rName+"-1")),
 				},
@@ -191,18 +202,17 @@ func TestAccS3Object_List_prefix(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_s3_object.test", map[string]knownvalue.Check{
-						names.AttrBucket:    knownvalue.StringExact(rName),
-						names.AttrKey:       knownvalue.StringExact("prefix-" + rName + "-0"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-					querycheck.ExpectIdentity("aws_s3_object.test", map[string]knownvalue.Check{
-						names.AttrBucket:    knownvalue.StringExact(rName),
-						names.AttrKey:       knownvalue.StringExact("prefix-" + rName + "-1"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact("prefix-"+rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact("prefix-"+rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+
+					tfquerycheck.ExpectNoIdentityFunc("aws_s3_object.test", identity3.Checks()),
+
+					tfquerycheck.ExpectNoIdentityFunc("aws_s3_object.test", identity4.Checks()),
 				},
 			},
 		},
