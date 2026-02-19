@@ -12,9 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_ec2_secondary_subnet")
@@ -29,6 +33,33 @@ type secondarySubnetListResource struct {
 	framework.WithList
 }
 
+type listSecondarySubnetModel struct {
+	framework.WithRegionModel
+	Filters customListFilters `tfsdk:"filter"`
+}
+
+func (l *secondarySubnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: listschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+				NestedObject: listschema.NestedBlockObject{
+					Attributes: map[string]listschema.Attribute{
+						names.AttrName: listschema.StringAttribute{
+							Required: true,
+						},
+						names.AttrValues: listschema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *secondarySubnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().EC2Client(ctx)
 
@@ -40,9 +71,14 @@ func (r *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 		}
 	}
 
+	var input ec2.DescribeSecondarySubnetsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		var input ec2.DescribeSecondarySubnetsInput
 		for item, err := range listSecondarySubnets(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
@@ -76,17 +112,13 @@ func (r *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 	}
 }
 
-type listSecondarySubnetModel struct {
-	framework.WithRegionModel
-}
-
 func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) iter.Seq2[awstypes.SecondarySubnet, error] {
 	return func(yield func(awstypes.SecondarySubnet, error) bool) {
 		pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.SecondarySubnet{}, fmt.Errorf("listing EC2 (Elastic Compute Cloud) Secondary Subnet resources: %w", err))
+				yield(awstypes.SecondarySubnet{}, fmt.Errorf("listing EC2 Secondary Subnet resources: %w", err))
 				return
 			}
 
