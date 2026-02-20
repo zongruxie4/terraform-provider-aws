@@ -29,7 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const imageVersionResourcePartCount = 2
+const (
+	imageVersionResourcePartCount = 2
+	mutexLockPrefix               = "sagemaker-image-version-"
+)
 
 // @SDKResource("aws_sagemaker_image_version", name="Image Version")
 func resourceImageVersion() *schema.Resource {
@@ -129,6 +132,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
+
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
@@ -167,7 +171,11 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	lockName := mutexLockPrefix + name
+	conns.GlobalMutexKV.Lock(lockName)
 	out, err := conn.CreateImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(lockName)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
@@ -317,7 +325,11 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 		ImageName: aws.String(name),
 		Version:   aws.Int32(version),
 	}
+
+	lockName := mutexLockPrefix + name
+	conns.GlobalMutexKV.Lock(lockName)
 	_, err = conn.DeleteImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(lockName)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 		return diags

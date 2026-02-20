@@ -6,6 +6,8 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -19,13 +21,66 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// imageVersionBaseImageEnvVar is the environment variable which must be
-// set to an ECR image URI for certain acceptance tests to run
-//
-// Follow this guide to set up a private ECR repository and push a simple
-// "hello world" image to it:
-// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
-const imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+func TestImageVersionFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want int32
+	}{
+		{
+			name: "valid ARN with version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42", //lintignore:AWSAT003,AWSAT005
+			want: 42,
+		},
+		{
+			name: "valid ARN with large version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/999999", //lintignore:AWSAT003,AWSAT005
+			want: 999999,
+		},
+		{
+			name: "invalid ARN - too few parts",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "invalid ARN - non-numeric version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "empty ARN",
+			arn:  "",
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfsagemaker.ImageVersionFromARN(tt.arn); got != tt.want {
+				t.Errorf("ImageVersionFromARN(%q) = %d, want %d", tt.arn, got, tt.want)
+			}
+		})
+	}
+}
+
+const (
+	// imageVersionBaseImageEnvVar is the environment variable which must be
+	// set to an ECR image URI for certain acceptance tests to run
+	//
+	// Follow this guide to set up a private ECR repository and push a simple
+	// "hello world" image to it:
+	// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
+	imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+
+	// imageVersionConcurrentCountEnvVar is the environment variable which can be
+	// set to control the number of concurrent image versions created in the test.
+	//
+	// Defaults to 10 if not set.
+	imageVersionConcurrentCountEnvVar = "SAGEMAKER_IMAGE_VERSION_CONCURRENT_COUNT"
+)
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -337,6 +392,38 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 	})
 }
 
+// Testing behavior during highly concurrent image version creation operations
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/44693
+func TestAccSageMakerImageVersion_concurrentCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
+
+	count := 10
+	if v := os.Getenv(imageVersionConcurrentCountEnvVar); v != "" {
+		if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
+			count = parsed
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_concurrent(rName, baseImage, count),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test.0", "image_name", rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckImageVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
@@ -478,47 +565,14 @@ resource "aws_sagemaker_image_version" "test" {
 `, baseImage))
 }
 
-func TestImageVersionFromARN(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-		arn  string
-		want int32
-	}{
-		{
-			name: "valid ARN with version",
-			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42", //lintignore:AWSAT003,AWSAT005
-			want: 42,
-		},
-		{
-			name: "valid ARN with large version",
-			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/999999", //lintignore:AWSAT003,AWSAT005
-			want: 999999,
-		},
-		{
-			name: "invalid ARN - too few parts",
-			arn:  "arn:aws:sagemaker:us-west-2:123456789012", //lintignore:AWSAT003,AWSAT005
-			want: 0,
-		},
-		{
-			name: "invalid ARN - non-numeric version",
-			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest", //lintignore:AWSAT003,AWSAT005
-			want: 0,
-		},
-		{
-			name: "empty ARN",
-			arn:  "",
-			want: 0,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := tfsagemaker.ImageVersionFromARN(tt.arn); got != tt.want {
-				t.Errorf("ImageVersionFromARN(%q) = %d, want %d", tt.arn, got, tt.want)
-			}
-		})
-	}
+func testAccImageVersionConfig_concurrent(rName, baseImage string, count int) string {
+	return acctest.ConfigCompose(
+		testAccImageVersionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_image_version" "test" {
+  count      = %[3]d
+  image_name = aws_sagemaker_image.test.image_name
+  base_image = %[2]q
+}
+`, rName, baseImage, count))
 }
