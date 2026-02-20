@@ -33,7 +33,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -209,7 +209,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_ExistingResource_basic(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -218,7 +218,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_ExistingResource_basic(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_ExistingResource_noRefreshNo
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_ExistingResource_noRefreshNo
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

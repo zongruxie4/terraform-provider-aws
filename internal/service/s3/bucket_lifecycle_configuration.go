@@ -55,7 +55,6 @@ import (
 // @IdentityAttribute("bucket")
 // @Testing(importStateIdAttribute="bucket")
 // @Testing(preIdentityVersion="6.32.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBucketLifecycleConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketLifecycleConfigurationResource{}
 

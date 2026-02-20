@@ -39,7 +39,7 @@ func TestAccS3BucketLifecycleConfiguration_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -97,7 +97,7 @@ func TestAccS3BucketLifecycleConfiguration_List_includeResource(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -160,7 +160,7 @@ func TestAccS3BucketLifecycleConfiguration_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
