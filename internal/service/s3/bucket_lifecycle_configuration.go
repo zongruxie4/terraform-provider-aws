@@ -52,6 +52,9 @@ import (
 )
 
 // @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
+// @IdentityAttribute("bucket")
+// @Testing(importStateIdAttribute="bucket")
+// @Testing(preIdentityVersion="6.32.0")
 func newBucketLifecycleConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketLifecycleConfigurationResource{}
 
@@ -67,6 +70,7 @@ var (
 
 type bucketLifecycleConfigurationResource struct {
 	framework.ResourceWithModel[bucketLifecycleConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -481,7 +485,7 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -590,16 +594,27 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 }
 
 func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
-		return
+	var bucket, expectedBucketOwner string
+
+	if request.ID != "" {
+		var err error
+		bucket, expectedBucketOwner, err = parseResourceID(request.ID)
+		if err != nil {
+			response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
+			return
+		}
+
+		request.ID = bucket
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), types.StringValue(createResourceID(bucket, expectedBucketOwner)))...)
+}
+
+func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, bucket, data)...)
 }
 
 func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
