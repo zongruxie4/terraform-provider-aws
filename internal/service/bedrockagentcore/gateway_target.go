@@ -1086,7 +1086,7 @@ type apiKeyCredentialProviderModel struct {
 
 type oauthCredentialProviderModel struct {
 	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
-	DefaultReturnUrl types.String                                `tfsdk:"default_return_url"`
+	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
 	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
 	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
 	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
