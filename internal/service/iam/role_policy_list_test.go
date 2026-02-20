@@ -125,7 +125,7 @@ func TestAccIAMRolePolicy_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_iam_role_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRole), knownvalue.StringExact(rName)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
 					}),
 				},
 			},
