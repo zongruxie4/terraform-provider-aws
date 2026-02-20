@@ -169,6 +169,7 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-1")),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),

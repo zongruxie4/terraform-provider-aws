@@ -1,16 +1,19 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_s3_object" "test" {
-  count = var.resource_count
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
 
-  bucket  = aws_s3_directory_bucket.test.bucket
-  key     = "${var.rName}-${count.index}"
-  content = "test content"
+  rule {
+    # This is Amazon S3 bucket default encryption.
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_directory_bucket" "test" {
-  bucket = local.bucket
+  bucket = format(local.bucket_format, var.rName)
 
   location {
     name = local.location_name
@@ -21,7 +24,7 @@ resource "aws_s3_directory_bucket" "test" {
 
 locals {
   location_name = data.aws_availability_zones.available.zone_ids[0]
-  bucket        = "${var.rName}--${local.location_name}--x-s3"
+  bucket_format = "%s--${local.location_name}--x-s3"
 }
 
 # testAccConfigDirectoryBucket_availableAZs
@@ -45,11 +48,5 @@ locals {
 variable "rName" {
   description = "Name for resource"
   type        = string
-  nullable    = false
-}
-
-variable "resource_count" {
-  description = "Number of resources to create"
-  type        = number
   nullable    = false
 }

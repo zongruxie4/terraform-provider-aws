@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_s3_object" "test" {
-  count = var.resource_count
+  count  = var.resource_count
+  region = var.region
 
   bucket  = aws_s3_bucket.test.bucket
   key     = "${var.rName}-${count.index}"
@@ -10,6 +11,8 @@ resource "aws_s3_object" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
+  region = var.region
+
   bucket = var.rName
 }
 
@@ -22,5 +25,11 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
   nullable    = false
 }

@@ -1,27 +1,46 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_s3_object" "test" {
-  count = var.resource_count
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
+}
 
-  bucket  = aws_s3_directory_bucket.test.bucket
-  key     = "${var.rName}-${count.index}"
-  content = "test content"
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3express:*",
+    ]
+
+    resources = [
+      aws_s3_directory_bucket.test.arn,
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
 }
 
 resource "aws_s3_directory_bucket" "test" {
-  bucket = local.bucket
+  bucket = format(local.bucket_format, var.rName)
 
   location {
     name = local.location_name
   }
 }
 
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
 # testAccDirectoryBucketConfig_baseAZ
 
 locals {
   location_name = data.aws_availability_zones.available.zone_ids[0]
-  bucket        = "${var.rName}--${local.location_name}--x-s3"
+  bucket_format = "%s--${local.location_name}--x-s3"
 }
 
 # testAccConfigDirectoryBucket_availableAZs
@@ -45,11 +64,5 @@ locals {
 variable "rName" {
   description = "Name for resource"
   type        = string
-  nullable    = false
-}
-
-variable "resource_count" {
-  description = "Number of resources to create"
-  type        = number
   nullable    = false
 }
