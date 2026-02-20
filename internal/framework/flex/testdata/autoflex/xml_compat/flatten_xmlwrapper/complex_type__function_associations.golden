@@ -33,6 +33,7 @@
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "FunctionAssociations",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTF"
   },
@@ -73,29 +74,27 @@
     "@level": "trace",
     "@message": "Starting XML wrapper flatten",
     "@module": "provider.autoflex",
-    "autoflex.source.fieldname": "Items",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.fieldname": "FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "trace",
     "@message": "Target is NestedObjectCollectionType - checking for Rule 2",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "trace",
     "@message": "Rule 2 detection result",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "field_count": 2,
     "is_rule2": false
@@ -104,31 +103,18 @@
     "@level": "trace",
     "@message": "NOT Rule 2 - continuing with Rule 1",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
-  },
-  {
-    "@level": "trace",
-    "@message": "Found Items field",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "items_is_nil": false,
-    "items_kind": "slice",
-    "items_len": 2,
-    "items_type": "[]flex.FunctionAssociation"
   },
   {
     "@level": "trace",
     "@message": "Using target element type",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_type": "ObjectTypeOf[flex.FunctionAssociationTF]"
   },
@@ -136,9 +122,9 @@
     "@level": "trace",
     "@message": "Converting items to set elements",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "items_count": 2,
     "valid_count": 2
@@ -147,16 +133,10 @@
     "@level": "trace",
     "@message": "Processing item",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "index": 0,
-    "item_kind": "struct",
-    "item_value": {
-      "EventType": "viewer-request",
-      "FunctionARN": "arn:aws:cloudfront::123456789012:function/example-function"
-    }
+    "autoflex.source.path": "Items[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "info",
@@ -211,16 +191,10 @@
     "@level": "trace",
     "@message": "Processing item",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
-    "index": 1,
-    "item_kind": "struct",
-    "item_value": {
-      "EventType": "viewer-response",
-      "FunctionARN": "arn:aws:cloudfront::123456789012:function/another-function"
-    }
+    "autoflex.source.path": "Items[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
   },
   {
     "@level": "info",
@@ -275,9 +249,9 @@
     "@level": "trace",
     "@message": "Creating set value",
     "@module": "provider.autoflex",
-    "autoflex.source.path": "",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.path": "",
+    "autoflex.source.path": "Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "element_count": 2
   }

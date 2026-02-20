@@ -1434,7 +1434,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
-			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
+			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
 				logAttrKeySourceFieldname: fromFieldName,
 			})
 			continue
@@ -1443,7 +1443,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
-			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
+			tflog.SubsystemDebug(ctx, subsystemName, "Target field cannot be set", map[string]any{
 				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
