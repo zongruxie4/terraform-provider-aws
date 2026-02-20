@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -39,6 +40,7 @@ const (
 
 type attachmentRoutingPolicyLabelResource struct {
 	framework.ResourceWithModel[attachmentRoutingPolicyLabelResourceModel]
+	framework.WithNoUpdate
 }
 
 type attachmentRoutingPolicyLabelResourceModel struct {
@@ -84,6 +86,7 @@ func (r *attachmentRoutingPolicyLabelResource) Create(ctx context.Context, req r
 	coreNetworkID, attachmentID := fwflex.StringValueFromFramework(ctx, plan.CoreNetworkID), fwflex.StringValueFromFramework(ctx, plan.AttachmentID)
 	input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
 		AttachmentId:       aws.String(attachmentID),
+		ClientToken:        aws.String(sdkid.UniqueId()),
 		CoreNetworkId:      aws.String(coreNetworkID),
 		RoutingPolicyLabel: fwflex.StringFromFramework(ctx, plan.RoutingPolicyLabel),
 	}
