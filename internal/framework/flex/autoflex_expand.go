@@ -609,10 +609,9 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	// TODO: Should continue failing silently for now
+	// diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 
 	return diags
 }
@@ -1120,8 +1119,6 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 
 	// TRACE: Log entry with field options
 	tflog.SubsystemTrace(ctx, subsystemName, "TRACE: nestedObjectCollection entry", map[string]any{
-		"target_type":     vTo.Type().String(),
-		"target_kind":     vTo.Kind().String(),
 		"xmlWrapper":      fieldOpts.xmlWrapper,
 		"xmlWrapperField": fieldOpts.xmlWrapperField,
 	})
@@ -1391,10 +1388,9 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	}
 
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-			"from": valFrom.Type(),
-			"to":   valTo.Kind(),
-		})
+		tflog.SubsystemError(ctx, subsystemName, "Expanding to incompatible interface")
+		// TODO: Should continue failing silently for now
+		// diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 		return diags
 	}
 
@@ -1972,15 +1968,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
-		"source_type": vFrom.Type(ctx).String(),
-		"target_type": vTo.Type().String(),
-	})
-
-	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
-		"source_type": vFrom.Type(ctx).String(),
-		"target_type": vTo.Type().String(),
-	})
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper")
 
 	// Get the nested Objects as a slice
 	from, d := vFrom.ToObjectSlice(ctx)
