@@ -15,9 +15,9 @@ var (
 	ResourceDevice                               = resourceDevice
 	ResourceDirectConnectGatewayAttachment       = newDirectConnectGatewayAttachmentResource
 	ResourceGlobalNetwork                        = resourceGlobalNetwork
-	ResourcePrefixListAssociation                = newPrefixListAssociationResource
 	ResourceLink                                 = resourceLink
 	ResourceLinkAssociation                      = resourceLinkAssociation
+	ResourcePrefixListAssociation                = newPrefixListAssociationResource
 	ResourceSite                                 = resourceSite
 	ResourceSiteToSiteVPNAttachment              = resourceSiteToSiteVPNAttachment
 	ResourceTransitGatewayConnectPeerAssociation = resourceTransitGatewayConnectPeerAssociation
@@ -36,9 +36,9 @@ var (
 	FindDeviceByTwoPartKey                                  = findDeviceByTwoPartKey
 	FindDirectConnectGatewayAttachmentByID                  = findDirectConnectGatewayAttachmentByID
 	FindGlobalNetworkByID                                   = findGlobalNetworkByID
-	FindPrefixListAssociationByTwoPartKey                   = findPrefixListAssociationByTwoPartKey
 	FindLinkAssociationByThreePartKey                       = findLinkAssociationByThreePartKey
 	FindLinkByTwoPartKey                                    = findLinkByTwoPartKey
+	FindPrefixListAssociationByTwoPartKey                   = findPrefixListAssociationByTwoPartKey
 	FindSiteByTwoPartKey                                    = findSiteByTwoPartKey
 	FindSiteToSiteVPNAttachmentByID                         = findSiteToSiteVPNAttachmentByID
 	FindTransitGatewayConnectPeerAssociationByTwoPartKey    = findTransitGatewayConnectPeerAssociationByTwoPartKey

@@ -24,6 +24,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -35,17 +36,17 @@ func newPrefixListAssociationResource(_ context.Context) (resource.ResourceWithC
 
 const (
 	prefixListAssociationAvailableTimeout = 20 * time.Minute
-	prefixListAssociationIDParts          = 2
 )
 
 type prefixListAssociationResource struct {
 	framework.ResourceWithModel[prefixListAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 type prefixListAssociationResourceModel struct {
 	CoreNetworkID   types.String `tfsdk:"core_network_id"`
 	PrefixListAlias types.String `tfsdk:"prefix_list_alias"`
-	PrefixListARN   types.String `tfsdk:"prefix_list_arn"`
+	PrefixListARN   fwtypes.ARN  `tfsdk:"prefix_list_arn"`
 }
 
 func (r *prefixListAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -64,7 +65,8 @@ func (r *prefixListAssociationResource) Schema(ctx context.Context, req resource
 				},
 			},
 			"prefix_list_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -84,12 +86,11 @@ func (r *prefixListAssociationResource) Create(ctx context.Context, req resource
 
 	coreNetworkID := fwflex.StringValueFromFramework(ctx, plan.CoreNetworkID)
 	prefixListARN := fwflex.StringValueFromFramework(ctx, plan.PrefixListARN)
-
 	input := networkmanager.CreateCoreNetworkPrefixListAssociationInput{
+		ClientToken:     aws.String(sdkid.UniqueId()),
 		CoreNetworkId:   aws.String(coreNetworkID),
 		PrefixListAlias: fwflex.StringFromFramework(ctx, plan.PrefixListAlias),
 		PrefixListArn:   aws.String(prefixListARN),
-		ClientToken:     aws.String(sdkid.UniqueId()),
 	}
 	_, err := conn.CreateCoreNetworkPrefixListAssociation(ctx, &input)
 
@@ -123,7 +124,6 @@ func (r *prefixListAssociationResource) Read(ctx context.Context, req resource.R
 
 	coreNetworkID := fwflex.StringValueFromFramework(ctx, state.CoreNetworkID)
 	prefixListARN := fwflex.StringValueFromFramework(ctx, state.PrefixListARN)
-
 	output, err := findPrefixListAssociationByTwoPartKey(ctx, conn, coreNetworkID, prefixListARN)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -154,7 +154,6 @@ func (r *prefixListAssociationResource) Delete(ctx context.Context, req resource
 
 	coreNetworkID := fwflex.StringValueFromFramework(ctx, state.CoreNetworkID)
 	prefixListARN := fwflex.StringValueFromFramework(ctx, state.PrefixListARN)
-
 	input := networkmanager.DeleteCoreNetworkPrefixListAssociationInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 		PrefixListArn: aws.String(prefixListARN),
@@ -182,6 +181,9 @@ func (r *prefixListAssociationResource) Delete(ctx context.Context, req resource
 }
 
 func (r *prefixListAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	const (
+		prefixListAssociationIDParts = 2
+	)
 	parts, err := intflex.ExpandResourceId(req.ID, prefixListAssociationIDParts, true)
 
 	if err != nil {
