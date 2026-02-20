@@ -130,8 +130,6 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get("image_name").(string)
 
-	conns.GlobalMutexKV.Lock(name)
-	defer conns.GlobalMutexKV.Unlock(name)
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
@@ -170,7 +168,10 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	conns.GlobalMutexKV.Lock(name)
 	out, err := conn.CreateImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(name)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}

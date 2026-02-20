@@ -6,6 +6,8 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -28,7 +30,14 @@ import (
 // Follow this guide to set up a private ECR repository and push a simple
 // "hello world" image to it:
 // https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
-const imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+//
+// imageVersionConcurrentCountEnvVar is the environment variable which can be
+// set to control the number of concurrent image versions created in the test.
+// Defaults to 10 if not set.
+const (
+	imageVersionBaseImageEnvVar       = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+	imageVersionConcurrentCountEnvVar = "SAGEMAKER_IMAGE_VERSION_CONCURRENT_COUNT"
+)
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
