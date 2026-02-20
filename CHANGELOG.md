@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_ec2_secondary_network` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
 * **New List Resource:** `aws_ec2_secondary_subnet` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
+* **New Resource:** `aws_networkmanager_prefix_list_association` ([#46566](https://github.com/hashicorp/terraform-provider-aws/issues/46566))
 
 ENHANCEMENTS:
 
@@ -13,6 +14,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.oauth.default_return_url` and `credential_provider_configuration.oauth.grant_type` arguments ([#46127](https://github.com/hashicorp/terraform-provider-aws/issues/46127))
+* resource/aws_bedrockagentcore_gateway_target: Retry IAM eventual consistency errors on Create ([#46127](https://github.com/hashicorp/terraform-provider-aws/issues/46127))
 * resource/aws_subnet: Fixed IPv6 CIDR block validation and assignment to IPAM-provisioned subnets. ([#46556](https://github.com/hashicorp/terraform-provider-aws/issues/46556))
 * resource/aws_vpc_endpoint: Fix `InvalidParameter: DnsOptions PrivateDnsOnlyForInboundResolverEndpoint is applicable only to Interface VPC Endpoints` errors when creating S3Tables VPC endpoints ([#46102](https://github.com/hashicorp/terraform-provider-aws/issues/46102))
 
