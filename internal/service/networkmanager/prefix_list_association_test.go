@@ -97,7 +97,7 @@ func testAccCheckPrefixListAssociationDestroy(ctx context.Context, t *testing.T)
 				return err
 			}
 
-			return fmt.Errorf("Network Manager Prefix List Association %s/%s still exists", rs.Primary.Attributes["core_network_id"], rs.Primary.Attributes["prefix_list_arn"])
+			return fmt.Errorf("Network Manager Prefix List Association %s,%s still exists", rs.Primary.Attributes["core_network_id"], rs.Primary.Attributes["prefix_list_arn"])
 		}
 
 		return nil
