@@ -54,6 +54,33 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_networkmanager_prefix_list_association.example
+  identity = {
+    core_network_id = "core-network-0fab1c1e1e1e1e1e1"
+    prefix_list_arn = "arn:aws:ec2:us-west-2:123456789012:prefix-list/pl-0123456789abcdef0"
+  }
+}
+
+resource "aws_networkmanager_prefix_list_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `core_network_id` (String) Core network ID.
+* `prefix_list_arn` (String) Prefix list ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_prefix_list_association` using the core network ID and prefix list ARN separated by a comma (`,`). For example:
 
 ```terraform
