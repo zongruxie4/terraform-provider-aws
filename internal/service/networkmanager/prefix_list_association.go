@@ -86,10 +86,10 @@ func (r *prefixListAssociationResource) Create(ctx context.Context, req resource
 	prefixListARN := fwflex.StringValueFromFramework(ctx, plan.PrefixListARN)
 
 	input := networkmanager.CreateCoreNetworkPrefixListAssociationInput{
-		CoreNetworkId:  aws.String(coreNetworkID),
+		CoreNetworkId:   aws.String(coreNetworkID),
 		PrefixListAlias: fwflex.StringFromFramework(ctx, plan.PrefixListAlias),
-		PrefixListArn:  aws.String(prefixListARN),
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		PrefixListArn:   aws.String(prefixListARN),
+		ClientToken:     aws.String(sdkid.UniqueId()),
 	}
 	_, err := conn.CreateCoreNetworkPrefixListAssociation(ctx, &input)
 

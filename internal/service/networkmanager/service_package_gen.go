@@ -33,12 +33,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newPrefixListAssociationResource,
-			TypeName: "aws_networkmanager_prefix_list_association",
-			Name:     "Prefix List Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-		},
-		{
 			Factory:  newDirectConnectGatewayAttachmentResource,
 			TypeName: "aws_networkmanager_dx_gateway_attachment",
 			Name:     "Direct Connect Gateway Attachment",
@@ -46,6 +40,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newPrefixListAssociationResource,
+			TypeName: "aws_networkmanager_prefix_list_association",
+			Name:     "Prefix List Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

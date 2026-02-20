@@ -121,7 +121,7 @@ func testAccCheckPrefixListAssociationExists(ctx context.Context, t *testing.T, 
 
 func testAccPrefixListAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, "us-west-2"),
+		acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, "us-west-2"), //lintignore:AWSAT003
 		fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
