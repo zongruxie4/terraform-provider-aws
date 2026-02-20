@@ -566,39 +566,13 @@ resource "aws_sagemaker_image_version" "test" {
 }
 
 func testAccImageVersionConfig_concurrent(rName, baseImage string, count int) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_sagemaker_image" "test" {
-  image_name = %[1]q
-  role_arn   = aws_iam_role.test.arn
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-
+	return acctest.ConfigCompose(
+		testAccImageVersionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_image_version" "test" {
   count      = %[3]d
   image_name = aws_sagemaker_image.test.image_name
   base_image = %[2]q
 }
-`, rName, baseImage, count)
+`, rName, baseImage, count))
 }
