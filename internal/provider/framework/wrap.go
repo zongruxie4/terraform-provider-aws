@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -29,6 +29,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +56,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, dataSourceValidateRegion())
 		}
@@ -100,6 +101,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
+		if s := c.RandomnessSource(); s != nil {
+			ctx = vcr.NewContext(ctx, s)
+		}
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
@@ -544,7 +548,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		interceptors = append(interceptors, resourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}
@@ -994,15 +998,9 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
 		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
-		}
-	} else { // Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
-		if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
-			if !tfunique.IsHandleNil(spec.Tags) {
-				v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
-			}
+			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -29,6 +30,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestKafkaOrARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tflambda.KafkaOrARNPattern)
+
+	// Test the main issue: ESC regions should work in ARNs
+	escARNs := []string{
+		"arn:aws-eusc:lambda:us-east-1:123456789012:function:MyFunction",      //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:MyFunction", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:sqs:eusc-de-east-1:123456789012:my-queue",               //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range escARNs {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected ESC ARN %q to match KafkaOrARNPattern", arn)
+		}
+	}
+
+	// Test other valid patterns
+	otherValid := []string{
+		"", // empty string is valid per original pattern
+		"kafka://broker.example.com/topic",
+		"arn:aws:lambda:us-east-1:123456789012:function:MyFunction", //lintignore:AWSAT003,AWSAT005
+		"literally anything passes this very permissive regex",
+	}
+
+	for _, input := range otherValid {
+		if !regex.MatchString(input) {
+			t.Errorf("Expected %q to match KafkaOrARNPattern", input)
+		}
+	}
+}
 
 func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -448,7 +482,7 @@ func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceEventSourceMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

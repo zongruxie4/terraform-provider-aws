@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -15,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -140,6 +141,7 @@ func resourceHealthCheck() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
 				},
 				Optional: true,
+				Computed: true,
 			},
 			"request_interval": {
 				Type:         schema.TypeInt,
@@ -454,9 +456,8 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	output, err := conn.GetHealthCheck(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHealthCheck](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -465,7 +466,7 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	}
 
 	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HealthCheck, nil

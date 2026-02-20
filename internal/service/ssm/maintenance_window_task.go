@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -39,6 +41,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowTaskOutput")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(importStateIdFunc="testAccMaintenanceWindowTaskImportStateIdFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
@@ -528,7 +531,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -867,7 +870,7 @@ func (maintenanceWindowTaskImportID) Create(d *schema.ResourceData) string {
 	return d.Id()
 }
 
-func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string, error) {
+func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 {
 		return id, nil, fmt.Errorf("maintenance_window_task id must be of the form <window_id>/<task_id>")
@@ -876,7 +879,7 @@ func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string
 	windowID := parts[0]
 	taskID := parts[1]
 
-	result := map[string]string{
+	result := map[string]any{
 		"window_id": windowID,
 	}
 	return taskID, result, nil

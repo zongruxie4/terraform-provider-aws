@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -24,7 +24,7 @@ func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
-			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+			"Identity":      testAccEC2SerialConsoleAccess_identitySerial,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,

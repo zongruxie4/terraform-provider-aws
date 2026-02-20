@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kendra
 
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -628,9 +629,8 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 		var resourceNotFoundException *types.ResourceNotFoundException
 
 		if errors.As(err, &resourceNotFoundException) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -638,14 +638,14 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *kendra.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIndex(conn *kendra.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -661,18 +661,18 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) sdkretry.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusCreating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
-		Refresh: statusIndex(ctx, conn, id),
+		Refresh: statusIndex(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
 		if output.Status == types.IndexStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -681,18 +681,18 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusUpdating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
-		Refresh: statusIndex(ctx, conn, id),
+		Refresh: statusIndex(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
 		if output.Status == types.IndexStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -701,17 +701,17 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusIndex(ctx, conn, id),
+		Refresh: statusIndex(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

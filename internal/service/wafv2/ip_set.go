@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafv2
 
@@ -146,7 +148,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateIPSetInput{
 		Addresses:        []string{},
 		IPAddressVersion: awstypes.IPAddressVersion(d.Get("ip_address_version").(string)),
@@ -286,7 +288,7 @@ func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, 
 	}
 
 	if output == nil || output.IPSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

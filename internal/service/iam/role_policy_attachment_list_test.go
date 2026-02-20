@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -21,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	customerManagedName1 := "aws_iam_role_policy_attachment.customer_managed[0]"
@@ -29,7 +28,7 @@ func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
 	awsManagedName1 := "aws_iam_role_policy_attachment.aws_managed[0]"
 	awsManagedName2 := "aws_iam_role_policy_attachment.aws_managed[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -42,7 +41,7 @@ func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -70,6 +70,8 @@ var (
 	ResourceRoute                                         = resourceRoute
 	ResourceRouteTable                                    = resourceRouteTable
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
+	ResourceSecondaryNetwork                              = newSecondaryNetworkResource
+	ResourceSecondarySubnet                               = newSecondarySubnetResource
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
@@ -210,9 +212,12 @@ var (
 	FindRouteServerPropagationByTwoPartKey                      = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                               = findRouteTableAssociationByID
 	FindRouteTableByID                                          = findRouteTableByID
+	FindSecondaryNetworkByID                                    = findSecondaryNetworkByID
+	FindSecondarySubnetByID                                     = findSecondarySubnetByID
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
+	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot

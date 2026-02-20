@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -150,7 +150,7 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -182,7 +182,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), imageResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), imageResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -478,4 +478,49 @@ resource "aws_sagemaker_image_version" "test" {
   aliases    = ["latest", "stable"]
 }
 `, baseImage))
+}
+
+func TestImageVersionFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want int32
+	}{
+		{
+			name: "valid ARN with version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42", //lintignore:AWSAT003,AWSAT005
+			want: 42,
+		},
+		{
+			name: "valid ARN with large version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/999999", //lintignore:AWSAT003,AWSAT005
+			want: 999999,
+		},
+		{
+			name: "invalid ARN - too few parts",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "invalid ARN - non-numeric version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "empty ARN",
+			arn:  "",
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfsagemaker.ImageVersionFromARN(tt.arn); got != tt.want {
+				t.Errorf("ImageVersionFromARN(%q) = %d, want %d", tt.arn, got, tt.want)
+			}
+		})
+	}
 }

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -81,8 +81,8 @@ func testAccRotation_basic(t *testing.T) {
 	})
 }
 
-// testAccSSMContactsRotation_Identity_RegionOverride cannot be generated, because the test requires `aws_ssmincidents_replication_set`, which doesn't support region override
-func testAccSSMContactsRotation_Identity_RegionOverride(t *testing.T) {
+// testAccSSMContactsRotation_Identity_regionOverride cannot be generated, because the test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+func testAccSSMContactsRotation_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -199,7 +199,7 @@ func testAccRotation_disappears(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceRotation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmcontacts.ResourceRotation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

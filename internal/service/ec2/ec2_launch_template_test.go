@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -70,9 +71,11 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "secondary_interfaces.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -161,7 +164,7 @@ func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &launchTemplate),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLaunchTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -727,6 +730,46 @@ func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_cpuOptionsNestedVirtualization(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, string(awstypes.NestedVirtualizationSpecificationEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.nested_virtualization", string(awstypes.NestedVirtualizationSpecificationEnabled)),
+				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, string(awstypes.NestedVirtualizationSpecificationDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.nested_virtualization", string(awstypes.NestedVirtualizationSpecificationDisabled)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -740,7 +783,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m1.small", "standard"),
+				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m7gd.medium", "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 				),
@@ -3235,6 +3278,96 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkPerformanceOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "vpc-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "vpc-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "ebs-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "ebs-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "default"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_secondaryInterfaces(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_secondaryInterfaces(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secondary_interfaces"), knownvalue.ListSizeExact(2)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4062,6 +4195,18 @@ resource "aws_launch_template" "test" {
 `, rName, amdSevSnp, coreCount, threadsPerCore)
 }
 
+func testAccLaunchTemplateConfig_cpuOptionsNestedVirtualization(rName, nestedVirtualization string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  cpu_options {
+    nested_virtualization = %[2]q
+  }
+}
+`, rName, nestedVirtualization)
+}
+
 func testAccLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -4670,6 +4815,49 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
+func testAccLaunchTemplateConfig_secondaryInterfaces(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_ec2_secondary_network" "test" {
+  ipv4_cidr_block = "10.0.0.0/16"
+  network_type    = "rdma"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_secondary_subnet" "test" {
+  secondary_network_id = aws_ec2_secondary_network.test.id
+  ipv4_cidr_block      = "10.0.1.0/24"
+  availability_zone    = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  secondary_interfaces {
+    device_index          = 1
+    delete_on_termination = true
+    interface_type        = "secondary"
+    network_card_index    = 1
+    secondary_subnet_id   = aws_ec2_secondary_subnet.test.id
+    private_ip_addresses  = ["10.0.1.10", "10.1.0.11"]
+  }
+
+  secondary_interfaces {
+    delete_on_termination    = true
+    device_index             = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+    private_ip_address_count = 3
+  }
+}
+`, rName))
+}
+
 func testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -4685,6 +4873,19 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
+
+func testAccLaunchTemplateConfig_networkPerformanceOptions(rName, bandwidthWeighting string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_performance_options {
+    bandwidth_weighting = %[2]q
+  }
+}
+`, rName, bandwidthWeighting)
+}
+
 func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {

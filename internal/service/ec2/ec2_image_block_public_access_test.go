@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,7 +17,7 @@ func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
-		"Identity":      testAccEC2ImageBlockPublicAccess_IdentitySerial,
+		"Identity":      testAccEC2ImageBlockPublicAccess_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

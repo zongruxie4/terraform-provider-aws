@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -734,9 +735,8 @@ func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeValidationException) || errs.IsA[*types.ResourceNotFoundException](err) || (err != nil && regexache.MustCompile(" not found$").MatchString(err.Error())) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1532,13 +1532,13 @@ func (targetImportID) Create(d *schema.ResourceData) string {
 	return targetCreateResourceID(eventBusName, rule, targetID)
 }
 
-func (targetImportID) Parse(id string) (string, map[string]string, error) {
+func (targetImportID) Parse(id string) (string, map[string]any, error) {
 	eventBusName, rule, targetID, err := targetParseImportID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		"event_bus_name": eventBusName,
 		names.AttrRule:   rule,
 		"target_id":      targetID,

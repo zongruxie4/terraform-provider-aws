@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -150,7 +152,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
-	if gmo.Members == nil || (len(gmo.Members) < 1) {
+	if len(gmo.Members) == 0 {
 		log.Printf("[WARN] GuardDuty Member %q not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

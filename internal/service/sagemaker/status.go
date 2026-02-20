@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -60,9 +60,9 @@ func statusImage(ctx context.Context, conn *sagemaker.Client, name string) sdkre
 	}
 }
 
-func statusImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
+func statusImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findImageVersionByName(ctx, conn, name)
+		output, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -221,22 +221,6 @@ func statusSpace(ctx context.Context, conn *sagemaker.Client, domainId, name str
 		}
 
 		return output, string(output.Status), nil
-	}
-}
-
-func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findMonitoringScheduleByName(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.MonitoringScheduleStatus), nil
 	}
 }
 

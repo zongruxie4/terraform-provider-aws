@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -71,7 +71,7 @@ func testAccInsight_disappears(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -499,7 +499,7 @@ func testAccCheckInsightARN(ctx context.Context, resourceName string) resource.T
 	return func(s *terraform.State) error {
 		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(ctx), acctest.AccountID(ctx))
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s) // nosemgrep:ci.semgrep.acctest.checks.arn-matchresourceattr
 	}
 }
 

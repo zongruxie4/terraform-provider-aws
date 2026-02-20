@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -81,7 +81,7 @@ var (
 	CreateBucketACLResourceID = createBucketACLResourceID
 	ParseBucketACLResourceID  = parseBucketACLResourceID
 
-	DirectoryBucketNameRegex = directoryBucketNameRegex
+	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
 	LifecycleConfigEqual = lifecycleConfigEqual
 )

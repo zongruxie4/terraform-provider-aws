@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kms
 
@@ -13,26 +15,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -387,7 +383,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		tags, err := listTags(ctx, conn, keyID)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{LastError: err}
+			return nil, &retry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -413,9 +409,8 @@ func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
 	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -426,9 +421,8 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -437,7 +431,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	}
 
 	if output == nil || output.KeyMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KeyMetadata, nil
@@ -465,9 +459,8 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -476,7 +469,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -490,9 +483,8 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -501,7 +493,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return aws.Bool(output.KeyRotationEnabled), output.RotationPeriodInDays, nil
@@ -636,8 +628,8 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeyState(conn *kms.Client, keyID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if retry.NotFound(err) {
@@ -681,10 +673,10 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
-		Refresh: statusKeyState(ctx, conn, keyID),
+		Refresh: statusKeyState(conn, keyID),
 		Timeout: timeout,
 	}
 
@@ -777,94 +769,4 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	)
 
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
-}
-
-// @SDKListResource("aws_kms_key")
-func keyResourceAsListResource() inttypes.ListResourceForSDK {
-	l := keyListResource{}
-	l.SetResourceSchema(resourceKey())
-	return &l
-}
-
-type keyListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type keyListResourceModel struct {
-	framework.WithRegionModel
-}
-
-func (l *keyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-		Blocks:     map[string]listschema.Block{},
-	}
-}
-
-func (l *keyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query keyListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	awsClient := l.Meta()
-	conn := awsClient.KMSClient(ctx)
-
-	tflog.Info(ctx, "Listing KMS keys")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		var input kms.ListKeysInput
-		pages := kms.NewListKeysPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			for _, key := range page.Keys {
-				id := aws.ToString(key.KeyId)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-				result := request.NewListResult(ctx)
-
-				rd := l.ResourceData()
-				rd.SetId(id)
-
-				diags := resourceKeyRead(ctx, rd, awsClient)
-				if diags.HasError() || rd.Id() == "" {
-					// Resource can't be read or is logically deleted.
-					// Log and continue.
-					tflog.Error(ctx, "Reading KMS key", map[string]any{
-						names.AttrID: id,
-						"diags":      sdkdiag.DiagnosticsString(diags),
-					})
-					continue
-				}
-
-				if err := l.SetTags(ctx, awsClient, rd); err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				result.DisplayName = id
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
-		}
-	}
 }

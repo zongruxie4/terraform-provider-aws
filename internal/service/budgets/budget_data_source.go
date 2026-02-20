@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package budgets
 
@@ -277,7 +279,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := c.BudgetsClient(ctx)
 
 	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
-	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	budgetName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	budget, err := findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 

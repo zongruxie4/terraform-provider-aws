@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -14,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -515,7 +516,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	output, err := findRuleGroupByARN(ctx, conn, d.Id())
 
 	if err == nil && output.RuleGroup == nil {
-		err = tfresource.NewEmptyResultError(d.Id())
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -633,9 +634,8 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 	output, err := conn.DescribeRuleGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -644,14 +644,14 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 	}
 
 	if output == nil || output.RuleGroupResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRuleGroup(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRuleGroupByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -667,10 +667,10 @@ func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn stri
 }
 
 func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeRuleGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusRuleGroup(ctx, conn, arn),
+		Refresh: statusRuleGroup(conn, arn),
 		Timeout: timeout,
 	}
 
