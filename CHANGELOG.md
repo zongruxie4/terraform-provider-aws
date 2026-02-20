@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_ec2_secondary_network` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
 * **New List Resource:** `aws_ec2_secondary_subnet` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
+* **New List Resource:** `aws_s3_bucket_lifecycle_configuration` ([#46531](https://github.com/hashicorp/terraform-provider-aws/issues/46531))
 * **New Resource:** `aws_networkmanager_prefix_list_association` ([#46566](https://github.com/hashicorp/terraform-provider-aws/issues/46566))
 
 ENHANCEMENTS:
