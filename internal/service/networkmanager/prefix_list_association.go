@@ -101,7 +101,7 @@ func (r *prefixListAssociationResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	if _, err := waitCoreNetworkAvailableAfterPrefixListChange(ctx, conn, coreNetworkID, prefixListAssociationAvailableTimeout); err != nil {
+	if err := waitCoreNetworkAvailableAfterPrefixListChange(ctx, conn, coreNetworkID, prefixListAssociationAvailableTimeout); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("waiting for Network Manager Core Network (%s) to become available after creating prefix list association", coreNetworkID),
 			err.Error(),
@@ -172,7 +172,7 @@ func (r *prefixListAssociationResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	if _, err := waitCoreNetworkAvailableAfterPrefixListChange(ctx, conn, coreNetworkID, prefixListAssociationAvailableTimeout); err != nil {
+	if err := waitCoreNetworkAvailableAfterPrefixListChange(ctx, conn, coreNetworkID, prefixListAssociationAvailableTimeout); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("waiting for Network Manager Core Network (%s) to become available after deleting prefix list association", coreNetworkID),
 			err.Error(),
@@ -244,7 +244,7 @@ func findPrefixListAssociations(ctx context.Context, conn *networkmanager.Client
 
 // Waiter for core network to become available after prefix list association changes.
 
-func waitCoreNetworkAvailableAfterPrefixListChange(ctx context.Context, conn *networkmanager.Client, coreNetworkID string, timeout time.Duration) (*awstypes.CoreNetwork, error) {
+func waitCoreNetworkAvailableAfterPrefixListChange(ctx context.Context, conn *networkmanager.Client, coreNetworkID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CoreNetworkStateUpdating, coreNetworkStatePending),
 		Target:  enum.Slice(awstypes.CoreNetworkStateAvailable),
@@ -252,11 +252,7 @@ func waitCoreNetworkAvailableAfterPrefixListChange(ctx context.Context, conn *ne
 		Refresh: statusCoreNetworkState(conn, coreNetworkID),
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.CoreNetwork); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
