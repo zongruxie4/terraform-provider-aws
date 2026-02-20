@@ -60,9 +60,9 @@ func statusImage(ctx context.Context, conn *sagemaker.Client, name string) sdkre
 	}
 }
 
-func statusImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
+func statusImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findImageVersionByName(ctx, conn, name)
+		output, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
 		if retry.NotFound(err) {
 			return nil, "", nil

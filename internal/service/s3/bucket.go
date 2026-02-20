@@ -51,6 +51,10 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
+
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
@@ -725,7 +729,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	bucket := create.Name(ctx, d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
 	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)

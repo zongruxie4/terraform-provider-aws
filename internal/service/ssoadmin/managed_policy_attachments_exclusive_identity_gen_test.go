@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
@@ -67,7 +68,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -83,7 +84,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
@@ -114,7 +115,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
@@ -160,7 +161,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc),
+				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -177,7 +178,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc),
+				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),

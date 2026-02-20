@@ -42,8 +42,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsTakesT=false)
 // @Testing(checkDestroyNoop=true)
-// @Testing(importStateIdFunc=testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc)
-// @Testing(importStateIdAttribute="instance_arn")
+// @Testing(importStateIdAttributes="instance_arn;permission_set_arn", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newManagedPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &managedPolicyAttachmentsExclusiveResource{}
 
@@ -167,13 +166,13 @@ var _ inttypes.ImportIDParser = managedPolicyAttachmentsExclusiveImportID{}
 
 type managedPolicyAttachmentsExclusiveImportID struct{}
 
-func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]string, error) {
+func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]any, error) {
 	instanceARN, permissionSetARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, smarterr.NewError(fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id))
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"instance_arn":       instanceARN,
 		"permission_set_arn": permissionSetARN,
 	}

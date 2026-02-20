@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -19,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRole_List_Basic(t *testing.T) {
+func TestAccIAMRole_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_iam_role.test[0]"
 	resourceName2 := "aws_iam_role.test[1]"
 	resourceName3 := "aws_iam_role.test[2]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -33,7 +32,7 @@ func TestAccIAMRole_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
