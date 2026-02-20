@@ -316,15 +316,15 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	conns.GlobalMutexKV.Lock(name)
-	defer conns.GlobalMutexKV.Unlock(name)
-
 	log.Printf("[DEBUG] Deleting SageMaker AI Image Version: %s", d.Id())
 	input := sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(name),
 		Version:   aws.Int32(version),
 	}
+
+	conns.GlobalMutexKV.Lock(name)
 	_, err = conn.DeleteImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(name)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 		return diags
