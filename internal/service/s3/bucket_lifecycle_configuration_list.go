@@ -75,7 +75,7 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 	}
 }
 
-func (r *bucketLifecycleConfigurationListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
+func (l *bucketLifecycleConfigurationListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
@@ -89,7 +89,7 @@ func (r *bucketLifecycleConfigurationListResource) list(ctx context.Context, req
 
 			result := request.NewListResult(ctx)
 
-			item, err := findBucketLifecycleConfiguration(ctx, conn, bucketName, r.Meta().AccountID(ctx))
+			item, err := findBucketLifecycleConfiguration(ctx, conn, bucketName, l.Meta().AccountID(ctx))
 			if retry.NotFound(err) {
 				tflog.Debug(ctx, "Bucket has no Lifecycle Configuration, skipping")
 				continue
@@ -103,7 +103,7 @@ func (r *bucketLifecycleConfigurationListResource) list(ctx context.Context, req
 
 			var data bucketLifecycleConfigurationResourceModel
 
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				flattenBucketLifecycleConfigurationResource(ctx, item, &data, &result.Diagnostics)
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
 				data.ID = data.Bucket
