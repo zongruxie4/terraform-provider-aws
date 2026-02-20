@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,9 +26,14 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkResource("aws_networkmanager_prefix_list_association", name="Prefix List Association")
+// @IdentityAttribute("core_network_id")
+// @IdentityAttribute("prefix_list_arn")
+// @ImportIDHandler("prefixListAssociationImportID")
+// @Testing(hasNoPreExistingResource=true)
 func newPrefixListAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &prefixListAssociationResource{}, nil
 }
@@ -41,6 +45,7 @@ const (
 type prefixListAssociationResource struct {
 	framework.ResourceWithModel[prefixListAssociationResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 type prefixListAssociationResourceModel struct {
@@ -180,19 +185,28 @@ func (r *prefixListAssociationResource) Delete(ctx context.Context, req resource
 	}
 }
 
-func (r *prefixListAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	const (
-		prefixListAssociationIDParts = 2
-	)
-	parts, err := intflex.ExpandResourceId(req.ID, prefixListAssociationIDParts, true)
+var (
+	_ inttypes.ImportIDParser = prefixListAssociationImportID{}
+)
 
+type prefixListAssociationImportID struct{}
+
+const (
+	prefixListAssociationIDParts = 2
+)
+
+func (prefixListAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := intflex.ExpandResourceId(id, prefixListAssociationIDParts, true)
 	if err != nil {
-		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-		return
+		return "", nil, err
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("core_network_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prefix_list_arn"), parts[1])...)
+	result := map[string]any{
+		"core_network_id": parts[0],
+		"prefix_list_arn": parts[1],
+	}
+
+	return id, result, nil
 }
 
 // Finder functions.

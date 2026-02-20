@@ -8,10 +8,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,17 +39,12 @@ func TestAccNetworkManagerPrefixListAssociation_basic(t *testing.T) {
 				Config: testAccPrefixListAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrefixListAssociationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_arn"),
-					resource.TestCheckResourceAttr(resourceName, "prefix_list_alias", "testprefixlist"),
 				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "prefix_list_arn",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -69,8 +70,87 @@ func TestAccNetworkManagerPrefixListAssociation_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Adapted from generated test.
+func TestAccNetworkManagerPrefixListAssociation_Identity_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_networkmanager_prefix_list_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		CheckDestroy:             testAccCheckPrefixListAssociationDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				Config: testAccPrefixListAssociationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrefixListAssociationExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"core_network_id":   knownvalue.NotNull(),
+						"prefix_list_arn":   knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("core_network_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("prefix_list_arn")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				Config:                               testAccPrefixListAssociationConfig_basic(rName),
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "prefix_list_arn",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn"),
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				Config:            testAccPrefixListAssociationConfig_basic(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn"),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("core_network_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("prefix_list_arn"), knownvalue.NotNull()),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				Config:          testAccPrefixListAssociationConfig_basic(rName),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("core_network_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("prefix_list_arn"), knownvalue.NotNull()),
 					},
 				},
 			},
@@ -121,7 +201,7 @@ func testAccCheckPrefixListAssociationExists(ctx context.Context, t *testing.T, 
 
 func testAccPrefixListAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, "us-west-2"), //lintignore:AWSAT003
+		acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, endpoints.UsWest2RegionID),
 		fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
