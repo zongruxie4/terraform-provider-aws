@@ -66,18 +66,19 @@ func TestImageVersionFromARN(t *testing.T) {
 	}
 }
 
-// imageVersionBaseImageEnvVar is the environment variable which must be
-// set to an ECR image URI for certain acceptance tests to run
-//
-// Follow this guide to set up a private ECR repository and push a simple
-// "hello world" image to it:
-// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
-//
-// imageVersionConcurrentCountEnvVar is the environment variable which can be
-// set to control the number of concurrent image versions created in the test.
-// Defaults to 10 if not set.
 const (
-	imageVersionBaseImageEnvVar       = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+	// imageVersionBaseImageEnvVar is the environment variable which must be
+	// set to an ECR image URI for certain acceptance tests to run
+	//
+	// Follow this guide to set up a private ECR repository and push a simple
+	// "hello world" image to it:
+	// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
+	imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+
+	// imageVersionConcurrentCountEnvVar is the environment variable which can be
+	// set to control the number of concurrent image versions created in the test.
+	//
+	// Defaults to 10 if not set.
 	imageVersionConcurrentCountEnvVar = "SAGEMAKER_IMAGE_VERSION_CONCURRENT_COUNT"
 )
 
@@ -391,6 +392,9 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 	})
 }
 
+// Testing behavior during highly concurrent image version creation operations
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/44693
 func TestAccSageMakerImageVersion_concurrentCreation(t *testing.T) {
 	ctx := acctest.Context(t)
 
