@@ -5345,6 +5345,8 @@ func TestAccEC2Instance_upgradeV6CPUOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(2)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(2)),
+					resource.TestCheckNoResourceAttr(resourceName, "cpu_core_count"),
+					resource.TestCheckNoResourceAttr(resourceName, "cpu_threads_per_core"),
 				),
 				// The config plan check also ensures that the instance is not recreated
 				ConfigPlanChecks: resource.ConfigPlanChecks{
