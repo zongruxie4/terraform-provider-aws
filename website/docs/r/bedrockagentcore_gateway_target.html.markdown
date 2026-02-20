@@ -186,13 +186,13 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
 
   credential_provider_configuration {
     oauth {
-      provider_arn = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
-      scopes       = ["read", "write"]
-      grant_type  = "authorization_code"
+      provider_arn       = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
+      scopes             = ["read", "write"]
+      grant_type         = "authorization_code"
       default_return_url = "https://myapp.example.com/callback"
+
       custom_parameters = {
         "client_type" = "confidential"
-        
       }
     }
   }
