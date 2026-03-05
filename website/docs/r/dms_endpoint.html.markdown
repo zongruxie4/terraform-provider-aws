@@ -134,6 +134,7 @@ The following arguments are optional:
 * `docs_to_investigate` - (Optional) Number of documents to preview to determine the document organization. Use this setting when `nesting_level` is set to `one`. Default is `1000`.
 * `extract_doc_id` - (Optional) Document ID. Use this setting when `nesting_level` is set to `none`. Default is `false`.
 * `nesting_level` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
+* `use_update_lookup` - (Optional) If `true`, DMS retrieves the entire document from the MongoDB source during migration. Default is `false`.
 
 ### mysql_settings
 

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -41,7 +40,6 @@ var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPattern
 // @Testing(preIdentityVersion="6.9.0")
 // @Testing(existsType="github.com/hashicorp/terraform-provider-aws/internal/service/lambda;tflambda;tflambda.PolicyStatement")
 // @Testing(importStateIdFunc="testAccPermissionImportStateIDFunc")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
@@ -208,11 +206,16 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
+	return append(diags, resourcePermissionFlatten(ctx, d, meta.(*conns.AWSClient), statement, functionName)...)
+}
+
+func resourcePermissionFlatten(ctx context.Context, d *schema.ResourceData, awsClient *conns.AWSClient, statement *policyStatement, functionName string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	qualifier, _ := getQualifierFromAliasOrVersionARN(statement.Resource)
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition(ctx)+":lambda:") {
+	if strings.HasPrefix(functionName, "arn:"+awsClient.Partition(ctx)+":lambda:") {
 		// Strip qualifier off
 		trimmed := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmed)
@@ -304,9 +307,8 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	output, err := conn.GetPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -348,9 +350,8 @@ func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, f
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastRequest:  statementID,
-		LastResponse: policy,
+	return nil, &retry.NotFoundError{
+		Message: fmt.Sprintf("statement %s not found in policy", statementID),
 	}
 }
 
