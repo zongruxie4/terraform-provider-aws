@@ -27,16 +27,16 @@ type ServicePackageResourceRegion struct {
 
 // ResourceRegionDefault returns the default resource region configuration.
 // The default is to enable per-resource Region override and validate the override value.
-func ResourceRegionDefault() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDefault() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
-	}
+	})
 }
 
 // ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
-func ResourceRegionDisabled() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{}
+func ResourceRegionDisabled() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{})
 }
 
 // ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
