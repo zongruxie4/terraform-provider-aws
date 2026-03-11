@@ -40,12 +40,12 @@ func ResourceRegionDisabled() unique.Handle[ServicePackageResourceRegion] {
 }
 
 // ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
-func ResourceRegionDeprecatedOverride() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDeprecatedOverride() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
 		IsOverrideDeprecated:          true,
-	}
+	})
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.

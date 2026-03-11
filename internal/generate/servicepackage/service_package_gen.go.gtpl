@@ -167,7 +167,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 			{{- end }}
 			{{- if $value.RegionOverrideDeprecated }}
-				Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
@@ -202,7 +202,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			{{- end }}
 			{{- if $value.RegionOverrideDeprecated }}
-				Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
