@@ -6,7 +6,6 @@ package s3files_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -23,7 +22,7 @@ func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3files_synchronization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity := tfstatecheck.Identity()
 
@@ -34,7 +33,7 @@ func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
@@ -64,7 +63,7 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3files_synchronization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity := tfstatecheck.Identity()
 
@@ -75,7 +74,7 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,16 +22,16 @@ func TestAccS3FilesSynchronization_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3files_synchronization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSynchronizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttr(resourceName, "import_data_rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.#", "1"),
@@ -56,23 +55,23 @@ func TestAccS3FilesSynchronization_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3files_synchronization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx),
+		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSynchronizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "30"),
 				),
 			},
 			{
 				Config: testAccSynchronizationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, resourceName, &synchronization),
+					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "60"),
 				),
 			},
@@ -80,14 +79,14 @@ func TestAccS3FilesSynchronization_update(t *testing.T) {
 	})
 }
 
-func testAccCheckSynchronizationExists(ctx context.Context, n string, v *s3files.GetSynchronizationConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckSynchronizationExists(ctx context.Context, t *testing.T, n string, v *s3files.GetSynchronizationConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		output, err := tfs3files.FindSynchronizationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
 		if err != nil {
@@ -100,9 +99,9 @@ func testAccCheckSynchronizationExists(ctx context.Context, n string, v *s3files
 	}
 }
 
-func testAccCheckSynchronizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSynchronizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3files_synchronization" {

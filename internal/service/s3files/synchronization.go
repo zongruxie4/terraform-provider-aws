@@ -33,7 +33,7 @@ import (
 // @FrameworkResource("aws_s3files_synchronization", name="Synchronization")
 // @IdentityAttribute("file_system_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetSynchronizationConfigurationOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource="true")
 // @Testing(importStateIdAttribute="file_system_id")
 func newSynchronizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
