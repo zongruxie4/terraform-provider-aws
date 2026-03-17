@@ -52,6 +52,11 @@ func (d *fileSystemsDataSource) Schema(ctx context.Context, _ datasource.SchemaR
 							Computed:    true,
 							Description: "File system ID",
 						},
+						names.AttrKMSKeyID: schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Computed:    true,
+							Description: "KMS key ID for encryption",
+						},
 						names.AttrName: schema.StringAttribute{
 							Computed:    true,
 							Description: "File system name",
@@ -113,6 +118,7 @@ type fileSystemsDataSourceFileSystemModel struct {
 	Bucket        types.String      `tfsdk:"bucket"`
 	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
 	ID            types.String      `tfsdk:"id"`
+	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
 	RoleArn       types.String      `tfsdk:"role_arn"`

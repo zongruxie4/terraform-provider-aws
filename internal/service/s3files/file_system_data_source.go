@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,6 +45,7 @@ func (d *fileSystemDataSource) Schema(ctx context.Context, _ datasource.SchemaRe
 				Description: "File system ID",
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Computed:    true,
 				Description: "KMS key ID for encryption",
 			},
@@ -110,7 +112,7 @@ type fileSystemDataSourceModel struct {
 	Bucket        types.String      `tfsdk:"bucket"`
 	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
 	ID            types.String      `tfsdk:"id"`
-	KmsKeyId      types.String      `tfsdk:"kms_key_id"`
+	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
 	Prefix        types.String      `tfsdk:"prefix" autoflex:",omitempty"`

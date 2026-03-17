@@ -27,7 +27,7 @@ func TestAccS3FilesFileSystem_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_s3files_file_system.test[0]"
 	resourceName2 := "aws_s3files_file_system.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -84,7 +84,7 @@ func TestAccS3FilesFileSystem_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_s3files_file_system.test[0]"
 	resourceName2 := "aws_s3files_file_system.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()

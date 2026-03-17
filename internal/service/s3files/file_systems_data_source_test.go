@@ -15,22 +15,22 @@ import (
 
 func TestAccS3FilesFileSystemsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3files_file_systems.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFileSystemsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "file_systems.#"),
-				),
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccFileSystemsDataSourceConfig_basic(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					resource.TestCheckResourceAttrSet(dataSourceName, "file_systems.#"),
+ 				),
+ 			},
+ 		},
+ 	})
 }
 
 func testAccFileSystemsDataSourceConfig_basic(rName string) string {
