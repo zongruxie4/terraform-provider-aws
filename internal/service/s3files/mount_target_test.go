@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,18 +23,18 @@ func TestAccS3FilesMountTarget_basic(t *testing.T) {
 	resourceName := "aws_s3files_mount_target.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mountTarget),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mountTarget),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
@@ -61,25 +60,25 @@ func TestAccS3FilesMountTarget_securityGroups(t *testing.T) {
 	resourceName := "aws_s3files_mount_target.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mountTarget),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mountTarget),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 			{
 				Config: testAccMountTargetConfig_securityGroupsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mountTarget),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mountTarget),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 				),
 			},
@@ -93,18 +92,18 @@ func TestAccS3FilesMountTarget_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3files_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mountTarget),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mountTarget),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3files.ResourceMountTarget, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,14 +112,14 @@ func TestAccS3FilesMountTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMountTargetExists(ctx context.Context, n string, v *s3files.GetMountTargetOutput) resource.TestCheckFunc {
+func testAccCheckMountTargetExists(ctx context.Context, t *testing.T, n string, v *s3files.GetMountTargetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		output, err := tfs3files.FindMountTargetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -133,9 +132,9 @@ func testAccCheckMountTargetExists(ctx context.Context, n string, v *s3files.Get
 	}
 }
 
-func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMountTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3files_mount_target" {

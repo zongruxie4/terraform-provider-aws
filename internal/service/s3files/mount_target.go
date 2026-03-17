@@ -33,7 +33,7 @@ import (
 // @FrameworkResource("aws_s3files_mount_target", name="Mount Target")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetMountTargetOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource="true")
 func newMountTargetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &mountTargetResource{}
