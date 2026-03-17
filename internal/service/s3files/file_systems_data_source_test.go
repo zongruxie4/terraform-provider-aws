@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,18 +18,18 @@ func TestAccS3FilesFileSystemsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_s3files_file_systems.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
- 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
- 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
- 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
- 		Steps: []resource.TestStep{
- 			{
- 				Config: testAccFileSystemsDataSourceConfig_basic(rName),
- 				Check: resource.ComposeTestCheckFunc(
- 					resource.TestCheckResourceAttrSet(dataSourceName, "file_systems.#"),
- 				),
- 			},
- 		},
- 	})
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemsDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "file_systems.#"),
+				),
+			},
+		},
+	})
 }
 
 func testAccFileSystemsDataSourceConfig_basic(rName string) string {
