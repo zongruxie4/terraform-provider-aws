@@ -38,7 +38,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetFileSystemOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource=true)
 func newFileSystemResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &fileSystemResource{}
@@ -115,11 +115,17 @@ func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaReques
 				Description: "IAM role ARN for S3 access",
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "File system status",
 			},
 			names.AttrStatusMessage: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Status message",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
