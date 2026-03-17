@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,18 +24,18 @@ func TestAccS3FilesFileSystem_basic(t *testing.T) {
 	resourceName := "aws_s3files_file_system.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, resourceName, &fileSystem),
+					testAccCheckFileSystemExists(ctx, t, resourceName, &fileSystem),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3files", regexache.MustCompile(`file-system/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.LifeCycleStateAvailable)),
@@ -59,18 +58,18 @@ func TestAccS3FilesFileSystem_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3files_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, resourceName, &fileSystem),
+					testAccCheckFileSystemExists(ctx, t, resourceName, &fileSystem),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3files.ResourceFileSystem, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,18 +85,18 @@ func TestAccS3FilesFileSystem_kmsKey(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, resourceName, &fileSystem),
+					testAccCheckFileSystemExists(ctx, t, resourceName, &fileSystem),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -110,14 +109,14 @@ func TestAccS3FilesFileSystem_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccCheckFileSystemExists(ctx context.Context, n string, v *s3files.GetFileSystemOutput) resource.TestCheckFunc {
+func testAccCheckFileSystemExists(ctx context.Context, t *testing.T, n string, v *s3files.GetFileSystemOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		output, err := tfs3files.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -130,9 +129,9 @@ func testAccCheckFileSystemExists(ctx context.Context, n string, v *s3files.GetF
 	}
 }
 
-func testAccCheckFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFileSystemDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3files_file_system" {
