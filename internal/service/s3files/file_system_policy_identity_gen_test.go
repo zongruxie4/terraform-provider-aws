@@ -32,7 +32,7 @@ func TestAccS3FilesFileSystemPolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
-		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -42,7 +42,7 @@ func TestAccS3FilesFileSystemPolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFileSystemPolicyExists(ctx, resourceName),
+					testAccCheckFileSystemPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

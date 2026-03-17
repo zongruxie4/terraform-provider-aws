@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,18 +20,18 @@ func TestAccS3FilesFileSystemPolicy_basic(t *testing.T) {
 	resourceName := "aws_s3files_file_system_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemPolicyExists(ctx, resourceName),
+					testAccCheckFileSystemPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
@@ -53,38 +52,38 @@ func TestAccS3FilesFileSystemPolicy_update(t *testing.T) {
 	resourceName := "aws_s3files_file_system_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemPolicyExists(ctx, resourceName),
+					testAccCheckFileSystemPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccFileSystemPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemPolicyExists(ctx, resourceName),
+					testAccCheckFileSystemPolicyExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFileSystemPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckFileSystemPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		_, err := s3files.FindFileSystemPolicyByID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
 
@@ -103,9 +102,9 @@ func testAccFileSystemPolicyImportStateIdFunc(resourceName string) resource.Impo
 	}
 }
 
-func testAccCheckFileSystemPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFileSystemPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3files_file_system_policy" {

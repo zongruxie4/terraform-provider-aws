@@ -28,7 +28,7 @@ import (
 
 // @FrameworkResource("aws_s3files_file_system_policy", name="File System Policy")
 // @IdentityAttribute("file_system_id")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="file_system_id")
 func newFileSystemPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {

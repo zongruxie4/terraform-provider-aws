@@ -33,7 +33,7 @@ func TestAccS3FilesFileSystemPolicy_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/FileSystemPolicy/list_basic/"),
@@ -76,7 +76,7 @@ func TestAccS3FilesFileSystemPolicy_List_regionOverride(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/FileSystemPolicy/list_region_override/"),
