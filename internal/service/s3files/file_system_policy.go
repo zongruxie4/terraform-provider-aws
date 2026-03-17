@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,6 +52,7 @@ func (r *fileSystemPolicyResource) Schema(ctx context.Context, _ resource.Schema
 				Description: "File system ID",
 			},
 			names.AttrPolicy: schema.StringAttribute{
+				CustomType:  fwtypes.IAMPolicyType,
 				Required:    true,
 				Description: "File system policy JSON",
 			},
@@ -113,7 +115,7 @@ func flattenFileSystemPolicyResource(ctx context.Context, output *s3files.GetFil
 		smerr.AddError(ctx, diags, err, smerr.ID, data.FileSystemID.ValueString())
 		return
 	}
-	data.Policy = types.StringValue(policyToSet)
+	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
 }
 
 func (r *fileSystemPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -165,8 +167,8 @@ func (r *fileSystemPolicyResource) Delete(ctx context.Context, request resource.
 
 type fileSystemPolicyResourceModel struct {
 	framework.WithRegionModel
-	FileSystemID types.String `tfsdk:"file_system_id"`
-	Policy       types.String `tfsdk:"policy"`
+	FileSystemID types.String      `tfsdk:"file_system_id"`
+	Policy       fwtypes.IAMPolicy `tfsdk:"policy"`
 }
 
 func findFileSystemPolicyByID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetFileSystemPolicyOutput, error) {
