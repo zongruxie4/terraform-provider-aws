@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,7 +38,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetFileSystemOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource=true)
 func newFileSystemResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &fileSystemResource{}
@@ -75,8 +76,9 @@ func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaReques
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -105,7 +107,8 @@ func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaReques
 				Description: "S3 bucket prefix",
 			},
 			names.AttrRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -257,11 +260,11 @@ type fileSystemResourceModel struct {
 	Bucket        types.String      `tfsdk:"bucket"`
 	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
 	ID            types.String      `tfsdk:"id"`
-	KmsKeyId      types.String      `tfsdk:"kms_key_id"`
+	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
 	Prefix        types.String      `tfsdk:"prefix" autoflex:",omitempty"`
-	RoleArn       types.String      `tfsdk:"role_arn"`
+	RoleArn       fwtypes.ARN       `tfsdk:"role_arn"`
 	Status        types.String      `tfsdk:"status"`
 	StatusMessage types.String      `tfsdk:"status_message"`
 	Tags          tftags.Map        `tfsdk:"tags"`
