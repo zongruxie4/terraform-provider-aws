@@ -76,8 +76,9 @@ func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaReques
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -253,7 +254,7 @@ type fileSystemResourceModel struct {
 	Bucket        types.String      `tfsdk:"bucket"`
 	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
 	ID            types.String      `tfsdk:"id"`
-	KmsKeyId      types.String      `tfsdk:"kms_key_id"`
+	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
 	Prefix        types.String      `tfsdk:"prefix" autoflex:",omitempty"`
