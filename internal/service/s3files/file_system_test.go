@@ -79,6 +79,37 @@ func TestAccS3FilesFileSystem_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3FilesFileSystem_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fileSystem s3files.GetFileSystemOutput
+	resourceName := "aws_s3files_file_system.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_kmsKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystemExists(ctx, resourceName, &fileSystem),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFileSystemExists(ctx context.Context, n string, v *s3files.GetFileSystemOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -176,6 +207,79 @@ resource "aws_iam_role_policy" "test" {
 resource "aws_s3files_file_system" "test" {
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccFileSystemConfig_kmsKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "s3files-private-beta-2025-%[1]s"
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "elasticfilesystem.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3files_file_system" "test" {
+  bucket     = aws_s3_bucket.test.arn
+  role_arn   = aws_iam_role.test.arn
+  kms_key_id = aws_kms_key.test.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
 
