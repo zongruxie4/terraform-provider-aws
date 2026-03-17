@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -105,24 +106,19 @@ func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaReques
 				Description: "S3 bucket prefix",
 			},
 			names.AttrRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "IAM role ARN for S3 access",
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Computed:    true,
 				Description: "File system status",
 			},
 			names.AttrStatusMessage: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Computed:    true,
 				Description: "Status message",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -261,7 +257,7 @@ type fileSystemResourceModel struct {
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
 	Prefix        types.String      `tfsdk:"prefix" autoflex:",omitempty"`
-	RoleArn       types.String      `tfsdk:"role_arn"`
+	RoleArn       fwtypes.ARN       `tfsdk:"role_arn"`
 	Status        types.String      `tfsdk:"status"`
 	StatusMessage types.String      `tfsdk:"status_message"`
 	Tags          tftags.Map        `tfsdk:"tags"`
