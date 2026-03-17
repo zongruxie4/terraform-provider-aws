@@ -6,7 +6,6 @@ package s3files_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -24,7 +23,7 @@ func TestAccS3FilesAccessPoint_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_s3files_access_point.test[0]"
 	resourceName2 := "aws_s3files_access_point.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -36,7 +35,7 @@ func TestAccS3FilesAccessPoint_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/list_basic/"),
@@ -73,7 +72,7 @@ func TestAccS3FilesAccessPoint_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_s3files_access_point.test[0]"
 	resourceName2 := "aws_s3files_access_point.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -85,7 +84,7 @@ func TestAccS3FilesAccessPoint_List_regionOverride(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/list_region_override/"),

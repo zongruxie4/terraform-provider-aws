@@ -34,7 +34,7 @@ func TestAccS3FilesAccessPoint_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccS3FilesAccessPoint_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, resourceName, &v),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

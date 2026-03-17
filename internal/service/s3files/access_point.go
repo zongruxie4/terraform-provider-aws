@@ -40,7 +40,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetAccessPointOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource=true)
 func newAccessPointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessPointResource{}

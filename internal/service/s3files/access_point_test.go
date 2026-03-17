@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,18 +24,18 @@ func TestAccS3FilesAccessPoint_basic(t *testing.T) {
 	resourceName := "aws_s3files_access_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, resourceName, &accessPoint),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &accessPoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3files", regexache.MustCompile(`file-system/.+/access-point/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.LifeCycleStateAvailable)),
@@ -61,18 +60,18 @@ func TestAccS3FilesAccessPoint_rootDirectory(t *testing.T) {
 	resourceName := "aws_s3files_access_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_rootDirectory(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, resourceName, &accessPoint),
+					testAccCheckAccessPointExists(ctx, t, resourceName, &accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/restricted"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_permissions.#", "1"),
@@ -85,14 +84,14 @@ func TestAccS3FilesAccessPoint_rootDirectory(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessPointExists(ctx context.Context, n string, v *s3files.GetAccessPointOutput) resource.TestCheckFunc {
+func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string, v *s3files.GetAccessPointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		output, err := tfs3files.FindAccessPointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -105,9 +104,9 @@ func testAccCheckAccessPointExists(ctx context.Context, n string, v *s3files.Get
 	}
 }
 
-func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessPointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3FilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3files_access_point" {
