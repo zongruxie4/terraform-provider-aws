@@ -2017,6 +2017,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// uxc
+
+				"uxc": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// verifiedpermissions
 
 				"verifiedpermissions": schema.StringAttribute{
