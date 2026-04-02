@@ -97,6 +97,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newEBSVolumeCopyResource,
+			TypeName: "aws_ebs_volume_copy",
+			Name:     "EBS Volume Copy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newAllowedImagesSettingsResource,
 			TypeName: "aws_ec2_allowed_images_settings",
 			Name:     "Allowed Images Settings",

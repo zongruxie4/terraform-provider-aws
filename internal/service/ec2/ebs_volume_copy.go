@@ -5,41 +5,11 @@
 
 package ec2
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/ec2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -47,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,68 +26,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-//
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
-// @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
-//
-// TIP: ==== GENERATED ACCEPTANCE TESTS ====
-// Resource Identity and tagging make use of automatically generated acceptance tests.
-// For more information about automatically generated acceptance tests, see
-// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
-//
-// Some common annotations are included below:
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2;ec2.DescribeEBSVolumeCopyResponse")
-// @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
-// @Testing(hasNoPreExistingResource=true)
-
-// @FrameworkResource("aws_ec2_ebs_volume_copy", name="EBS Volume Copy")
+// @FrameworkResource("aws_ebs_volume_copy", name="EBS Volume Copy")
+// @Tags(identifierAttribute="id")
 func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsVolumeCopyResource{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -124,218 +44,127 @@ func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure
 	return r, nil
 }
 
-// const (
-// 	ResNameEBSVolumeCopy = "EBS Volume Copy"
-// )
-
 type ebsVolumeCopyResource struct {
 	framework.ResourceWithModel[ebsVolumeCopyResourceModel]
-	framework.WithNoUpdate
 	framework.WithTimeouts
-	framework.WithImportByIdentity
+	framework.WithImportByID
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			// dry run?
-			// client_token?
-
+			names.AttrARN:              framework.ARNAttributeComputedOnly(),
+			names.AttrID:               framework.IDAttribute(),
+			names.AttrAvailabilityZone: framework.ARNAttributeComputedOnly(),
+			names.AttrIOPS: schema.Int32Attribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrSize: schema.Int64Attribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrThroughput: schema.Int32Attribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrVolumeType: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"source_volume_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrType: schema.StringAttribute{
-				Optional: true,
-			},
-			names.AttrSize: schema.Int64Attribute{
-				Optional: true,
-			},
-			names.AttrIOPS: schema.Int32Attribute{
-				Optional: true,
-			},
-			"multi_attach_enabled": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrThroughput: schema.Int32Attribute{
-				Optional: true,
-			},
-			names.AttrTags: schema.MapAttribute{
-				Optional: true,
-			},
-			names.AttrTagsAll: schema.MapAttribute{
-				Optional: true,
-			},
 		},
-		// Blocks: map[string]schema.Block{
-		// 	"complex_argument": schema.ListNestedBlock{
-		// 		// TIP: ==== CUSTOM TYPES ====
-		// 		// Use a custom type to identify the model type of the tested object
-		// 		CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-		// 		// TIP: ==== LIST VALIDATORS ====
-		// 		// List and set validators take the place of MaxItems and MinItems in
-		// 		// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-		// 		// make a nested object required. Similar to Plugin-SDK, complex objects
-		// 		// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-		// 		//
-		// 		// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-		// 		// see:
-		// 		// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-		// 		Validators: []validator.List{
-		// 			listvalidator.SizeAtMost(1),
-		// 		},
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"nested_required": schema.StringAttribute{
-		// 					Required: true,
-		// 				},
-		// 				"nested_computed": schema.StringAttribute{
-		// 					Computed: true,
-		// 					PlanModifiers: []planmodifier.String{
-		// 						stringplanmodifier.UseStateForUnknown(),
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-		// 		Create: true,
-		// 		Update: true,
-		// 		Delete: true,
-		// 	}),
-		// },
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
 func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().EC2Client(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input ec2.CopyVolumesInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `EBSVolumeCopyId`
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("EBSVolumeCopy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume)
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CopyVolumes(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "Copy of "+plan.SourceVolumeID.String())
 		return
 	}
 	if out == nil || out.Volumes == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, "Copy of "+plan.SourceVolumeID.String())
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitEBSVolumeCopyCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitVolumeCreated(ctx, conn, *out.Volumes[0].VolumeId, createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, *out.Volumes[0].VolumeId)
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	volume := out.Volumes[0]
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, &volume, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.ID = types.StringPointerValue(volume.VolumeId)
+	plan.ARN = fwflex.StringValueToFramework(ctx, r.Meta().RegionalARN(ctx, names.EC2, "volume/"+aws.ToString(volume.VolumeId)))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *ebsVolumeCopyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().EC2Client(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
 	out, err := findEBSVolumeByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
+
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -346,13 +175,12 @@ func (r *ebsVolumeCopyResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	// TIP: -- 5. Set the arguments and attributes
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	setTagsOut(ctx, out.Tags)
 
-	// TIP: -- 6. Set the state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -361,117 +189,74 @@ func (r *ebsVolumeCopyResource) flatten(ctx context.Context, ebsVolumeCopy *awst
 	return diags
 }
 
-// func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-// 	// TIP: ==== RESOURCE UPDATE ====
-// 	// Not all resources have Update functions. There are a few reasons:
-// 	// a. The AWS API does not support changing a resource
-// 	// b. All arguments have RequiresReplace() plan modifiers
-// 	// c. The AWS API uses a create call to modify an existing resource
-// 	//
-// 	// In the cases of a. and b., the resource will not have an update method
-// 	// defined. In the case of c., Update and Create can be refactored to call
-// 	// the same underlying function.
-// 	//
-// 	// The rest of the time, there should be an Update function and it should
-// 	// do the following things. Make sure there is a good reason if you don't
-// 	// do one of these.
-// 	//
-// 	// 1. Get a client connection to the relevant service
-// 	// 2. Fetch the plan and state
-// 	// 3. Populate a modify input structure and check for changes
-// 	// 4. Call the AWS modify/update function
-// 	// 5. Use a waiter to wait for update to complete
-// 	// 6. Save the request plan to response state
-// 	// TIP: -- 1. Get a client connection to the relevant service
-// 	conn := r.Meta().EC2Client(ctx)
-
-// 	// TIP: -- 2. Fetch the plan
-// 	var plan, state ebsVolumeCopyResourceModel
-// 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-// 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-// 	if resp.Diagnostics.HasError() {
-// 		return
-// 	}
-
-// 	// TIP: -- 3. Get the difference between the plan and state, if any
-// 	diff, d := flex.Diff(ctx, plan, state)
-// 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-// 	if resp.Diagnostics.HasError() {
-// 		return
-// 	}
-
-// 	if diff.HasChanges() {
-// 		var input ec2.UpdateEBSVolumeCopyInput
-// 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
-// 		if resp.Diagnostics.HasError() {
-// 			return
-// 		}
-
-// 		// TIP: -- 4. Call the AWS modify/update function
-// 		out, err := conn.UpdateEBSVolumeCopy(ctx, &input)
-// 		if err != nil {
-// 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-// 			return
-// 		}
-// 		if out == nil || out.EBSVolumeCopy == nil {
-// 			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-// 			return
-// 		}
-
-// 		// TIP: Using the output from the update function, re-set any computed attributes
-// 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-// 		if resp.Diagnostics.HasError() {
-// 			return
-// 		}
-// 	}
-
-// 	// TIP: -- 5. Use a waiter to wait for update to complete
-// 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-// 	_, err := waitEBSVolumeCopyUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-// 	if err != nil {
-// 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-// 		return
-// 	}
-
-// 	// TIP: -- 6. Save the request plan to response state
-// 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-// }
-
-func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
+func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	// TIP: -- 2. Fetch the state
+	// TIP: -- 2. Fetch the plan
+	var plan, state ebsVolumeCopyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// TIP: -- 3. Get the difference between the plan and state, if any
+	_, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Iops.Equal(state.Iops) || !plan.Size.Equal(state.Size) || !plan.Throughput.Equal(state.Throughput) || !plan.VolumeType.Equal(state.VolumeType) {
+		var input ec2.ModifyVolumeInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("EBSVolumeCopy")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.VolumeId = aws.String(state.ID.ValueString())
+		out, err := conn.ModifyVolume(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "something wrong?"+plan.ID.String())
+			return
+		}
+		if out == nil || out.VolumeModification == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitVolumeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().EC2Client(ctx)
+
 	var state ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := ec2.DeleteVolumeInput{
 		VolumeId: state.ID.ValueStringPointer(),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteVolume(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if retry.NotFound(err) {
 			return
@@ -481,7 +266,6 @@ func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitEBSVolumeCopyDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
@@ -515,126 +299,65 @@ const (
 	statusUpdated       = "Updated"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitEBSVolumeCopyCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusEBSVolumeCopy(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
+// func waitEBSVolumeCopyUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{statusChangePending},
+// 		Target:                    []string{statusUpdated},
+// 		Refresh:                   statusEBSVolumeCopy(conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Volume); ok {
-		return out, smarterr.NewError(err)
-	}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*awstypes.Volume); ok {
+// 		return out, smarterr.NewError(err)
+// 	}
 
-	return nil, smarterr.NewError(err)
-}
+// 	return nil, smarterr.NewError(err)
+// }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitEBSVolumeCopyUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusEBSVolumeCopy(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Volume); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
 func waitEBSVolumeCopyDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusEBSVolumeCopy(conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Volume); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
+	return waitVolumeDeleted(ctx, conn, id, timeout)
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusEBSVolumeCopy(conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findEBSVolumeByID(ctx, conn, id)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
+// func statusEBSVolumeCopy(conn *ec2.Client, id string) retry.StateRefreshFunc {
+// 	return func(ctx context.Context) (any, string, error) {
+// 		out, err := findEBSVolumeByID(ctx, conn, id)
+// 		if retry.NotFound(err) {
+// 			return nil, "", nil
+// 		}
 
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
+// 		if err != nil {
+// 			return nil, "", smarterr.NewError(err)
+// 		}
 
-		return out, aws.ToString((*string)(&out.State)), nil
-	}
-}
+// 		return out, aws.ToString((*string)(&out.State)), nil
+// 	}
+// }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findEBSVolumeCopyByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
-	input := ec2.DescribeVolumesInput{
-		VolumeIds: []string{id},
-	}
+// func findEBSVolumeCopyByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
+// 	input := ec2.DescribeVolumesInput{
+// 		VolumeIds: []string{id},
+// 	}
 
-	out, err := conn.DescribeVolumes(ctx, &input)
-	if err != nil {
-		if retry.NotFound(err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
+// 	out, err := conn.DescribeVolumes(ctx, &input)
+// 	if err != nil {
+// 		if retry.NotFound(err) {
+// 			return nil, smarterr.NewError(&retry.NotFoundError{
+// 				LastError: err,
+// 			})
+// 		}
 
-		return nil, smarterr.NewError(err)
-	}
+// 		return nil, smarterr.NewError(err)
+// 	}
 
-	if out == nil || out.Volumes == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
+// 	if out == nil || out.Volumes == nil {
+// 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+// 	}
 
-	return &out.Volumes[0], nil
-}
+// 	return &out.Volumes[0], nil
+// }
 
 // TIP: ==== DATA STRUCTURES ====
 // With Terraform Plugin-Framework configurations are deserialized into
@@ -650,19 +373,23 @@ func findEBSVolumeCopyByID(ctx context.Context, conn *ec2.Client, id string) (*a
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type ebsVolumeCopyResourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
+	ARN              types.String   `tfsdk:"arn"`
+	AvailabilityZone types.String   `tfsdk:"availability_zone"`
+	ID               types.String   `tfsdk:"id"`
+	Iops             types.Int32    `tfsdk:"iops"`
+	Size             types.Int64    `tfsdk:"size"`
+	SourceVolumeID   types.String   `tfsdk:"source_volume_id"`
+	Tags             tftags.Map     `tfsdk:"tags"`
+	TagsAll          tftags.Map     `tfsdk:"tags_all"`
+	Throughput       types.Int32    `tfsdk:"throughput"`
+	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+	VolumeType       types.String   `tfsdk:"volume_type"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
+// type complexArgumentModel struct {
+// 	NestedRequired types.String `tfsdk:"nested_required"`
+// 	NestedOptional types.String `tfsdk:"nested_optional"`
+// }
 
 // TIP: ==== IMPORT ID HANDLER ====
 // When a resource type has a Resource Identity with multiple attributes, it needs a handler to
