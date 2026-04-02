@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -946,4 +947,218 @@ resource "aws_grafana_workspace" "test" {
   kms_key_id               = aws_kms_key.test.arn
 }
 `, rName))
+}
+
+func newStringSet(values ...string) *schema.Set {
+	raw := make([]any, len(values))
+	for i, v := range values {
+		raw[i] = v
+	}
+	return schema.NewSet(schema.HashString, raw)
+}
+
+func buildNetworkAccessTFList(prefixIDs, vpceIDs *schema.Set) []any {
+	return []any{
+		map[string]any{
+			"prefix_list_ids": prefixIDs,
+			"vpce_ids":        vpceIDs,
+		},
+	}
+}
+
+func TestExpandNetworkAccessControl_bothPopulated(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.ExpandNetworkAccessControl(buildNetworkAccessTFList(
+		newStringSet("pl-111"),
+		newStringSet("vpce-aaa"),
+	))
+
+	if out == nil {
+		t.Fatal("expected non-nil NetworkAccessConfiguration")
+	}
+	if len(out.PrefixListIds) != 1 || out.PrefixListIds[0] != "pl-111" {
+		t.Errorf("unexpected PrefixListIds: %v", out.PrefixListIds)
+	}
+	if len(out.VpceIds) != 1 || out.VpceIds[0] != "vpce-aaa" {
+		t.Errorf("unexpected VpceIds: %v", out.VpceIds)
+	}
+}
+
+func TestExpandNetworkAccessControl_onlyVPCEIDs(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.ExpandNetworkAccessControl(buildNetworkAccessTFList(
+		newStringSet(),
+		newStringSet("vpce-aaa", "vpce-bbb"),
+	))
+
+	if out == nil {
+		t.Fatal("expected non-nil NetworkAccessConfiguration")
+	}
+	if out.PrefixListIds == nil {
+		t.Error("PrefixListIds must not be nil")
+	}
+	if len(out.PrefixListIds) != 0 {
+		t.Errorf("expected empty PrefixListIds, got %v", out.PrefixListIds)
+	}
+	if len(out.VpceIds) != 2 {
+		t.Errorf("expected 2 VpceIds, got %v", out.VpceIds)
+	}
+}
+
+func TestExpandNetworkAccessControl_onlyPrefixListIDs(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.ExpandNetworkAccessControl(buildNetworkAccessTFList(
+		newStringSet("pl-222"),
+		newStringSet(),
+	))
+
+	if out == nil {
+		t.Fatal("expected non-nil NetworkAccessConfiguration")
+	}
+	if out.VpceIds == nil {
+		t.Error("VpceIds must not be nil")
+	}
+	if len(out.VpceIds) != 0 {
+		t.Errorf("expected empty VpceIds, got %v", out.VpceIds)
+	}
+	if len(out.PrefixListIds) != 1 || out.PrefixListIds[0] != "pl-222" {
+		t.Errorf("unexpected PrefixListIds: %v", out.PrefixListIds)
+	}
+}
+
+func TestExpandNetworkAccessControl_bothEmpty(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.ExpandNetworkAccessControl(buildNetworkAccessTFList(
+		newStringSet(),
+		newStringSet(),
+	))
+
+	if out != nil {
+		t.Errorf("expected nil for empty sets, got %+v", out)
+	}
+}
+
+func TestExpandNetworkAccessControl_emptyList(t *testing.T) {
+	t.Parallel()
+
+	if out := tfgrafana.ExpandNetworkAccessControl([]any{}); out != nil {
+		t.Errorf("expected nil for empty input, got %+v", out)
+	}
+}
+
+func TestExpandNetworkAccessControl_nilElementInList(t *testing.T) {
+	t.Parallel()
+
+	if out := tfgrafana.ExpandNetworkAccessControl([]any{nil}); out != nil {
+		t.Errorf("expected nil for nil element, got %+v", out)
+	}
+}
+
+func TestExpandNetworkAccessControl_multipleVPCEIDs(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.ExpandNetworkAccessControl(buildNetworkAccessTFList(
+		newStringSet("pl-333"),
+		newStringSet("vpce-x", "vpce-y", "vpce-z"),
+	))
+
+	if out == nil {
+		t.Fatal("expected non-nil NetworkAccessConfiguration")
+	}
+	if len(out.VpceIds) != 3 {
+		t.Errorf("expected 3 VpceIds, got %d: %v", len(out.VpceIds), out.VpceIds)
+	}
+}
+
+func TestFlattenNetworkAccessControl_nil(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.FlattenNetworkAccessControl(nil)
+	if len(out) != 0 {
+		t.Errorf("expected empty slice for nil input, got %v", out)
+	}
+}
+
+func TestFlattenNetworkAccessControl_bothEmpty(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.FlattenNetworkAccessControl(&awstypes.NetworkAccessConfiguration{
+		PrefixListIds: []string{},
+		VpceIds:       []string{},
+	})
+	if len(out) != 0 {
+		t.Errorf("expected empty slice when both fields are empty, got %v", out)
+	}
+}
+
+func TestFlattenNetworkAccessControl_populated(t *testing.T) {
+	t.Parallel()
+
+	out := tfgrafana.FlattenNetworkAccessControl(&awstypes.NetworkAccessConfiguration{
+		PrefixListIds: []string{"pl-abc"},
+		VpceIds:       []string{"vpce-def"},
+	})
+
+	if len(out) != 1 {
+		t.Fatalf("expected 1 element, got %d", len(out))
+	}
+	m, ok := out[0].(map[string]any)
+	if !ok {
+		t.Fatalf("element is not map[string]any: %T", out[0])
+	}
+	if pl, ok := m["prefix_list_ids"].([]string); !ok || len(pl) != 1 || pl[0] != "pl-abc" {
+		t.Errorf("unexpected prefix_list_ids: %v", m["prefix_list_ids"])
+	}
+	if vp, ok := m["vpce_ids"].([]string); !ok || len(vp) != 1 || vp[0] != "vpce-def" {
+		t.Errorf("unexpected vpce_ids: %v", m["vpce_ids"])
+	}
+}
+
+func TestExpandFlattenRoundtrip_populated(t *testing.T) {
+	t.Parallel()
+
+	original := &awstypes.NetworkAccessConfiguration{
+		PrefixListIds: []string{"pl-round"},
+		VpceIds:       []string{"vpce-round"},
+	}
+
+	flat := tfgrafana.FlattenNetworkAccessControl(original)
+	if len(flat) != 1 {
+		t.Fatalf("FlattenNetworkAccessControl returned %d elements", len(flat))
+	}
+
+	m := flat[0].(map[string]any)
+	pfxSlice := m["prefix_list_ids"].([]string)
+	vpceSlice := m["vpce_ids"].([]string)
+
+	pfxRaw := make([]any, len(pfxSlice))
+	for i, v := range pfxSlice {
+		pfxRaw[i] = v
+	}
+	vpceRaw := make([]any, len(vpceSlice))
+	for i, v := range vpceSlice {
+		vpceRaw[i] = v
+	}
+
+	tfList := []any{
+		map[string]any{
+			"prefix_list_ids": schema.NewSet(schema.HashString, pfxRaw),
+			"vpce_ids":        schema.NewSet(schema.HashString, vpceRaw),
+		},
+	}
+
+	out := tfgrafana.ExpandNetworkAccessControl(tfList)
+	if out == nil {
+		t.Fatal("round-trip produced nil")
+	}
+	if len(out.PrefixListIds) != 1 || out.PrefixListIds[0] != "pl-round" {
+		t.Errorf("round-trip PrefixListIds mismatch: %v", out.PrefixListIds)
+	}
+	if len(out.VpceIds) != 1 || out.VpceIds[0] != "vpce-round" {
+		t.Errorf("round-trip VpceIds mismatch: %v", out.VpceIds)
+	}
 }
