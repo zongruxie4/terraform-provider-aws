@@ -356,6 +356,7 @@ variable "service_labels" {
     "transfer",
     "transitgateway",
     "translate",
+    "uxc",
     "verifiedaccess",
     "verifiedpermissions",
     "voiceid",
