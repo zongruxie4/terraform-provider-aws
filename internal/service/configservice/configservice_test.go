@@ -80,6 +80,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Template":       testAccOrganizationConformancePack_updateS3Template,
 			"updateTemplateBody":     testAccOrganizationConformancePack_updateTemplateBody,
 			"delegatedAdministrator": testAccOrganizationConformancePack_delegatedAdministrator,
+			"Identity":               testAccConfigServiceOrganizationConformancePack_identitySerial,
 		},
 		"OrganizationCustomPolicyRule": {
 			acctest.CtBasic:      testAccOrganizationCustomPolicyRule_basic,
