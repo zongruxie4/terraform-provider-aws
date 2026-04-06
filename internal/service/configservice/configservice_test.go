@@ -101,6 +101,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"TagKeyScope":               testAccOrganizationCustomRule_TagKeyScope,
 			"TagValueScope":             testAccOrganizationCustomRule_TagValueScope,
 			"TriggerTypes":              testAccOrganizationCustomRule_TriggerTypes,
+			"Identity":                  testAccConfigServiceOrganizationCustomRule_identitySerial,
 		},
 		"OrganizationManagedRule": {
 			acctest.CtBasic:             testAccOrganizationManagedRule_basic,
