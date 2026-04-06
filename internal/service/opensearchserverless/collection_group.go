@@ -147,7 +147,7 @@ func (r *collectionGroupResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.CreateCollectionGroupDetail, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.CreateCollectionGroupDetail, &plan, fwflex.WithIgnoredFieldNamesAppend("CreatedDate")))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -178,10 +178,12 @@ func (r *collectionGroupResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNamesAppend("CreatedDate")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	state.CreatedDate = timetypes.NewRFC3339ValueMust(flex.Int64ToRFC3339StringValue(output.CreatedDate))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
 }

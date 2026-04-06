@@ -131,12 +131,12 @@ func (d *collectionGroupDataSource) Read(ctx context.Context, req datasource.Rea
 
 type collectionGroupDataSourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                  `tfsdk:"arn"`
-	CapacityLimits  fwtypes.ObjectValueOf[capacityLimitsModel]    `tfsdk:"capacity_limits"`
-	CreatedDate     types.Int64                                   `tfsdk:"created_date"`
-	Description     types.String                                  `tfsdk:"description"`
-	ID              types.String                                  `tfsdk:"id"`
-	Name            types.String                                  `tfsdk:"name"`
-	StandbyReplicas types.String                                  `tfsdk:"standby_replicas"`
-	Tags            tftags.Map                                    `tfsdk:"tags"`
+	ARN             types.String                               `tfsdk:"arn"`
+	CapacityLimits  fwtypes.ObjectValueOf[capacityLimitsModel] `tfsdk:"capacity_limits"`
+	CreatedDate     types.Int64                                `tfsdk:"created_date"`
+	Description     types.String                               `tfsdk:"description"`
+	ID              types.String                               `tfsdk:"id"`
+	Name            types.String                               `tfsdk:"name"`
+	StandbyReplicas types.String                               `tfsdk:"standby_replicas"`
+	Tags            tftags.Map                                 `tfsdk:"tags"`
 }

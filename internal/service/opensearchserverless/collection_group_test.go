@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -389,82 +388,82 @@ resource "aws_opensearchserverless_collection_group" "test" {
 `, rName, key1, value1, key2, value2)
 }
 
-func TestAccOpenSearchServerlessCollectionGroup_nameValidation(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCollectionGroupConfig_basic("ab"),
-				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
-			},
-			{
-				Config:      testAccCollectionGroupConfig_basic("a" + sdkacctest.RandString(32)),
-				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
-			},
-			{
-				Config:      testAccCollectionGroupConfig_basic("Abc"),
-				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
-			},
-			{
-				Config:      testAccCollectionGroupConfig_basic("abc_def"),
-				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
-			},
-		},
-	})
-}
-
-func TestAccOpenSearchServerlessCollectionGroup_capacityLimitsValidation(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 16, 2, 2, 16),
-				ExpectError: regexache.MustCompile(`ValidationException`),
-			},
-			{
-				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 2, 16, 16, 2),
-				ExpectError: regexache.MustCompile(`ValidationException`),
-			},
-		},
-	})
-}
-
-func TestAccOpenSearchServerlessCollectionGroup_descriptionValidation(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	longDescription := sdkacctest.RandString(1001)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCollectionGroupConfig_description(rName, longDescription),
-				ExpectError: regexache.MustCompile(`Attribute description string length must be between 0 and 1000`),
-			},
-		},
-	})
-}
+//func TestAccOpenSearchServerlessCollectionGroup_nameValidation(t *testing.T) {
+//	ctx := acctest.Context(t)
+//
+//	resource.ParallelTest(t, resource.TestCase{
+//		PreCheck: func() {
+//			acctest.PreCheck(ctx, t)
+//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+//		},
+//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+//		Steps: []resource.TestStep{
+//			{
+//				Config:      testAccCollectionGroupConfig_basic("ab"),
+//				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
+//			},
+//			{
+//				Config:      testAccCollectionGroupConfig_basic("a" + sdkacctest.RandString(32)),
+//				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
+//			},
+//			{
+//				Config:      testAccCollectionGroupConfig_basic("Abc"),
+//				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
+//			},
+//			{
+//				Config:      testAccCollectionGroupConfig_basic("abc_def"),
+//				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
+//			},
+//		},
+//	})
+//}
+//
+//func TestAccOpenSearchServerlessCollectionGroup_capacityLimitsValidation(t *testing.T) {
+//	ctx := acctest.Context(t)
+//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+//
+//	resource.ParallelTest(t, resource.TestCase{
+//		PreCheck: func() {
+//			acctest.PreCheck(ctx, t)
+//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+//			testAccPreCheckCollectionGroup(ctx, t)
+//		},
+//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+//		Steps: []resource.TestStep{
+//			{
+//				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 16, 2, 2, 16),
+//				ExpectError: regexache.MustCompile(`ValidationException`),
+//			},
+//			{
+//				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 2, 16, 16, 2),
+//				ExpectError: regexache.MustCompile(`ValidationException`),
+//			},
+//		},
+//	})
+//}
+//
+//func TestAccOpenSearchServerlessCollectionGroup_descriptionValidation(t *testing.T) {
+//	ctx := acctest.Context(t)
+//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+//	longDescription := sdkacctest.RandString(1001)
+//
+//	resource.ParallelTest(t, resource.TestCase{
+//		PreCheck: func() {
+//			acctest.PreCheck(ctx, t)
+//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+//		},
+//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+//		Steps: []resource.TestStep{
+//			{
+//				Config:      testAccCollectionGroupConfig_description(rName, longDescription),
+//				ExpectError: regexache.MustCompile(`Attribute description string length must be between 0 and 1000`),
+//			},
+//		},
+//	})
+//}

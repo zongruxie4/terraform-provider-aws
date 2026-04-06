@@ -51,20 +51,20 @@ func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, e
 
 type collectionResourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String                                         `tfsdk:"arn"`
-	CollectionEndpoint  types.String                                         `tfsdk:"collection_endpoint"`
-	CollectionGroupName types.String                                         `tfsdk:"collection_group_name"`
-	DashboardEndpoint   types.String                                         `tfsdk:"dashboard_endpoint"`
-	Description         types.String                                         `tfsdk:"description"`
-	EncryptionConfig    fwtypes.ObjectValueOf[encryptionConfigModel]         `tfsdk:"encryption_config"`
-	ID                  types.String                                         `tfsdk:"id"`
-	KmsKeyARN           types.String                                         `tfsdk:"kms_key_arn"`
-	Name                types.String                                         `tfsdk:"name"`
-	StandbyReplicas     types.String                                         `tfsdk:"standby_replicas"`
-	Tags                tftags.Map                                           `tfsdk:"tags"`
-	TagsAll             tftags.Map                                           `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
-	Type                types.String                                         `tfsdk:"type"`
+	ARN                 types.String                                 `tfsdk:"arn"`
+	CollectionEndpoint  types.String                                 `tfsdk:"collection_endpoint"`
+	CollectionGroupName types.String                                 `tfsdk:"collection_group_name"`
+	DashboardEndpoint   types.String                                 `tfsdk:"dashboard_endpoint"`
+	Description         types.String                                 `tfsdk:"description"`
+	EncryptionConfig    fwtypes.ObjectValueOf[encryptionConfigModel] `tfsdk:"encryption_config"`
+	ID                  types.String                                 `tfsdk:"id"`
+	KmsKeyARN           types.String                                 `tfsdk:"kms_key_arn"`
+	Name                types.String                                 `tfsdk:"name"`
+	StandbyReplicas     types.String                                 `tfsdk:"standby_replicas"`
+	Tags                tftags.Map                                   `tfsdk:"tags"`
+	TagsAll             tftags.Map                                   `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                               `tfsdk:"timeouts"`
+	Type                types.String                                 `tfsdk:"type"`
 }
 
 type encryptionConfigModel struct {

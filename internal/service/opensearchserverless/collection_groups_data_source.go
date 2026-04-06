@@ -77,11 +77,11 @@ type collectionGroupsDataSourceModel struct {
 }
 
 type collectionGroupSummaryModel struct {
-	ARN                  types.String                                  `tfsdk:"arn"`
-	CapacityLimits       fwtypes.ObjectValueOf[capacityLimitsModel]    `tfsdk:"capacity_limits"`
-	CreatedDate          types.Int64                                   `tfsdk:"created_date"`
-	ID                   types.String                                  `tfsdk:"id"`
-	Name                 types.String                                  `tfsdk:"name"`
-	NumberOfCollections  types.Int64                                   `tfsdk:"number_of_collections"`
-	StandbyReplicas      types.String                                  `tfsdk:"standby_replicas"`
+	ARN                 types.String                               `tfsdk:"arn"`
+	CapacityLimits      fwtypes.ObjectValueOf[capacityLimitsModel] `tfsdk:"capacity_limits"`
+	CreatedDate         types.Int64                                `tfsdk:"created_date"`
+	ID                  types.String                               `tfsdk:"id"`
+	Name                types.String                               `tfsdk:"name"`
+	NumberOfCollections types.Int64                                `tfsdk:"number_of_collections"`
+	StandbyReplicas     types.String                               `tfsdk:"standby_replicas"`
 }
