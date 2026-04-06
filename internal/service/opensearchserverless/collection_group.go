@@ -35,6 +35,8 @@ import (
 
 // @FrameworkResource("aws_opensearchserverless_collection_group", name="Collection Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionGroupDetail")
 func newCollectionGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &collectionGroupResource{}, nil

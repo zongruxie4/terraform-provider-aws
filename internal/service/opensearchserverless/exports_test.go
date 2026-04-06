@@ -15,6 +15,7 @@ var (
 
 	FindAccessPolicyByNameAndType    = findAccessPolicyByNameAndType
 	FindCollectionByID               = findCollectionByID
+	FindCollectionGroupByID          = findCollectionGroupByID
 	FindLifecyclePolicyByNameAndType = findLifecyclePolicyByNameAndType
 	FindSecurityConfigByID           = findSecurityConfigByID
 	FindSecurityPolicyByNameAndType  = findSecurityPolicyByNameAndType

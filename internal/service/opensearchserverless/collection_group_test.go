@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,12 +37,12 @@ func TestAccOpenSearchServerlessCollectionGroup_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
@@ -72,12 +73,12 @@ func TestAccOpenSearchServerlessCollectionGroup_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceCollectionGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,12 +101,12 @@ func TestAccOpenSearchServerlessCollectionGroup_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -117,7 +118,7 @@ func TestAccOpenSearchServerlessCollectionGroup_update(t *testing.T) {
 			{
 				Config: testAccCollectionGroupConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -139,12 +140,12 @@ func TestAccOpenSearchServerlessCollectionGroup_capacityLimits(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_capacityLimits(rName, 2, 16, 2, 16),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_indexing_capacity_in_ocu", "2"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_indexing_capacity_in_ocu", "16"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_search_capacity_in_ocu", "2"),
@@ -159,7 +160,7 @@ func TestAccOpenSearchServerlessCollectionGroup_capacityLimits(t *testing.T) {
 			{
 				Config: testAccCollectionGroupConfig_capacityLimits(rName, 4, 32, 4, 32),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_indexing_capacity_in_ocu", "4"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_indexing_capacity_in_ocu", "32"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_search_capacity_in_ocu", "4"),
@@ -184,12 +185,12 @@ func TestAccOpenSearchServerlessCollectionGroup_standbyReplicas(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_standbyReplicas(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "DISABLED"),
 				),
 			},
@@ -216,12 +217,12 @@ func TestAccOpenSearchServerlessCollectionGroup_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -234,7 +235,7 @@ func TestAccOpenSearchServerlessCollectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccCollectionGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -243,7 +244,7 @@ func TestAccOpenSearchServerlessCollectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccCollectionGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, resourceName, &collectionGroup),
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -252,38 +253,33 @@ func TestAccOpenSearchServerlessCollectionGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCollectionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCollectionGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_collection_group" {
 				continue
 			}
 
-			input := &opensearchserverless.BatchGetCollectionGroupInput{
-				Ids: []string{rs.Primary.ID},
+			_, err := tfopensearchserverless.FindCollectionGroupByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
-			output, err := conn.BatchGetCollectionGroup(ctx, input)
 
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			if output != nil && len(output.CollectionGroupDetails) > 0 {
-				return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameCollectionGroup, rs.Primary.ID, errors.New("not destroyed"))
-			}
+			return fmt.Errorf("OpenSearch Serverless Collection Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCollectionGroupExists(ctx context.Context, name string, collectionGroup *types.CollectionGroupDetail) resource.TestCheckFunc {
+func testAccCheckCollectionGroupExists(ctx context.Context, t *testing.T, name string, collectionGroup *types.CollectionGroupDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -294,22 +290,14 @@ func testAccCheckCollectionGroupExists(ctx context.Context, name string, collect
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameCollectionGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-
-		input := &opensearchserverless.BatchGetCollectionGroupInput{
-			Ids: []string{rs.Primary.ID},
-		}
-		output, err := conn.BatchGetCollectionGroup(ctx, input)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
+		output, err := tfopensearchserverless.FindCollectionGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameCollectionGroup, rs.Primary.ID, err)
 		}
 
-		if output == nil || len(output.CollectionGroupDetails) == 0 {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameCollectionGroup, rs.Primary.ID, errors.New("not found"))
-		}
-
-		*collectionGroup = output.CollectionGroupDetails[0]
+		*collectionGroup = *output
 
 		return nil
 	}
@@ -411,7 +399,7 @@ func TestAccOpenSearchServerlessCollectionGroup_nameValidation(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCollectionGroupConfig_basic("ab"),
@@ -445,7 +433,7 @@ func TestAccOpenSearchServerlessCollectionGroup_capacityLimitsValidation(t *test
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 16, 2, 2, 16),
@@ -471,7 +459,7 @@ func TestAccOpenSearchServerlessCollectionGroup_descriptionValidation(t *testing
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCollectionGroupConfig_description(rName, longDescription),

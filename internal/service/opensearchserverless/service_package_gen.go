@@ -108,6 +108,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newLifecyclePolicyResource,
