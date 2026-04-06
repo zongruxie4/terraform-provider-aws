@@ -148,15 +148,14 @@ func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserve
 }
 
 func findCollectionGroupByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionGroupDetail, error) {
-	in := &opensearchserverless.BatchGetCollectionGroupInput{
+	input := opensearchserverless.BatchGetCollectionGroupInput{
 		Ids: []string{id},
 	}
-	out, err := conn.BatchGetCollectionGroup(ctx, in)
+	out, err := conn.BatchGetCollectionGroup(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -168,15 +167,14 @@ func findCollectionGroupByID(ctx context.Context, conn *opensearchserverless.Cli
 }
 
 func findCollectionGroupByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionGroupDetail, error) {
-	in := &opensearchserverless.BatchGetCollectionGroupInput{
+	input := opensearchserverless.BatchGetCollectionGroupInput{
 		Names: []string{name},
 	}
-	out, err := conn.BatchGetCollectionGroup(ctx, in)
+	out, err := conn.BatchGetCollectionGroup(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
