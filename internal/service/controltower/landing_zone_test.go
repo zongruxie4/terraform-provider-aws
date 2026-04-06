@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -39,7 +40,7 @@ func testAccLandingZone_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
 					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, landingZoneVersion),
 				),
 			},
 			{
@@ -82,7 +83,7 @@ func testAccLandingZone_remediationTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -100,6 +101,31 @@ func testAccLandingZone_remediationTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remediation_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "remediation_types.*", "INHERITANCE_DRIFT"),
 				),
+			},
+			{
+				Config: testAccLandingZoneConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "remediation_types.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccLandingZoneConfig_remediationTypes,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "remediation_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "remediation_types.*", "INHERITANCE_DRIFT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -221,7 +247,7 @@ func testAccCheckLandingZoneDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-const landingZoneVersion = "3.3"
+const landingZoneVersion = "4.0"
 
 var testAccLandingZoneConfig_basic = fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
@@ -242,7 +268,7 @@ resource "aws_controltower_landing_zone" "test" {
 func testAccLandingZoneConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest_json = jfile("${path.module}/test-fixtures/LandingZoneManifest.json")
+	manifest_json = file("${path.module}/test-fixtures/LandingZoneManifest.json")
 
   version = %[2]q
 

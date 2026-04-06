@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -77,10 +78,9 @@ func resourceLandingZone() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"INHERITANCE_DRIFT"}, false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.RemediationType](),
 				},
-				Description: "Specifies the types of remediations to perform on guardrail violations. Currently only supports the INHERITANCE_DRIFT value.",
 			},
 			"manifest_json": {
 				Type:                  schema.TypeString,
@@ -118,13 +118,8 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 		Version:  aws.String(d.Get(names.AttrVersion).(string)),
 	}
 
-	// Add remediation types if specified
 	if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
-		remediationTypes := make([]types.RemediationType, 0)
-		for _, t := range v.(*schema.Set).List() {
-			remediationTypes = append(remediationTypes, types.RemediationType(t.(string)))
-		}
-		input.RemediationTypes = remediationTypes
+		input.RemediationTypes = flex.ExpandStringyValueSet[types.RemediationType](v.(*schema.Set))
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -173,17 +168,8 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 
-	// Set remediation types if present
-	if len(landingZone.RemediationTypes) > 0 {
-		remediationTypeSet := schema.NewSet(schema.HashString, []interface{}{})
-		for _, rt := range landingZone.RemediationTypes {
-			remediationTypeSet.Add(string(rt))
-		}
-		if err := d.Set("remediation_types", remediationTypeSet); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting remediation_types: %s", err)
-		}
-	} else {
-		d.Set("remediation_types", nil)
+	if err := d.Set("remediation_types", landingZone.RemediationTypes); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remediation_types: %s", err)
 	}
 
 	if landingZone.Manifest != nil {
@@ -218,13 +204,8 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 			Version:               aws.String(d.Get(names.AttrVersion).(string)),
 		}
 
-		// Add remediation types if specified
 		if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
-			remediationTypes := make([]types.RemediationType, 0)
-			for _, t := range v.(*schema.Set).List() {
-				remediationTypes = append(remediationTypes, types.RemediationType(t.(string)))
-			}
-			input.RemediationTypes = remediationTypes
+			input.RemediationTypes = flex.ExpandStringyValueSet[types.RemediationType](v.(*schema.Set))
 		}
 
 		output, err := conn.UpdateLandingZone(ctx, input)
