@@ -10,12 +10,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,7 +103,7 @@ func resourceMetricFilter() *schema.Resource {
 			"pattern": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validatePatternLength(),
+				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
 				StateFunc: func(v any) string {
 					s, ok := v.(string)
 					if !ok {
@@ -114,25 +113,6 @@ func resourceMetricFilter() *schema.Resource {
 				},
 			},
 		},
-	}
-}
-
-func validatePatternLength() schema.SchemaValidateDiagFunc {
-	return func(v any, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		value := v.(string)
-		const maxLength = 1024
-
-		utf8Length := utf8.RuneCountInString(value)
-		if utf8Length > maxLength {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Invalid character length",
-				Detail:   fmt.Sprintf("expected length of pattern to be between 0 and %d UTF-8 characters, got %d", maxLength, utf8Length),
-			})
-		}
-
-		return diags
 	}
 }
 
