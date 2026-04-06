@@ -101,6 +101,11 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:      testAccStandardsSubscription_basic,
 			acctest.CtDisappears: testAccStandardsSubscription_disappears,
 		},
+		"V2Account": {
+			acctest.CtBasic:      testAccV2Account_basic,
+			acctest.CtDisappears: testAccV2Account_disappears,
+			"tags":               testAccV2Account_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

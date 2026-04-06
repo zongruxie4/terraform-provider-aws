@@ -20,8 +20,10 @@ var (
 	ResourceStandardsControl               = resourceStandardsControl
 	ResourceStandardsControlAssociation    = newStandardsControlAssociationResource
 	ResourceStandardsSubscription          = resourceStandardsSubscription
+	ResourceV2Account                      = newV2AccountResource
 
 	AccountHubARN                                 = accountHubARN
+	FindV2Account                                 = findV2Account
 	FindActionTargetByARN                         = findActionTargetByARN
 	FindAdminAccountByID                          = findAdminAccountByID
 	FindAutomationRuleByARN                       = findAutomationRuleByARN
