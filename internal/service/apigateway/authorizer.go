@@ -338,7 +338,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v any) error {
 	var plan authorizerResourceModel
-	if err := tfcty.GetFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
+	if err := tfcty.ToFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
 		return fmt.Errorf("RawPlan to framework model: %w", err)
 	}
 	if plan.Type.IsUnknown() {
@@ -351,7 +351,7 @@ func resourceAuthorizerCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if rawState := diff.GetRawState(); !rawState.IsNull() { // RawState is null on Create.
 		var state authorizerResourceModel
-		if err := tfcty.GetFramework(ctx, rawState, &state); err != nil {
+		if err := tfcty.ToFramework(ctx, rawState, &state); err != nil {
 			return fmt.Errorf("RawState to framework model: %w", err)
 		}
 
@@ -363,7 +363,7 @@ func resourceAuthorizerCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 	}
 
 	var config authorizerResourceModel
-	if err := tfcty.GetFramework(ctx, diff.GetRawConfig(), &config); err != nil {
+	if err := tfcty.ToFramework(ctx, diff.GetRawConfig(), &config); err != nil {
 		return fmt.Errorf("RawConfig to framework model: %w", err)
 	}
 

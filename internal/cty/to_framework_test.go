@@ -16,7 +16,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestGetFrameworkPrimitives(t *testing.T) {
+func TestToFrameworkPrimitives(t *testing.T) {
 	t.Parallel()
 
 	type A struct {
@@ -157,7 +157,7 @@ func TestGetFrameworkPrimitives(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			err := tfcty.ToFramework(ctx, testCase.source, testCase.target)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
@@ -175,7 +175,7 @@ func TestGetFrameworkPrimitives(t *testing.T) {
 	}
 }
 
-func TestGetFrameworkAggregatePrimitives(t *testing.T) {
+func TestToFrameworkAggregatePrimitives(t *testing.T) {
 	t.Parallel()
 
 	type A struct {
@@ -264,7 +264,7 @@ func TestGetFrameworkAggregatePrimitives(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			err := tfcty.ToFramework(ctx, testCase.source, testCase.target)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
@@ -282,7 +282,7 @@ func TestGetFrameworkAggregatePrimitives(t *testing.T) {
 	}
 }
 
-func TestGetFrameworkSimpleNestedObject(t *testing.T) {
+func TestToFrameworkSimpleNestedObject(t *testing.T) {
 	t.Parallel()
 
 	type B struct {
@@ -341,7 +341,7 @@ func TestGetFrameworkSimpleNestedObject(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			err := tfcty.ToFramework(ctx, testCase.source, testCase.target)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
@@ -359,7 +359,7 @@ func TestGetFrameworkSimpleNestedObject(t *testing.T) {
 	}
 }
 
-func TestGetFrameworkComplexNestedObject(t *testing.T) {
+func TestToFrameworkComplexNestedObject(t *testing.T) {
 	t.Parallel()
 
 	type C struct {
@@ -422,7 +422,7 @@ func TestGetFrameworkComplexNestedObject(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			err := tfcty.ToFramework(ctx, testCase.source, testCase.target)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
