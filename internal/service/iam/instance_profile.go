@@ -35,7 +35,7 @@ const (
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+// @Tags(identifierAttribute="name", resourceType="InstanceProfile")
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
 // @Testing(preIdentityVersion="v6.39.0")
