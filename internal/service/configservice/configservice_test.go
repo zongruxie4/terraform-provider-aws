@@ -117,6 +117,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"RuleIdentifier":            testAccOrganizationManagedRule_RuleIdentifier,
 			"TagKeyScope":               testAccOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccOrganizationManagedRule_TagValueScope,
+			"Identity":                  testAccConfigServiceOrganizationManagedRule_identitySerial,
 		},
 		"RemediationConfiguration": {
 			acctest.CtBasic:      testAccRemediationConfiguration_basic,
