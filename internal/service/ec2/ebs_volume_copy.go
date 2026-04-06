@@ -8,27 +8,31 @@ package ec2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,9 +42,9 @@ import (
 func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsVolumeCopyResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -69,11 +73,11 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSize: schema.Int64Attribute{
+			names.AttrSize: schema.Int32Attribute{
 				Computed: true,
 				Optional: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -225,16 +229,36 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	if !plan.Iops.Equal(state.Iops) || !plan.Size.Equal(state.Size) || !plan.Throughput.Equal(state.Throughput) || !plan.VolumeType.Equal(state.VolumeType) {
-		var input ec2.ModifyVolumeInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("EBSVolumeCopy")))
-		if resp.Diagnostics.HasError() {
-			return
+		input := ec2.ModifyVolumeInput{
+			VolumeId: aws.String(state.ID.ValueString()),
 		}
 
-		input.VolumeId = aws.String(state.ID.ValueString())
+		if !plan.Iops.Equal(state.Iops) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
+			input.Iops = plan.Iops.ValueInt32Pointer()
+		}
+
+		if !plan.Size.Equal(state.Size) && !plan.Size.IsUnknown() && !plan.Size.IsNull() {
+			input.Size = plan.Size.ValueInt32Pointer()
+		}
+
+		if !plan.Throughput.IsUnknown() && !plan.Throughput.IsNull() {
+			if v := plan.Throughput.ValueInt32(); v > 0 && plan.VolumeType.ValueString() == string(awstypes.VolumeTypeGp3) {
+				input.Throughput = aws.Int32(v)
+			}
+		}
+
+		if !plan.VolumeType.Equal(state.VolumeType) {
+			volumeType := awstypes.VolumeType(plan.VolumeType.ValueString())
+			input.VolumeType = volumeType
+
+			if (volumeType == awstypes.VolumeTypeIo1 || volumeType == awstypes.VolumeTypeIo2 || volumeType == awstypes.VolumeTypeGp3) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
+				input.Iops = plan.Iops.ValueInt32Pointer()
+			}
+		}
+
 		out, err := conn.ModifyVolume(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "something wrong?"+plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 		if out == nil || out.VolumeModification == nil {
@@ -265,31 +289,131 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state ebsVolumeCopyResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	var id types.String
+	var tfTimeouts timeouts.Value
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, path.Root(names.AttrID), &id))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, path.Root(names.AttrTimeouts), &tfTimeouts))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := ec2.DeleteVolumeInput{
-		VolumeId: state.ID.ValueStringPointer(),
+		VolumeId: id.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteVolume(ctx, &input)
 	if err != nil {
-		if retry.NotFound(err) {
+		if retry.NotFound(err) || tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id.String())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVolumeDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	deleteTimeout := r.DeleteTimeout(ctx, tfTimeouts)
+	_, err = waitVolumeDeleted(ctx, conn, id.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id.String())
 		return
+	}
+}
+
+func (r *ebsVolumeCopyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var volumeType types.String
+	var iops, throughput types.Int32
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrVolumeType), &volumeType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrIOPS), &iops))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrThroughput), &throughput))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if volumeType.IsNull() || volumeType.IsUnknown() {
+		return
+	}
+
+	vt := awstypes.VolumeType(volumeType.ValueString())
+
+	if !throughput.IsNull() && !throughput.IsUnknown() && throughput.ValueInt32() > 0 && vt != awstypes.VolumeTypeGp3 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(names.AttrThroughput),
+			"Invalid Throughput Configuration",
+			fmt.Sprintf("`throughput` must not be set when `volume_type` is %q.", vt),
+		)
+	}
+
+	if !iops.IsNull() && !iops.IsUnknown() && iops.ValueInt32() > 0 {
+		switch vt {
+		case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
+		default:
+			resp.Diagnostics.AddAttributeError(
+				path.Root(names.AttrIOPS),
+				"Invalid IOPS Configuration",
+				fmt.Sprintf("`iops` must not be set when `volume_type` is %q.", vt),
+			)
+		}
+	}
+
+	if (vt == awstypes.VolumeTypeIo1 || vt == awstypes.VolumeTypeIo2) && (iops.IsNull() || iops.IsUnknown() || iops.ValueInt32() == 0) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(names.AttrIOPS),
+			"Missing IOPS Configuration",
+			fmt.Sprintf("`iops` must be set when `volume_type` is %q.", vt),
+		)
+	}
+}
+
+func (r *ebsVolumeCopyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var planVolumeType, stateVolumeType types.String
+	var configIops, configThroughput types.Int32
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, path.Root(names.AttrVolumeType), &planVolumeType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, path.Root(names.AttrVolumeType), &stateVolumeType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrIOPS), &configIops))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrThroughput), &configThroughput))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !planVolumeType.IsNull() && !planVolumeType.IsUnknown() {
+		vt := awstypes.VolumeType(planVolumeType.ValueString())
+
+		if !configThroughput.IsNull() && !configThroughput.IsUnknown() && configThroughput.ValueInt32() > 0 && vt != awstypes.VolumeTypeGp3 {
+			resp.Diagnostics.AddAttributeError(
+				path.Root(names.AttrThroughput),
+				"Invalid Throughput Configuration",
+				fmt.Sprintf("`throughput` must not be set when `volume_type` is %q.", vt),
+			)
+		}
+
+		if !configIops.IsNull() && !configIops.IsUnknown() && configIops.ValueInt32() > 0 {
+			switch vt {
+			case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
+			default:
+				resp.Diagnostics.AddAttributeError(
+					path.Root(names.AttrIOPS),
+					"Invalid IOPS Configuration",
+					fmt.Sprintf("`iops` must not be set when `volume_type` is %q.", vt),
+				)
+			}
+		}
+	}
+
+	if !planVolumeType.Equal(stateVolumeType) {
+		if configIops.IsNull() && !configIops.IsUnknown() {
+			smerr.AddEnrich(ctx, &resp.Diagnostics, resp.Plan.SetAttribute(ctx, path.Root(names.AttrIOPS), types.Int32Unknown()))
+		}
+
+		if configThroughput.IsNull() && !configThroughput.IsUnknown() {
+			smerr.AddEnrich(ctx, &resp.Diagnostics, resp.Plan.SetAttribute(ctx, path.Root(names.AttrThroughput), types.Int32Unknown()))
+		}
 	}
 }
 
@@ -299,7 +423,7 @@ type ebsVolumeCopyResourceModel struct {
 	AvailabilityZone types.String   `tfsdk:"availability_zone"`
 	ID               types.String   `tfsdk:"id"`
 	Iops             types.Int32    `tfsdk:"iops"`
-	Size             types.Int64    `tfsdk:"size"`
+	Size             types.Int32    `tfsdk:"size"`
 	SourceVolumeID   types.String   `tfsdk:"source_volume_id"`
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
@@ -308,41 +432,36 @@ type ebsVolumeCopyResourceModel struct {
 	VolumeType       types.String   `tfsdk:"volume_type"`
 }
 
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//	awsv2.Register("aws_ec2_ebs_volume_copy", sweepEBSVolumeCopys)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
-// func sweepEBSVolumeCopys(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-// 	input := ec2.ListEBSVolumeCopysInput{}
-// 	conn := client.EC2Client(ctx)
-// 	var sweepResources []sweep.Sweepable
+func sweepEBSVolumeCopies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	input := ec2.DescribeVolumesInput{}
+	var sweepResources []sweep.Sweepable
 
-// 	pages := ec2.NewListEBSVolumeCopysPaginator(conn, &input)
-// 	for pages.HasMorePages() {
-// 		page, err := pages.NextPage(ctx)
-// 		if err != nil {
-// 			return nil, smarterr.NewError(err)
-// 		}
+	pages := ec2.NewDescribeVolumesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-// 		for _, v := range page.EBSVolumeCopys {
-// 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newEBSVolumeCopyResource, client,
-// 				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.EBSVolumeCopyId))),
-// 			)
-// 		}
-// 	}
+		for _, v := range page.Volumes {
+			if v.SourceVolumeId == nil {
+				continue
+			}
 
-// 	return sweepResources, nil
-// }
+			if v.State != awstypes.VolumeStateAvailable {
+				continue
+			}
+
+			sweepResources = append(sweepResources,
+				sweepfw.NewSweepResource(
+					newEBSVolumeCopyResource,
+					client,
+					sweepfw.NewAttribute(names.AttrID, aws.ToString(v.VolumeId)),
+				),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}

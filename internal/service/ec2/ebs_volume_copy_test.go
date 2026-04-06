@@ -3,325 +3,532 @@
 
 package ec2_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/ec2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
+func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestEBSVolumeCopyExampleUnitTest(t *testing.T) {
-	t.Parallel()
+	var ebsVolumeCopy awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
 
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	fmt.Printf("%v\n", testCases)
-
-	// for _, testCase := range testCases {
-	// 	t.Run(testCase.TestName, func(t *testing.T) {
-	// 		t.Parallel()
-	// 		got, err := tfec2.FunctionFromResource(testCase.Input)
-
-	// 		if err != nil && !testCase.Error {
-	// 			t.Errorf("got error (%s), expected no error", err)
-	// 		}
-
-	// 		if err == nil && testCase.Error {
-	// 			t.Errorf("got (%s) and no error, expected error", got)
-	// 		}
-
-	// 		if got != testCase.Expected {
-	// 			t.Errorf("got %s, expected %s", got, testCase.Expected)
-	// 		}
-	// 	})
-	// }
+	})
 }
 
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
-func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
-	// ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// var ebsvolumecopy ec2.DescribeEBSVolumeCopyResponse
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// resourceName := "aws_ec2_ebs_volume_copy.test"
+	var ebsVolumeCopy awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
 
-	// acctest.ParallelTest(ctx, t, resource.TestCase{
-	// 	PreCheck: func() {
-	// 		acctest.PreCheck(ctx, t)
-	// 		acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-	// 		testAccPreCheck(ctx, t)
-	// 	},
-	// 	ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-	// 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-	// 	CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
-	// 	Steps: []resource.TestStep{
-	// 		{
-	// 			Config: testAccEBSVolumeCopyConfig_basic(rName),
-	// 			Check: resource.ComposeAggregateTestCheckFunc(
-	// 				testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsvolumecopy),
-	// 				resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-	// 				resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-	// 				resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-	// 					"console_access": "false",
-	// 					"groups.#":       "0",
-	// 					"username":       "Test",
-	// 					"password":       "TestTest1234",
-	// 				}),
-	// 				// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-	// 				// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-	// 				acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ebsvolumecopy:.+$`)),
-	// 			),
-	// 		},
-	// 		{
-	// 			ResourceName:            resourceName,
-	// 			ImportState:             true,
-	// 			ImportStateVerify:       true,
-	// 			ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-	// 		},
-	// 	},
-	// })
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfec2.ResourceEBSVolumeCopy, resourceName, ebsVolumeCopyDisappearsStateFunc),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
-	// ctx := acctest.Context(t)
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
+func TestAccEC2EBSVolumeCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ebsVolumeCopy awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
 
-	// var ebsvolumecopy ec2.DescribeEBSVolumeCopyResponse
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// resourceName := "aws_ec2_ebs_volume_copy.test"
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
-	// acctest.ParallelTest(ctx, t, resource.TestCase{
-	// 	PreCheck: func() {
-	// 		acctest.PreCheck(ctx, t)
-	// 		acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-	// 		testAccPreCheck(ctx, t)
-	// 	},
-	// 	ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-	// 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-	// 	CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
-	// 	Steps: []resource.TestStep{
-	// 		{
-	// 			Config: testAccEBSVolumeCopyConfig_basic(rName, testAccEBSVolumeCopyVersionNewer),
-	// 			Check: resource.ComposeAggregateTestCheckFunc(
-	// 				testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsvolumecopy),
-	// 				// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-	// 				// but expects a new resource factory function as the third argument. To expose this
-	// 				// private function to the testing package, you may need to add a line like the following
-	// 				// to exports_test.go:
-	// 				//
-	// 				//   var ResourceEBSVolumeCopy = newEBSVolumeCopyResource
-	// 				acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSVolumeCopy, resourceName),
-	// 			),
-	// 			ExpectNonEmptyPlan: true,
-	// 			ConfigPlanChecks: resource.ConfigPlanChecks{
-	// 				PostApplyPostRefresh: []plancheck.PlanCheck{
-	// 					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// })
+func TestAccEC2EBSVolumeCopy_defaultTags_providerOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ebsVolumeCopy awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccEBSVolumeCopyConfig_basic(),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all."+acctest.CtProviderKey1, acctest.CtProviderValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_updateSize(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_iops(3000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_iops(4000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_throughput(125),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_throughput(150),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "150"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_volumeTypeGP3(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckEBSVolumeCopyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	// return func(s *terraform.State) error {
-	// 	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-	// 	for _, rs := range s.RootModule().Resources {
-	// 		if rs.Type != "aws_ec2_ebs_volume_copy" {
-	// 			continue
-	// 		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ebs_volume_copy" {
+				continue
+			}
 
-	// 		// TIP: ==== FINDERS ====
-	// 		// The find function should be exported. Since it won't be used outside of the package, it can be exported
-	// 		// in the `exports_test.go` file.
-	// 		_, err := tfec2.FindEBSVolumeCopyByID(ctx, conn, rs.Primary.ID)
-	// 		if retry.NotFound(err) {
-	// 			return nil
-	// 		}
-	// 		if err != nil {
-	// 			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameEBSVolumeCopy, rs.Primary.ID, err)
-	// 		}
+			_, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, "EBS Volume Copy", rs.Primary.ID, err)
+			}
 
-	// 		return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameEBSVolumeCopy, rs.Primary.ID, errors.New("not destroyed"))
-	// 	}
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, "EBS Volume Copy", rs.Primary.ID, errors.New("not destroyed"))
+		}
 
-	return nil
-	// }
+		return nil
+	}
 }
 
-func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name string, ebsvolumecopy *ec2.DescribeVolumesInput) resource.TestCheckFunc {
-	// return func(s *terraform.State) error {
-	// 	rs, ok := s.RootModule().Resources[name]
-	// 	if !ok {
-	// 		return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSVolumeCopy, name, errors.New("not found"))
-	// 	}
+func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name string, ebsVolumeCopy *awstypes.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, "EBS Volume Copy", name, errors.New("not found"))
+		}
 
-	// 	if rs.Primary.ID == "" {
-	// 		return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSVolumeCopy, name, errors.New("not set"))
-	// 	}
+		if rs.Primary.ID == "" {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, "EBS Volume Copy", name, errors.New("not set"))
+		}
 
-	// 	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-	// 	resp, err := tfec2.FindEBSVolumeCopyByID(ctx, conn, rs.Primary.ID)
-	// 	if err != nil {
-	// 		return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSVolumeCopy, rs.Primary.ID, err)
-	// 	}
+		resp, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, "EBS Volume Copy", rs.Primary.ID, err)
+		}
 
-	// 	*ebsvolumecopy = *resp
+		*ebsVolumeCopy = *resp
 
-	return nil
-	// }
+		return nil
+	}
 }
 
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+func ebsVolumeCopyDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	if is.ID == "" {
+		return errors.New(`identifying attribute "id" not defined`)
+	}
 
-// input := &ec2.ListEBSVolumeCopysInput{}
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrID), is.ID)); err != nil {
+		return err
+	}
 
-// _, err := conn.ListEBSVolumeCopys(ctx, input)
-
-// if acctest.PreCheckSkipError(err) {
-// 	t.Skipf("skipping acceptance testing: %s", err)
-// }
-// if err != nil {
-// 	t.Fatalf("unexpected PreCheck error: %s", err)
-// }
-// }
-
-func testAccCheckEBSVolumeCopyNotRecreated(before, after *ec2.DescribeVolumesOutput) resource.TestCheckFunc {
-	// return func(s *terraform.State) error {
-	// 	if before, after := aws.ToString(before.EBSVolumeCopyId), aws.ToString(after.EBSVolumeCopyId); before != after {
-	// 		return create.Error(names.EC2, create.ErrActionCheckingNotRecreated, tfec2.ResNameEBSVolumeCopy, aws.ToString(before.EBSVolumeCopyId), errors.New("recreated"))
-	// 	}
+	if _, ok := state.Schema.GetAttributes()[names.AttrRegion]; ok {
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrRegion), acctest.Region())); err != nil {
+			return err
+		}
+	}
 
 	return nil
-	// }
 }
 
-func testAccEBSVolumeCopyConfig_basic(rName, version string) string {
-	// 	return fmt.Sprintf(`
-	// resource "aws_security_group" "test" {
-	//   name = %[1]q
-	// }
+func testAccCheckEBSVolumeCopyNotRecreated(before, after *awstypes.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(before.VolumeId), aws.ToString(after.VolumeId); before != after {
+			return errors.New("EC2 EBS Volume Copy was recreated")
+		}
 
-	// resource "aws_ec2_ebs_volume_copy" "test" {
-	//   ebs_volume_copy_name             = %[1]q
-	//   engine_type             = "ActiveEC2"
-	//   engine_version          = %[2]q
-	//   host_instance_type      = "ec2.t2.micro"
-	//   security_groups         = [aws_security_group.test.id]
-	//   authentication_strategy = "simple"
-	//   storage_type            = "efs"
+		return nil
+	}
+}
 
-	//   logs {
-	//     general = true
-	//   }
+func testAccEBSVolumeCopyConfigBaseConfig() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+data "aws_region" "current" {}
 
-	//	  user {
-	//	    username = "Test"
-	//	    password = "TestTest1234"
-	//	  }
-	//	}
-	//
-	// `, rName, version)
-	return ""
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+  encrypted         = true
+}
+`)
+}
+
+func testAccEBSVolumeCopyConfig_basic() string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), `
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+}
+`)
+}
+
+func testAccEBSVolumeCopyConfig_updateSize() string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), `
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+  size             = 2
+}
+`)
+}
+
+func testAccEBSVolumeCopyConfig_iops(iops int) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+  volume_type      = "gp3"
+  iops             = %d
+  size             = 8
+}
+`, iops))
+}
+
+func testAccEBSVolumeCopyConfig_throughput(throughput int) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+  volume_type      = "gp3"
+  throughput       = %d
+  size             = 1
+}
+`, throughput))
+}
+
+func testAccEBSVolumeCopyConfig_volumeTypeGP3() string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), `
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+  volume_type      = "gp3"
+}
+`)
+}
+
+func testAccEBSVolumeCopyConfig_tags1(tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccEBSVolumeCopyConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
