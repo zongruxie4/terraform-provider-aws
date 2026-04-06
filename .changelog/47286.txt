@@ -41,3 +41,7 @@ resource/aws_config_organization_custom_policy_rule: Add Resource Identity suppo
 ```release-note:enhancement
 resource/aws_config_organization_managed_rule: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_config_remediation_configuration: Add Resource Identity support
+```

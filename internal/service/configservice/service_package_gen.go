@@ -161,6 +161,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_config_remediation_configuration",
 			Name:     "Remediation Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("config_rule_name"),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }

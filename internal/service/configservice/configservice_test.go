@@ -125,6 +125,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtDisappears: testAccRemediationConfiguration_disappears,
 			"updates":            testAccRemediationConfiguration_updates,
 			"values":             testAccRemediationConfiguration_values,
+			"Identity":           testAccConfigServiceRemediationConfiguration_identitySerial,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,
