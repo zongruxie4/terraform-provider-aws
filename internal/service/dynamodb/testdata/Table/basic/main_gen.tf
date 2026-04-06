@@ -1,5 +1,7 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_dynamodb_table" "test" {
-{{- template "region" }}
   hash_key       = "TestTableHashKey"
   name           = var.rName
   read_capacity  = 1
@@ -9,6 +11,9 @@ resource "aws_dynamodb_table" "test" {
     name = "TestTableHashKey"
     type = "S"
   }
-
-{{- template "tags" . }}
+}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
