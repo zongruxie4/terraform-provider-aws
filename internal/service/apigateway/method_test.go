@@ -35,6 +35,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					testAccCheckMethodExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "agm-{rest_api_id}-{resource_id}-{http_method}"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
