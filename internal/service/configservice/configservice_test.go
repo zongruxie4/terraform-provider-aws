@@ -86,6 +86,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtBasic:      testAccOrganizationCustomPolicyRule_basic,
 			acctest.CtDisappears: testAccOrganizationCustomPolicyRule_disappears,
 			"policyText":         testAccOrganizationCustomPolicyRule_PolicyText,
+			"Identity":           testAccConfigServiceOrganizationCustomPolicyRule_identitySerial,
 		},
 		"OrganizationCustomRule": {
 			acctest.CtBasic:             testAccOrganizationCustomRule_basic,

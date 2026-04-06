@@ -33,3 +33,7 @@ resource/aws_config_organization_conformance_pack: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_config_organization_custom_rule: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_config_organization_custom_policy_rule: Add Resource Identity support
+```
