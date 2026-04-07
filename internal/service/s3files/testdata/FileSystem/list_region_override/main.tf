@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: MPL-2.0
 
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
+  region = var.region
+
   bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
+  region = var.region
+
   bucket = aws_s3_bucket.test.id
   versioning_configuration {
     status = "Enabled"
@@ -33,7 +36,7 @@ resource "aws_iam_role" "test" {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:aws:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+            "aws:SourceArn" = "arn:aws:s3files:${var.region}:${data.aws_caller_identity.current.account_id}:file-system/*"
           }
         }
       }
@@ -89,10 +92,10 @@ resource "aws_iam_role_policy" "test" {
           "kms:ReEncryptFrom",
           "kms:ReEncryptTo"
         ]
-        Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Resource = "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         Condition = {
           StringLike = {
-            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "s3.${var.region}.amazonaws.com"
             "kms:EncryptionContext:aws:s3:arn" = [
               aws_s3_bucket.test.arn,
               "${aws_s3_bucket.test.arn}/*"
@@ -134,7 +137,8 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3files_file_system" "test" {
-  count = var.resource_count
+  region = var.region
+  count  = var.resource_count
 
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
@@ -149,6 +153,13 @@ variable "rName" {
 }
 
 variable "resource_count" {
-  type     = number
-  nullable = false
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
