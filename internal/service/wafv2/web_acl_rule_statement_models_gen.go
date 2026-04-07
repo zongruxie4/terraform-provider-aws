@@ -223,7 +223,7 @@ var andStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-func notStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
+var notStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotStatementLevel0Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -234,7 +234,7 @@ func notStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical NOT statement.",
 	}
-}
+})
 
 func orStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -356,7 +356,7 @@ var andStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-func notStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
+var notStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotStatementLevel1Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -367,7 +367,7 @@ func notStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical NOT statement.",
 	}
-}
+})
 
 func orStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -495,7 +495,7 @@ var andStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-func notStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
+var notStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotStatementLevel2Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -506,7 +506,7 @@ func notStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical NOT statement.",
 	}
-}
+})
 
 func orStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{

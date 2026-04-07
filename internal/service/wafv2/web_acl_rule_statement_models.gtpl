@@ -117,7 +117,7 @@ var andStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Con
 	}
 })
 
-func notStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var notStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -128,7 +128,7 @@ func notStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlo
 		},
 		Description: "Logical NOT statement.",
 	}
-}
+})
 
 func orStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
