@@ -144,7 +144,7 @@ var orStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Cont
 })
 
 // statementBlockLevel{{minus .}}NoMinMax is for AND/OR statements that need multiple nested statements.
-func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel{{minus .}}NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -176,7 +176,7 @@ func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNest
 		},
 		Description: "Nested statements for logical operations.",
 	}
-}
+})
 
 // statementBlockLevel{{minus .}}Single is for NOT statement that needs exactly one nested statement.
 func statementBlockLevel{{minus .}}Single(ctx context.Context) schema.ListNestedBlock {
