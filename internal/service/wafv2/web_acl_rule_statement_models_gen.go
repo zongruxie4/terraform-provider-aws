@@ -192,10 +192,10 @@ func statementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel0(ctx),
+		"not_statement":                         notStatementBlockLevel0(ctx),
+		"or_statement":                          orStatementBlockLevel0(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel0(ctx)
-	blocks["not_statement"] = notStatementBlockLevel0(ctx)
-	blocks["or_statement"] = orStatementBlockLevel0(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel1Model](ctx),
@@ -325,10 +325,10 @@ func statementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel1(ctx),
+		"not_statement":                         notStatementBlockLevel1(ctx),
+		"or_statement":                          orStatementBlockLevel1(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel1(ctx)
-	blocks["not_statement"] = notStatementBlockLevel1(ctx)
-	blocks["or_statement"] = orStatementBlockLevel1(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel2Model](ctx),
@@ -398,10 +398,10 @@ var statementBlockLevel1NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel0(ctx),
+		"not_statement":                         notStatementBlockLevel0(ctx),
+		"or_statement":                          orStatementBlockLevel0(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel0(ctx)
-	blocks["not_statement"] = notStatementBlockLevel0(ctx)
-	blocks["or_statement"] = orStatementBlockLevel0(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel1Model](ctx),
@@ -431,10 +431,10 @@ var statementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.Context) s
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel0(ctx),
+		"not_statement":                         notStatementBlockLevel0(ctx),
+		"or_statement":                          orStatementBlockLevel0(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel0(ctx)
-	blocks["not_statement"] = notStatementBlockLevel0(ctx)
-	blocks["or_statement"] = orStatementBlockLevel0(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel1Model](ctx),
@@ -464,10 +464,10 @@ func statementBlockLevel3(ctx context.Context) schema.ListNestedBlock {
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel2(ctx),
+		"not_statement":                         notStatementBlockLevel2(ctx),
+		"or_statement":                          orStatementBlockLevel2(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel2(ctx)
-	blocks["not_statement"] = notStatementBlockLevel2(ctx)
-	blocks["or_statement"] = orStatementBlockLevel2(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel3Model](ctx),
@@ -537,10 +537,10 @@ var statementBlockLevel2NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel1(ctx),
+		"not_statement":                         notStatementBlockLevel1(ctx),
+		"or_statement":                          orStatementBlockLevel1(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel1(ctx)
-	blocks["not_statement"] = notStatementBlockLevel1(ctx)
-	blocks["or_statement"] = orStatementBlockLevel1(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel2Model](ctx),
@@ -570,10 +570,10 @@ var statementBlockLevel2Single = tfsync.OnceValueCtx(func(ctx context.Context) s
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"and_statement":                         andStatementBlockLevel1(ctx),
+		"not_statement":                         notStatementBlockLevel1(ctx),
+		"or_statement":                          orStatementBlockLevel1(ctx),
 	}
-	blocks["and_statement"] = andStatementBlockLevel1(ctx)
-	blocks["not_statement"] = notStatementBlockLevel1(ctx)
-	blocks["or_statement"] = orStatementBlockLevel1(ctx)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel2Model](ctx),
