@@ -24,8 +24,6 @@ import (
 
 const (
 	defaultFilename = "list_pages_gen.go"
-	sdkV1           = 1
-	sdkV2           = 2
 )
 
 var (
@@ -33,8 +31,6 @@ var (
 	listOps         = flag.String("ListOps", "", "ListOps")
 	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
-	export          = flag.Bool("Export", false, "whether to export the list functions")
-	v2Suffix        = flag.Bool("V2Suffix", false, "whether to append a V2 suffix to the list functions")
 )
 
 func usage() {
@@ -98,7 +94,7 @@ func main() {
 	})
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsService, *export)
+		g.generateFunction(functionName, awsService)
 	}
 
 	src := g.format()
@@ -182,7 +178,7 @@ type FuncSpec struct {
 	OutputPaginator string
 }
 
-func (g *Generator) generateFunction(functionName, awsService string, export bool) {
+func (g *Generator) generateFunction(functionName, awsService string) {
 	var function *ast.FuncDecl
 
 	for _, file := range g.pkg.files {
@@ -206,10 +202,7 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 	}
 
 	funcName := function.Name.Name
-
-	if !export {
-		funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
-	}
+	funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
 
 	funcSpec := FuncSpec{
 		Name:            fixSomeInitialisms(funcName),
@@ -251,10 +244,10 @@ func (g *Generator) expandTypeExpr(expr ast.Expr) string {
 	return ""
 }
 
-//go:embed v2/header.gtpl
+//go:embed header.gtpl
 var headerTemplate string
 
-//go:embed v2/function.gtpl
+//go:embed function.gtpl
 var functionTemplate string
 
 func (g *Generator) format() []byte {
