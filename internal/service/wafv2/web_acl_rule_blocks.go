@@ -17,18 +17,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Common reusable block builders using sync.OnceValue pattern
-
-var emptyBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
-	return func(ctx context.Context) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-			Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{},
-		}
+var emptyBlock = tfsync.OnceValueCtx(func(ctx context.Context) *schema.ListNestedBlock {
+	return &schema.ListNestedBlock{
+		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{},
 	}
 })
 
@@ -993,7 +990,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"all_query_arguments": emptyBlock()(ctx),
+				"all_query_arguments": emptyBlock(ctx),
 				"body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1040,7 +1037,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 										},
 									},
 									Blocks: map[string]schema.Block{
-										"all": emptyBlock()(ctx),
+										"all": emptyBlock(ctx),
 									},
 								},
 							},
@@ -1147,8 +1144,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"method":                emptyBlock()(ctx),
-				"query_string":          emptyBlock()(ctx),
+				"method":                emptyBlock(ctx),
+				"query_string":          emptyBlock(ctx),
 				"single_header":         nameOnlyBlock()(ctx, "Header name"),
 				"single_query_argument": nameOnlyBlock()(ctx, "Query argument name"),
 				"uri_fragment": schema.ListNestedBlock{
@@ -1164,7 +1161,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"uri_path": emptyBlock()(ctx),
+				"uri_path": emptyBlock(ctx),
 			},
 		},
 	}
@@ -1198,7 +1195,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 		Validators: []validator.List{listvalidator.SizeAtMost(5)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn": emptyBlock()(ctx),
+				"asn": emptyBlock(ctx),
 				"cookie": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyCookieModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1213,7 +1210,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"forwarded_ip": emptyBlock()(ctx),
+				"forwarded_ip": emptyBlock(ctx),
 				names.AttrHeader: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyHeaderModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1228,8 +1225,8 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"http_method":     emptyBlock()(ctx),
-				"ip":              emptyBlock()(ctx),
+				"http_method":     emptyBlock(ctx),
+				"ip":              emptyBlock(ctx),
 				"ja3_fingerprint": jaFingerprintBlock()(ctx),
 				"ja4_fingerprint": jaFingerprintBlock()(ctx),
 				"label_namespace": schema.ListNestedBlock{
