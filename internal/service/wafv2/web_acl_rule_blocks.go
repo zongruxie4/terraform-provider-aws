@@ -144,7 +144,7 @@ var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 	}
 })
 
-func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var ruleGroupReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleGroupReferenceStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -165,9 +165,9 @@ func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBloc
 		},
 		Description: "Rule statement used to run the rules that are defined in a RuleGroup.",
 	}
-}
+})
 
-func excludedRuleBlock(ctx context.Context) schema.ListNestedBlock {
+var excludedRuleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleExcludedRuleModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(100)},
@@ -185,7 +185,7 @@ func excludedRuleBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rules in the referenced rule group whose actions are set to Count. Deprecated: use rule_action_override instead.",
 	}
-}
+})
 
 func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -812,7 +812,7 @@ func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
+var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleActionOverrideModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(100)},
@@ -886,7 +886,7 @@ func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Action settings to use in place of rule actions configured inside the rule group.",
 	}
-}
+})
 
 func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
