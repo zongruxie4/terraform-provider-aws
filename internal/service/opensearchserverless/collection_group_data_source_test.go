@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchServerlessCollectionGroupDataSource_byID(t *testing.T) {
+func TestAccOpenSearchServerlessCollectionGroupDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
@@ -43,7 +43,7 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_byID(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchServerlessCollectionGroupDataSource_byName(t *testing.T) {
+func TestAccOpenSearchServerlessCollectionGroupDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
@@ -79,6 +79,11 @@ resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   description      = "test description"
   standby_replicas = "ENABLED"
+
+  capacity_limits {
+    max_indexing_capacity_in_ocu = 1
+    max_search_capacity_in_ocu   = 1
+  }
 }
 
 data "aws_opensearchserverless_collection_group" "test" {
@@ -93,6 +98,11 @@ resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   description      = "test description"
   standby_replicas = "ENABLED"
+
+  capacity_limits {
+    max_indexing_capacity_in_ocu = 1
+    max_search_capacity_in_ocu   = 1
+  }
 }
 
 data "aws_opensearchserverless_collection_group" "test" {
