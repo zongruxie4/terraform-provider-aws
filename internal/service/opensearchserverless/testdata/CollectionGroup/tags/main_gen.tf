@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_opensearchserverless_collection_group" "test" {
-  region = var.region
-
   name             = var.rName
   standby_replicas = "ENABLED"
 
@@ -11,6 +9,8 @@ resource "aws_opensearchserverless_collection_group" "test" {
     max_indexing_capacity_in_ocu = 1
     max_search_capacity_in_ocu   = 1
   }
+
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -19,8 +19,9 @@ variable "rName" {
   nullable    = false
 }
 
-variable "region" {
-  description = "Region to deploy resource in"
-  type        = string
-  nullable    = false
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
 }

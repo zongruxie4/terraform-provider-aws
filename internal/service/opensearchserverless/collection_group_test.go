@@ -202,56 +202,6 @@ func TestAccOpenSearchServerlessCollectionGroup_standbyReplicas(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchServerlessCollectionGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var collectionGroup types.CollectionGroupDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_opensearchserverless_collection_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCollectionGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCollectionGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckCollectionGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
@@ -305,8 +255,8 @@ func testAccCheckCollectionGroupExists(ctx context.Context, t *testing.T, name s
 func testAccPreCheckCollectionGroup(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	input := &opensearchserverless.ListCollectionGroupsInput{}
-	_, err := conn.ListCollectionGroups(ctx, input)
+	input := opensearchserverless.ListCollectionGroupsInput{}
+	_, err := conn.ListCollectionGroups(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -332,6 +282,11 @@ resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   description      = %[2]q
   standby_replicas = "ENABLED"
+
+  capacity_limits {
+    max_indexing_capacity_in_ocu = 1
+    max_search_capacity_in_ocu   = 1
+  }
 }
 `, rName, description)
 }
@@ -357,113 +312,11 @@ func testAccCollectionGroupConfig_standbyReplicas(rName, standbyReplicas string)
 resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   standby_replicas = %[2]q
+
+  capacity_limits {
+    max_indexing_capacity_in_ocu = 1
+    max_search_capacity_in_ocu   = 1
+  }
 }
 `, rName, standbyReplicas)
 }
-
-func testAccCollectionGroupConfig_tags1(rName, key1, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_opensearchserverless_collection_group" "test" {
-  name             = %[1]q
-  standby_replicas = "ENABLED"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1)
-}
-
-func testAccCollectionGroupConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
-resource "aws_opensearchserverless_collection_group" "test" {
-  name             = %[1]q
-  standby_replicas = "ENABLED"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2)
-}
-
-//func TestAccOpenSearchServerlessCollectionGroup_nameValidation(t *testing.T) {
-//	ctx := acctest.Context(t)
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck: func() {
-//			acctest.PreCheck(ctx, t)
-//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-//		},
-//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-//		Steps: []resource.TestStep{
-//			{
-//				Config:      testAccCollectionGroupConfig_basic("ab"),
-//				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
-//			},
-//			{
-//				Config:      testAccCollectionGroupConfig_basic("a" + sdkacctest.RandString(32)),
-//				ExpectError: regexache.MustCompile(`Attribute name string length must be between 3 and 32`),
-//			},
-//			{
-//				Config:      testAccCollectionGroupConfig_basic("Abc"),
-//				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
-//			},
-//			{
-//				Config:      testAccCollectionGroupConfig_basic("abc_def"),
-//				ExpectError: regexache.MustCompile(`must start with any lower case letter`),
-//			},
-//		},
-//	})
-//}
-//
-//func TestAccOpenSearchServerlessCollectionGroup_capacityLimitsValidation(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck: func() {
-//			acctest.PreCheck(ctx, t)
-//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-//			testAccPreCheckCollectionGroup(ctx, t)
-//		},
-//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-//		Steps: []resource.TestStep{
-//			{
-//				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 16, 2, 2, 16),
-//				ExpectError: regexache.MustCompile(`ValidationException`),
-//			},
-//			{
-//				Config:      testAccCollectionGroupConfig_capacityLimits(rName, 2, 16, 16, 2),
-//				ExpectError: regexache.MustCompile(`ValidationException`),
-//			},
-//		},
-//	})
-//}
-//
-//func TestAccOpenSearchServerlessCollectionGroup_descriptionValidation(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	longDescription := sdkacctest.RandString(1001)
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck: func() {
-//			acctest.PreCheck(ctx, t)
-//			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-//		},
-//		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-//		Steps: []resource.TestStep{
-//			{
-//				Config:      testAccCollectionGroupConfig_description(rName, longDescription),
-//				ExpectError: regexache.MustCompile(`Attribute description string length must be between 0 and 1000`),
-//			},
-//		},
-//	})
-//}

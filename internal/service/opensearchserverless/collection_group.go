@@ -71,8 +71,8 @@ type capacityLimitsModel struct {
 	MaxSearchCapacityInOCU   types.Float32 `tfsdk:"max_search_capacity_in_ocu"`
 }
 
-func (r *collectionGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			"capacity_limits": framework.ResourceOptionalComputedListOfObjectsAttribute[capacityLimitsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),

@@ -23,6 +23,7 @@ import (
 
 // @FrameworkDataSource("aws_opensearchserverless_collection_group", name="Collection Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newCollectionGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &collectionGroupDataSource{}, nil
 }
