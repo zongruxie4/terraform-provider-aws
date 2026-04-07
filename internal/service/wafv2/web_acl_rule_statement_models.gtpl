@@ -130,7 +130,7 @@ var notStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Con
 	}
 })
 
-func orStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var orStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleOrStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -141,7 +141,7 @@ func orStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBloc
 		},
 		Description: "Logical OR statement.",
 	}
-}
+})
 
 // statementBlockLevel{{minus .}}NoMinMax is for AND/OR statements that need multiple nested statements.
 func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNestedBlock {
