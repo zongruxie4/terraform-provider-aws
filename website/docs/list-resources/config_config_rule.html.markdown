@@ -1,19 +1,19 @@
 ---
 subcategory: "Config"
 layout: "aws"
-page_title: "AWS: aws_configservice_config_rule"
+page_title: "AWS: aws_config_config_rule"
 description: |-
-  Lists Config Config Rule resources.
+  Lists AWS Config Rule resources.
 ---
 
-# List Resource: aws_configservice_config_rule
+# List Resource: aws_config_config_rule
 
-Lists Config Config Rule resources.
+Lists AWS Config Rule resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_configservice_config_rule" "example" {
+list "aws_config_config_rule" "example" {
   provider = aws
 }
 ```
