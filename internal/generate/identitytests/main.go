@@ -789,6 +789,15 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 			return re.ReplaceAll(b, []byte("$1.name")), nil
 		})
+	} else if test == "region_override" {
+		tf = g.NewFileDestinationWithFormatter(mainPath, func(b []byte) ([]byte, error) {
+			// Remove unused aws_region data source
+			re1 := regexp.MustCompile(`(?m)^data "aws_region" "current" \{\}\n`) // nosemgrep:ci.calling-regexp.MustCompile-directly
+			b = re1.ReplaceAll(b, []byte(""))
+			// Replace data.aws_region.current.name with var.region
+			re2 := regexp.MustCompile(`data\.aws_region\.current\.name`) // nosemgrep:ci.calling-regexp.MustCompile-directly
+			return re2.ReplaceAll(b, []byte("var.region")), nil
+		})
 	} else {
 		tf = g.NewUnformattedFileDestination(mainPath)
 	}
