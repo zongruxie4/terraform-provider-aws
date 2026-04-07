@@ -27,33 +27,33 @@ func TestAccOpenSearchServerlessCollectionGroup_basic(t *testing.T) {
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
- 		PreCheck: func() {
- 			acctest.PreCheck(ctx, t)
- 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
- 			testAccPreCheckCollectionGroup(ctx, t)
- 		},
- 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
- 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
- 		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
- 		Steps: []resource.TestStep{
- 			{
- 				Config: testAccCollectionGroupConfig_basic(rName),
- 				Check: resource.ComposeTestCheckFunc(
- 					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
- 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
- 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "ENABLED"),
- 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
- 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
- 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
- 				),
- 			},
- 			{
- 				ResourceName:      resourceName,
- 				ImportState:       true,
- 				ImportStateVerify: true,
- 			},
- 		},
- 	})
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollectionGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccOpenSearchServerlessCollectionGroup_disappears(t *testing.T) {
@@ -158,10 +158,10 @@ func TestAccOpenSearchServerlessCollectionGroup_capacityLimits(t *testing.T) {
 				Config: testAccCollectionGroupConfig_capacityLimits(rName, 4, 32, 4, 32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_indexing_capacity_in_ocu", "4"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_indexing_capacity_in_ocu", "32"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_search_capacity_in_ocu", "4"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_search_capacity_in_ocu", "32"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.min_indexing_capacity_in_ocu", "4"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.max_indexing_capacity_in_ocu", "32"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.min_search_capacity_in_ocu", "4"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.max_search_capacity_in_ocu", "32"),
 				),
 			},
 		},
