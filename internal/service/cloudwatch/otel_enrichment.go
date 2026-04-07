@@ -28,7 +28,7 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_otel_enrichment", name="OTel Enrichment")
 // @SingletonIdentity(identityDuplicateAttributes="id")
-// @Testing(serialize=true, hasNoPreExistingResource=true)
+// @Testing(serialize=true, hasNoPreExistingResource=true, generator=false)
 func newOtelEnrichmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &otelEnrichmentResource{}
 
