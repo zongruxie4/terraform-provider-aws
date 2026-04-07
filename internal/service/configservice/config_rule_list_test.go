@@ -24,8 +24,8 @@ import (
 
 func testAccConfigRule_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_configservice_config_rule.test[0]"
-	resourceName2 := "aws_configservice_config_rule.test[1]"
+	resourceName1 := "aws_config_config_rule.test[0]"
+	resourceName2 := "aws_config_config_rule.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -64,13 +64,13 @@ func testAccConfigRule_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_configservice_config_rule.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					tfquerycheck.ExpectNoResourceObject("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_config_config_rule.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
-					tfquerycheck.ExpectIdentityFunc("aws_configservice_config_rule.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
-					tfquerycheck.ExpectNoResourceObject("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_config_config_rule.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
@@ -79,7 +79,7 @@ func testAccConfigRule_List_basic(t *testing.T) {
 
 func testAccConfigRule_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_configservice_config_rule.test[0]"
+	resourceName1 := "aws_config_config_rule.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
@@ -120,9 +120,9 @@ func testAccConfigRule_List_includeResource(t *testing.T) {
 					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_configservice_config_rule.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					querycheck.ExpectResourceKnownValues("aws_configservice_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_config_config_rule.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_config_config_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$"))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
@@ -142,8 +142,8 @@ func testAccConfigRule_List_includeResource(t *testing.T) {
 
 func testAccConfigRule_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_configservice_config_rule.test[0]"
-	resourceName2 := "aws_configservice_config_rule.test[1]"
+	resourceName1 := "aws_config_config_rule.test[0]"
+	resourceName2 := "aws_config_config_rule.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -187,9 +187,9 @@ func testAccConfigRule_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_configservice_config_rule.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_config_config_rule.test", identity1.Checks()),
 
-					tfquerycheck.ExpectIdentityFunc("aws_configservice_config_rule.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_config_config_rule.test", identity2.Checks()),
 				},
 			},
 		},
