@@ -20,6 +20,10 @@ resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
   encrypted         = true
+
+  tags = {
+    Name = var.rName
+  }
 }
 
 data "aws_availability_zones" "available" {
