@@ -451,7 +451,7 @@ var asnMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 	}
 })
 
-func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
+var managedRuleGroupConfigsBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupConfigModel](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -481,7 +481,7 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 var identifierFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
