@@ -3,7 +3,6 @@
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
   region = var.region
@@ -38,7 +37,7 @@ resource "aws_iam_role" "test" {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${var.region}:${data.aws_caller_identity.current.account_id}:file-system/*"
           }
         }
       }
@@ -94,10 +93,10 @@ resource "aws_iam_role_policy" "test" {
           "kms:ReEncryptFrom",
           "kms:ReEncryptTo"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         Condition = {
           StringLike = {
-            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "s3.${var.region}.amazonaws.com"
             "kms:EncryptionContext:aws:s3:arn" = [
               aws_s3_bucket.test.arn,
               "${aws_s3_bucket.test.arn}/*"
