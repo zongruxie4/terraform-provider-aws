@@ -13,11 +13,11 @@ import (
 	"go/ast"
 	"go/format"
 	"html/template"
-	"log"
 	"os"
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/tools/go/packages"
 )
@@ -41,13 +41,13 @@ func usage() {
 }
 
 func main() {
-	log.SetPrefix("generate/listpage: ")
-	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
 
+	g := common.NewGenerator()
+
 	if (*inputPaginator != "" && *outputPaginator == "") || (*inputPaginator == "" && *outputPaginator != "") {
-		log.Fatal("both InputPaginator and OutputPaginator must be specified if one is")
+		g.Fatalf("both InputPaginator and OutputPaginator must be specified if one is")
 	}
 
 	if *inputPaginator == "" {
@@ -63,11 +63,9 @@ func main() {
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
-
 	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
 
 	awsService := service.GoV2Package()
@@ -77,31 +75,32 @@ func main() {
 
 	tmpl := template.Must(template.New("function").Parse(functionTemplate))
 
-	g := Generator{
+	generator := Generator{
 		tmpl:            tmpl,
 		inputPaginator:  *inputPaginator,
 		outputPaginator: *outputPaginator,
+		g:               g,
 	}
 
 	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
 
-	g.parsePackage(sourcePackage)
+	generator.parsePackage(sourcePackage)
 
-	g.printHeader(HeaderInfo{
+	generator.printHeader(HeaderInfo{
 		Parameters:         strings.Join(os.Args[1:], " "),
 		DestinationPackage: servicePackage,
 		SourcePackage:      sourcePackage,
 	})
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsService)
+		generator.generateFunction(functionName, awsService)
 	}
 
-	src := g.format()
+	src := generator.format()
 
 	err = os.WriteFile(filename, src, 0644)
 	if err != nil {
-		log.Fatalf("error writing output: %s", err)
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 
@@ -109,18 +108,6 @@ type HeaderInfo struct {
 	Parameters         string
 	DestinationPackage string
 	SourcePackage      string
-}
-
-type Generator struct {
-	buf             bytes.Buffer
-	pkg             *Package
-	tmpl            *template.Template
-	inputPaginator  string
-	outputPaginator string
-}
-
-func (g *Generator) Printf(format string, args ...any) {
-	fmt.Fprintf(&g.buf, format, args...)
 }
 
 type PackageFile struct {
@@ -132,12 +119,21 @@ type Package struct {
 	files []*PackageFile
 }
 
+type Generator struct {
+	buf             bytes.Buffer
+	pkg             *Package
+	tmpl            *template.Template
+	inputPaginator  string
+	outputPaginator string
+	g               *common.Generator
+}
+
 func (g *Generator) printHeader(headerInfo HeaderInfo) {
 	header := template.Must(template.New("header").Parse(headerTemplate))
 
 	err := header.Execute(&g.buf, headerInfo)
 	if err != nil {
-		log.Fatalf("error writing header: %s", err)
+		g.g.Fatalf("error writing header: %s", err)
 	}
 }
 
@@ -147,10 +143,10 @@ func (g *Generator) parsePackage(sourcePackage string) {
 	}
 	pkgs, err := packages.Load(cfg, sourcePackage)
 	if err != nil {
-		log.Fatal(err)
+		g.g.Fatalf("loading %s: %s", sourcePackage, err)
 	}
 	if len(pkgs) != 1 {
-		log.Fatalf("error: %d packages found", len(pkgs))
+		g.g.Fatalf("error: %d packages found", len(pkgs))
 	}
 	g.addPackage(pkgs[0])
 }
@@ -198,7 +194,7 @@ func (g *Generator) generateFunction(functionName, awsService string) {
 	}
 
 	if function == nil {
-		log.Fatalf("function \"%s\" not found", functionName)
+		g.g.Fatalf("function \"%s\" not found", functionName)
 	}
 
 	funcName := function.Name.Name
@@ -216,7 +212,7 @@ func (g *Generator) generateFunction(functionName, awsService string) {
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)
 	if err != nil {
-		log.Fatalf("error writing function \"%s\": %s", functionName, err)
+		g.g.Fatalf("writing function %q: %s", functionName, err)
 	}
 }
 
@@ -231,7 +227,7 @@ func (g *Generator) expandTypeField(field *ast.FieldList, result bool) string {
 		return fmt.Sprintf("*%s", g.expandTypeExpr(star.X))
 	}
 
-	log.Fatalf("Unexpected type expression: (%[1]T) %[1]v", typeValue)
+	g.g.Fatalf("Unexpected type expression: (%[1]T) %[1]v", typeValue)
 	return ""
 }
 
@@ -240,7 +236,7 @@ func (g *Generator) expandTypeExpr(expr ast.Expr) string {
 		return fmt.Sprintf("%s.%s", g.pkg.name, ident.Name)
 	}
 
-	log.Fatalf("Unexpected expression: (%[1]T) %[1]v", expr)
+	g.g.Fatalf("Unexpected expression: (%[1]T) %[1]v", expr)
 	return ""
 }
 
@@ -253,8 +249,8 @@ var functionTemplate string
 func (g *Generator) format() []byte {
 	src, err := format.Source(g.buf.Bytes())
 	if err != nil {
-		log.Printf("warning: internal error: invalid Go generated: %s", err)
-		log.Printf("warning: compile the package to analyze the error")
+		g.g.Fatalf("warning: internal error: invalid Go generated: %s", err)
+		g.g.Fatalf("warning: compile the package to analyze the error")
 		return g.buf.Bytes()
 	}
 	return src
