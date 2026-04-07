@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * resource/aws_opensearchserverless_security_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
 * resource/aws_opensearchserverless_vpc_endpoint: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
 * resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.data_export.storage_lens_table_destination` argument ([#47152](https://github.com/hashicorp/terraform-provider-aws/issues/47152))
+* resource/aws_ssm_patch_group: Add resource identity support ([#47318](https://github.com/hashicorp/terraform-provider-aws/issues/47318))
 
 BUG FIXES:
 
