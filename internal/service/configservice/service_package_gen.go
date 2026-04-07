@@ -31,6 +31,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_config_retention_configuration",
 			Name:     "Retention Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
 }

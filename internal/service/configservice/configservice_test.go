@@ -130,6 +130,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,
 			acctest.CtDisappears: testAccRetentionConfiguration_disappears,
+			"Identity":           testAccConfigServiceRetentionConfiguration_identitySerial,
 		},
 	}
 
