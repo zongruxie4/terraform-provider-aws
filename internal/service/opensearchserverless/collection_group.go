@@ -255,6 +255,5 @@ func (r *collectionGroupResource) Delete(ctx context.Context, request resource.D
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.String())
 		return
-
 	}
 }

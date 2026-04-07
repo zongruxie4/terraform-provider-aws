@@ -234,7 +234,7 @@ func TestAccOpenSearchServerlessCollection_collectionGroupName(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchServerlessCollection_encryptionConfigAWSOwned(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_encryptionConfig_owned(t *testing.T) {
 	ctx := acctest.Context(t)
 	var collection types.CollectionDetail
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -251,7 +251,7 @@ func TestAccOpenSearchServerlessCollection_encryptionConfigAWSOwned(t *testing.T
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_encryptionConfigAWSOwned(rName),
+				Config: testAccCollectionConfig_encryptionConfig_owned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", "true"),
@@ -493,7 +493,7 @@ resource "aws_opensearchserverless_collection" "test" {
 `, rName)
 }
 
-func testAccCollectionConfig_encryptionConfigAWSOwned(rName string) string {
+func testAccCollectionConfig_encryptionConfig_owned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_collection" "test" {
   name = %[1]q
