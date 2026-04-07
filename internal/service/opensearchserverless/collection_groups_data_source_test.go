@@ -15,26 +15,26 @@ import (
 
 func TestAccOpenSearchServerlessCollectionGroupsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection_groups.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionGroupsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "collection_group_summaries.#"),
-				),
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollectionGroup(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionGroupsDataSourceConfig_basic(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					resource.TestCheckResourceAttrSet(dataSourceName, "collection_group_summaries.#"),
+ 				),
+ 			},
+ 		},
+ 	})
 }
 
 func testAccCollectionGroupsDataSourceConfig_basic(rName string) string {

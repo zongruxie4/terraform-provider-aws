@@ -15,7 +15,7 @@ import (
 
 func TestAccOpenSearchServerlessCollectionGroupDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
@@ -36,7 +36,7 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
 				),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_id(t *testing.T) {
 
 func TestAccOpenSearchServerlessCollectionGroupDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
@@ -66,7 +66,7 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
 				),
 			},
 		},

@@ -76,7 +76,7 @@ func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			"capacity_limits": framework.ResourceOptionalComputedListOfObjectsAttribute[capacityLimitsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "Date the collection group was created.",
 				Computed:    true,

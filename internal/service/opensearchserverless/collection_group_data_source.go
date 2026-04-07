@@ -38,7 +38,7 @@ func (d *collectionGroupDataSource) Schema(ctx context.Context, _ datasource.Sch
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			"capacity_limits": framework.DataSourceComputedListOfObjectAttribute[capacityLimitsDataSourceModel](ctx),
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "Date the collection group was created.",
 				Computed:    true,
