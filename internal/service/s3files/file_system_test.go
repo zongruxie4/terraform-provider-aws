@@ -152,7 +152,7 @@ func testAccCheckFileSystemDestroy(ctx context.Context, t *testing.T) resource.T
 func testAccFileSystemConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -224,7 +224,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_versioning" "test" {
