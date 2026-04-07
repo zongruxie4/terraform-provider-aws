@@ -1,11 +1,53 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_configservice_config_rule" "test" {
+resource "aws_config_config_rule" "test" {
   count  = var.resource_count
   region = var.region
 
   name = "${var.rName}-${count.index}"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
+  }
+
+  depends_on = [aws_config_configuration_recorder.test]
+}
+
+# testAccConfigRuleConfig_base
+
+data "aws_partition" "current" {}
+
+resource "aws_config_configuration_recorder" "test" {
+  region   = var.region
+  name     = var.rName
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_iam_role" "test" {
+  name = var.rName
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
+  role       = aws_iam_role.test.name
 }
 
 variable "rName" {

@@ -7,6 +7,7 @@ package configservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -267,28 +268,8 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Config Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.ConfigRuleArn)
-	d.Set(names.AttrDescription, rule.Description)
-	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting evaluation_mode: %s", err)
-	}
-	d.Set("input_parameters", rule.InputParameters)
-	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
-	d.Set(names.AttrName, rule.ConfigRuleName)
-	d.Set("rule_id", rule.ConfigRuleId)
-	if rule.Scope != nil {
-		if err := d.Set(names.AttrScope, flattenScope(rule.Scope)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scope: %s", err)
-		}
-	}
-	if rule.Source != nil && rule.Source.CustomPolicyDetails != nil && aws.ToString(rule.Source.CustomPolicyDetails.PolicyText) == "" {
-		// Source.CustomPolicyDetails.PolicyText is not returned by the API, so copy from state.
-		if v, ok := d.GetOk("source.0.custom_policy_details.0.policy_text"); ok {
-			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
-		}
-	}
-	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
+	if err := resourceConfigRuleFlatten(ctx, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -322,6 +303,34 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func resourceConfigRuleFlatten(_ context.Context, rule *types.ConfigRule, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, rule.ConfigRuleArn)
+	d.Set(names.AttrDescription, rule.Description)
+	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
+		return fmt.Errorf("setting evaluation_mode: %w", err)
+	}
+	d.Set("input_parameters", rule.InputParameters)
+	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
+	d.Set(names.AttrName, rule.ConfigRuleName)
+	d.Set("rule_id", rule.ConfigRuleId)
+	if rule.Scope != nil {
+		if err := d.Set(names.AttrScope, flattenScope(rule.Scope)); err != nil {
+			return fmt.Errorf("setting scope: %w", err)
+		}
+	}
+	if rule.Source != nil && rule.Source.CustomPolicyDetails != nil && aws.ToString(rule.Source.CustomPolicyDetails.PolicyText) == "" {
+		// Source.CustomPolicyDetails.PolicyText is not returned by the API, so copy from state.
+		if v, ok := d.GetOk("source.0.custom_policy_details.0.policy_text"); ok {
+			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
+		}
+	}
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
+		return fmt.Errorf("setting source: %w", err)
+	}
+
+	return nil
 }
 
 func findConfigRuleByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigRule, error) {
