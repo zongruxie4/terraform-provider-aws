@@ -187,7 +187,7 @@ var excludedRuleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 	}
 })
 
-func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var managedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -224,7 +224,7 @@ func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock 
 		},
 		Description: "Managed rule group statement.",
 	}
-}
+})
 
 func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -888,7 +888,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -908,7 +908,7 @@ func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Scope down statement for managed rule groups.",
 	}
-}
+})
 
 var customRequestHandlingBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
