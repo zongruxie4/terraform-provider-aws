@@ -5,7 +5,6 @@ package wafv2
 
 import (
 	"context"
-	"sync"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -45,20 +44,18 @@ func nameOnlyBlock(ctx context.Context, description string) schema.ListNestedBlo
 	}
 }
 
-var jaFingerprintBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
-	return func(ctx context.Context) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
-			Validators: []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					"fallback_behavior": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-						Required:   true,
-					},
+var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) *schema.ListNestedBlock {
+	return &schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"fallback_behavior": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+					Required:   true,
 				},
 			},
-		}
+		},
 	}
 })
 
@@ -1096,8 +1093,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"ja3_fingerprint": jaFingerprintBlock()(ctx),
-				"ja4_fingerprint": jaFingerprintBlock()(ctx),
+				"ja3_fingerprint": jaFingerprintBlock(ctx),
+				"ja4_fingerprint": jaFingerprintBlock(ctx),
 				"json_body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJsonBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1226,8 +1223,8 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 				},
 				"http_method":     emptyBlock(ctx),
 				"ip":              emptyBlock(ctx),
-				"ja3_fingerprint": jaFingerprintBlock()(ctx),
-				"ja4_fingerprint": jaFingerprintBlock()(ctx),
+				"ja3_fingerprint": jaFingerprintBlock(ctx),
+				"ja4_fingerprint": jaFingerprintBlock(ctx),
 				"label_namespace": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
