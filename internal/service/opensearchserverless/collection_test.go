@@ -240,31 +240,31 @@ func TestAccOpenSearchServerlessCollection_encryptionConfig_owned(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollection(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionConfig_encryptionConfig_owned(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
-					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", acctest.CtTrue),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"encryption_config"},
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollection(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionConfig_encryptionConfig_owned(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+ 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", acctest.CtTrue),
+ 				),
+ 			},
+ 			{
+ 				ResourceName:            resourceName,
+ 				ImportState:             true,
+ 				ImportStateVerify:       true,
+ 				ImportStateVerifyIgnore: []string{"encryption_config"},
+ 			},
+ 		},
+ 	})
 }
 
 func TestAccOpenSearchServerlessCollection_encryptionConfigKMS(t *testing.T) {
