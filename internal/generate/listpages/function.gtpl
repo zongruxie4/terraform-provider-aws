@@ -1,4 +1,4 @@
-func {{ .Name }}Pages(ctx context.Context, conn *{{ .AWSService }}.Client, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool, optFns ...func(*{{ .AWSService }}.Options)) error {
+func {{ .Name }}Pages(ctx context.Context, conn *{{ .AWSService }}.Client, input *{{ .AWSService }}.{{ .ParamType }}, fn func(*{{ .AWSService }}.{{ .ResultType }}, bool) bool, optFns ...func(*{{ .AWSService }}.Options)) error {
 	for {
 		output, err := conn.{{ .AWSName }}(ctx, input, optFns...)
 		if err != nil {

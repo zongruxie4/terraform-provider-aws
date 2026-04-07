@@ -6,24 +6,18 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/format"
-	"html/template"
 	"os"
 	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/tools/go/packages"
-)
-
-const (
-	defaultFilename = "list_pages_gen.go"
 )
 
 var (
@@ -38,6 +32,18 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\tmain.go [flags] [<generated-lister-file>]\n\n")
 	fmt.Fprintf(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
+}
+
+type TemplateData struct {
+	Parameters      string
+	AWSService      string
+	ServicePackage  string
+	InputPaginator  string
+	OutputPaginator string
+	Name            string
+	AWSName         string
+	ParamType       string
+	ResultType      string
 }
 
 func main() {
@@ -57,57 +63,77 @@ func main() {
 		*outputPaginator = *paginator
 	}
 
-	filename := defaultFilename
+	filename := "list_pages_gen.go"
 	if args := flag.Args(); len(args) > 0 {
 		filename = args[0]
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
+
+	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
+
 	service, err := data.LookupService(servicePackage)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	awsService := service.GoV2Package()
+	awsPkg := service.GoPackageName()
+
+	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsPkg)
+	pkg, err := parsePackage(sourcePackage)
+	if err != nil {
+		g.Fatalf("parsing package (%s): %s", sourcePackage, err)
+	}
+
+	d := g.NewGoFileDestination(filename)
+
+	templateData := TemplateData{
+		Parameters:      strings.Join(os.Args[1:], " "),
+		AWSService:      awsPkg,
+		ServicePackage:  servicePackage,
+		InputPaginator:  *inputPaginator,
+		OutputPaginator: *outputPaginator,
+	}
+
+	if err := d.BufferTemplate("header", headerTemplate, templateData); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
 
 	functions := strings.Split(*listOps, ",")
 	slices.Sort(functions)
-
-	tmpl := template.Must(template.New("function").Parse(functionTemplate))
-
-	generator := Generator{
-		tmpl:            tmpl,
-		inputPaginator:  *inputPaginator,
-		outputPaginator: *outputPaginator,
-		g:               g,
-	}
-
-	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
-
-	generator.parsePackage(sourcePackage)
-
-	generator.printHeader(HeaderInfo{
-		Parameters:         strings.Join(os.Args[1:], " "),
-		DestinationPackage: servicePackage,
-		SourcePackage:      sourcePackage,
-	})
-
 	for _, functionName := range functions {
-		generator.generateFunction(functionName, awsService)
+		function, err := expandFunction(pkg, functionName, awsPkg)
+		if err != nil {
+			g.Fatalf("expanding function %q: %s", functionName, err)
+		}
+
+		funcName := function.Name.Name
+		funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
+		funcName = fixSomeInitialisms(funcName)
+
+		g.Infof("  %s.%s", servicePackage, funcName)
+
+		templateData.Name = funcName
+		templateData.AWSName = function.Name.Name
+		paramType, err := expandTypeField(function.Type.Params, false) // Assumes there is a single input parameter
+		if err != nil {
+			g.Fatalf("expanding function %q input parameter: %s", functionName, err)
+		}
+		templateData.ParamType = paramType
+		resultType, err := expandTypeField(function.Type.Results, true) // Assumes we can take the first return parameter
+		if err != nil {
+			g.Fatalf("expanding function %q result: %s", functionName, err)
+		}
+		templateData.ResultType = resultType
+
+		if err := d.BufferTemplate("function", functionTemplate, templateData); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
+		}
 	}
 
-	src := generator.format()
-
-	err = os.WriteFile(filename, src, 0644)
-	if err != nil {
+	if err := d.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
-}
-
-type HeaderInfo struct {
-	Parameters         string
-	DestinationPackage string
-	SourcePackage      string
 }
 
 type PackageFile struct {
@@ -119,65 +145,33 @@ type Package struct {
 	files []*PackageFile
 }
 
-type Generator struct {
-	buf             bytes.Buffer
-	pkg             *Package
-	tmpl            *template.Template
-	inputPaginator  string
-	outputPaginator string
-	g               *common.Generator
-}
-
-func (g *Generator) printHeader(headerInfo HeaderInfo) {
-	header := template.Must(template.New("header").Parse(headerTemplate))
-
-	err := header.Execute(&g.buf, headerInfo)
-	if err != nil {
-		g.g.Fatalf("error writing header: %s", err)
-	}
-}
-
-func (g *Generator) parsePackage(sourcePackage string) {
+func parsePackage(sourcePackage string) (*Package, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax,
 	}
 	pkgs, err := packages.Load(cfg, sourcePackage)
 	if err != nil {
-		g.g.Fatalf("loading %s: %s", sourcePackage, err)
+		return nil, fmt.Errorf("loading %s: %w", sourcePackage, err)
 	}
 	if len(pkgs) != 1 {
-		g.g.Fatalf("error: %d packages found", len(pkgs))
+		return nil, fmt.Errorf("error: %d packages found", len(pkgs))
 	}
-	g.addPackage(pkgs[0])
+	pkg := pkgs[0]
+
+	return &Package{
+		name: pkg.Name,
+		files: tfslices.ApplyToAll(pkg.Syntax, func(file *ast.File) *PackageFile {
+			return &PackageFile{
+				file: file,
+			}
+		}),
+	}, nil
 }
 
-func (g *Generator) addPackage(pkg *packages.Package) {
-	g.pkg = &Package{
-		name:  pkg.Name,
-		files: make([]*PackageFile, len(pkg.Syntax)),
-	}
-
-	for i, file := range pkg.Syntax {
-		g.pkg.files[i] = &PackageFile{
-			file: file,
-		}
-	}
-}
-
-type FuncSpec struct {
-	Name            string
-	AWSName         string
-	AWSService      string
-	ParamType       string
-	ResultType      string
-	InputPaginator  string
-	OutputPaginator string
-}
-
-func (g *Generator) generateFunction(functionName, awsService string) {
+func expandFunction(pkg *Package, functionName, awsService string) (*ast.FuncDecl, error) {
 	var function *ast.FuncDecl
 
-	for _, file := range g.pkg.files {
+	for _, file := range pkg.files {
 		if file.file != nil {
 			for _, decl := range file.file.Decls {
 				if funcDecl, ok := decl.(*ast.FuncDecl); ok {
@@ -194,29 +188,13 @@ func (g *Generator) generateFunction(functionName, awsService string) {
 	}
 
 	if function == nil {
-		g.g.Fatalf("function \"%s\" not found", functionName)
+		return nil, fmt.Errorf("function %q not found", functionName)
 	}
 
-	funcName := function.Name.Name
-	funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
-
-	funcSpec := FuncSpec{
-		Name:            fixSomeInitialisms(funcName),
-		AWSName:         function.Name.Name,
-		AWSService:      awsService,
-		ParamType:       g.expandTypeField(function.Type.Params, false), // Assumes there is a single input parameter
-		ResultType:      g.expandTypeField(function.Type.Results, true), // Assumes we can take the first return parameter
-		InputPaginator:  g.inputPaginator,
-		OutputPaginator: g.outputPaginator,
-	}
-
-	err := g.tmpl.Execute(&g.buf, funcSpec)
-	if err != nil {
-		g.g.Fatalf("writing function %q: %s", functionName, err)
-	}
+	return function, nil
 }
 
-func (g *Generator) expandTypeField(field *ast.FieldList, result bool) string {
+func expandTypeField(field *ast.FieldList, result bool) (string, error) {
 	typeValue := field.List[0].Type
 
 	if !result {
@@ -224,20 +202,18 @@ func (g *Generator) expandTypeField(field *ast.FieldList, result bool) string {
 	}
 
 	if star, ok := typeValue.(*ast.StarExpr); ok {
-		return fmt.Sprintf("*%s", g.expandTypeExpr(star.X))
+		return expandTypeExpr(star.X)
 	}
 
-	g.g.Fatalf("Unexpected type expression: (%[1]T) %[1]v", typeValue)
-	return ""
+	return "", fmt.Errorf("unexpected type expression: (%[1]T) %[1]v", typeValue)
 }
 
-func (g *Generator) expandTypeExpr(expr ast.Expr) string {
+func expandTypeExpr(expr ast.Expr) (string, error) {
 	if ident, ok := expr.(*ast.Ident); ok {
-		return fmt.Sprintf("%s.%s", g.pkg.name, ident.Name)
+		return ident.Name, nil
 	}
 
-	g.g.Fatalf("Unexpected expression: (%[1]T) %[1]v", expr)
-	return ""
+	return "", fmt.Errorf("unexpected expression: (%[1]T) %[1]v", expr)
 }
 
 //go:embed header.gtpl
@@ -245,16 +221,6 @@ var headerTemplate string
 
 //go:embed function.gtpl
 var functionTemplate string
-
-func (g *Generator) format() []byte {
-	src, err := format.Source(g.buf.Bytes())
-	if err != nil {
-		g.g.Fatalf("warning: internal error: invalid Go generated: %s", err)
-		g.g.Fatalf("warning: compile the package to analyze the error")
-		return g.buf.Bytes()
-	}
-	return src
-}
 
 func fixSomeInitialisms(s string) string {
 	replace := s
