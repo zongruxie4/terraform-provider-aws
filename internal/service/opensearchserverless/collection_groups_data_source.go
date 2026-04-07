@@ -87,7 +87,7 @@ type collectionGroupsDataSourceModel struct {
 type collectionGroupSummaryModel struct {
 	ARN                 types.String                                                   `tfsdk:"arn"`
 	CapacityLimits      fwtypes.ListNestedObjectValueOf[capacityLimitsDataSourceModel] `tfsdk:"capacity_limits"`
-	CreatedDate         timetypes.RFC3339                                              `tfsdk:"created_date"`
+	CreatedAt           timetypes.RFC3339                                              `tfsdk:"created_date"`
 	ID                  types.String                                                   `tfsdk:"id"`
 	Name                types.String                                                   `tfsdk:"name"`
 	NumberOfCollections types.Int32                                                    `tfsdk:"number_of_collections"`
@@ -96,5 +96,5 @@ type collectionGroupSummaryModel struct {
 
 type summariesData struct {
 	awstypes.CollectionGroupSummary
-	CreatedDate string `tfsdk:"created_date"`
+	CreatedAt string `tfsdk:"created_date"`
 }
