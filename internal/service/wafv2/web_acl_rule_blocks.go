@@ -105,7 +105,7 @@ var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 	}
 })
 
-func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleGeoMatchStatementModel](ctx),
 		Validators: []validator.List{
@@ -142,7 +142,7 @@ func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Geo match statement.",
 	}
-}
+})
 
 func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
