@@ -29,22 +29,21 @@ var emptyBlock = tfsync.OnceValueCtx(func(ctx context.Context) *schema.ListNeste
 	}
 })
 
-var nameOnlyBlock = sync.OnceValue(func() func(context.Context, string) schema.ListNestedBlock {
-	return func(ctx context.Context, description string) schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
-			Validators: []validator.List{listvalidator.SizeAtMost(1)},
-			NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					names.AttrName: schema.StringAttribute{
-						Required:    true,
-						Description: description,
-					},
+// nameOnlyBlock cannot be cached because of the description parameter
+func nameOnlyBlock(ctx context.Context, description string) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required:    true,
+					Description: description,
 				},
 			},
-		}
+		},
 	}
-})
+}
 
 var jaFingerprintBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
 	return func(ctx context.Context) schema.ListNestedBlock {
@@ -1146,8 +1145,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"method":                emptyBlock(ctx),
 				"query_string":          emptyBlock(ctx),
-				"single_header":         nameOnlyBlock()(ctx, "Header name"),
-				"single_query_argument": nameOnlyBlock()(ctx, "Query argument name"),
+				"single_header":         nameOnlyBlock(ctx, "Header name"),
+				"single_query_argument": nameOnlyBlock(ctx, "Query argument name"),
 				"uri_fragment": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleUriFragmentModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
