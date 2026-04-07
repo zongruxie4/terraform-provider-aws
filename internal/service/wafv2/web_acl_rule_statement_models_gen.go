@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
 
 // StatementModelMaxLevel is the maximum nesting depth for logical statements.
@@ -209,7 +210,7 @@ func statementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func andStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
+var andStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndStatementLevel0Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -220,7 +221,7 @@ func andStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical AND statement.",
 	}
-}
+})
 
 func notStatementBlockLevel0(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -342,7 +343,7 @@ func statementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func andStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
+var andStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndStatementLevel1Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -353,7 +354,7 @@ func andStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical AND statement.",
 	}
-}
+})
 
 func notStatementBlockLevel1(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -481,7 +482,7 @@ func statementBlockLevel3(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func andStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
+var andStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndStatementLevel2Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -492,7 +493,7 @@ func andStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Logical AND statement.",
 	}
-}
+})
 
 func notStatementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{

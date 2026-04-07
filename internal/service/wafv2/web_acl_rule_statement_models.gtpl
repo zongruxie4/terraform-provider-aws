@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
 
 // StatementModelMaxLevel is the maximum nesting depth for logical statements.
@@ -103,7 +104,7 @@ func statementBlockLevel{{.}}(ctx context.Context) schema.ListNestedBlock {
 
 {{- if gt . 0}}
 
-func andStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var andStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -114,7 +115,7 @@ func andStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlo
 		},
 		Description: "Logical AND statement.",
 	}
-}
+})
 
 func notStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
