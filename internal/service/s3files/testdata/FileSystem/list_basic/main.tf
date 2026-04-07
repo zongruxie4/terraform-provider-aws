@@ -4,7 +4,7 @@
 resource "aws_s3_bucket" "test" {
   count = var.resource_count
 
-  bucket = "s3files-private-beta-2025-${var.rName}-${count.index}"
+  bucket = "${var.rName}-${count.index}"
 }
 
 resource "aws_s3_bucket_versioning" "test" {

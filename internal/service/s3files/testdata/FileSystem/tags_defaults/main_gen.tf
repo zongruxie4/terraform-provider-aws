@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-${var.rName}"
+  bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
