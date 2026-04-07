@@ -143,10 +143,10 @@ func TestAccOpenSearchServerlessCollectionGroup_capacityLimits(t *testing.T) {
 				Config: testAccCollectionGroupConfig_capacityLimits(rName, 2, 16, 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_indexing_capacity_in_ocu", "2"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_indexing_capacity_in_ocu", "16"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.min_search_capacity_in_ocu", "2"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_limits.max_search_capacity_in_ocu", "16"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.min_indexing_capacity_in_ocu", "2"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.max_indexing_capacity_in_ocu", "16"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.min_search_capacity_in_ocu", "2"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_limits.0.max_search_capacity_in_ocu", "16"),
 				),
 			},
 			{
@@ -301,7 +301,7 @@ resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   standby_replicas = "ENABLED"
 
-  capacity_limits = {
+  capacity_limits {
     min_indexing_capacity_in_ocu = %[2]d
     max_indexing_capacity_in_ocu = %[3]d
     min_search_capacity_in_ocu   = %[4]d

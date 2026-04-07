@@ -464,31 +464,31 @@ resource "aws_opensearchserverless_collection" "test" {
 func testAccCollectionConfig_collectionGroupName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_collection_group" "test" {
- name             = %[1]q
- standby_replicas = "ENABLED"
+  name             = %[1]q
+  standby_replicas = "ENABLED"
 }
 
 resource "aws_opensearchserverless_security_policy" "test" {
- name = %[1]q
- type = "encryption"
- policy = jsonencode({
-   "Rules" = [
-     {
-       "Resource" = [
-         "collection/%[1]s"
-       ],
-       "ResourceType" = "collection"
-     }
-   ],
-   "AWSOwnedKey" = true
- })
+  name = %[1]q
+  type = "encryption"
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/%[1]s"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
 }
 
 resource "aws_opensearchserverless_collection" "test" {
- name                 = %[1]q
- collection_group_name = aws_opensearchserverless_collection_group.test.name
+  name                  = %[1]q
+  collection_group_name = aws_opensearchserverless_collection_group.test.name
 
- depends_on = [aws_opensearchserverless_security_policy.test]
+  depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName)
 }
@@ -496,12 +496,12 @@ resource "aws_opensearchserverless_collection" "test" {
 func testAccCollectionConfig_encryptionConfigAWSOwned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_collection" "test" {
- name = %[1]q
+  name = %[1]q
 
- encryption_config {
-   aws_owned_key = true
-   kms_key_arn   = null
- }
+  encryption_config {
+    aws_owned_key = true
+    kms_key_arn   = null
+  }
 }
 `, rName)
 }
@@ -509,17 +509,17 @@ resource "aws_opensearchserverless_collection" "test" {
 func testAccCollectionConfig_encryptionConfigKMS(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_opensearchserverless_collection" "test" {
- name = %[1]q
+  name = %[1]q
 
- encryption_config {
-   aws_owned_key = null
-   kms_key_arn   = aws_kms_key.test.arn
- }
+  encryption_config {
+    aws_owned_key = null
+    kms_key_arn   = aws_kms_key.test.arn
+  }
 }
 `, rName)
 }
