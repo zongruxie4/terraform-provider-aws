@@ -226,7 +226,7 @@ var managedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Contex
 	}
 })
 
-func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexPatternSetReferenceStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -247,7 +247,7 @@ func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNest
 		},
 		Description: "Rule statement used to search web request components for matches with regular expressions from a RegexPatternSet.",
 	}
-}
+})
 
 func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
