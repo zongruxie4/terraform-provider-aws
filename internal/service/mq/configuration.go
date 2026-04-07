@@ -99,6 +99,11 @@ func resourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -227,6 +232,11 @@ func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining MQ Configuration: %s", d.Id())
+		return diags
+	}
 
 	log.Printf("[INFO] Deleting MQ Configuration: %s", d.Id())
 	_, err := conn.DeleteConfiguration(ctx, &mq.DeleteConfigurationInput{

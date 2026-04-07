@@ -46,9 +46,10 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 			{
 				Config: testAccConfigurationConfig_descriptionUpdated(rName),
@@ -121,9 +122,10 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -158,9 +160,10 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -195,9 +198,10 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -227,9 +231,10 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 			{
 				Config: testAccConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -246,6 +251,33 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 					testAccCheckConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMQConfiguration_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop, // this purposely leaves dangling resources, since skip_destroy = true
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationConfig_skipDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},
@@ -401,6 +433,24 @@ resource "aws_mq_configuration" "test" {
 
   data = <<DATA
 consumer_timeout = 60000
+DATA
+}
+`, rName)
+}
+
+func testAccConfigurationConfig_skipDestroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "ActiveMQ"
+  engine_version = "5.19"
+  skip_destroy   = true
+
+  data = <<DATA
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<broker xmlns="http://activemq.apache.org/schema/core">
+</broker>
 DATA
 }
 `, rName)
