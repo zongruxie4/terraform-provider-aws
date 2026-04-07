@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"context"
+	"sync"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -50,12 +51,16 @@ var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Bl
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"fallback_behavior": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-					Required:   true,
-				},
+				"fallback_behavior": fallbackBehaviorAttrRequired(),
 			},
 		},
+	}
+})
+
+var fallbackBehaviorAttrRequired = sync.OnceValue(func() schema.Attribute {
+	return schema.StringAttribute{
+		CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+		Required:   true,
 	}
 })
 
@@ -81,20 +86,13 @@ var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("MATCH", "NO_MATCH"),
-								},
-							},
+							"fallback_behavior": fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
 							"position": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("FIRST", "LAST", "ANY"),
-								},
+								CustomType: fwtypes.StringEnumType[awstypes.ForwardedIPPosition](),
+								Required:   true,
 							},
 						},
 					},
@@ -126,12 +124,7 @@ var geoMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.OneOf("MATCH", "NO_MATCH"),
-								},
-							},
+							"fallback_behavior": fallbackBehaviorAttrRequired(),
 							"header_name": schema.StringAttribute{
 								Required: true,
 							},
@@ -300,11 +293,9 @@ var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 					},
 				},
 				"positional_constraint": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.PositionalConstraint](),
 					Required:    true,
 					Description: "Area within the portion of a web request that you want AWS WAF to search for SearchString.",
-					Validators: []validator.String{
-						stringvalidator.OneOf("EXACTLY", "STARTS_WITH", "ENDS_WITH", "CONTAINS", "CONTAINS_WORD"),
-					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -965,12 +956,7 @@ var forwardedIPConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"fallback_behavior": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.OneOf("MATCH", "NO_MATCH"),
-					},
-				},
+				"fallback_behavior": fallbackBehaviorAttrRequired(),
 				"header_name": schema.StringAttribute{
 					Required: true,
 				},
@@ -1178,10 +1164,8 @@ var textTransformationBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 					Required: true,
 				},
 				names.AttrType: schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.OneOf("NONE", "COMPRESS_WHITE_SPACE", "HTML_ENTITY_DECODE", "LOWERCASE", "CMD_LINE", "URL_DECODE", "BASE64_DECODE", "HEX_DECODE", "MD5", "REPLACE_COMMENTS", "ESCAPE_SEQ_DECODE", "SQL_HEX_DECODE", "CSS_DECODE", "JS_DECODE", "NORMALIZE_PATH", "NORMALIZE_PATH_WIN", "REMOVE_NULLS", "REPLACE_NULLS", "BASE64_DECODE_EXT", "URL_DECODE_UNI", "UTF8_TO_UNICODE"),
-					},
+					CustomType: fwtypes.StringEnumType[awstypes.TextTransformationType](),
+					Required:   true,
 				},
 			},
 		},
