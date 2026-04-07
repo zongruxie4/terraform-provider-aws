@@ -230,7 +230,7 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 
 	if !plan.Iops.Equal(state.Iops) || !plan.Size.Equal(state.Size) || !plan.Throughput.Equal(state.Throughput) || !plan.VolumeType.Equal(state.VolumeType) {
 		input := ec2.ModifyVolumeInput{
-			VolumeId: aws.String(state.ID.ValueString()),
+			VolumeId: state.ID.ValueStringPointer(),
 		}
 
 		if !plan.Iops.Equal(state.Iops) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
