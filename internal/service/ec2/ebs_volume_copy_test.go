@@ -42,7 +42,7 @@ func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -77,103 +77,10 @@ func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfec2.ResourceEBSVolumeCopy, resourceName, ebsVolumeCopyDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSVolumeCopy_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ebsVolumeCopy awstypes.Volume
-	resourceName := "aws_ebs_volume_copy.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEBSVolumeCopyConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSVolumeCopy_defaultTags_providerOnly(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ebsVolumeCopy awstypes.Volume
-	resourceName := "aws_ebs_volume_copy.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
-					testAccEBSVolumeCopyConfig_basic(),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all."+acctest.CtProviderKey1, acctest.CtProviderValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -200,7 +107,7 @@ func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
 				),
 			},
@@ -212,7 +119,7 @@ func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_updateSize(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
 					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "2"),
 				),
@@ -247,7 +154,7 @@ func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_iops(3000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 				),
@@ -260,7 +167,7 @@ func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_iops(4000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
 					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
@@ -296,7 +203,7 @@ func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_throughput(125),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
 				),
@@ -309,7 +216,7 @@ func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_throughput(150),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
 					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "150"),
@@ -345,7 +252,7 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
 				),
 			},
 			{
@@ -356,7 +263,7 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_volumeTypeGP3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
 					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
@@ -396,7 +303,11 @@ func testAccCheckEBSVolumeCopyDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
-func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name string, ebsVolumeCopy *awstypes.Volume) resource.TestCheckFunc {
+func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+	return testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, name, nil)
+}
+
+func testAccCheckEBSVolumeCopyExistsWithVolume(ctx context.Context, t *testing.T, name string, ebsVolumeCopy *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -414,7 +325,9 @@ func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name str
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, "EBS Volume Copy", rs.Primary.ID, err)
 		}
 
-		*ebsVolumeCopy = *resp
+		if ebsVolumeCopy != nil {
+			*ebsVolumeCopy = *resp
+		}
 
 		return nil
 	}
@@ -506,29 +419,4 @@ resource "aws_ebs_volume_copy" "test" {
   volume_type      = "gp3"
 }
 `)
-}
-
-func testAccEBSVolumeCopyConfig_tags1(tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
-resource "aws_ebs_volume_copy" "test" {
-  source_volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccEBSVolumeCopyConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
-resource "aws_ebs_volume_copy" "test" {
-  source_volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
