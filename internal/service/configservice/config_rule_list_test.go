@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConfigServiceConfigRule_List_basic(t *testing.T) {
+func testAccConfigRule_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_configservice_config_rule.test[0]"
 	resourceName2 := "aws_configservice_config_rule.test[1]"
@@ -30,7 +30,7 @@ func TestAccConfigServiceConfigRule_List_basic(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -77,13 +77,13 @@ func TestAccConfigServiceConfigRule_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigRule_List_includeResource(t *testing.T) {
+func testAccConfigRule_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_configservice_config_rule.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -140,7 +140,7 @@ func TestAccConfigServiceConfigRule_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigRule_List_regionOverride(t *testing.T) {
+func testAccConfigRule_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_configservice_config_rule.test[0]"
 	resourceName2 := "aws_configservice_config_rule.test[1]"
@@ -148,7 +148,7 @@ func TestAccConfigServiceConfigRule_List_regionOverride(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
