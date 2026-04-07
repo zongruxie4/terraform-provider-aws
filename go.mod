@@ -278,7 +278,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.67.2
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.21
-	github.com/aws/smithy-go v1.24.2
+	github.com/aws/smithy-go v1.24.3
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.6.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -318,7 +318,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.67.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.68.0
 	go.opentelemetry.io/otel v1.43.0
 	golang.org/x/crypto v0.49.0
 	golang.org/x/text v0.35.0
