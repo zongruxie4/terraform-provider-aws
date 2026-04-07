@@ -1188,7 +1188,7 @@ func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlock {
+var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(5)},
@@ -1274,6 +1274,6 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 			},
 		},
 	}
-}
+})
 
 // andStatementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
