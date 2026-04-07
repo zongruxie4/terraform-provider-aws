@@ -717,7 +717,7 @@ func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+var responseInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -810,7 +810,7 @@ func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
