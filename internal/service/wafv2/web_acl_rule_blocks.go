@@ -483,7 +483,7 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
+var identifierFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifierFieldModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -498,7 +498,7 @@ func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 func identifierFieldBlockDeprecated(ctx context.Context, deprecationMessage string) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -518,7 +518,7 @@ func identifierFieldBlockDeprecated(ctx context.Context, deprecationMessage stri
 	}
 }
 
-func identifiersFieldBlock(ctx context.Context) schema.ListNestedBlock {
+var identifiersFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifiersFieldModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -532,7 +532,7 @@ func identifiersFieldBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
@@ -676,7 +676,7 @@ func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func requestInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+var requestInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -693,9 +693,9 @@ func requestInspectionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
+var requestInspectionACFPBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionACFPModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -715,7 +715,7 @@ func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 var responseInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
