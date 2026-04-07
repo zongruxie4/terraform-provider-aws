@@ -208,30 +208,30 @@ func TestAccOpenSearchServerlessCollection_collectionGroupName(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollection(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionConfig_collectionGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "collection_group_name"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollection(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionConfig_collectionGroupName(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+ 					resource.TestCheckResourceAttrSet(resourceName, "collection_group_name"),
+ 				),
+ 			},
+ 			{
+ 				ResourceName:      resourceName,
+ 				ImportState:       true,
+ 				ImportStateVerify: true,
+ 			},
+ 		},
+ 	})
 }
 
 func TestAccOpenSearchServerlessCollection_encryptionConfig_owned(t *testing.T) {
@@ -254,7 +254,7 @@ func TestAccOpenSearchServerlessCollection_encryptionConfig_owned(t *testing.T) 
 				Config: testAccCollectionConfig_encryptionConfig_owned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
-					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", "true"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", acctest.CtTrue),
 				),
 			},
 			{
@@ -273,31 +273,31 @@ func TestAccOpenSearchServerlessCollection_encryptionConfigKMS(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollection(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionConfig_encryptionConfigKMS(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "encryption_config.0.kms_key_arn"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"encryption_config"},
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollection(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionConfig_encryptionConfigKMS(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+ 					resource.TestCheckResourceAttrSet(resourceName, "encryption_config.0.kms_key_arn"),
+ 				),
+ 			},
+ 			{
+ 				ResourceName:            resourceName,
+ 				ImportState:             true,
+ 				ImportStateVerify:       true,
+ 				ImportStateVerifyIgnore: []string{"encryption_config"},
+ 			},
+ 		},
+ 	})
 }
 
 func testAccCheckCollectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

@@ -18,28 +18,28 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionGroupDataSourceConfig_byID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
-				),
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollectionGroup(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionGroupDataSourceConfig_byID(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
+ 				),
+ 			},
+ 		},
+ 	})
 }
 
 func TestAccOpenSearchServerlessCollectionGroupDataSource_name(t *testing.T) {
@@ -48,28 +48,28 @@ func TestAccOpenSearchServerlessCollectionGroupDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_opensearchserverless_collection_group.test"
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionGroupDataSourceConfig_byName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
-				),
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollectionGroup(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionGroupDataSourceConfig_byName(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
+ 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
+ 				),
+ 			},
+ 		},
+ 	})
 }
 
 func testAccCollectionGroupDataSourceConfig_byID(rName string) string {

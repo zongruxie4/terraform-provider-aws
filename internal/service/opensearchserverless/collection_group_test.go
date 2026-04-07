@@ -26,34 +26,34 @@ func TestAccOpenSearchServerlessCollectionGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_collection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheckCollectionGroup(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollectionGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "ENABLED"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+ 		PreCheck: func() {
+ 			acctest.PreCheck(ctx, t)
+ 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+ 			testAccPreCheckCollectionGroup(ctx, t)
+ 		},
+ 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+ 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+ 		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+ 		Steps: []resource.TestStep{
+ 			{
+ 				Config: testAccCollectionGroupConfig_basic(rName),
+ 				Check: resource.ComposeTestCheckFunc(
+ 					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
+ 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+ 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "ENABLED"),
+ 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+ 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+ 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+ 				),
+ 			},
+ 			{
+ 				ResourceName:      resourceName,
+ 				ImportState:       true,
+ 				ImportStateVerify: true,
+ 			},
+ 		},
+ 	})
 }
 
 func TestAccOpenSearchServerlessCollectionGroup_disappears(t *testing.T) {
