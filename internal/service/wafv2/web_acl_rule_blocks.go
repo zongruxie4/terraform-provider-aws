@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var emptyBlock = tfsync.OnceValueCtx(func(ctx context.Context) *schema.ListNestedBlock {
-	return &schema.ListNestedBlock{
+var emptyBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
 		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
 		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{},
@@ -44,8 +44,8 @@ func nameOnlyBlock(ctx context.Context, description string) schema.ListNestedBlo
 	}
 }
 
-var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) *schema.ListNestedBlock {
-	return &schema.ListNestedBlock{
+var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
@@ -910,7 +910,7 @@ func scopeDownStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func customRequestHandlingBlock(ctx context.Context) schema.ListNestedBlock {
+var customRequestHandlingBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCustomRequestHandlingModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -929,7 +929,7 @@ func customRequestHandlingBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 func customResponseBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
