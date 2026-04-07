@@ -57,6 +57,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "user_status"),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
