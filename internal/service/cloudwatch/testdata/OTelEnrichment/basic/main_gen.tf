@@ -8,3 +8,8 @@ resource "aws_cloudwatch_otel_enrichment" "test" {
 
   depends_on = [aws_observabilityadmin_telemetry_enrichment.test]
 }
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
