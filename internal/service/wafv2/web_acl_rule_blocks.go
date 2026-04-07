@@ -959,7 +959,7 @@ var customResponseBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.B
 	}
 })
 
-func forwardedIPConfigBlock(ctx context.Context) schema.ListNestedBlock {
+var forwardedIPConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleForwardedIPConfigModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -977,7 +977,8 @@ func forwardedIPConfigBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
+
 func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleFieldToMatchModel](ctx),
