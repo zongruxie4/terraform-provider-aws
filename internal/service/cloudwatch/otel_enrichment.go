@@ -179,14 +179,14 @@ func waitOtelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, tim
 	var input cloudwatch.GetOTelEnrichmentInput
 	out, err := findOtelEnrichmentStatus(ctx, conn, &input)
 	if retry.NotFound(err) {
-		return nil, nil //nolint:nilnil
+		return nil, smarterr.NewError(err)
 	}
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
 	if out.Status == awstypes.OTelEnrichmentStatusStopped {
-		return nil, nil //nolint:nilnil
+		return nil, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(errors.New("OTel enrichment still running"))
