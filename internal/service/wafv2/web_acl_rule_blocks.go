@@ -61,7 +61,7 @@ var jaFingerprintBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Bl
 
 // statementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
 
-func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var ipSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIPSetReferenceStatementModel](ctx),
 		Validators: []validator.List{
@@ -103,7 +103,7 @@ func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "IP set reference statement.",
 	}
-}
+})
 
 func geoMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
