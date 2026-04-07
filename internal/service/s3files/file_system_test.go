@@ -152,6 +152,7 @@ func testAccCheckFileSystemDestroy(ctx context.Context, t *testing.T) resource.T
 func testAccFileSystemConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -183,7 +184,7 @@ resource "aws_iam_role" "test" {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:aws:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
           }
         }
       }
@@ -239,7 +240,7 @@ resource "aws_iam_role_policy" "test" {
           "kms:ReEncryptFrom",
           "kms:ReEncryptTo"
         ]
-        Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
         Condition = {
           StringLike = {
             "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
@@ -261,7 +262,7 @@ resource "aws_iam_role_policy" "test" {
           "events:PutTargets",
           "events:RemoveTargets"
         ]
-        Resource = "arn:aws:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
         Condition = {
           StringEquals = {
             "events:ManagedBy" = "elasticfilesystem.amazonaws.com"
@@ -277,7 +278,7 @@ resource "aws_iam_role_policy" "test" {
           "events:ListRules",
           "events:ListTargetsByRule"
         ]
-        Resource = "arn:aws:events:*:*:rule/*"
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
       }
     ]
   })
