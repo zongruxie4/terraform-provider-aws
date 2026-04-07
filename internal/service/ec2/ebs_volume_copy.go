@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -133,7 +132,7 @@ func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var input ec2.CopyVolumesInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("EBSVolumeCopy")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("EBSVolumeCopy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -220,7 +219,7 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	_, d := flex.Diff(ctx, plan, state)
+	_, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 

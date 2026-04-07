@@ -35,6 +35,7 @@ resource "aws_ebs_volume_copy" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference). This must match the Region of the source EBS volume referenced by `source_volume_id`.
 - `source_volume_id` - (Optional) ID of the source EBS volume to copy. This argument must be set when creating a new EBS volume copy. Changing this value forces replacement of the resource.
 - `size` - (Optional) Size of the copied volume, in GiB.
 - `iops` - (Optional) Provisioned IOPS for the copied volume. Use only with volume types that support provisioned IOPS, such as `gp3`.
@@ -51,7 +52,6 @@ This resource exports the following attributes in addition to the arguments abov
 - `arn` - Amazon Resource Name (ARN) of the copied EBS volume.
 - `availability_zone` - Availability Zone for the copied volume.
 - `id` - ID of the copied EBS volume.
-- `region` - Region where this resource is [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints).
 - `source_volume_id` - ID of the source EBS volume from which the copy was created.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
