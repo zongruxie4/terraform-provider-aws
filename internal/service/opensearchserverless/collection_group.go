@@ -166,7 +166,10 @@ func (r *collectionGroupResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	output, err := findCollectionGroupByID(ctx, conn, state.ID.ValueString())
+	input := opensearchserverless.BatchGetCollectionGroupInput{
+		Ids: []string{state.ID.ValueString()},
+	}
+	output, err := findCollectionGroup(ctx, conn, &input)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)

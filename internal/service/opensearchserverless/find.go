@@ -147,30 +147,8 @@ func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserve
 	return tfresource.AssertSingleValueResult(out.LifecyclePolicyDetails)
 }
 
-func findCollectionGroupByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionGroupDetail, error) {
-	input := opensearchserverless.BatchGetCollectionGroupInput{
-		Ids: []string{id},
-	}
-	out, err := conn.BatchGetCollectionGroup(ctx, &input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(out.CollectionGroupDetails)
-}
-
-func findCollectionGroupByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionGroupDetail, error) {
-	input := opensearchserverless.BatchGetCollectionGroupInput{
-		Names: []string{name},
-	}
-	out, err := conn.BatchGetCollectionGroup(ctx, &input)
+func findCollectionGroup(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.BatchGetCollectionGroupInput) (*types.CollectionGroupDetail, error) {
+	out, err := conn.BatchGetCollectionGroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

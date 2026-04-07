@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
@@ -211,7 +210,10 @@ func testAccCheckCollectionGroupDestroy(ctx context.Context, t *testing.T) resou
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindCollectionGroupByID(ctx, conn, rs.Primary.ID)
+			input := opensearchserverless.BatchGetCollectionGroupInput{
+				Ids: []string{rs.Primary.ID},
+			}
+			_, err := tfopensearchserverless.FindCollectionGroup(ctx, conn, &input)
 
 			if retry.NotFound(err) {
 				continue
@@ -240,7 +242,10 @@ func testAccCheckCollectionGroupExists(ctx context.Context, t *testing.T, name s
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
-		output, err := tfopensearchserverless.FindCollectionGroupByID(ctx, conn, rs.Primary.ID)
+		input := opensearchserverless.BatchGetCollectionGroupInput{
+			Ids: []string{rs.Primary.ID},
+		}
+		output, err := tfopensearchserverless.FindCollectionGroup(ctx, conn, &input)
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameCollectionGroup, rs.Primary.ID, err)
@@ -253,7 +258,7 @@ func testAccCheckCollectionGroupExists(ctx context.Context, t *testing.T, name s
 }
 
 func testAccPreCheckCollectionGroup(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 	input := opensearchserverless.ListCollectionGroupsInput{}
 	_, err := conn.ListCollectionGroups(ctx, &input)
