@@ -80,7 +80,7 @@ func main() {
 	awsPkg := service.GoPackageName()
 
 	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsPkg)
-	pkg, err := parsePackage(sourcePackage)
+	pkg, err := loadPackage(sourcePackage)
 	if err != nil {
 		g.Fatalf("parsing package (%s): %s", sourcePackage, err)
 	}
@@ -102,29 +102,43 @@ func main() {
 	functions := strings.Split(*listOps, ",")
 	slices.Sort(functions)
 	for _, functionName := range functions {
-		function, err := expandFunction(pkg, functionName, awsPkg)
+		function := pkg.findFunction(functionName)
 		if err != nil {
-			g.Fatalf("expanding function %q: %s", functionName, err)
+			g.Fatalf("function (%q) not found", functionName)
 		}
 
-		funcName := function.Name.Name
-		funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
-		funcName = fixSomeInitialisms(funcName)
+		awsFunctionName := function.Name()
+		localFunctionName := localFunctionName(awsFunctionName)
 
-		g.Infof("  %s.%s", servicePackage, funcName)
+		g.Infof("  %s.%s", servicePackage, localFunctionName)
 
-		templateData.Name = funcName
-		templateData.AWSName = function.Name.Name
-		paramType, err := expandTypeField(function.Type.Params, false) // Assumes there is a single input parameter
-		if err != nil {
-			g.Fatalf("expanding function %q input parameter: %s", functionName, err)
+		templateData.Name = localFunctionName
+		templateData.AWSName = awsFunctionName
+
+		params, results := function.Params(), function.Results()
+		// 1st parameter should be context.Context.
+		// 2nd parameter should be *<Service>.<FunctionName>Input.
+		if len(params) < 2 {
+			g.Fatalf("%d params found", len(params))
 		}
-		templateData.ParamType = paramType
-		resultType, err := expandTypeField(function.Type.Results, true) // Assumes we can take the first return parameter
-		if err != nil {
-			g.Fatalf("expanding function %q result: %s", functionName, err)
+		expr := params[1].Type
+		name := typeName(expr)
+		if name == "" {
+			g.Fatalf("unexpected type expression: (%[1]T) %[1]v", expr)
 		}
-		templateData.ResultType = resultType
+		templateData.ParamType = name
+
+		// 1st result should be *<Service>.<FunctionName>Output.
+		// 2nd result should be error.
+		if len(results) < 2 {
+			g.Fatalf("%d results found", len(results))
+		}
+		expr = results[0].Type
+		name = typeName(expr)
+		if name == "" {
+			g.Fatalf("unexpected type expression: (%[1]T) %[1]v", expr)
+		}
+		templateData.ResultType = name
 
 		if err := d.BufferTemplate("function", functionTemplate, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
@@ -145,7 +159,7 @@ type Package struct {
 	files []*PackageFile
 }
 
-func parsePackage(sourcePackage string) (*Package, error) {
+func loadPackage(sourcePackage string) (*Package, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax,
 	}
@@ -154,7 +168,7 @@ func parsePackage(sourcePackage string) (*Package, error) {
 		return nil, fmt.Errorf("loading %s: %w", sourcePackage, err)
 	}
 	if len(pkgs) != 1 {
-		return nil, fmt.Errorf("error: %d packages found", len(pkgs))
+		return nil, fmt.Errorf("%d packages found", len(pkgs))
 	}
 	pkg := pkgs[0]
 
@@ -168,52 +182,56 @@ func parsePackage(sourcePackage string) (*Package, error) {
 	}, nil
 }
 
-func expandFunction(pkg *Package, functionName, awsService string) (*ast.FuncDecl, error) {
-	var function *ast.FuncDecl
-
+func (pkg *Package) findFunction(functionName string) *Function {
 	for _, file := range pkg.files {
 		if file.file != nil {
 			for _, decl := range file.file.Decls {
 				if funcDecl, ok := decl.(*ast.FuncDecl); ok {
 					if funcDecl.Name.Name == functionName {
-						function = funcDecl
-						break
+						return &Function{
+							funcDecl: funcDecl,
+						}
 					}
 				}
-			}
-			if function != nil {
-				break
 			}
 		}
 	}
 
-	if function == nil {
-		return nil, fmt.Errorf("function %q not found", functionName)
-	}
-
-	return function, nil
+	return nil
 }
 
-func expandTypeField(field *ast.FieldList, result bool) (string, error) {
-	typeValue := field.List[0].Type
-
-	if !result {
-		typeValue = field.List[1].Type
-	}
-
-	if star, ok := typeValue.(*ast.StarExpr); ok {
-		return expandTypeExpr(star.X)
-	}
-
-	return "", fmt.Errorf("unexpected type expression: (%[1]T) %[1]v", typeValue)
+type Function struct {
+	funcDecl *ast.FuncDecl
 }
 
-func expandTypeExpr(expr ast.Expr) (string, error) {
+func (function *Function) Name() string {
+	return function.funcDecl.Name.Name
+}
+
+func (function *Function) Params() []*ast.Field {
+	return function.funcDecl.Type.Params.List
+}
+
+func (function *Function) Results() []*ast.Field {
+	return function.funcDecl.Type.Results.List
+}
+
+func identifierName(expr ast.Expr) string {
 	if ident, ok := expr.(*ast.Ident); ok {
-		return ident.Name, nil
+		return ident.Name
 	}
+	return ""
+}
 
-	return "", fmt.Errorf("unexpected expression: (%[1]T) %[1]v", expr)
+func typeName(expr ast.Expr) string {
+	if star, ok := expr.(*ast.StarExpr); ok {
+		return identifierName(star.X)
+	}
+	return ""
+}
+
+func localFunctionName(awsFunctionName string) string {
+	return fixSomeInitialisms(strings.ToLower(awsFunctionName[0:1]) + awsFunctionName[1:])
 }
 
 //go:embed header.gtpl
