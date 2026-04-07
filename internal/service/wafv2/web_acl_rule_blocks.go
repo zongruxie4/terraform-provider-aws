@@ -534,7 +534,7 @@ var identifiersFieldBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema
 	}
 })
 
-func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesBotControlRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesBotControlRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -551,9 +551,9 @@ func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNeste
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesACFPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesACFPRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesACFPRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -582,9 +582,9 @@ func awsManagedRulesACFPRuleSetBlock(ctx context.Context) schema.ListNestedBlock
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesATPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesATPRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesATPRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -607,9 +607,9 @@ func awsManagedRulesATPRuleSetBlock(ctx context.Context) schema.ListNestedBlock 
 			},
 		},
 	}
-}
+})
 
-func awsManagedRulesAntiDDoSRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+var awsManagedRulesAntiDDoSRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -626,9 +626,9 @@ func awsManagedRulesAntiDDoSRuleSetBlock(ctx context.Context) schema.ListNestedB
 			},
 		},
 	}
-}
+})
 
-func clientSideActionConfigBlock(ctx context.Context) schema.ListNestedBlock {
+var clientSideActionConfigBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionConfigModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -638,9 +638,9 @@ func clientSideActionConfigBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
-func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
+var clientSideActionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -674,7 +674,7 @@ func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 var requestInspectionBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
