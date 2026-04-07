@@ -280,7 +280,7 @@ var statementBlockLevel0NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context)
 })
 
 // statementBlockLevel0Single is for NOT statement that needs exactly one nested statement.
-func statementBlockLevel0Single(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel0Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -308,7 +308,7 @@ func statementBlockLevel0Single(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Nested statement for NOT operation.",
 	}
-}
+})
 
 func statementBlockLevel2(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
@@ -416,7 +416,7 @@ var statementBlockLevel1NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context)
 })
 
 // statementBlockLevel1Single is for NOT statement that needs exactly one nested statement.
-func statementBlockLevel1Single(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -447,7 +447,7 @@ func statementBlockLevel1Single(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Nested statement for NOT operation.",
 	}
-}
+})
 
 func statementBlockLevel3(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
@@ -555,7 +555,7 @@ var statementBlockLevel2NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context)
 })
 
 // statementBlockLevel2Single is for NOT statement that needs exactly one nested statement.
-func statementBlockLevel2Single(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel2Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -586,7 +586,7 @@ func statementBlockLevel2Single(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Nested statement for NOT operation.",
 	}
-}
+})
 
 // statementBlock returns the top-level statement block schema.
 func statementBlock(ctx context.Context, level int) schema.ListNestedBlock {
