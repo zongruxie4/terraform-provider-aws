@@ -249,7 +249,7 @@ var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx contex
 	}
 })
 
-func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var rateBasedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -284,9 +284,9 @@ func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rate-based statement.",
 	}
-}
+})
 
-func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleByteMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -314,9 +314,9 @@ func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Byte match statement.",
 	}
-}
+})
 
-func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var sqliMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSqliMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -337,9 +337,9 @@ func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "SQL injection match statement.",
 	}
-}
+})
 
-func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var xssMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleXssMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -351,9 +351,9 @@ func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Cross-site scripting match statement.",
 	}
-}
+})
 
-func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var sizeConstraintStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSizeConstraintStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -377,9 +377,9 @@ func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Size constraint statement.",
 	}
-}
+})
 
-func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var regexMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -400,9 +400,9 @@ func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Rule statement used to search web request components for a match against a single regular expression.",
 	}
-}
+})
 
-func labelMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var labelMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleLabelMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -425,9 +425,9 @@ func labelMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "Label match statement.",
 	}
-}
+})
 
-func asnMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
+var asnMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAsnMatchStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -449,7 +449,7 @@ func asnMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		Description: "ASN match statement.",
 	}
-}
+})
 
 func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
