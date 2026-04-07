@@ -1165,7 +1165,7 @@ var fieldToMatchBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 	}
 })
 
-func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
+var textTransformationBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleTextTransformModel](ctx),
 		Validators: []validator.List{
@@ -1186,7 +1186,7 @@ func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
-}
+})
 
 var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
