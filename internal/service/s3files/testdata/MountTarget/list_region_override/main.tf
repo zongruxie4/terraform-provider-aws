@@ -3,15 +3,14 @@
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {
-  region = var.region
-}
 
 resource "aws_vpc" "test" {
+  region     = var.region
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+  region            = var.region
   count             = var.resource_count
   vpc_id            = aws_vpc.test.id
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
@@ -19,7 +18,8 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_availability_zones" "available" {
-  state = "available"
+  region = var.region
+  state  = "available"
 
   filter {
     name   = "opt-in-status"
@@ -58,7 +58,7 @@ resource "aws_iam_role" "test" {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${var.region}:${data.aws_caller_identity.current.account_id}:file-system/*"
           }
         }
       }
@@ -114,10 +114,10 @@ resource "aws_iam_role_policy" "test" {
           "kms:ReEncryptFrom",
           "kms:ReEncryptTo"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         Condition = {
           StringLike = {
-            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "s3.${var.region}.amazonaws.com"
             "kms:EncryptionContext:aws:s3:arn" = [
               aws_s3_bucket.test.arn,
               "${aws_s3_bucket.test.arn}/*"
@@ -167,7 +167,8 @@ resource "aws_s3files_file_system" "test" {
 }
 
 resource "aws_s3files_mount_target" "test" {
-  count = var.resource_count
+  region = var.region
+  count  = var.resource_count
 
   file_system_id = aws_s3files_file_system.test.id
   subnet_id      = aws_subnet.test[count.index].id
