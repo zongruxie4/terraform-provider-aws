@@ -64,8 +64,8 @@ func (l *methodListResource) List(ctx context.Context, request list.ListRequest,
 	resourceID := query.ResourceID.ValueString()
 
 	tflog.Info(ctx, "Listing API Gateway Methods", map[string]any{
-		"rest_api_id": restAPIID,
-		"resource_id": resourceID,
+		"rest_api_id":        restAPIID,
+		names.AttrResourceID: resourceID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {

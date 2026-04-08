@@ -4,9 +4,9 @@
 package apigateway_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -61,11 +61,11 @@ func TestAccAPIGatewayMethod_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_api_gateway_method.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexp.MustCompile(`^(GET|POST) /test$`))),
+					querycheck.ExpectResourceDisplayName("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^(GET|POST) /test$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_api_gateway_method.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexp.MustCompile(`^(GET|POST) /test$`))),
+					querycheck.ExpectResourceDisplayName("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^(GET|POST) /test$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_api_gateway_method.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
