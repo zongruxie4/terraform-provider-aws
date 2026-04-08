@@ -30,6 +30,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Access Point",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newFileSystemDataSource,
+			TypeName: "aws_s3files_file_system",
+			Name:     "File System",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newFileSystemsDataSource,
+			TypeName: "aws_s3files_file_systems",
+			Name:     "File Systems",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
