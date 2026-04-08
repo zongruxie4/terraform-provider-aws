@@ -5,7 +5,7 @@ list "aws_s3files_mount_target" "test" {
   provider = aws
 
   config {
-    region          = var.region
-    file_system_id  = aws_s3files_file_system.test.id
+    region         = var.region
+    file_system_id = aws_s3files_file_system.test.id
   }
 }
