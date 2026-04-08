@@ -13,6 +13,8 @@ import (
 // Adapted from TestOnceValue in sync/once_test.go in the Go standard library
 
 func TestOnceValueCtx(t *testing.T) {
+	t.Parallel()
+
 	ctx := t.Context()
 	calls := 0
 	of := func(_ context.Context) int {
@@ -40,6 +42,8 @@ func TestOnceValueCtx(t *testing.T) {
 }
 
 func TestOnceValueCtxPanic(t *testing.T) {
+	t.Parallel()
+
 	calls := 0
 	f := sync.OnceValueCtx(func(_ context.Context) int {
 		calls++
