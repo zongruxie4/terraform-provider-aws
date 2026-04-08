@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 list "aws_s3files_mount_target" "test" {
-  provider = awsalternate
+  provider = aws
 
   config {
-    file_system_id = aws_s3files_file_system.test.id
-    region         = data.aws_region.alternate.name
+    region          = var.region
+    file_system_id  = aws_s3files_file_system.test.id
   }
 }
