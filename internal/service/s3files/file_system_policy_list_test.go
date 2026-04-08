@@ -83,6 +83,7 @@ func TestAccS3FilesFileSystemPolicy_List_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -94,6 +95,7 @@ func TestAccS3FilesFileSystemPolicy_List_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3files_file_system_policy.test", identity.Checks()),
