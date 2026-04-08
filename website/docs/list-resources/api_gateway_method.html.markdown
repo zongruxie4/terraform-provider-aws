@@ -27,6 +27,6 @@ list "aws_api_gateway_method" "example" {
 
 This list resource supports the following arguments:
 
-* `rest_api_id` - (Required) ID of the associated REST API.
-* `resource_id` - (Required) ID of the API Gateway Resource to list methods from.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `resource_id` - (Required) ID of the API Gateway Resource to list methods from.
+* `rest_api_id` - (Required) ID of the associated REST API.
