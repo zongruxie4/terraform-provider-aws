@@ -165,14 +165,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Method (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_key_required", method.ApiKeyRequired)
-	d.Set("authorization", method.AuthorizationType)
-	d.Set("authorization_scopes", method.AuthorizationScopes)
-	d.Set("authorizer_id", method.AuthorizerId)
-	d.Set("operation_name", method.OperationName)
-	d.Set("request_models", method.RequestModels)
-	d.Set("request_parameters", method.RequestParameters)
-	d.Set("request_validator_id", method.RequestValidatorId)
+	resourceMethodFlatten(d, method)
 
 	return diags
 }
@@ -377,6 +370,17 @@ func updateIntegration(ctx context.Context, d *schema.ResourceData, conn *apigat
 	}
 
 	return nil
+}
+
+func resourceMethodFlatten(d *schema.ResourceData, method *apigateway.GetMethodOutput) {
+	d.Set("api_key_required", method.ApiKeyRequired)
+	d.Set("authorization", method.AuthorizationType)
+	d.Set("authorization_scopes", method.AuthorizationScopes)
+	d.Set("authorizer_id", method.AuthorizerId)
+	d.Set("operation_name", method.OperationName)
+	d.Set("request_models", method.RequestModels)
+	d.Set("request_parameters", method.RequestParameters)
+	d.Set("request_validator_id", method.RequestValidatorId)
 }
 
 func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {

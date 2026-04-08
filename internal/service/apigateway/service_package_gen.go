@@ -7,6 +7,8 @@ package apigateway
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -295,6 +297,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newMethodResourceAsListResource,
+			TypeName: "aws_api_gateway_method",
+			Name:     "Method",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("http_method", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
