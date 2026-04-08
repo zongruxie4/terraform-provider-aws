@@ -38,7 +38,7 @@ import (
 // @IdentityAttribute("http_method")
 // @ImportIDHandler("integrationImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetIntegrationOutput")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 // @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
 // @Testing(plannableImportAction="NoOp")
 func resourceIntegration() *schema.Resource {
