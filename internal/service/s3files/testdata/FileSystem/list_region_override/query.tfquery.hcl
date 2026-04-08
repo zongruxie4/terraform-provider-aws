@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 list "aws_s3files_file_system" "test" {
-  provider = awsalternate
+  provider = aws
 
   config {
-    region = data.aws_region.alternate.name
+    region = var.region
   }
 }

@@ -6,6 +6,7 @@ package s3files
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -21,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -155,7 +156,7 @@ func (r *fileSystemResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateFileSystem(ctx, &input)
@@ -297,10 +298,11 @@ func findFileSystemByID(ctx context.Context, conn *s3files.Client, id string) (*
 
 func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string, timeout time.Duration) (*s3files.GetFileSystemOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
-		Target:  enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
-		Refresh: statusFileSystem(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
+		Refresh:    statusFileSystem(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -330,6 +332,9 @@ func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string,
 }
 
 func statusFileSystem(_ context.Context, conn *s3files.Client, id string) retry.StateRefreshFunc {
+	const iamPropagationBuffer = 3 * time.Minute
+	firstErrorTime := time.Time{}
+
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
@@ -341,8 +346,38 @@ func statusFileSystem(_ context.Context, conn *s3files.Client, id string) retry.
 			return nil, "", smarterr.NewError(err)
 		}
 
-		if output != nil && output.Status == awstypes.LifeCycleStateError {
-			return output, string(output.Status), smarterr.Errorf("in \"%s\" state with status message: %s", string(output.Status), aws.ToString(output.StatusMessage))
+		if output != nil {
+			status := string(output.Status)
+			statusMsg := aws.ToString(output.StatusMessage)
+
+			// s3files quirk: during creation, the resource may be in 'Creating' state with an error message
+			// such as IAM permissions
+			//   - Access denied: S3 Files does not have permissions to assume the provided role.
+			//   - Access denied: The provided role does not have permission to call s3:HeadObject on the provided bucket.
+			if output.Status == awstypes.LifeCycleStateCreating && strings.Contains(statusMsg, "Access denied") && strings.Contains(statusMsg, "does not have permission") {
+				if firstErrorTime.IsZero() {
+					firstErrorTime = time.Now()
+				}
+
+				// Allow time for IAM propagation
+				if time.Since(firstErrorTime) > iamPropagationBuffer {
+					return output, string(awstypes.LifeCycleStateError), smarterr.Errorf("in \"%s\" state with status message: %s", status, statusMsg)
+				}
+				// Still within propagation window, keep waiting
+				return output, status, nil
+			}
+
+			// Clear error timer if no error message
+			if statusMsg == "" {
+				firstErrorTime = time.Time{}
+			}
+
+			// Explicit error state
+			if output.Status == awstypes.LifeCycleStateError {
+				return output, status, smarterr.Errorf("in \"%s\" state with status message: %s", status, statusMsg)
+			}
+
+			return output, status, nil
 		}
 
 		return output, string(output.Status), nil
