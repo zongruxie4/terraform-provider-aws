@@ -34,7 +34,7 @@ import (
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
-// @Testing(importIgnore="rule.0.bucket_key_enabled")
+// @Testing(importIgnore="rule.0.blocked_encryption_types")
 // @Testing(plannableImportAction="NoOp")
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
