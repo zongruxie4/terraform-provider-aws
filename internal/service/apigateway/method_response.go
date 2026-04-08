@@ -28,6 +28,7 @@ import (
 )
 
 // @SDKResource("aws_api_gateway_method_response", name="Method Response")
+// @IdAttrFormat("agmr-{rest_api_id}-{resource_id}-{http_method}-{status_code}")
 // @IdentityAttribute("rest_api_id")
 // @IdentityAttribute("resource_id")
 // @IdentityAttribute("http_method")
@@ -113,7 +114,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method Response: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agmr-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
+	d.SetId(resourceMethodResponseIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
 
 	return diags
 }
@@ -234,6 +235,10 @@ func methodResponseCreateImportID(restApiID, resourceID, httpMethod, statusCode 
 	return restApiID + "/" + resourceID + "/" + httpMethod + "/" + statusCode
 }
 
+func resourceMethodResponseIDAttr(restApiID, resourceID, httpMethod, statusCode string) string {
+	return fmt.Sprintf("agmr-%s-%s-%s-%s", restApiID, resourceID, httpMethod, statusCode)
+}
+
 func (methodResponseImportID) Create(d *schema.ResourceData) string {
 	return methodResponseCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
 }
@@ -251,5 +256,5 @@ func (methodResponseImportID) Parse(id string) (string, map[string]any, error) {
 		names.AttrStatusCode: parts[3],
 	}
 
-	return fmt.Sprintf("agmr-%s-%s-%s-%s", parts[0], parts[1], parts[2], parts[3]), result, nil
+	return resourceMethodResponseIDAttr(parts[0], parts[1], parts[2], parts[3]), result, nil
 }

@@ -48,6 +48,7 @@ func TestAccAPIGatewayMethodResponse_Identity_basic(t *testing.T) {
 					testAccCheckMethodResponseExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "agmr-{rest_api_id}-{resource_id}-{http_method}-{status_code}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID:  tfknownvalue.AccountID(),
@@ -144,6 +145,7 @@ func TestAccAPIGatewayMethodResponse_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "agmr-{rest_api_id}-{resource_id}-{http_method}-{status_code}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID:  tfknownvalue.AccountID(),
