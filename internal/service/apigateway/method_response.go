@@ -230,8 +230,12 @@ var _ inttypes.SDKv2ImportID = methodResponseImportID{}
 
 type methodResponseImportID struct{}
 
+func methodResponseCreateImportID(restApiID, resourceID, httpMethod, statusCode string) string {
+	return restApiID + "/" + resourceID + "/" + httpMethod + "/" + statusCode
+}
+
 func (methodResponseImportID) Create(d *schema.ResourceData) string {
-	return d.Get("rest_api_id").(string) + "/" + d.Get(names.AttrResourceID).(string) + "/" + d.Get("http_method").(string) + "/" + d.Get(names.AttrStatusCode).(string)
+	return methodResponseCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
 }
 
 func (methodResponseImportID) Parse(id string) (string, map[string]any, error) {
