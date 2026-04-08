@@ -300,7 +300,7 @@ func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdF
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
+		return tfapigateway.MethodCreateImportID(rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
 }
 
