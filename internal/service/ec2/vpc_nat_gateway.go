@@ -355,7 +355,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
-	if err := flattenNATGateway(d, natGateway); err != nil {
+	if err := resourceNATGatewayFlatten(d, natGateway); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -364,7 +364,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 	return diags
 }
 
-func flattenNATGateway(d *schema.ResourceData, natGateway *awstypes.NatGateway) error {
+func resourceNATGatewayFlatten(d *schema.ResourceData, natGateway *awstypes.NatGateway) error {
 	d.Set("availability_mode", natGateway.AvailabilityMode)
 	d.Set("connectivity_type", natGateway.ConnectivityType)
 	d.Set(names.AttrVPCID, natGateway.VpcId)
