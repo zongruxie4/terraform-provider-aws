@@ -28,10 +28,12 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_s3_bucket" "test" {
+  region = var.region
   bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
+  region = var.region
   bucket = aws_s3_bucket.test.id
   versioning_configuration {
     status = "Enabled"
