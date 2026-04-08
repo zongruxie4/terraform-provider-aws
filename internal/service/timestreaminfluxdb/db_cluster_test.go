@@ -551,6 +551,30 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName), // var reference
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName), // conditional
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1251,6 +1275,56 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   vpc_security_group_ids        = [aws_security_group.test.id]
   db_instance_type              = "db.influx.medium"
   db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "db_parameter_group_identifier" {
+  type    = string
+  default = "InfluxDBV3Core"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.db_parameter_group_identifier
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "environment" {
+  type    = string
+  default = "test"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.environment == "test" ? "InfluxDBV3Core" : "InfluxDBV3Enterprise"
 
   depends_on = [
     aws_vpc_endpoint_route_table_association.test,
