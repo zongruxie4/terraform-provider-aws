@@ -157,6 +157,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3files_file_system" "test" {
+  region   = var.region
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
 
