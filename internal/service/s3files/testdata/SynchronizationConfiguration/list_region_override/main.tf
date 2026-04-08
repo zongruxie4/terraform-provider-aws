@@ -146,7 +146,7 @@ resource "aws_s3files_file_system" "test" {
   depends_on = [aws_s3_bucket_versioning.test]
 }
 
-resource "aws_s3files_synchronization" "test" {
+resource "aws_s3files_synchronization_configuration" "test" {
   region         = var.region
   file_system_id = aws_s3files_file_system.test.id
 

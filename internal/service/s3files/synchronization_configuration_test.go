@@ -16,22 +16,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3FilesSynchronization_basic(t *testing.T) {
+func TestAccS3FilesSynchronizationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var synchronization s3files.GetSynchronizationConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_s3files_synchronization.test"
+	resourceName := "aws_s3files_synchronization_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSynchronizationConfig_basic(rName),
+				Config: testAccSynchronizationConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
+					testAccCheckSynchronizationConfigurationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttr(resourceName, "import_data_rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.#", "1"),
@@ -49,29 +49,29 @@ func TestAccS3FilesSynchronization_basic(t *testing.T) {
 	})
 }
 
-func TestAccS3FilesSynchronization_update(t *testing.T) {
+func TestAccS3FilesSynchronizationConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var synchronization s3files.GetSynchronizationConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_s3files_synchronization.test"
+	resourceName := "aws_s3files_synchronization_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSynchronizationConfig_basic(rName),
+				Config: testAccSynchronizationConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
+					testAccCheckSynchronizationConfigurationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "30"),
 				),
 			},
 			{
-				Config: testAccSynchronizationConfig_updated(rName),
+				Config: testAccSynchronizationConfigurationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSynchronizationExists(ctx, t, resourceName, &synchronization),
+					testAccCheckSynchronizationConfigurationExists(ctx, t, resourceName, &synchronization),
 					resource.TestCheckResourceAttr(resourceName, "expiration_data_rule.0.days_after_last_access", "60"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccS3FilesSynchronization_update(t *testing.T) {
 	})
 }
 
-func testAccCheckSynchronizationExists(ctx context.Context, t *testing.T, n string, v *s3files.GetSynchronizationConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckSynchronizationConfigurationExists(ctx context.Context, t *testing.T, n string, v *s3files.GetSynchronizationConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -88,7 +88,7 @@ func testAccCheckSynchronizationExists(ctx context.Context, t *testing.T, n stri
 
 		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
-		output, err := tfs3files.FindSynchronizationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
+		output, err := tfs3files.FindSynchronizationConfigurationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
 		if err != nil {
 			return err
 		}
@@ -99,16 +99,16 @@ func testAccCheckSynchronizationExists(ctx context.Context, t *testing.T, n stri
 	}
 }
 
-func testAccCheckSynchronizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckSynchronizationConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).S3FilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3files_synchronization" {
+			if rs.Type != "aws_s3files_synchronization_configuration" {
 				continue
 			}
 
-			_, err := tfs3files.FindSynchronizationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
+			_, err := tfs3files.FindSynchronizationConfigurationByFileSystemID(ctx, conn, rs.Primary.Attributes[names.AttrFileSystemID])
 
 			if err == nil {
 				return fmt.Errorf("S3 Files Synchronization %s still exists", rs.Primary.Attributes[names.AttrFileSystemID])
@@ -119,7 +119,7 @@ func testAccCheckSynchronizationDestroy(ctx context.Context, t *testing.T) resou
 	}
 }
 
-func testAccSynchronizationConfig_base(rName string) string {
+func testAccSynchronizationConfigurationConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFileSystemConfig_base(rName),
 		`
@@ -132,11 +132,11 @@ resource "aws_s3files_file_system" "test" {
 `)
 }
 
-func testAccSynchronizationConfig_basic(rName string) string {
+func testAccSynchronizationConfigurationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSynchronizationConfig_base(rName),
+		testAccSynchronizationConfigurationConfig_base(rName),
 		`
-resource "aws_s3files_synchronization" "test" {
+resource "aws_s3files_synchronization_configuration" "test" {
   file_system_id = aws_s3files_file_system.test.id
 
   import_data_rule {
@@ -158,11 +158,11 @@ resource "aws_s3files_synchronization" "test" {
 `)
 }
 
-func testAccSynchronizationConfig_updated(rName string) string {
+func testAccSynchronizationConfigurationConfig_updated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSynchronizationConfig_base(rName),
+		testAccSynchronizationConfigurationConfig_base(rName),
 		`
-resource "aws_s3files_synchronization" "test" {
+resource "aws_s3files_synchronization_configuration" "test" {
   file_system_id = aws_s3files_file_system.test.id
 
   import_data_rule {

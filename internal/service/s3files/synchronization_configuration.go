@@ -30,22 +30,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_s3files_synchronization", name="Synchronization")
+// @FrameworkResource("aws_s3files_synchronization_configuration", name="Synchronization Configuration")
 // @IdentityAttribute("file_system_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3files;s3files.GetSynchronizationConfigurationOutput")
 // @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(hasNoPreExistingResource="true")
 // @Testing(importStateIdAttribute="file_system_id")
-func newSynchronizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &synchronizationResource{}, nil
+func newSynchronizationConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &synchronizationConfigurationResource{}, nil
 }
 
-type synchronizationResource struct {
-	framework.ResourceWithModel[synchronizationResourceModel]
+type synchronizationConfigurationResource struct {
+	framework.ResourceWithModel[synchronizationConfigurationResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *synchronizationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *synchronizationConfigurationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrFileSystemID: schema.StringAttribute{
@@ -105,8 +105,8 @@ func (r *synchronizationResource) Schema(ctx context.Context, _ resource.SchemaR
 	}
 }
 
-func (r *synchronizationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data synchronizationResourceModel
+func (r *synchronizationConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data synchronizationConfigurationResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -126,7 +126,7 @@ func (r *synchronizationResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	output, err := findSynchronizationByFileSystemID(ctx, conn, data.FileSystemID.ValueString())
+	output, err := findSynchronizationConfigurationByFileSystemID(ctx, conn, data.FileSystemID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
@@ -140,8 +140,8 @@ func (r *synchronizationResource) Create(ctx context.Context, request resource.C
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func (r *synchronizationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data synchronizationResourceModel
+func (r *synchronizationConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data synchronizationConfigurationResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -149,7 +149,7 @@ func (r *synchronizationResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3FilesClient(ctx)
 
-	output, err := findSynchronizationByFileSystemID(ctx, conn, data.FileSystemID.ValueString())
+	output, err := findSynchronizationConfigurationByFileSystemID(ctx, conn, data.FileSystemID.ValueString())
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -160,7 +160,7 @@ func (r *synchronizationResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	flattenSynchronizationResource(ctx, output, &data, &response.Diagnostics)
+	flattenSynchronizationConfigurationResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -168,12 +168,12 @@ func (r *synchronizationResource) Read(ctx context.Context, request resource.Rea
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func flattenSynchronizationResource(ctx context.Context, output *s3files.GetSynchronizationConfigurationOutput, data *synchronizationResourceModel, diags *diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenSynchronizationConfigurationResource(ctx context.Context, output *s3files.GetSynchronizationConfigurationOutput, data *synchronizationConfigurationResourceModel, diags *diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, output, data))
 }
 
-func (r *synchronizationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new synchronizationResourceModel
+func (r *synchronizationConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new synchronizationConfigurationResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
@@ -194,7 +194,7 @@ func (r *synchronizationResource) Update(ctx context.Context, request resource.U
 		return
 	}
 
-	output, err := findSynchronizationByFileSystemID(ctx, conn, new.FileSystemID.ValueString())
+	output, err := findSynchronizationConfigurationByFileSystemID(ctx, conn, new.FileSystemID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
@@ -208,8 +208,8 @@ func (r *synchronizationResource) Update(ctx context.Context, request resource.U
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, new))
 }
 
-func (r *synchronizationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data synchronizationResourceModel
+func (r *synchronizationConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data synchronizationConfigurationResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -240,7 +240,7 @@ func (r *synchronizationResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-type synchronizationResourceModel struct {
+type synchronizationConfigurationResourceModel struct {
 	framework.WithRegionModel
 	ExpirationDataRules fwtypes.SetNestedObjectValueOf[expirationDataRuleModel] `tfsdk:"expiration_data_rule"`
 	FileSystemID        types.String                                            `tfsdk:"file_system_id"`
@@ -258,7 +258,7 @@ type importDataRuleModel struct {
 	Trigger      types.String `tfsdk:"trigger"`
 }
 
-func findSynchronizationByFileSystemID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetSynchronizationConfigurationOutput, error) {
+func findSynchronizationConfigurationByFileSystemID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetSynchronizationConfigurationOutput, error) {
 	input := s3files.GetSynchronizationConfigurationInput{
 		FileSystemId: &id,
 	}

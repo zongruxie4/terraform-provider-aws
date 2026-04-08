@@ -18,19 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkListResource("aws_s3files_synchronization")
-func newSynchronizationResourceAsListResource() list.ListResourceWithConfigure {
-	return &synchronizationListResource{}
+// @FrameworkListResource("aws_s3files_synchronization_configuration")
+func newSynchronizationConfigurationResourceAsListResource() list.ListResourceWithConfigure {
+	return &synchronizationConfigurationListResource{}
 }
 
-var _ list.ListResource = &synchronizationListResource{}
+var _ list.ListResource = &synchronizationConfigurationListResource{}
 
-type synchronizationListResource struct {
-	synchronizationResource
+type synchronizationConfigurationListResource struct {
+	synchronizationConfigurationResource
 	framework.WithList
 }
 
-func (r *synchronizationListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (r *synchronizationConfigurationListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema.Attributes = map[string]listschema.Attribute{
 		names.AttrFileSystemID: listschema.StringAttribute{
 			Required:    true,
@@ -39,7 +39,7 @@ func (r *synchronizationListResource) ListResourceConfigSchema(ctx context.Conte
 	}
 }
 
-func (r *synchronizationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (r *synchronizationConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().S3FilesClient(ctx)
 
 	var query listSynchronizationModel
@@ -56,7 +56,7 @@ func (r *synchronizationListResource) List(ctx context.Context, request list.Lis
 		result := request.NewListResult(ctx)
 		ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), fileSystemID)
 
-		output, err := findSynchronizationByFileSystemID(ctx, conn, fileSystemID)
+		output, err := findSynchronizationConfigurationByFileSystemID(ctx, conn, fileSystemID)
 		if retry.NotFound(err) {
 			tflog.Warn(ctx, "Synchronization configuration not found")
 			return
@@ -67,9 +67,9 @@ func (r *synchronizationListResource) List(ctx context.Context, request list.Lis
 			return
 		}
 
-		var data synchronizationResourceModel
+		var data synchronizationConfigurationResourceModel
 		r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
-			flattenSynchronizationResource(ctx, output, &data, &result.Diagnostics)
+			flattenSynchronizationConfigurationResource(ctx, output, &data, &result.Diagnostics)
 			data.FileSystemID = fwflex.StringValueToFramework(ctx, fileSystemID)
 			result.DisplayName = fileSystemID
 		})

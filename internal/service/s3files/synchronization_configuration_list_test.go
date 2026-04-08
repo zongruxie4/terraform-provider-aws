@@ -18,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
+func TestAccS3FilesSynchronizationConfiguration_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_s3files_synchronization.test"
+	resourceName := "aws_s3files_synchronization_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity := tfstatecheck.Identity()
@@ -33,7 +33,7 @@ func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
@@ -51,18 +51,18 @@ func TestAccS3FilesSynchronization_List_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization.test", identity.Checks()),
-					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization_configuration.test", identity.Checks()),
+					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
 		},
 	})
 }
 
-func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
+func TestAccS3FilesSynchronizationConfiguration_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_s3files_synchronization.test"
+	resourceName := "aws_s3files_synchronization_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity := tfstatecheck.Identity()
@@ -74,7 +74,7 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckSynchronizationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
@@ -94,8 +94,8 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization.test", identity.Checks()),
-					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization_configuration.test", identity.Checks()),
+					tfquerycheck.ExpectNoResourceObject("aws_s3files_synchronization_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
 		},

@@ -1,22 +1,16 @@
-# Copyright IBM Corp. 2014, 2026
-# SPDX-License-Identifier: MPL-2.0
-
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {
-  region = var.region
-
+{{- template "region" }}
 }
 
 resource "aws_s3_bucket" "test" {
-  region = var.region
-
+{{- template "region" }}
   bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  region = var.region
-
+{{- template "region" }}
   bucket = aws_s3_bucket.test.id
   versioning_configuration {
     status = "Enabled"
@@ -142,17 +136,15 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3files_file_system" "test" {
-  region = var.region
-
+{{- template "region" }}
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
 }
 
-resource "aws_s3files_synchronization" "test" {
-  region = var.region
-
+resource "aws_s3files_synchronization_configuration" "test" {
+{{- template "region" }}
   file_system_id = aws_s3files_file_system.test.id
 
   import_data_rule {
@@ -170,16 +162,5 @@ resource "aws_s3files_synchronization" "test" {
   expiration_data_rule {
     days_after_last_access = 30
   }
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
-variable "region" {
-  description = "Region to deploy resource in"
-  type        = string
-  nullable    = false
+{{- template "tags" . }}
 }

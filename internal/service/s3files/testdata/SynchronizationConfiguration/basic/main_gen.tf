@@ -3,7 +3,8 @@
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_s3_bucket" "test" {
   bucket = var.rName
@@ -141,12 +142,18 @@ resource "aws_s3files_file_system" "test" {
   depends_on = [aws_s3_bucket_versioning.test]
 }
 
-resource "aws_s3files_synchronization" "test" {
+resource "aws_s3files_synchronization_configuration_configuration" "test" {
   file_system_id = aws_s3files_file_system.test.id
 
   import_data_rule {
     prefix         = ""
     size_less_than = 52673613135872
+    trigger        = "ON_FILE_ACCESS"
+  }
+
+  import_data_rule {
+    prefix         = "data/"
+    size_less_than = 1048576
     trigger        = "ON_FILE_ACCESS"
   }
 

@@ -1,19 +1,19 @@
 ---
 subcategory: "S3 Files"
 layout: "aws"
-page_title: "AWS: aws_s3files_synchronization"
+page_title: "AWS: aws_s3files_synchronization_configuration"
 description: |-
   Manages an S3 Files Synchronization configuration.
 ---
 
-# Resource: aws_s3files_synchronization
+# Resource: aws_s3files_synchronization_configuration
 
 Manages an S3 Files Synchronization configuration.
 
 ## Example Usage
 
 ```terraform
-resource "aws_s3files_synchronization" "example" {
+resource "aws_s3files_synchronization_configuration" "example" {
   file_system_id = aws_s3files_file_system.example.id
 
   import_data_rule {
@@ -62,13 +62,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_s3files_synchronization.example
+  to = aws_s3files_synchronization_configuration.example
   identity = {
     file_system_id = "fs-1234567890abcdef0"
   }
 }
 
-resource "aws_s3files_synchronization" "example" {
+resource "aws_s3files_synchronization_configuration" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -88,7 +88,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_s3files_synchronization.example
+  to = aws_s3files_synchronization_configuration.example
   id = "fs-1234567890abcdef0"
 }
 ```
@@ -96,5 +96,5 @@ import {
 Using `terraform import`, import S3 Files Synchronization using `file_system_id`. For example:
 
 ```console
-% terraform import aws_s3files_synchronization.example fs-1234567890abcdef0
+% terraform import aws_s3files_synchronization_configuration.example fs-1234567890abcdef0
 ```
