@@ -96,6 +96,7 @@ func (r *synchronizationConfigurationResource) Schema(ctx context.Context, _ res
 						},
 						"trigger": schema.StringAttribute{
 							Required:    true,
+							CustomType:  fwtypes.StringEnumType[awstypes.ImportTrigger](),
 							Description: "Import trigger type",
 						},
 					},
@@ -255,7 +256,7 @@ type expirationDataRuleModel struct {
 type importDataRuleModel struct {
 	Prefix       types.String `tfsdk:"prefix"`
 	SizeLessThan types.Int64  `tfsdk:"size_less_than"`
-	Trigger      types.String `tfsdk:"trigger"`
+	Trigger      fwtypes.StringEnum[awstypes.ImportTrigger] `tfsdk:"trigger"`
 }
 
 func findSynchronizationConfigurationByFileSystemID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetSynchronizationConfigurationOutput, error) {
