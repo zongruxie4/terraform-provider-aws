@@ -152,139 +152,31 @@ func testAccCheckMountTargetDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccMountTargetConfig_basic(rName string) string {
+func testAccMountTargetConfig_base(rName string) string {
 	return acctest.ConfigCompose(
+		testAccFileSystemConfig_base(rName),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "elasticfilesystem.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
 resource "aws_s3files_file_system" "test" {
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
-}
-
-resource "aws_s3files_mount_target" "test" {
-  file_system_id = aws_s3files_file_system.test.id
-  subnet_id      = aws_subnet.test[0].id
 }
 `, rName))
 }
 
+func testAccMountTargetConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), `
+resource "aws_s3files_mount_target" "test" {
+  file_system_id = aws_s3files_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+`)
+}
+
 func testAccMountTargetConfig_securityGroups(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 1),
-		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "elasticfilesystem.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_s3files_file_system" "test" {
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-}
-
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -299,68 +191,7 @@ resource "aws_s3files_mount_target" "test" {
 }
 
 func testAccMountTargetConfig_securityGroupsUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 1),
-		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "elasticfilesystem.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_s3files_file_system" "test" {
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-}
-
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id

@@ -101,6 +101,7 @@ func TestAccS3FilesMountTarget_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -113,6 +114,7 @@ func TestAccS3FilesMountTarget_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
