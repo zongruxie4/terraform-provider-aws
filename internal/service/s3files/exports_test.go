@@ -5,9 +5,13 @@ package s3files
 
 // Exports for use in tests only.
 var (
+	ResourceAccessPoint      = newAccessPointResource
 	ResourceFileSystem       = newFileSystemResource
 	ResourceFileSystemPolicy = newFileSystemPolicyResource
+	ResourceMountTarget      = newMountTargetResource
 
+	FindAccessPointByID      = findAccessPointByID
 	FindFileSystemByID       = findFileSystemByID
 	FindFileSystemPolicyByID = findFileSystemPolicyByID
+	FindMountTargetByID      = findMountTargetByID
 )
