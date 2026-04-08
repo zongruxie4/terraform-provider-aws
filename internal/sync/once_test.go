@@ -12,9 +12,7 @@ import (
 
 // Adapted from TestOnceValue in sync/once_test.go in the Go standard library
 
-func TestOnceValueCtx(t *testing.T) {
-	t.Parallel()
-
+func TestOnceValueCtx(t *testing.T) { //nolint:paralleltest // t.Parallel() cannot be used with testing.AllocsPerRun
 	ctx := t.Context()
 	calls := 0
 	of := func(_ context.Context) int {
