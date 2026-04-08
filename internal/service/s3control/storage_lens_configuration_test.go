@@ -523,20 +523,20 @@ resource "aws_s3control_storage_lens_configuration" "test" {
       }
     }
 
-	expanded_prefixes_data_export {
-	  s3_bucket_destination {
-		account_id            = data.aws_caller_identity.current.account_id
-		arn                   = aws_s3_bucket.test[0].arn
-		format                = "CSV"
-		output_schema_version = "V_1"
-		prefix                = "p1"
-	  }
-	
-	  storage_lens_table_destination {
-		enabled = false
-	  }
-	}
-	
+    expanded_prefixes_data_export {
+      s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "CSV"
+        output_schema_version = "V_1"
+        prefix                = "p1"
+      }
+
+      storage_lens_table_destination {
+        enabled = false
+      }
+    }
+
     prefix_delimiter = ","
 
     exclude {
@@ -599,8 +599,8 @@ resource "aws_s3control_storage_lens_configuration" "test" {
       }
     }
 
-	expanded_prefixes_data_export {
-	  s3_bucket_destination {
+    expanded_prefixes_data_export {
+      s3_bucket_destination {
         account_id            = data.aws_caller_identity.current.account_id
         arn                   = aws_s3_bucket.test[0].arn
         format                = "Parquet"
@@ -611,9 +611,10 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         }
       }
 
-	  storage_lens_table_destination {
-		enabled = true
-		encryption {
+      storage_lens_table_destination {
+        enabled = true
+
+        encryption {
           sse_s3 {}
         }
       }
