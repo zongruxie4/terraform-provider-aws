@@ -7,17 +7,11 @@ import (
 	"fmt"
 	"go/ast"
 
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/tools/go/packages"
 )
 
-type PackageFile struct {
-	file *ast.File
-}
-
 type Package struct {
-	name  string
-	files []*PackageFile
+	files []*ast.File
 }
 
 func LoadPackage(sourcePackage string) (*Package, error) {
@@ -34,19 +28,14 @@ func LoadPackage(sourcePackage string) (*Package, error) {
 	pkg := pkgs[0]
 
 	return &Package{
-		name: pkg.Name,
-		files: tfslices.ApplyToAll(pkg.Syntax, func(file *ast.File) *PackageFile {
-			return &PackageFile{
-				file: file,
-			}
-		}),
+		files: pkg.Syntax,
 	}, nil
 }
 
 func (pkg *Package) FindFunction(functionName string) *Function {
 	for _, file := range pkg.files {
-		if file.file != nil {
-			for _, decl := range file.file.Decls {
+		if file != nil {
+			for _, decl := range file.Decls {
 				if funcDecl, ok := decl.(*ast.FuncDecl); ok {
 					if funcDecl.Name.Name == functionName {
 						return &Function{
