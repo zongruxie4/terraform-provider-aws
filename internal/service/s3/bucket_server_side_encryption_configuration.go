@@ -70,6 +70,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 									"kms_master_key_id": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 									"sse_algorithm": {
 										Type:             schema.TypeString,
@@ -91,6 +92,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 						"bucket_key_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
