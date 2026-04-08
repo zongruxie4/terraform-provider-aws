@@ -149,10 +149,14 @@ func testAccCheckFileSystemDestroy(ctx context.Context, t *testing.T) resource.T
 	}
 }
 
-func testAccFileSystemConfig_basic(rName string) string {
+func testAccFileSystemConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -169,10 +173,19 @@ resource "aws_iam_role" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowS3FilesAssumeRole"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
           Service = "elasticfilesystem.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+          }
         }
       }
     ]
@@ -187,22 +200,96 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "S3BucketPermissions"
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:ListBucketVersions"
         ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
+        Resource = aws_s3_bucket.test.arn
+        Condition = {
+          StringEquals = {
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid    = "S3ObjectPermissions"
+        Effect = "Allow"
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:DeleteObject*",
+          "s3:GetObject*",
+          "s3:List*",
+          "s3:PutObject*"
         ]
+        Resource = "${aws_s3_bucket.test.arn}/*"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid    = "UseKmsKeyWithS3Files"
+        Effect = "Allow"
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncryptFrom",
+          "kms:ReEncryptTo"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:EncryptionContext:aws:s3:arn" = [
+              aws_s3_bucket.test.arn,
+              "${aws_s3_bucket.test.arn}/*"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeManage"
+        Effect = "Allow"
+        Action = [
+          "events:DeleteRule",
+          "events:DisableRule",
+          "events:EnableRule",
+          "events:PutRule",
+          "events:PutTargets",
+          "events:RemoveTargets"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+        Condition = {
+          StringEquals = {
+            "events:ManagedBy" = "elasticfilesystem.amazonaws.com"
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeRead"
+        Effect = "Allow"
+        Action = [
+          "events:DescribeRule",
+          "events:ListRuleNamesByTarget",
+          "events:ListRules",
+          "events:ListTargetsByRule"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
       }
     ]
   })
 }
+`, rName)
+}
 
+func testAccFileSystemConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_s3files_file_system" "test" {
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
@@ -213,66 +300,16 @@ resource "aws_s3files_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccFileSystemConfig_kmsKey(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-%[1]s"
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "elasticfilesystem.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
-        ]
-      }
-    ]
-  })
 }
 
 resource "aws_s3files_file_system" "test" {
@@ -286,5 +323,5 @@ resource "aws_s3files_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
