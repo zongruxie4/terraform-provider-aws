@@ -18,6 +18,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_s3files_file_system", sweepFileSystems, "aws_s3files_access_point", "aws_s3files_mount_target")
 	awsv2.Register("aws_s3files_access_point", sweepAccessPoints)
+	awsv2.Register("aws_s3files_mount_target", sweepMountTargets)
 }
 
 func sweepAccessPoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -63,6 +64,35 @@ func sweepFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 		sweepResources = append(sweepResources, framework.NewSweepResource(newFileSystemResource, client,
 			framework.NewAttribute(names.AttrID, aws.ToString(v.FileSystemId)),
 		))
+	}
+
+	return sweepResources, nil
+}
+
+func sweepMountTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3FilesClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := s3files.ListFileSystemsInput{}
+	output, err := conn.ListFileSystems(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fs := range output.FileSystems {
+		mtInput := s3files.ListMountTargetsInput{
+			FileSystemId: fs.FileSystemId,
+		}
+		mtOutput, err := conn.ListMountTargets(ctx, &mtInput)
+		if err != nil {
+			continue
+		}
+
+		for _, mt := range mtOutput.MountTargets {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMountTargetResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(mt.MountTargetId)),
+			))
+		}
 	}
 
 	return sweepResources, nil

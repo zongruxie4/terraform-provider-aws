@@ -7,7 +7,9 @@ package s3files
 var (
 	ResourceAccessPoint = newAccessPointResource
 	ResourceFileSystem  = newFileSystemResource
+	ResourceMountTarget = newMountTargetResource
 
 	FindAccessPointByID = findAccessPointByID
 	FindFileSystemByID  = findFileSystemByID
+	FindMountTargetByID = findMountTargetByID
 )
