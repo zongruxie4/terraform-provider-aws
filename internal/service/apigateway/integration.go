@@ -32,6 +32,7 @@ import (
 )
 
 // @SDKResource("aws_api_gateway_integration", name="Integration")
+// @IdAttrFormat("agi-{rest_api_id}-{resource_id}-{http_method}")
 // @IdentityAttribute("rest_api_id")
 // @IdentityAttribute("resource_id")
 // @IdentityAttribute("http_method")
@@ -272,7 +273,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceIntegrationIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -755,6 +756,10 @@ func integrationCreateImportID(restApiID, resourceID, httpMethod string) string 
 	return restApiID + "/" + resourceID + "/" + httpMethod
 }
 
+func resourceIntegrationIDAttr(restApiID, resourceID, httpMethod string) string {
+	return fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod)
+}
+
 func (integrationImportID) Create(d *schema.ResourceData) string {
 	return integrationCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
 }
@@ -771,5 +776,5 @@ func (integrationImportID) Parse(id string) (string, map[string]any, error) {
 		"http_method":        parts[2],
 	}
 
-	return fmt.Sprintf("agi-%s-%s-%s", parts[0], parts[1], parts[2]), result, nil
+	return resourceIntegrationIDAttr(parts[0], parts[1], parts[2]), result, nil
 }
