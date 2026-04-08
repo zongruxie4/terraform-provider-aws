@@ -33,7 +33,7 @@ import (
 // @IdentityAttribute("http_method")
 // @ImportIDHandler("methodImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetMethodOutput")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 // @Testing(importIgnore="authorizer_id;operation_name;request_validator_id")
 // @Testing(importStateIdFunc="testAccMethodImportStateIdFunc")
 // @Testing(plannableImportAction="NoOp")
