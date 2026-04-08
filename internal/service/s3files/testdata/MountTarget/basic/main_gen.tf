@@ -1,6 +1,11 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -22,7 +27,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "s3files-private-beta-2025-${var.rName}"
+  bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -39,10 +44,19 @@ resource "aws_iam_role" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowS3FilesAssumeRole"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
           Service = "elasticfilesystem.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+          }
         }
       }
     ]
@@ -57,6 +71,7 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowS3BucketAccess"
         Effect = "Allow"
         Action = [
           "s3:GetObject",
@@ -68,6 +83,37 @@ resource "aws_iam_role_policy" "test" {
           aws_s3_bucket.test.arn,
           "${aws_s3_bucket.test.arn}/*"
         ]
+        Condition = {
+          StringEquals = {
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid    = "AllowKMSAccess"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:Encrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+          }
+        }
+      },
+      {
+        Sid    = "AllowEventBridgeAccess"
+        Effect = "Allow"
+        Action = [
+          "events:PutRule",
+          "events:DeleteRule",
+          "events:PutTargets",
+          "events:RemoveTargets"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/S3Files-*"
       }
     ]
   })
