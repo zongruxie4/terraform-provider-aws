@@ -1,12 +1,12 @@
 ---
 subcategory: "Security Hub"
 layout: "aws"
-page_title: "AWS: aws_securityhub_v2_account"
+page_title: "AWS: aws_securityhub_account_v2"
 description: |-
   Enables Security Hub V2 for an AWS account.
 ---
 
-# Resource: aws_securityhub_v2_account
+# Resource: aws_securityhub_account_v2
 
 Enables the unified Security Hub V2 for this AWS account.
 
@@ -19,13 +19,13 @@ Enables the unified Security Hub V2 for this AWS account.
 ### Basic
 
 ```terraform
-resource "aws_securityhub_v2_account" "example" {}
+resource "aws_securityhub_account_v2" "example" {}
 ```
 
 ### With Tags
 
 ```terraform
-resource "aws_securityhub_v2_account" "example" {
+resource "aws_securityhub_account_v2" "example" {
   tags = {
     Environment = "production"
   }
@@ -53,7 +53,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_securityhub_v2_account.example
+  to = aws_securityhub_account_v2.example
   id = "import"
 }
 ```
@@ -61,5 +61,5 @@ import {
 Using `terraform import`, import an existing Security Hub V2 enabled account. For example:
 
 ```console
-% terraform import aws_securityhub_v2_account.example import
+% terraform import aws_securityhub_account_v2.example import
 ```

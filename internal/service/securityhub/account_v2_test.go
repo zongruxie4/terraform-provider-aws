@@ -20,7 +20,7 @@ import (
 func testAccV2Account_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
-	resourceName := "aws_securityhub_v2_account.test"
+	resourceName := "aws_securityhub_account_v2.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -47,7 +47,7 @@ func testAccV2Account_basic(t *testing.T) {
 func testAccV2Account_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
-	resourceName := "aws_securityhub_v2_account.test"
+	resourceName := "aws_securityhub_account_v2.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -70,7 +70,7 @@ func testAccV2Account_disappears(t *testing.T) {
 func testAccV2Account_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
-	resourceName := "aws_securityhub_v2_account.test"
+	resourceName := "aws_securityhub_account_v2.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -140,7 +140,7 @@ func testAccCheckV2AccountDestroy(ctx context.Context, t *testing.T) resource.Te
 		conn := awsClient.SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_securityhub_v2_account" {
+			if rs.Type != "aws_securityhub_account_v2" {
 				continue
 			}
 
@@ -162,12 +162,12 @@ func testAccCheckV2AccountDestroy(ctx context.Context, t *testing.T) resource.Te
 }
 
 const testAccV2AccountConfig_basic = `
-resource "aws_securityhub_v2_account" "test" {}
+resource "aws_securityhub_account_v2" "test" {}
 `
 
 func testAccV2AccountConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_securityhub_v2_account" "test" {
+resource "aws_securityhub_account_v2" "test" {
   tags = {
     %[1]q = %[2]q
   }
@@ -177,7 +177,7 @@ resource "aws_securityhub_v2_account" "test" {
 
 func testAccV2AccountConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_securityhub_v2_account" "test" {
+resource "aws_securityhub_account_v2" "test" {
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q

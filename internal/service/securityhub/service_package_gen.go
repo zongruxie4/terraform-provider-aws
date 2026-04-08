@@ -54,8 +54,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		},
 		{
 			Factory:  newV2AccountResource,
-			TypeName: "aws_securityhub_v2_account",
-			Name:     "V2 Account",
+			TypeName: "aws_securityhub_account_v2",
+			Name:     "Account V2",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "hub_arn",
 			}),

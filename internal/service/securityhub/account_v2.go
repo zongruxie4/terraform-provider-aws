@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_securityhub_v2_account", name="V2 Account")
+// @FrameworkResource("aws_securityhub_account_v2", name="Account V2")
 // @Tags(identifierAttribute="hub_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub;securityhub;securityhub.DescribeSecurityHubV2Output")
 // @Testing(serialize=true)
