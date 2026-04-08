@@ -83,19 +83,13 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowS3BucketAccess"
+        Sid    = "S3BucketPermissions"
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
           "s3:ListBucket",
-          "s3:HeadObject"
+          "s3:ListBucketVersions"
         ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
-        ]
+        Resource = aws_s3_bucket.test.arn
         Condition = {
           StringEquals = {
             "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
@@ -103,30 +97,71 @@ resource "aws_iam_role_policy" "test" {
         }
       },
       {
-        Sid    = "AllowKMSAccess"
+        Sid    = "S3ObjectPermissions"
         Effect = "Allow"
         Action = [
-          "kms:Decrypt",
-          "kms:Encrypt",
-          "kms:GenerateDataKey"
+          "s3:AbortMultipartUpload",
+          "s3:DeleteObject*",
+          "s3:GetObject*",
+          "s3:List*",
+          "s3:PutObject*"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+        Resource = "${aws_s3_bucket.test.arn}/*"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
           }
         }
       },
       {
-        Sid    = "AllowEventBridgeAccess"
+        Sid    = "UseKmsKeyWithS3Files"
         Effect = "Allow"
         Action = [
-          "events:PutRule",
+          "kms:GenerateDataKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncryptFrom",
+          "kms:ReEncryptTo"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:EncryptionContext:aws:s3:arn" = [
+              aws_s3_bucket.test.arn,
+              "${aws_s3_bucket.test.arn}/*"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeManage"
+        Effect = "Allow"
+        Action = [
           "events:DeleteRule",
+          "events:DisableRule",
+          "events:EnableRule",
+          "events:PutRule",
           "events:PutTargets",
           "events:RemoveTargets"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/S3Files-*"
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+        Condition = {
+          StringEquals = {
+            "events:ManagedBy" = "elasticfilesystem.amazonaws.com"
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeRead"
+        Effect = "Allow"
+        Action = [
+          "events:DescribeRule",
+          "events:ListRuleNamesByTarget",
+          "events:ListRules",
+          "events:ListTargetsByRule"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
       }
     ]
   })
