@@ -4,6 +4,8 @@ FEATURES:
 
 * **New Data Source:** `aws_opensearchserverless_collection_group` ([#46308](https://github.com/hashicorp/terraform-provider-aws/issues/46308))
 * **New Data Source:** `aws_opensearchserverless_collection_groups` ([#46308](https://github.com/hashicorp/terraform-provider-aws/issues/46308))
+* **New Data Source:** `aws_s3files_file_system` ([#47344](https://github.com/hashicorp/terraform-provider-aws/issues/47344))
+* **New Data Source:** `aws_s3files_file_systems` ([#47344](https://github.com/hashicorp/terraform-provider-aws/issues/47344))
 * **New List Resource:** `aws_config_config_rule` ([#47319](https://github.com/hashicorp/terraform-provider-aws/issues/47319))
 * **New List Resource:** `aws_glue_job` ([#47266](https://github.com/hashicorp/terraform-provider-aws/issues/47266))
 * **New List Resource:** `aws_opensearchserverless_collection_group` ([#46308](https://github.com/hashicorp/terraform-provider-aws/issues/46308))
