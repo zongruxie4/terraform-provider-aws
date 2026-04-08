@@ -272,7 +272,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(integrationImportID{}.Create(d))
+	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -751,8 +751,12 @@ var _ inttypes.SDKv2ImportID = integrationImportID{}
 
 type integrationImportID struct{}
 
+func integrationCreateImportID(restApiID, resourceID, httpMethod string) string {
+	return restApiID + "/" + resourceID + "/" + httpMethod
+}
+
 func (integrationImportID) Create(d *schema.ResourceData) string {
-	return fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
+	return integrationCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
 }
 
 func (integrationImportID) Parse(id string) (string, map[string]any, error) {
