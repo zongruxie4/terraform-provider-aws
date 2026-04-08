@@ -254,8 +254,8 @@ type expirationDataRuleModel struct {
 }
 
 type importDataRuleModel struct {
-	Prefix       types.String `tfsdk:"prefix"`
-	SizeLessThan types.Int64  `tfsdk:"size_less_than"`
+	Prefix       types.String                               `tfsdk:"prefix"`
+	SizeLessThan types.Int64                                `tfsdk:"size_less_than"`
 	Trigger      fwtypes.StringEnum[awstypes.ImportTrigger] `tfsdk:"trigger"`
 }
 
