@@ -14,12 +14,14 @@ FEATURES:
 * **New List Resource:** `aws_s3files_access_point` ([#47352](https://github.com/hashicorp/terraform-provider-aws/issues/47352))
 * **New List Resource:** `aws_s3files_file_system` ([#47325](https://github.com/hashicorp/terraform-provider-aws/issues/47325))
 * **New List Resource:** `aws_s3files_mount_target` ([#47347](https://github.com/hashicorp/terraform-provider-aws/issues/47347))
+* **New List Resource:** `aws_s3files_synchronization_configuration` ([#47353](https://github.com/hashicorp/terraform-provider-aws/issues/47353))
 * **New List Resource:** `aws_ssm_association` ([#47321](https://github.com/hashicorp/terraform-provider-aws/issues/47321))
 * **New List Resource:** `aws_ssm_patch_group` ([#47329](https://github.com/hashicorp/terraform-provider-aws/issues/47329))
 * **New Resource:** `aws_opensearchserverless_collection_group` ([#46308](https://github.com/hashicorp/terraform-provider-aws/issues/46308))
 * **New Resource:** `aws_s3files_access_point` ([#47352](https://github.com/hashicorp/terraform-provider-aws/issues/47352))
 * **New Resource:** `aws_s3files_file_system` ([#47325](https://github.com/hashicorp/terraform-provider-aws/issues/47325))
 * **New Resource:** `aws_s3files_mount_target` ([#47347](https://github.com/hashicorp/terraform-provider-aws/issues/47347))
+* **New Resource:** `aws_s3files_synchronization_configuration` ([#47353](https://github.com/hashicorp/terraform-provider-aws/issues/47353))
 * **New Resource:** `aws_servicequotas_auto_management` ([#45968](https://github.com/hashicorp/terraform-provider-aws/issues/45968))
 
 ENHANCEMENTS:
