@@ -39,7 +39,7 @@ func TestAccS3FilesSynchronization_Identity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -59,7 +59,7 @@ func TestAccS3FilesSynchronization_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -73,7 +73,7 @@ func TestAccS3FilesSynchronization_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -91,7 +91,7 @@ func TestAccS3FilesSynchronization_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -126,7 +126,7 @@ func TestAccS3FilesSynchronization_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -144,7 +144,7 @@ func TestAccS3FilesSynchronization_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -159,7 +159,7 @@ func TestAccS3FilesSynchronization_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -178,7 +178,7 @@ func TestAccS3FilesSynchronization_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

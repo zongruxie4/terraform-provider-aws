@@ -142,7 +142,7 @@ resource "aws_s3files_file_system" "test" {
   depends_on = [aws_s3_bucket_versioning.test]
 }
 
-resource "aws_s3files_synchronization_configuration_configuration" "test" {
+resource "aws_s3files_synchronization_configuration" "test" {
   file_system_id = aws_s3files_file_system.test.id
 
   import_data_rule {

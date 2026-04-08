@@ -36,7 +36,7 @@ func TestAccS3FilesSynchronizationConfiguration_List_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -46,7 +46,7 @@ func TestAccS3FilesSynchronizationConfiguration_List_basic(t *testing.T) {
 			},
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -77,7 +77,7 @@ func TestAccS3FilesSynchronizationConfiguration_List_regionOverride(t *testing.T
 		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -88,7 +88,7 @@ func TestAccS3FilesSynchronizationConfiguration_List_regionOverride(t *testing.T
 			},
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SynchronizationConfiguration/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
