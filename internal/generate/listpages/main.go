@@ -101,7 +101,7 @@ func main() {
 	slices.Sort(functions)
 	for _, functionName := range functions {
 		function := pkg.FindFunction(functionName)
-		if err != nil {
+		if function == nil {
 			g.Fatalf("function (%q) not found", functionName)
 		}
 
