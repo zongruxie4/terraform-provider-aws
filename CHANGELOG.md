@@ -4,6 +4,8 @@ FEATURES:
 
 * **New List Resource:** `aws_config_config_rule` ([#47319](https://github.com/hashicorp/terraform-provider-aws/issues/47319))
 * **New List Resource:** `aws_glue_job` ([#47266](https://github.com/hashicorp/terraform-provider-aws/issues/47266))
+* **New List Resource:** `aws_s3files_file_system` ([#47325](https://github.com/hashicorp/terraform-provider-aws/issues/47325))
+* **New Resource:** `aws_s3files_file_system` ([#47325](https://github.com/hashicorp/terraform-provider-aws/issues/47325))
 * **New Resource:** `aws_servicequotas_auto_management` ([#45968](https://github.com/hashicorp/terraform-provider-aws/issues/45968))
 
 ENHANCEMENTS:
@@ -22,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_config_organization_managed_rule: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
 * resource/aws_config_remediation_configuration: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
 * resource/aws_config_retention_configuration: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_controltower_landing_zone: Add `remediation_types` attribute ([#46549](https://github.com/hashicorp/terraform-provider-aws/issues/46549))
 * resource/aws_glue_job: Add Resource Identity support ([#47266](https://github.com/hashicorp/terraform-provider-aws/issues/47266))
 * resource/aws_iam_instance_profile: Add resource identity support ([#47307](https://github.com/hashicorp/terraform-provider-aws/issues/47307))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-2_2` as a valid value for `runtime_environment` ([#47207](https://github.com/hashicorp/terraform-provider-aws/issues/47207))
