@@ -1,3 +1,31 @@
+resource "aws_s3files_file_system_policy" "test" {
+{{- template "region" }}
+  file_system_id = aws_s3files_file_system.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "s3files:ClientMount"
+        Resource = "*"
+      }
+    ]
+  })
+{{- template "tags" . }}
+}
+
+resource "aws_s3files_file_system" "test" {
+{{- template "region" }}
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {
@@ -133,32 +161,4 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   })
-}
-
-resource "aws_s3files_file_system" "test" {
-{{- template "region" }}
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-}
-
-resource "aws_s3files_file_system_policy" "test" {
-{{- template "region" }}
-  file_system_id = aws_s3files_file_system.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "s3files:ClientMount"
-        Resource = "*"
-      }
-    ]
-  })
-{{- template "tags" . }}
 }

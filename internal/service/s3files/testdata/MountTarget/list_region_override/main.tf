@@ -1,6 +1,22 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_s3files_mount_target" "test" {
+  region = var.region
+  count  = var.resource_count
+
+  file_system_id = aws_s3files_file_system.test.id
+  subnet_id      = aws_subnet.test[count.index].id
+}
+
+resource "aws_s3files_file_system" "test" {
+  region   = var.region
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -156,22 +172,6 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   })
-}
-
-resource "aws_s3files_file_system" "test" {
-  region   = var.region
-  bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-}
-
-resource "aws_s3files_mount_target" "test" {
-  region = var.region
-  count  = var.resource_count
-
-  file_system_id = aws_s3files_file_system.test.id
-  subnet_id      = aws_subnet.test[count.index].id
 }
 
 variable "rName" {
