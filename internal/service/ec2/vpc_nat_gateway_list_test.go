@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2NATGateway_List_basic(t *testing.T) {
+func TestAccVPCNATGateway_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_nat_gateway.test[0]"
@@ -76,7 +76,7 @@ func TestAccEC2NATGateway_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_List_includeResource(t *testing.T) {
+func TestAccVPCNATGateway_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_nat_gateway.test[0]"
@@ -143,7 +143,7 @@ func TestAccEC2NATGateway_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_List_regionOverride(t *testing.T) {
+func TestAccVPCNATGateway_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_nat_gateway.test[0]"

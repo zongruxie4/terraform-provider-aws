@@ -22,12 +22,6 @@ resource "aws_subnet" "test" {
   map_public_ip_on_launch = false
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number

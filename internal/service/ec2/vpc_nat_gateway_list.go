@@ -16,6 +16,7 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -83,11 +84,11 @@ func (l *natGatewayListResource) List(ctx context.Context, request list.ListRequ
 	}) {
 		input.Filter = append(input.Filter, awstypes.Filter{
 			Name: aws.String(names.AttrState),
-			Values: []string{
-				string(awstypes.NatGatewayStatePending),
-				string(awstypes.NatGatewayStateAvailable),
-				string(awstypes.NatGatewayStateFailed),
-			},
+			Values: enum.Slice(
+				awstypes.NatGatewayStatePending,
+				awstypes.NatGatewayStateAvailable,
+				awstypes.NatGatewayStateFailed,
+			),
 		})
 	}
 
