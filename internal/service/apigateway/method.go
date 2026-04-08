@@ -31,6 +31,7 @@ import (
 // @IdentityAttribute("rest_api_id")
 // @IdentityAttribute("resource_id")
 // @IdentityAttribute("http_method")
+// @IdAttrFormat("agm-{rest_api_id}-{resource_id}-{http_method}")
 // @ImportIDHandler("methodImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetMethodOutput")
 // @Testing(preIdentityVersion="v6.39.0")
@@ -143,7 +144,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agm-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceMethodIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return diags
 }
@@ -408,6 +409,10 @@ var _ inttypes.SDKv2ImportID = methodImportID{}
 
 type methodImportID struct{}
 
+func resourceMethodIDAttr(restApiID, resourceID, httpMethod string) string {
+	return fmt.Sprintf("agm-%s-%s-%s", restApiID, resourceID, httpMethod)
+}
+
 func methodCreateImportID(restApiID, resourceID, httpMethod string) string {
 	return restApiID + "/" + resourceID + "/" + httpMethod
 }
@@ -428,5 +433,5 @@ func (methodImportID) Parse(id string) (string, map[string]any, error) {
 		"http_method":        parts[2],
 	}
 
-	return fmt.Sprintf("agm-%s-%s-%s", parts[0], parts[1], parts[2]), result, nil
+	return resourceMethodIDAttr(parts[0], parts[1], parts[2]), result, nil
 }
