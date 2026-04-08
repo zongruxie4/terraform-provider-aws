@@ -70,6 +70,7 @@ func (r *mountTargetResource) Schema(ctx context.Context, _ resource.SchemaReque
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIPAddressType: schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.IpAddressType](),
 				Optional:    true,
 				Description: "IP address type",
 			},
@@ -284,20 +285,20 @@ func (r *mountTargetResource) Delete(ctx context.Context, request resource.Delet
 
 type mountTargetResourceModel struct {
 	framework.WithRegionModel
-	AvailabilityZoneID types.String                     `tfsdk:"availability_zone_id"`
-	FileSystemID       types.String                     `tfsdk:"file_system_id"`
-	ID                 types.String                     `tfsdk:"id"`
-	IpAddressType      types.String                     `tfsdk:"ip_address_type"`
-	Ipv4Address        types.String                     `tfsdk:"ipv4_address"`
-	Ipv6Address        types.String                     `tfsdk:"ipv6_address"`
-	NetworkInterfaceID types.String                     `tfsdk:"network_interface_id"`
-	OwnerID            types.String                     `tfsdk:"owner_id"`
-	SecurityGroups     fwtypes.SetValueOf[types.String] `tfsdk:"security_groups"`
-	Status             types.String                     `tfsdk:"status"`
-	StatusMessage      types.String                     `tfsdk:"status_message"`
-	SubnetID           types.String                     `tfsdk:"subnet_id"`
-	Timeouts           timeouts.Value                   `tfsdk:"timeouts"`
-	VPCID              types.String                     `tfsdk:"vpc_id"`
+	AvailabilityZoneID types.String                               `tfsdk:"availability_zone_id"`
+	FileSystemID       types.String                               `tfsdk:"file_system_id"`
+	ID                 types.String                               `tfsdk:"id"`
+	IpAddressType      fwtypes.StringEnum[awstypes.IpAddressType] `tfsdk:"ip_address_type"`
+	Ipv4Address        types.String                               `tfsdk:"ipv4_address"`
+	Ipv6Address        types.String                               `tfsdk:"ipv6_address"`
+	NetworkInterfaceID types.String                               `tfsdk:"network_interface_id"`
+	OwnerID            types.String                               `tfsdk:"owner_id"`
+	SecurityGroups     fwtypes.SetValueOf[types.String]           `tfsdk:"security_groups"`
+	Status             types.String                               `tfsdk:"status"`
+	StatusMessage      types.String                               `tfsdk:"status_message"`
+	SubnetID           types.String                               `tfsdk:"subnet_id"`
+	Timeouts           timeouts.Value                             `tfsdk:"timeouts"`
+	VPCID              types.String                               `tfsdk:"vpc_id"`
 }
 
 func findMountTargetByID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetMountTargetOutput, error) {

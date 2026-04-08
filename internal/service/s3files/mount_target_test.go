@@ -156,14 +156,14 @@ func testAccMountTargetConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFileSystemConfig_base(rName),
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		fmt.Sprintf(`
+		`
 resource "aws_s3files_file_system" "test" {
   bucket   = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
 }
-`, rName))
+`)
 }
 
 func testAccMountTargetConfig_basic(rName string) string {
