@@ -80,6 +80,7 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -90,6 +91,7 @@ func TestAccS3FilesSynchronization_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Synchronization/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3files_synchronization.test", identity.Checks()),
