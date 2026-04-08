@@ -1,6 +1,12 @@
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {
+{{- template "region" }}
+}
+
 resource "aws_s3_bucket" "test" {
 {{- template "region" }}
-  bucket = "s3files-private-beta-2025-${var.rName}"
+  bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -18,10 +24,19 @@ resource "aws_iam_role" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowS3FilesAssumeRole"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
           Service = "elasticfilesystem.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/*"
+          }
         }
       }
     ]
@@ -36,17 +51,85 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "S3BucketPermissions"
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:ListBucketVersions"
         ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*"
+        Resource = aws_s3_bucket.test.arn
+        Condition = {
+          StringEquals = {
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid    = "S3ObjectPermissions"
+        Effect = "Allow"
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:DeleteObject*",
+          "s3:GetObject*",
+          "s3:List*",
+          "s3:PutObject*"
         ]
+        Resource = "${aws_s3_bucket.test.arn}/*"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid    = "UseKmsKeyWithS3Files"
+        Effect = "Allow"
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncryptFrom",
+          "kms:ReEncryptTo"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
+            "kms:EncryptionContext:aws:s3:arn" = [
+              aws_s3_bucket.test.arn,
+              "${aws_s3_bucket.test.arn}/*"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeManage"
+        Effect = "Allow"
+        Action = [
+          "events:DeleteRule",
+          "events:DisableRule",
+          "events:EnableRule",
+          "events:PutRule",
+          "events:PutTargets",
+          "events:RemoveTargets"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+        Condition = {
+          StringEquals = {
+            "events:ManagedBy" = "elasticfilesystem.amazonaws.com"
+          }
+        }
+      },
+      {
+        Sid    = "EventBridgeRead"
+        Effect = "Allow"
+        Action = [
+          "events:DescribeRule",
+          "events:ListRuleNamesByTarget",
+          "events:ListRules",
+          "events:ListTargetsByRule"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
       }
     ]
   })
@@ -63,15 +146,19 @@ resource "aws_s3files_file_system" "test" {
 resource "aws_s3files_file_system_policy" "test" {
 {{- template "region" }}
   file_system_id = aws_s3files_file_system.test.id
+
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        AWS = "*"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "s3files:ClientMount"
+        Resource = "*"
       }
-      Action   = "s3files:*"
-      Resource = "*"
-    }]
+    ]
   })
+{{- template "tags" . }}
 }
