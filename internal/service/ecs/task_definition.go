@@ -456,6 +456,38 @@ func resourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"s3files_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_point_arn": {
+										Type:         schema.TypeString,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"file_system_arn": {
+										Type:         schema.TypeString,
+										ForceNew:     true,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"transit_encryption_port": {
+										Type:     schema.TypeInt,
+										ForceNew: true,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 				Set: func(v any) int {
@@ -538,6 +570,22 @@ func resourceTaskDefinition() *schema.Resource {
 					}
 					str.WriteString(tfMap["host_path"].(string))
 					str.WriteString(tfMap[names.AttrName].(string))
+					if v, ok := tfMap["s3files_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						tfMap := v.([]any)[0].(map[string]any)
+
+						if v, ok := tfMap["access_point_arn"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["file_system_arn"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+							str.WriteString(v)
+						}
+						if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+							str.WriteString(strconv.Itoa(v))
+						}
+					}
 
 					return create.StringHashcode(str.String())
 				},
@@ -920,6 +968,10 @@ func expandVolumes(tfList []any) []awstypes.Volume {
 			}
 		}
 
+		if v, ok := tfMap["s3files_volume_configuration"].([]any); ok && len(v) > 0 {
+			apiObject.S3filesVolumeConfiguration = expandS3FilesVolumeConfiguration(v)
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
@@ -1057,6 +1109,10 @@ func flattenVolumes(apiObjects []awstypes.Volume) []any {
 
 		if apiObject.Host != nil && apiObject.Host.SourcePath != nil {
 			tfMap["host_path"] = aws.ToString(apiObject.Host.SourcePath)
+		}
+
+		if apiObject.S3filesVolumeConfiguration != nil {
+			tfMap["s3files_volume_configuration"] = flattenS3FilesVolumeConfiguration(apiObject.S3filesVolumeConfiguration)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1199,6 +1255,56 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	tfMap["size_in_gib"] = apiObject.SizeInGiB
 
 	return []any{tfMap}
+}
+
+func expandS3FilesVolumeConfiguration(tfList []any) *awstypes.S3FilesVolumeConfiguration {
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.S3FilesVolumeConfiguration{}
+
+	if v, ok := tfMap["access_point_arn"].(string); ok && v != "" {
+		apiObject.AccessPointArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_system_arn"].(string); ok && v != "" {
+		apiObject.FileSystemArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+		apiObject.RootDirectory = aws.String(v)
+	}
+
+	if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+		apiObject.TransitEncryptionPort = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenS3FilesVolumeConfiguration(apiObject *awstypes.S3FilesVolumeConfiguration) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
+
+	if apiObject != nil {
+		if v := apiObject.AccessPointArn; v != nil {
+			tfMap["access_point_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.FileSystemArn; v != nil {
+			tfMap["file_system_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.RootDirectory; v != nil {
+			tfMap["root_directory"] = aws.ToString(v)
+		}
+
+		if v := apiObject.TransitEncryptionPort; v != nil {
+			tfMap["transit_encryption_port"] = aws.ToInt32(v)
+		}
+	}
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
 }
 
 func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, taskDefinition *awstypes.TaskDefinition, tags []awstypes.Tag) diag.Diagnostics {
