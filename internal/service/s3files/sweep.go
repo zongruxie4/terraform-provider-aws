@@ -16,7 +16,37 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_s3files_file_system", sweepFileSystems)
+	awsv2.Register("aws_s3files_file_system", sweepFileSystems, "aws_s3files_access_point", "aws_s3files_mount_target")
+	awsv2.Register("aws_s3files_access_point", sweepAccessPoints)
+}
+
+func sweepAccessPoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3FilesClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := s3files.ListFileSystemsInput{}
+	output, err := conn.ListFileSystems(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fs := range output.FileSystems {
+		apInput := s3files.ListAccessPointsInput{
+			FileSystemId: fs.FileSystemId,
+		}
+		apOutput, err := conn.ListAccessPoints(ctx, &apInput)
+		if err != nil {
+			continue
+		}
+
+		for _, ap := range apOutput.AccessPoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessPointResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(ap.AccessPointId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

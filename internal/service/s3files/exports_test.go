@@ -5,9 +5,11 @@ package s3files
 
 // Exports for use in tests only.
 var (
+	ResourceAccessPoint     = newAccessPointResource
 	ResourceFileSystem      = newFileSystemResource
 	ResourceSynchronization = newSynchronizationResource
 
+	FindAccessPointByID               = findAccessPointByID
 	FindFileSystemByID                = findFileSystemByID
 	FindSynchronizationByFileSystemID = findSynchronizationByFileSystemID
 )
