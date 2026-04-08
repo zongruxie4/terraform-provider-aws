@@ -3,6 +3,9 @@
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+data "aws_region" "alternate" {
+  region = var.region
+}
 
 resource "aws_vpc" "test" {
   region     = var.region
