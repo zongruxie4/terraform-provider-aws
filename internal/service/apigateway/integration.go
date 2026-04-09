@@ -294,6 +294,12 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
+	resourceIntegrationFlatten(d, integration)
+
+	return diags
+}
+
+func resourceIntegrationFlatten(d *schema.ResourceData, integration *apigateway.GetIntegrationOutput) {
 	d.Set("cache_key_parameters", integration.CacheKeyParameters)
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set(names.AttrConnectionID, integration.ConnectionId)
@@ -316,12 +322,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
 	d.Set(names.AttrURI, integration.Uri)
-
-	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
-	}
-
-	return diags
+	d.Set("tls_config", flattenTLSConfig(integration.TlsConfig))
 }
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
