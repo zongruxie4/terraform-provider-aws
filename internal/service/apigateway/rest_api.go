@@ -42,7 +42,6 @@ import (
 // @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetRestApiOutput", importIgnore="put_rest_api_mode")
 // @Testing(preIdentityVersion="v6.40.0")
-// @Testing(idAttrDuplicates="id")
 // @Testing(plannableImportAction="NoOp")
 func resourceRestAPI() *schema.Resource {
 	return &schema.Resource{
