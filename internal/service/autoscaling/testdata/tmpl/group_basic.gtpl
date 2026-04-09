@@ -1,4 +1,5 @@
 resource "aws_autoscaling_group" "test" {
+{{- template "region" }}
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0

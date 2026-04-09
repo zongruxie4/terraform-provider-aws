@@ -46,6 +46,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_autoscaling_group", name="Group")
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.AutoScalingGroup")
+// @Testing(importIgnore="force_delete;force_delete_warm_pool;ignore_failed_scaling_activities;wait_for_capacity_timeout")
 // @Testing(preIdentityVersion="v6.40.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
