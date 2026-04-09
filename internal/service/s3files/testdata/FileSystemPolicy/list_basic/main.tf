@@ -1,6 +1,33 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_s3files_file_system_policy" "test" {
+  count          = var.resource_count
+  file_system_id = aws_s3files_file_system.test[count.index].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "s3files:ClientMount"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3files_file_system" "test" {
+  count    = var.resource_count
+  bucket   = aws_s3_bucket.test[count.index].arn
+  role_arn = aws_iam_role.test[count.index].arn
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -133,33 +160,6 @@ resource "aws_iam_role_policy" "test" {
           "events:ListTargetsByRule"
         ]
         Resource = "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
-      }
-    ]
-  })
-}
-
-resource "aws_s3files_file_system" "test" {
-  count    = var.resource_count
-  bucket   = aws_s3_bucket.test[count.index].arn
-  role_arn = aws_iam_role.test[count.index].arn
-
-  depends_on = [aws_s3_bucket_versioning.test]
-}
-
-resource "aws_s3files_file_system_policy" "test" {
-  count          = var.resource_count
-  file_system_id = aws_s3files_file_system.test[count.index].id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "s3files:ClientMount"
-        Resource = "*"
       }
     ]
   })

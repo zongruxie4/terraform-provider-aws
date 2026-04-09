@@ -1,4 +1,14 @@
-## 6.40.0 (Unreleased)
+## 6.41.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_nat_gateway` ([#47349](https://github.com/hashicorp/terraform-provider-aws/issues/47349))
+
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_method: Add resource identity support ([#47310](https://github.com/hashicorp/terraform-provider-aws/issues/47310))
+
+## 6.40.0 (April 8, 2026)
 
 FEATURES:
 
