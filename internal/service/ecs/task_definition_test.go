@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -705,13 +706,13 @@ func TestAccECSTaskDefinition_S3Files_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("volume"), knownvalue.SetExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("volume"), knownvalue.SetExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						names.AttrName: knownvalue.StringExact(rName),
 						"s3files_volume_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"access_point_arn":        knownvalue.Null(),
-							"file_system_arn":         knownvalue.NotNull(),
-							"root_directory":          knownvalue.Null(),
-							"transit_encryption_port": knownvalue.Null(),
+							"access_point_arn":        knownvalue.StringExact(""),
+							"file_system_arn":         tfknownvalue.RegionalARNRegexp("s3files", regexache.MustCompile(`file-system/.+`)),
+							"root_directory":          knownvalue.StringExact("/"),
+							"transit_encryption_port": knownvalue.Int64Exact(0),
 						})}),
 					})})),
 				},
@@ -2739,7 +2740,7 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionConfig_baseS3Files(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -2755,8 +2756,8 @@ resource "aws_s3_bucket_versioning" "test" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  name = %[1]q
+resource "aws_iam_role" "s3files" {
+  name = "%[1]s-s3files"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -2781,9 +2782,9 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
+resource "aws_iam_role_policy" "s3files" {
+  name = "%[1]s-s3files"
+  role = aws_iam_role.s3files.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -2875,7 +2876,7 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_s3files_file_system" "test" {
   bucket   = aws_s3_bucket.test.arn
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.s3files.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
 
@@ -2883,13 +2884,61 @@ resource "aws_s3files_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+
+resource "aws_s3files_mount_target" "test" {
+  file_system_id = aws_s3files_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_iam_role" "ecs" {
+  name = "%[1]s-ecs"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "ec2.amazonaws.com"
+			},
+			"Effect": "Allow",
+			"Sid": ""
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs" {
+  name = "%[1]s-ecs"
+  role = aws_iam_role.ecs.id
+
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetBucketLocation",
+				"s3:ListAllMyBuckets"
+			],
+			"Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
+		}
+	]
+}
+EOF
+}
+`, rName))
 }
 
 func testAccTaskDefinitionConfig_s3FilesBasic(rName string) string {
 	return acctest.ConfigCompose(testAccTaskDefinitionConfig_baseS3Files(rName), fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family        = %[1]q
+  task_role_arn = aws_iam_role.ecs.arn
+  network_mode  = "awsvpc"
 
   container_definitions = <<TASK_DEFINITION
 [
