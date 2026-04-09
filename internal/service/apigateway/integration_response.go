@@ -145,6 +145,12 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration Response (%s): %s", d.Id(), err)
 	}
 
+	resourceIntegrationResponseFlatten(d, integrationResponse)
+
+	return diags
+}
+
+func resourceIntegrationResponseFlatten(d *schema.ResourceData, integrationResponse *apigateway.GetIntegrationResponseOutput) {
 	d.Set("content_handling", integrationResponse.ContentHandling)
 	d.Set("response_parameters", integrationResponse.ResponseParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes.
@@ -152,8 +158,6 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	maps.Copy(responseTemplates, integrationResponse.ResponseTemplates)
 	d.Set("response_templates", responseTemplates)
 	d.Set("selection_pattern", integrationResponse.SelectionPattern)
-
-	return diags
 }
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
