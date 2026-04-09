@@ -33,8 +33,6 @@ import (
 // @IdentityAttribute("traffic_source_type", resourceAttributeName="traffic_source.0.type")
 // @IdentityAttribute("traffic_source_identifier", resourceAttributeName="traffic_source.0.identifier")
 // @ImportIDHandler("trafficSourceAttachmentImportID")
-// Generated identity tests not currently working with 'resourceAttributeName'.
-// @Testing(identityTest=false)
 // @Testing(preIdentityVersion="v6.40.0")
 func resourceTrafficSourceAttachment() *schema.Resource {
 	return &schema.Resource{
