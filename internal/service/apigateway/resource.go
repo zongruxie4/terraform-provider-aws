@@ -31,7 +31,7 @@ import (
 // @IdentityAttribute("id")
 // @ImportIDHandler("apiResourceImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetResourceOutput")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 // @Testing(importStateIdFunc="testAccResourceImportStateIdFunc")
 // @Testing(plannableImportAction="NoOp")
 func resourceResource() *schema.Resource {
