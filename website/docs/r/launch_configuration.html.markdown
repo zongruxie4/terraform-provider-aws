@@ -229,7 +229,6 @@ This resource exports the following attributes in addition to the arguments abov
 [2]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 [3]: /docs/providers/aws/r/spot_instance_request.html
 
-
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
