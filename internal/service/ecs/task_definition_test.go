@@ -728,6 +728,141 @@ func TestAccECSTaskDefinition_S3Files_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_S3Files_rootDirectory(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_s3FilesRootDirectory(rName, "/home/test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("volume"), knownvalue.SetExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrName: knownvalue.StringExact(rName),
+						"s3files_volume_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_point_arn":        knownvalue.StringExact(""),
+							"file_system_arn":         tfknownvalue.RegionalARNRegexp("s3files", regexache.MustCompile(`file-system/.+`)),
+							"root_directory":          knownvalue.StringExact("/home/test"),
+							"transit_encryption_port": knownvalue.Int64Exact(0),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_S3Files_transitEncryptionPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_s3FilesTransitEncryptionPort(rName, 444),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("volume"), knownvalue.SetExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrName: knownvalue.StringExact(rName),
+						"s3files_volume_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_point_arn":        knownvalue.StringExact(""),
+							"file_system_arn":         tfknownvalue.RegionalARNRegexp("s3files", regexache.MustCompile(`file-system/.+`)),
+							"root_directory":          knownvalue.StringExact("/"),
+							"transit_encryption_port": knownvalue.Int64Exact(444),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_S3Files_accessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_s3FilesAccessPoint(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("volume"), knownvalue.SetExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrName: knownvalue.StringExact(rName),
+						"s3files_volume_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_point_arn":        tfknownvalue.RegionalARNRegexp("s3files", regexache.MustCompile(`file-system/.+/access-point/.+`)),
+							"file_system_arn":         tfknownvalue.RegionalARNRegexp("s3files", regexache.MustCompile(`file-system/.+`)),
+							"root_directory":          knownvalue.StringExact("/"),
+							"transit_encryption_port": knownvalue.Int64Exact(0),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def awstypes.TaskDefinition
@@ -2910,25 +3045,9 @@ resource "aws_iam_role" "ecs" {
 EOF
 }
 
-resource "aws_iam_role_policy" "ecs" {
-  name = "%[1]s-ecs"
-  role = aws_iam_role.ecs.id
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:GetBucketLocation",
-				"s3:ListAllMyBuckets"
-			],
-			"Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
-		}
-	]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "ecs" {
+  role       = aws_iam_role.ecs.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3FilesClientFullAccess"
 }
 `, rName))
 }
@@ -2958,6 +3077,115 @@ TASK_DEFINITION
 
     s3files_volume_configuration {
       file_system_arn = aws_s3files_file_system.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccTaskDefinitionConfig_s3FilesRootDirectory(rName, rootDirectory string) string {
+	return acctest.ConfigCompose(testAccTaskDefinitionConfig_baseS3Files(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family        = %[1]q
+  task_role_arn = aws_iam_role.ecs.arn
+  network_mode  = "awsvpc"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+
+    s3files_volume_configuration {
+      file_system_arn = aws_s3files_file_system.test.arn
+      root_directory  = %[2]q
+    }
+  }
+}
+`, rName, rootDirectory))
+}
+
+func testAccTaskDefinitionConfig_s3FilesTransitEncryptionPort(rName string, transitEncryptionPort int) string {
+	return acctest.ConfigCompose(testAccTaskDefinitionConfig_baseS3Files(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family        = %[1]q
+  task_role_arn = aws_iam_role.ecs.arn
+  network_mode  = "awsvpc"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+
+    s3files_volume_configuration {
+      file_system_arn          = aws_s3files_file_system.test.arn
+      transit_encryption_port  = %[2]d
+    }
+  }
+}
+`, rName, transitEncryptionPort))
+}
+
+func testAccTaskDefinitionConfig_s3FilesAccessPoint(rName string) string {
+	return acctest.ConfigCompose(testAccTaskDefinitionConfig_baseS3Files(rName), fmt.Sprintf(`
+resource "aws_s3files_access_point" "test" {
+  file_system_id = aws_s3files_file_system.test.id
+
+  posix_user {
+    gid = 1001
+    uid = 1001
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family        = %[1]q
+  task_role_arn = aws_iam_role.ecs.arn
+  network_mode  = "awsvpc"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+
+    s3files_volume_configuration {
+      file_system_arn  = aws_s3files_file_system.test.arn
+      access_point_arn = aws_s3files_access_point.test.arn
     }
   }
 }
