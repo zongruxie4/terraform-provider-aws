@@ -1,5 +1,9 @@
 ## 6.41.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_nat_gateway` ([#47349](https://github.com/hashicorp/terraform-provider-aws/issues/47349))
+
 ## 6.40.0 (April 8, 2026)
 
 FEATURES:
