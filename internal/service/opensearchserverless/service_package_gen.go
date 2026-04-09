@@ -40,6 +40,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newCollectionGroupDataSource,
+			TypeName: "aws_opensearchserverless_collection_group",
+			Name:     "Collection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newCollectionGroupsDataSource,
+			TypeName: "aws_opensearchserverless_collection_groups",
+			Name:     "Collection Groups",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newLifecyclePolicyDataSource,
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
@@ -75,6 +90,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCollectionResource,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newCollectionGroupResource,
+			TypeName: "aws_opensearchserverless_collection_group",
+			Name:     "Collection Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
@@ -148,6 +176,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newCollectionResourceAsListResource,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newCollectionGroupResourceAsListResource,
+			TypeName: "aws_opensearchserverless_collection_group",
+			Name:     "Collection Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),

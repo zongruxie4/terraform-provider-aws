@@ -58,4 +58,5 @@ var (
 	FindVPCLinkByID                      = findVPCLinkByID
 
 	IntegrationCreateImportID = integrationCreateImportID
+	MethodCreateImportID      = methodCreateImportID
 )
