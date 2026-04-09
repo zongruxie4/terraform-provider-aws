@@ -35,7 +35,7 @@ import (
 // @IdentityAttribute("status_code")
 // @ImportIDHandler("integrationResponseImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetIntegrationResponseOutput")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 // @Testing(importStateIdFunc="testAccIntegrationResponseImportStateIdFunc")
 // @Testing(plannableImportAction="NoOp")
 func resourceIntegrationResponse() *schema.Resource {
