@@ -1,59 +1,43 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_s3files_file_system_policy" "test" {
-  count          = var.resource_count
-  region         = var.region
-  file_system_id = aws_s3files_file_system.test[count.index].id
+resource "aws_s3files_access_point" "test" {
+  count = var.resource_count
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "s3files:ClientMount"
-        Resource = "*"
-      }
-    ]
-  })
+  file_system_id = aws_s3files_file_system.test.id
+
+  posix_user {
+    gid = 1001
+    uid = 1001
+  }
+
+  tags = var.resource_tags
 }
 
 resource "aws_s3files_file_system" "test" {
-  count    = var.resource_count
-  region   = var.region
-  bucket   = aws_s3_bucket.test[count.index].arn
-  role_arn = aws_iam_role.test[count.index].arn
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
 
   depends_on = [aws_s3_bucket_versioning.test]
 }
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {
-  region = var.region
-}
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  count  = var.resource_count
-  region = var.region
-  bucket = "${var.rName}-${count.index}"
+  bucket = var.rName
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  count  = var.resource_count
-  region = var.region
-  bucket = aws_s3_bucket.test[count.index].id
+  bucket = aws_s3_bucket.test.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 resource "aws_iam_role" "test" {
-  count = var.resource_count
-  name  = "${var.rName}-${count.index}"
+  name = var.rName
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -79,9 +63,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  count = var.resource_count
-  name  = "${var.rName}-${count.index}"
-  role  = aws_iam_role.test[count.index].id
+  name = var.rName
+  role = aws_iam_role.test.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -93,7 +76,7 @@ resource "aws_iam_role_policy" "test" {
           "s3:ListBucket",
           "s3:ListBucketVersions"
         ]
-        Resource = aws_s3_bucket.test[count.index].arn
+        Resource = aws_s3_bucket.test.arn
         Condition = {
           StringEquals = {
             "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
@@ -110,7 +93,7 @@ resource "aws_iam_role_policy" "test" {
           "s3:List*",
           "s3:PutObject*"
         ]
-        Resource = "${aws_s3_bucket.test[count.index].arn}/*"
+        Resource = "${aws_s3_bucket.test.arn}/*"
         Condition = {
           StringEquals = {
             "aws:ResourceAccount" = data.aws_caller_identity.current.account_id
@@ -132,8 +115,8 @@ resource "aws_iam_role_policy" "test" {
           StringLike = {
             "kms:ViaService" = "s3.${data.aws_region.current.name}.amazonaws.com"
             "kms:EncryptionContext:aws:s3:arn" = [
-              aws_s3_bucket.test[count.index].arn,
-              "${aws_s3_bucket.test[count.index].arn}/*"
+              aws_s3_bucket.test.arn,
+              "${aws_s3_bucket.test.arn}/*"
             ]
           }
         }
@@ -172,12 +155,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 variable "rName" {
-  type     = string
-  nullable = false
-}
-
-variable "region" {
-  description = "Region for resource"
+  description = "Name for resource"
   type        = string
   nullable    = false
 }
@@ -185,4 +163,10 @@ variable "region" {
 variable "resource_count" {
   type     = number
   nullable = false
+}
+
+variable "resource_tags" {
+  description = "Tags for resource"
+  type        = map(string)
+  nullable    = false
 }

@@ -3,7 +3,6 @@
 
 resource "aws_s3files_file_system_policy" "test" {
   count          = var.resource_count
-  region         = var.region
   file_system_id = aws_s3files_file_system.test[count.index].id
 
   policy = jsonencode({
@@ -23,7 +22,6 @@ resource "aws_s3files_file_system_policy" "test" {
 
 resource "aws_s3files_file_system" "test" {
   count    = var.resource_count
-  region   = var.region
   bucket   = aws_s3_bucket.test[count.index].arn
   role_arn = aws_iam_role.test[count.index].arn
 
@@ -32,19 +30,17 @@ resource "aws_s3files_file_system" "test" {
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {
-  region = var.region
-}
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  count  = var.resource_count
-  region = var.region
+  count = var.resource_count
+
   bucket = "${var.rName}-${count.index}"
 }
 
 resource "aws_s3_bucket_versioning" "test" {
-  count  = var.resource_count
-  region = var.region
+  count = var.resource_count
+
   bucket = aws_s3_bucket.test[count.index].id
   versioning_configuration {
     status = "Enabled"
@@ -53,7 +49,8 @@ resource "aws_s3_bucket_versioning" "test" {
 
 resource "aws_iam_role" "test" {
   count = var.resource_count
-  name  = "${var.rName}-${count.index}"
+
+  name = "${var.rName}-${count.index}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -80,8 +77,9 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy" "test" {
   count = var.resource_count
-  name  = "${var.rName}-${count.index}"
-  role  = aws_iam_role.test[count.index].id
+
+  name = "${var.rName}-${count.index}"
+  role = aws_iam_role.test[count.index].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -174,12 +172,6 @@ resource "aws_iam_role_policy" "test" {
 variable "rName" {
   type     = string
   nullable = false
-}
-
-variable "region" {
-  description = "Region for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_count" {
