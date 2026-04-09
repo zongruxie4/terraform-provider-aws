@@ -28,6 +28,8 @@ func TestAccAutoScalingSchedule_Identity_basic(t *testing.T) {
 	var v awstypes.ScheduledUpdateGroupAction
 	resourceName := "aws_autoscaling_schedule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -43,6 +45,8 @@ func TestAccAutoScalingSchedule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &v),
@@ -65,6 +69,8 @@ func TestAccAutoScalingSchedule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -77,6 +83,8 @@ func TestAccAutoScalingSchedule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -95,6 +103,8 @@ func TestAccAutoScalingSchedule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -116,6 +126,8 @@ func TestAccAutoScalingSchedule_Identity_regionOverride(t *testing.T) {
 
 	resourceName := "aws_autoscaling_schedule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -132,6 +144,8 @@ func TestAccAutoScalingSchedule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -152,6 +166,8 @@ func TestAccAutoScalingSchedule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -166,6 +182,8 @@ func TestAccAutoScalingSchedule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -186,6 +204,8 @@ func TestAccAutoScalingSchedule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -209,6 +229,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_basic(t *testing.T) {
 	var v awstypes.ScheduledUpdateGroupAction
 	resourceName := "aws_autoscaling_schedule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -223,6 +245,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic_v6.40.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &v),
@@ -238,6 +262,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -269,6 +295,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_noRefreshNoChange(t *t
 	var v awstypes.ScheduledUpdateGroupAction
 	resourceName := "aws_autoscaling_schedule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -288,6 +316,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_noRefreshNoChange(t *t
 				ConfigDirectory: config.StaticDirectory("testdata/Schedule/basic_v6.40.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &v),
@@ -303,6 +333,8 @@ func TestAccAutoScalingSchedule_Identity_ExistingResource_noRefreshNoChange(t *t
 				ConfigDirectory:          config.StaticDirectory("testdata/Schedule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"startTime":     config.StringVariable(startTime),
+					"endTime":       config.StringVariable(endTime),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

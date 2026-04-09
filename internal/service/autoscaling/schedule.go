@@ -32,6 +32,8 @@ const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 // @IdentityAttribute("autoscaling_group_name")
 // @IdentityAttribute("scheduled_action_name")
 // @ImportIDHandler("scheduleImportID")
+// Identity tests require start and end time.
+// @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.ScheduledUpdateGroupAction")
 // @Testing(preIdentityVersion="v6.40.0")
 func resourceSchedule() *schema.Resource {
