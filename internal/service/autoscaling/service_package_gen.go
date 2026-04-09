@@ -96,8 +96,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceSchedule,
 			TypeName: "aws_autoscaling_schedule",
-			Name:     "Scheduled Action",
+			Name:     "Schedule",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("autoscaling_group_name", true),
+				inttypes.StringIdentityAttribute("scheduled_action_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      scheduleImportID{},
+			},
 		},
 		{
 			Factory:  resourceTrafficSourceAttachment,

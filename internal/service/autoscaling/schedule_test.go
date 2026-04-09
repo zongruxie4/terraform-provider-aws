@@ -37,7 +37,7 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,7 +92,7 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_zeroValues(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 			{
 				Config: testAccScheduleConfig_negativeOne(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&v),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
@@ -185,7 +185,7 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScheduleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
