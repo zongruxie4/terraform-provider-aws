@@ -365,6 +365,18 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 		},
 		{
+			Factory:  newMethodResponseResourceAsListResource,
+			TypeName: "aws_api_gateway_method_response",
+			Name:     "Method Response",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("http_method", true),
+				inttypes.StringIdentityAttribute(names.AttrStatusCode, true),
+			}),
+		},
+		{
 			Factory:  newResourceResourceAsListResource,
 			TypeName: "aws_api_gateway_resource",
 			Name:     "Resource",
