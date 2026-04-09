@@ -35,7 +35,7 @@ import (
 // @IdentityAttribute("status_code")
 // @ImportIDHandler("methodResponseImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetMethodResponseOutput")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 // @Testing(importStateIdFunc="testAccMethodResponseImportStateIdFunc")
 // @Testing(plannableImportAction="NoOp")
 func resourceMethodResponse() *schema.Resource {
