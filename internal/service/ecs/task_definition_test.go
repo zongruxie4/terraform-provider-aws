@@ -3139,8 +3139,8 @@ TASK_DEFINITION
     name = %[1]q
 
     s3files_volume_configuration {
-      file_system_arn          = aws_s3files_file_system.test.arn
-      transit_encryption_port  = %[2]d
+      file_system_arn         = aws_s3files_file_system.test.arn
+      transit_encryption_port = %[2]d
     }
   }
 }
