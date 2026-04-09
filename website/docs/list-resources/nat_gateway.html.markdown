@@ -39,6 +39,21 @@ list "aws_nat_gateway" "example" {
 }
 ```
 
+This example returns NAT Gateways in a specific subnet.
+
+```terraform
+list "aws_nat_gateway" "example" {
+  provider = aws
+
+  config {
+    filter {
+      name   = "subnet-id"
+      values = [aws_subnet.example.id]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This list resource supports the following arguments:
