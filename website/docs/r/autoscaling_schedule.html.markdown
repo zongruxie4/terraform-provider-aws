@@ -100,7 +100,7 @@ import {
 }
 ```
 
-Using `terraform import`, import AutoScaling Schedules `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
+Using `terraform import`, import AutoScaling Schedules using `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
 
 ```console
 % terraform import aws_autoscaling_schedule.example example-asg/example-action

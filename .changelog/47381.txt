@@ -13,3 +13,7 @@ resource/aws_autoscaling_traffic_source_attachment: Add import support
 ```release-note:bug
 resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to Required
 ```
+
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add Resource Identity support
+```
