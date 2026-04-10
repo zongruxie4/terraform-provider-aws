@@ -17,3 +17,7 @@ resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to R
 ```release-note:enhancement
 resource/aws_autoscaling_policy: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_autoscaling_notification: Add plan-time validation of `topic_arn`
+```
