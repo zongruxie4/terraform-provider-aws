@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,12 +84,12 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 	trafficSourceID := aws.ToString(trafficSource.Identifier)
 	trafficSourceType := aws.ToString(trafficSource.Type)
 	id := trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, trafficSourceID)
-	input := &autoscaling.AttachTrafficSourcesInput{
+	input := autoscaling.AttachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
 	}
 
-	_, err := conn.AttachTrafficSources(ctx, input)
+	_, err := conn.AttachTrafficSources(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Traffic Source Attachment (%s): %s", id, err)
@@ -187,22 +187,20 @@ func trafficSourceAttachmentParseResourceID(id string) (string, string, string, 
 }
 
 func findTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) (*awstypes.TrafficSourceState, error) {
-	input := &autoscaling.DescribeTrafficSourcesInput{
+	input := autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSourceType:    aws.String(trafficSourceType),
 	}
 
-	output, err := findTrafficSourceStates(ctx, conn, input)
+	output, err := findTrafficSourceStates(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	output = slices.Filter(output, func(v awstypes.TrafficSourceState) bool {
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.TrafficSourceState) bool {
 		return aws.ToString(v.Identifier) == trafficSourceID
-	})
-
-	return tfresource.AssertSingleValueResult(output)
+	}))
 }
 
 func statusTrafficSourceAttachment(conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
@@ -223,8 +221,8 @@ func statusTrafficSourceAttachment(conn *autoscaling.Client, asgName, trafficSou
 
 func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{TrafficSourceStateAdding},
-		Target:  []string{TrafficSourceStateAdded, TrafficSourceStateInService},
+		Pending: []string{trafficSourceStateAdding},
+		Target:  []string{trafficSourceStateAdded, trafficSourceStateInService},
 		Refresh: statusTrafficSourceAttachment(conn, asgName, trafficSourceType, trafficSourceID),
 		Timeout: timeout,
 	}
@@ -240,7 +238,7 @@ func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.C
 
 func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{TrafficSourceStateRemoving, TrafficSourceStateRemoved},
+		Pending: []string{trafficSourceStateRemoving, trafficSourceStateRemoved},
 		Target:  []string{},
 		Refresh: statusTrafficSourceAttachment(conn, asgName, trafficSourceType, trafficSourceID),
 		Timeout: timeout,
