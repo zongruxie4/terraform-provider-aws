@@ -207,6 +207,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ssm_patch_group",
 			Name:     "Patch Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("patch_group", true),
+				inttypes.StringIdentityAttribute("baseline_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      patchGroupImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourceDataSync,
@@ -226,6 +234,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAssociationResourceAsListResource,
+			TypeName: "aws_ssm_association",
+			Name:     "Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Association",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrAssociationID),
+		},
+		{
+			Factory:  newDocumentResourceAsListResource,
+			TypeName: "aws_ssm_document",
+			Name:     "Document",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Document",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
 			Factory:  newParameterResourceAsListResource,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
@@ -235,6 +265,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				ResourceType:        "Parameter",
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  newPatchGroupResourceAsListResource,
+			TypeName: "aws_ssm_patch_group",
+			Name:     "Patch Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("patch_group", true),
+				inttypes.StringIdentityAttribute("baseline_id", true),
+			}),
 		},
 	})
 }

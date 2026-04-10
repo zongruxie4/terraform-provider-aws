@@ -30,6 +30,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Outbound Web Identity Federation",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory:  newRolePoliciesDataSource,
+			TypeName: "aws_iam_role_policies",
+			Name:     "Role Policies",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newRolePolicyAttachmentsDataSource,
+			TypeName: "aws_iam_role_policy_attachments",
+			Name:     "Role Policy Attachments",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
@@ -251,10 +263,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrName,
 				ResourceType:        "InstanceProfile",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceOpenIDConnectProvider,

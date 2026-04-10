@@ -1518,7 +1518,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceNetworkACL,
@@ -1540,6 +1544,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_network_acl_rule",
 			Name:     "Network ACL Rule",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     networkACLRuleImportID{},
+			},
 		},
 		{
 			Factory:  resourceNetworkInterface,
@@ -1605,6 +1619,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route_table_association",
 			Name:     "Route Table Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID,
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceSecurityGroup,
@@ -1977,6 +1997,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
+			Factory:  newNATGatewayResourceAsListResource,
+			TypeName: "aws_nat_gateway",
+			Name:     "NAT Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
 			Factory:  routeResourceAsListResource,
 			TypeName: "aws_route",
 			Name:     "Route",
@@ -1997,6 +2027,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newRouteTableAssociationResourceAsListResource,
+			TypeName: "aws_route_table_association",
+			Name:     "Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID,
+				inttypes.WithMutableIdentity(),
+			),
 		},
 		{
 			Factory:  newSecurityGroupResourceAsListResource,
@@ -2022,6 +2061,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newVPCResourceAsListResource,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newVPCEndpointResourceAsListResource,
+			TypeName: "aws_vpc_endpoint",
+			Name:     "VPC Endpoint",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,

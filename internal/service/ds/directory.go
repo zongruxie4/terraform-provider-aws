@@ -666,11 +666,11 @@ func getDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, 
 	return dda, nil
 }
 
-func statusDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectoryDataAccess(conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := getDirectoryDataAccess(ctx, conn, directoryID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -686,7 +686,7 @@ func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(string(awstypes.DataAccessStatusEnabling), string(awstypes.DataAccessStatusDisabling)),
 		Target:     enum.Slice(string(awstypes.DataAccessStatusEnabled), string(awstypes.DataAccessStatusDisabled)),
-		Refresh:    statusDirectoryDataAccess(ctx, conn, directoryID),
+		Refresh:    statusDirectoryDataAccess(conn, directoryID),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -702,7 +702,7 @@ func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client,
 	}()
 
 	if output, ok := outputRaw.(*directoryservice.DescribeDirectoryDataAccessOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.DataAccessStatus))))
+		retry.SetLastError(err, errors.New(aws.ToString((*string)(&output.DataAccessStatus))))
 
 		return err
 	}
