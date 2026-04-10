@@ -301,6 +301,18 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceRestAPIFlatten(ctx, c, d, api); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if err := resourceRestAPIReadRootResourceID(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, api *apigateway.GetRestApiOutput) error {
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
@@ -308,7 +320,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
+		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
 	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if api.MinimumCompressionSize == nil {
@@ -318,6 +330,24 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set(names.AttrName, api.Name)
 
+	policy, err := flattenAPIPolicy(api.Policy)
+	if err != nil {
+		return err
+	}
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
+	if err != nil {
+		return err
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	setTagsOut(ctx, api.Tags)
+
+	return nil
+}
+
+func resourceRestAPIReadRootResourceID(ctx context.Context, conn *apigateway.Client, d *schema.ResourceData) error {
 	input := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
@@ -331,24 +361,10 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway REST API (%s) root resource: %w", d.Id(), err)
 	}
 
-	policy, err := flattenAPIPolicy(api.Policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
-	setTagsOut(ctx, api.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
