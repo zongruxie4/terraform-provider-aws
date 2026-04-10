@@ -112,15 +112,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_autoscaling_traffic_source_attachment",
 			Name:     "Traffic Source Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("autoscaling_group_name", true),
-				inttypes.StringIdentityAttributeWithMappedName("traffic_source_type", true, "traffic_source.0.type"),
-				inttypes.StringIdentityAttributeWithMappedName("traffic_source_identifier", true, "traffic_source.0.identifier"),
-			}),
-			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-				ImportID:      trafficSourceAttachmentImportID{},
-			},
 		},
 		{
 			Factory:  resourceLaunchConfiguration,

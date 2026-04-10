@@ -24,18 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_traffic_source_attachment", name="Traffic Source Attachment")
-// @IdentityAttribute("autoscaling_group_name")
-// @IdentityAttribute("traffic_source_type", resourceAttributeName="traffic_source.0.type")
-// @IdentityAttribute("traffic_source_identifier", resourceAttributeName="traffic_source.0.identifier")
-// @ImportIDHandler("trafficSourceAttachmentImportID")
-// Generated identity tests not currently working with 'resourceAttributeName'.
-// @Testing(identityTest=false)
-// @Testing(preIdentityVersion="v6.40.0")
 func resourceTrafficSourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficSourceAttachmentCreate,
@@ -45,6 +37,10 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -117,7 +113,7 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
+	output, err := findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Traffic Source Attachment (%s) not found, removing from state", d.Id())
@@ -128,6 +124,12 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Traffic Source Attachment (%s): %s", d.Id(), err)
 	}
+
+	d.Set("autoscaling_group_name", asgName)
+	d.Set("traffic_source", []any{map[string]any{
+		names.AttrIdentifier: output.Identifier,
+		names.AttrType:       output.Type,
+	}})
 
 	return diags
 }
@@ -251,36 +253,4 @@ func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.C
 	}
 
 	return nil, err
-}
-
-var (
-	_ inttypes.SDKv2ImportID = trafficSourceAttachmentImportID{}
-)
-
-type trafficSourceAttachmentImportID struct{}
-
-func (trafficSourceAttachmentImportID) Parse(id string) (string, map[string]any, error) {
-	asgName, trafficSourceType, trafficSourceID, err := trafficSourceAttachmentParseResourceID(id)
-	if err != nil {
-		return "", nil, err
-	}
-
-	result := map[string]any{
-		"autoscaling_group_name": asgName,
-		"traffic_source": []any{map[string]any{
-			names.AttrIdentifier: trafficSourceID,
-			names.AttrType:       trafficSourceType,
-		}},
-	}
-
-	return id, result, nil
-}
-
-func (trafficSourceAttachmentImportID) Create(d *schema.ResourceData) string {
-	asgName := d.Get("autoscaling_group_name").(string)
-	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]any)[0].(map[string]any))
-	trafficSourceID := aws.ToString(trafficSource.Identifier)
-	trafficSourceType := aws.ToString(trafficSource.Type)
-
-	return trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, trafficSourceID)
 }
