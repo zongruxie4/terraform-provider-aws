@@ -28,13 +28,14 @@ import (
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
-// @SDKResource("aws_autoscaling_schedule", name="Schedule")
+// @SDKResource("aws_autoscaling_schedule", name="Scheduled Action")
 // @IdentityAttribute("autoscaling_group_name")
 // @IdentityAttribute("scheduled_action_name")
 // @ImportIDHandler("scheduleImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.ScheduledUpdateGroupAction")
 // Identity tests require start and end time.
 // @Testing(identityTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.ScheduledUpdateGroupAction")
+// @Testing(importStateIdFunc=testAccScheduleImportStateIDFunc)
 // @Testing(preIdentityVersion="v6.40.0")
 func resourceSchedule() *schema.Resource {
 	return &schema.Resource{

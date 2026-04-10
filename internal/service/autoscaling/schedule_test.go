@@ -42,7 +42,7 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName2),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -98,7 +98,7 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -128,7 +128,7 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -160,7 +160,7 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateIdFunc: testAccScheduleImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -240,6 +240,10 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(v *awstypes.ScheduledUpdate
 
 		return fmt.Errorf("Expected not to set desired capacity, got %v", aws.ToInt32(v.DesiredCapacity))
 	}
+}
+
+func testAccScheduleImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", "autoscaling_group_name", "scheduled_action_name")
 }
 
 func testAccScheduleConfig_base(rName string) string {
