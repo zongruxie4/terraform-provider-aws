@@ -31,6 +31,7 @@ import (
 // @IdentityAttribute("rest_api_id")
 // @IdentityAttribute("resource_id")
 // @IdentityAttribute("http_method")
+// @IdAttrFormat("agm-{rest_api_id}-{resource_id}-{http_method}")
 // @ImportIDHandler("methodImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetMethodOutput")
 // @Testing(preIdentityVersion="v6.40.0")
@@ -143,7 +144,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agm-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceMethodIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return diags
 }
@@ -164,14 +165,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Method (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_key_required", method.ApiKeyRequired)
-	d.Set("authorization", method.AuthorizationType)
-	d.Set("authorization_scopes", method.AuthorizationScopes)
-	d.Set("authorizer_id", method.AuthorizerId)
-	d.Set("operation_name", method.OperationName)
-	d.Set("request_models", method.RequestModels)
-	d.Set("request_parameters", method.RequestParameters)
-	d.Set("request_validator_id", method.RequestValidatorId)
+	resourceMethodFlatten(d, method)
 
 	return diags
 }
@@ -378,6 +372,17 @@ func updateIntegration(ctx context.Context, d *schema.ResourceData, conn *apigat
 	return nil
 }
 
+func resourceMethodFlatten(d *schema.ResourceData, method *apigateway.GetMethodOutput) {
+	d.Set("api_key_required", method.ApiKeyRequired)
+	d.Set("authorization", method.AuthorizationType)
+	d.Set("authorization_scopes", method.AuthorizationScopes)
+	d.Set("authorizer_id", method.AuthorizerId)
+	d.Set("operation_name", method.OperationName)
+	d.Set("request_models", method.RequestModels)
+	d.Set("request_parameters", method.RequestParameters)
+	d.Set("request_validator_id", method.RequestValidatorId)
+}
+
 func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {
 	input := apigateway.GetMethodInput{
 		HttpMethod: aws.String(httpMethod),
@@ -408,6 +413,10 @@ var _ inttypes.SDKv2ImportID = methodImportID{}
 
 type methodImportID struct{}
 
+func resourceMethodIDAttr(restApiID, resourceID, httpMethod string) string {
+	return fmt.Sprintf("agm-%s-%s-%s", restApiID, resourceID, httpMethod)
+}
+
 func methodCreateImportID(restApiID, resourceID, httpMethod string) string {
 	return restApiID + "/" + resourceID + "/" + httpMethod
 }
@@ -428,5 +437,5 @@ func (methodImportID) Parse(id string) (string, map[string]any, error) {
 		"http_method":        parts[2],
 	}
 
-	return fmt.Sprintf("agm-%s-%s-%s", parts[0], parts[1], parts[2]), result, nil
+	return resourceMethodIDAttr(parts[0], parts[1], parts[2]), result, nil
 }
