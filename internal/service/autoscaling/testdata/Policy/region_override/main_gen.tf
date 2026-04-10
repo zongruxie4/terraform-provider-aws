@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_autoscaling_policy" "test" {
+  region = var.region
+
   name                   = "${var.rName}-policy"
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
@@ -11,6 +13,8 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
+  region = var.region
+
   availability_zones   = slice(data.aws_availability_zones.available.names, 0, 2)
   name                 = "${var.rName}-group"
   max_size             = 0
@@ -20,6 +24,8 @@ resource "aws_autoscaling_group" "test" {
 }
 
 resource "aws_launch_configuration" "test" {
+  region = var.region
+
   name          = var.rName
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
