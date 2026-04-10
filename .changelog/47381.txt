@@ -21,3 +21,7 @@ resource/aws_autoscaling_policy: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_autoscaling_notification: Add plan-time validation of `topic_arn`
 ```
+
+```release-note:enhancement
+resource/aws_autoscaling_lifecycle_hook: Add Resource Identity support
+```
