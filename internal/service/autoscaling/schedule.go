@@ -284,13 +284,6 @@ func validScheduleTimestamp(v any, k string) (ws []string, errors []error) {
 
 const scheduleImportIDSeparator = "/"
 
-func scheduleCreateImportID(asgName, actionName string) string {
-	parts := []string{asgName, actionName}
-	id := strings.Join(parts, scheduleImportIDSeparator)
-
-	return id
-}
-
 func scheduleParseImportID(id string) (string, string, error) {
 	parts := strings.Split(id, scheduleImportIDSeparator)
 
@@ -322,5 +315,5 @@ func (scheduleImportID) Parse(id string) (string, map[string]any, error) {
 }
 
 func (scheduleImportID) Create(d *schema.ResourceData) string {
-	return scheduleCreateImportID(d.Get("autoscaling_group_name").(string), d.Get("scheduled_action_name").(string))
+	return d.Get("scheduled_action_name").(string)
 }
