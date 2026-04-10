@@ -57,6 +57,7 @@ var (
 	FindUsagePlanKeyByTwoPartKey         = findUsagePlanKeyByTwoPartKey
 	FindVPCLinkByID                      = findVPCLinkByID
 
-	IntegrationCreateImportID = integrationCreateImportID
-	MethodCreateImportID      = methodCreateImportID
+	IntegrationCreateImportID    = integrationCreateImportID
+	MethodCreateImportID         = methodCreateImportID
+	MethodResponseCreateImportID = methodResponseCreateImportID
 )
