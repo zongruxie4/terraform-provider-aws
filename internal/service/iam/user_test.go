@@ -44,7 +44,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "user{path}{name}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),

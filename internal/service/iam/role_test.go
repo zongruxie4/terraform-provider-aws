@@ -43,7 +43,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3600"),
@@ -218,7 +218,7 @@ func TestAccIAMRole_path(t *testing.T) {
 	path2 := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
 	resourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
