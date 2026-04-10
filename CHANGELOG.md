@@ -6,7 +6,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` attribute ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
 * resource/aws_api_gateway_method: Add resource identity support ([#47310](https://github.com/hashicorp/terraform-provider-aws/issues/47310))
+* resource/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` argument ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
 
 ## 6.40.0 (April 8, 2026)
 
