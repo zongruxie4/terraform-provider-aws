@@ -196,6 +196,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_api_gateway_integration",
 			Name:     "Integration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("http_method", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      integrationImportID{},
+			},
 		},
 		{
 			Factory:  resourceIntegrationResponse,
@@ -208,6 +217,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_api_gateway_method",
 			Name:     "Method",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("http_method", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      methodImportID{},
+			},
 		},
 		{
 			Factory:  resourceMethodResponse,
@@ -238,6 +256,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_api_gateway_resource",
 			Name:     "Resource",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      apiResourceImportID{},
+			},
 		},
 		{
 			Factory:  resourceRestAPI,
@@ -296,6 +322,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newMethodResourceAsListResource,
+			TypeName: "aws_api_gateway_method",
+			Name:     "Method",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("http_method", true),
+			}),
+		},
 		{
 			Factory:  newRestAPIResourceAsListResource,
 			TypeName: "aws_api_gateway_rest_api",
