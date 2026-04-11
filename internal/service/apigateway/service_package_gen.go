@@ -343,6 +343,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute("http_method", true),
 			}),
 		},
+		{
+			Factory:  newRestAPIResourceAsListResource,
+			TypeName: "aws_api_gateway_rest_api",
+			Name:     "REST API",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
 	})
 }
 
