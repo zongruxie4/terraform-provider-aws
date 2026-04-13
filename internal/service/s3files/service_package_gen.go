@@ -80,6 +80,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newFileSystemPolicyResource,
+			TypeName: "aws_s3files_file_system_policy",
+			Name:     "File System Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrFileSystemID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newMountTargetResource,
 			TypeName: "aws_s3files_mount_target",
 			Name:     "Mount Target",
@@ -123,6 +133,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newFileSystemPolicyResourceAsListResource,
+			TypeName: "aws_s3files_file_system_policy",
+			Name:     "File System Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrFileSystemID),
 		},
 		{
 			Factory:  newMountTargetResourceAsListResource,

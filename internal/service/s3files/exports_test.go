@@ -7,11 +7,13 @@ package s3files
 var (
 	ResourceAccessPoint                  = newAccessPointResource
 	ResourceFileSystem                   = newFileSystemResource
+	ResourceFileSystemPolicy             = newFileSystemPolicyResource
 	ResourceMountTarget                  = newMountTargetResource
 	ResourceSynchronizationConfiguration = newSynchronizationConfigurationResource
 
 	FindAccessPointByID                            = findAccessPointByID
 	FindFileSystemByID                             = findFileSystemByID
+	FindFileSystemPolicyByID                       = findFileSystemPolicyByID
 	FindMountTargetByID                            = findMountTargetByID
 	FindSynchronizationConfigurationByFileSystemID = findSynchronizationConfigurationByFileSystemID
 )
