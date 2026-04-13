@@ -72,7 +72,7 @@ const (
 
 const (
 	guardDutyServiceNamePattern  = "*guardduty-data*"
-	GuardDutySecurityGroupPrefix = "GuardDutyManagedSecurityGroup-"
+	guardDutySecurityGroupPrefix = "GuardDutyManagedSecurityGroup-"
 	guardDutyManagedTagKey       = "GuardDutyManaged"
 	guardDutyManagedTagValue     = "true"
 )

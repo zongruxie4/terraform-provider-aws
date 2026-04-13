@@ -17,12 +17,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -389,7 +391,8 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	tflog.Info(ctx, "Deleting EC2 VPC")
 
 	input := ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
@@ -397,37 +400,39 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	var guardDutyWarnings []string
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		result, err := conn.DeleteVpc(ctx, &input)
+	// First attempt at deletion.
+	_, err := conn.DeleteVpc(ctx, &input)
 
-		// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
-		// proactive. This keeps the change invisible to customers who have never
-		// enabled GuardDuty — no extra API calls on their VPC deletes. A proactive
-		// approach would add DescribeVpcEndpoints and DescribeSecurityGroups calls
-		// to every terraform destroy on every VPC, even when there is nothing to
-		// clean up.
-		if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
-			log.Printf("[DEBUG] VPC deletion failed with DependencyViolation, checking for GuardDuty resources")
+	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
+	// proactive. This keeps the change invisible to customers who have never
+	// enabled GuardDuty - no extra API calls on their VPC deletes. A proactive
+	// approach would add DescribeVpcEndpoints and DescribeSecurityGroups calls
+	// to every terraform destroy on every VPC, even when there is nothing to
+	// clean up.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources")
 
-			warningMsg, cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
-			if warningMsg != "" {
-				guardDutyWarnings = append(guardDutyWarnings, warningMsg)
-			}
-			if cleanupErr != nil {
-				log.Printf("[WARN] Error cleaning up GuardDuty VPC endpoints in VPC %s: %s", d.Id(), cleanupErr)
-			}
-
-			_, sgWarning, sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
-			if sgWarning != "" {
-				guardDutyWarnings = append(guardDutyWarnings, sgWarning)
-			}
-			if sgErr != nil {
-				log.Printf("[WARN] Error cleaning up GuardDuty security groups in VPC %s: %s", d.Id(), sgErr)
-			}
+		warningMsg, cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
+		if warningMsg != "" {
+			guardDutyWarnings = append(guardDutyWarnings, warningMsg)
+		}
+		if cleanupErr != nil {
+			tflog.Warn(ctx, "Error cleaning up GuardDuty VPC endpoints", map[string]any{"error": cleanupErr.Error()})
 		}
 
-		return result, err
-	}, errCodeDependencyViolation)
+		_, sgWarning, sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
+		if sgWarning != "" {
+			guardDutyWarnings = append(guardDutyWarnings, sgWarning)
+		}
+		if sgErr != nil {
+			tflog.Warn(ctx, "Error cleaning up GuardDuty security groups", map[string]any{"error": sgErr.Error()})
+		}
+
+		// Retry the deletion now that GuardDuty resources have been cleaned up.
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			return conn.DeleteVpc(ctx, &input)
+		}, errCodeDependencyViolation)
+	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
@@ -795,31 +800,14 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 }
 
 func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, string, error) {
-	log.Printf("[INFO] Detecting GuardDuty security groups in VPC: %s", vpcID)
+	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC", map[string]any{names.AttrVPCID: vpcID})
 
-	guardDutyGroupName := fmt.Sprintf("%s%s", GuardDutySecurityGroupPrefix, vpcID)
+	guardDutyGroupName := fmt.Sprintf("%s%s", guardDutySecurityGroupPrefix, vpcID)
 
-	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: []awstypes.Filter{
-			{
-				Name:   aws.String("vpc-id"),
-				Values: []string{vpcID},
-			},
-			{
-				Name:   aws.String("group-name"),
-				Values: []string{guardDutyGroupName},
-			},
-			{
-				Name:   aws.String("tag:" + guardDutyManagedTagKey),
-				Values: []string{guardDutyManagedTagValue},
-			},
-		},
-	}
-
-	output, err := conn.DescribeSecurityGroups(ctx, input)
+	sgs, err := findGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 	if err != nil {
 		if IsUnauthorizedError(err) {
-			log.Printf("[WARN] Insufficient IAM permissions to describe GuardDuty security groups in VPC %s: %s", vpcID, err)
+			tflog.Warn(ctx, "Insufficient IAM permissions to describe GuardDuty security groups", map[string]any{names.AttrVPCID: vpcID})
 			warningMsg := fmt.Sprintf(
 				"During deletion of VPC %s, Terraform attempted to check for and delete "+
 					"GuardDuty-managed security groups that may have been causing a DependencyViolation, "+
@@ -830,37 +818,31 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		return 0, "", formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
 	}
 
-	if len(output.SecurityGroups) == 0 {
-		log.Printf("[DEBUG] No GuardDuty security groups found in VPC: %s", vpcID)
+	if len(sgs) == 0 {
+		tflog.Debug(ctx, "No GuardDuty security groups found in VPC", map[string]any{names.AttrVPCID: vpcID})
 		return 0, "", nil
 	}
 
-	log.Printf("[INFO] Found %d GuardDuty security group(s) in VPC %s", len(output.SecurityGroups), vpcID)
-	for _, sg := range output.SecurityGroups {
-		groupID := aws.ToString(sg.GroupId)
-		groupName := aws.ToString(sg.GroupName)
-		log.Printf("[DEBUG] Detected GuardDuty security group: %s (name: %s)", groupID, groupName)
-	}
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{names.AttrVPCID: vpcID, "count": len(sgs)})
 
 	deletedCount := 0
-	for _, sg := range output.SecurityGroups {
+	for _, sg := range sgs {
 		groupID := aws.ToString(sg.GroupId)
 
 		if !hasGuardDutyManagedTag(sg.Tags) {
-			log.Printf("[DEBUG] Skipping security group %s: missing GuardDutyManaged=true tag", groupID)
+			tflog.Debug(ctx, "Skipping security group: missing GuardDutyManaged=true tag", map[string]any{"group_id": groupID})
 			continue
 		}
 
-		log.Printf("[INFO] Deleting GuardDuty security group: %s", groupID)
+		tflog.Debug(ctx, "Deleting GuardDuty security group", map[string]any{"group_id": groupID})
 
-		deleteInput := &ec2.DeleteSecurityGroupInput{
+		deleteInput := ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(groupID),
 		}
-
-		_, err := conn.DeleteSecurityGroup(ctx, deleteInput)
+		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
 		if err != nil {
 			if IsUnauthorizedError(err) {
-				log.Printf("[WARN] Insufficient IAM permissions to delete GuardDuty security group %s: %s", groupID, err)
+				tflog.Warn(ctx, "Insufficient IAM permissions to delete GuardDuty security group", map[string]any{"group_id": groupID})
 				warningMsg := fmt.Sprintf(
 					"During deletion of VPC %s, Terraform attempted to check for and delete "+
 						"GuardDuty-managed security groups that may have been causing a DependencyViolation, "+
@@ -874,7 +856,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 			return deletedCount, "", formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
 		}
 
-		log.Printf("[INFO] Successfully deleted GuardDuty security group: %s", groupID)
+		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
 		deletedCount++
 	}
 
@@ -882,7 +864,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 }
 
 func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) (string, error) {
-	log.Printf("[DEBUG] Checking for GuardDuty VPC endpoints in VPC %s for deletion", vpcID)
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion", map[string]any{names.AttrVPCID: vpcID})
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
@@ -899,26 +881,26 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	}
 
 	if len(endpoints) == 0 {
-		log.Printf("[DEBUG] No GuardDuty VPC endpoints found in VPC %s", vpcID)
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found", map[string]any{names.AttrVPCID: vpcID})
 		return "", nil
 	}
 
-	log.Printf("[INFO] Found %d GuardDuty VPC endpoint(s) in VPC %s, deleting", len(endpoints), vpcID)
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), deleting", map[string]any{names.AttrVPCID: vpcID, "count": len(endpoints)})
 
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
 
 		if !hasGuardDutyManagedTag(endpoint.Tags) {
-			log.Printf("[DEBUG] GuardDuty VPC endpoint %s lacks GuardDutyManaged=true tag, skipping", endpointID)
+			tflog.Debug(ctx, "GuardDuty VPC endpoint lacks GuardDutyManaged=true tag, skipping", map[string]any{"endpoint_id": endpointID})
 			continue
 		}
 
-		log.Printf("[DEBUG] Deleting GuardDuty VPC endpoint %s in VPC %s", endpointID, vpcID)
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID, names.AttrVPCID: vpcID})
 
-		input := ec2.DeleteVpcEndpointsInput{
+		deleteInput := ec2.DeleteVpcEndpointsInput{
 			VpcEndpointIds: []string{endpointID},
 		}
-		_, err := conn.DeleteVpcEndpoints(ctx, &input)
+		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
 		if err != nil {
 			if IsUnauthorizedError(err) {
 				return fmt.Sprintf(
@@ -930,7 +912,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 				), nil
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				log.Printf("[DEBUG] GuardDuty VPC endpoint %s not found during deletion, continuing", endpointID)
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion, continuing", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
 			return "", fmt.Errorf("deleting GuardDuty VPC endpoint %s in VPC %s: %w", endpointID, vpcID, err)
@@ -938,13 +920,13 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 
 		if _, err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				log.Printf("[DEBUG] GuardDuty VPC endpoint %s not found while waiting for deleted state, continuing", endpointID)
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state, continuing", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
 			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach deleted state in VPC %s: %w", endpointID, vpcID, err)
 		}
 
-		log.Printf("[INFO] Successfully deleted GuardDuty VPC endpoint %s in VPC %s", endpointID, vpcID)
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID, names.AttrVPCID: vpcID})
 	}
 
 	return "", nil
