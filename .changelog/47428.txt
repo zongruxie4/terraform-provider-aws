@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_eks_access_entry: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_access_policy_association: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_addon: Add Resource Identity support
+```
