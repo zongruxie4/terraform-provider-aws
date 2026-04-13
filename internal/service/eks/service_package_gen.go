@@ -148,6 +148,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_eks_access_policy_association",
 			Name:     "Access Policy Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("principal_arn", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      accessPolicyAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceAddon,
