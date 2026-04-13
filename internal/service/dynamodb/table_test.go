@@ -13258,7 +13258,7 @@ resource "aws_dynamodb_table" "test" {
 
   dynamic "global_secondary_index" {
     for_each = var.global_secondary_index
-	content {
+    content {
       name               = global_secondary_index.value.name
       hash_key           = global_secondary_index.value.hash_key
       non_key_attributes = lookup(global_secondary_index.value, "non_key_attributes", null)
