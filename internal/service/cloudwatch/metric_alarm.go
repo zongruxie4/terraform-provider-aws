@@ -601,8 +601,8 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 
 	if v, ok := d.GetOk("threshold_metric_id"); ok {
 		apiObject.ThresholdMetricId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("threshold"); ok {
-		apiObject.Threshold = aws.Float64(v.(float64))
+	} else {
+		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
 
 	if v, ok := d.GetOk(names.AttrUnit); ok {
