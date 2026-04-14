@@ -1036,19 +1036,19 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_metrics(rName, metric string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-	name         = %[1]q
-	budget_type  = "COST"
-	limit_amount = "1000.0"
-	limit_unit   = "USD"
-	time_unit    = "MONTHLY"
-	metrics      = [%[2]q]
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+  metrics      = [%[2]q]
 
-	filter_expression {
-		dimensions {
-			key    = "SERVICE"
-			values = ["Amazon Elastic Compute Cloud - Compute"]
-		}
-	}
+  filter_expression {
+    dimensions {
+      key    = "SERVICE"
+      values = ["Amazon Elastic Compute Cloud - Compute"]
+    }
+  }
 }
 `, rName, metric)
 }
