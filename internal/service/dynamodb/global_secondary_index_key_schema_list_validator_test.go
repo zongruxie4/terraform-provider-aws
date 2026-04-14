@@ -25,8 +25,9 @@ func TestGlobalSecondaryIndexKeySchemaListValidator(t *testing.T) {
 			expectError: false,
 		},
 		"null": {
+			// Null value is handled by `listvalidator.IsRequired()`
 			value:       fwtypes.NewListNestedObjectValueOfNull[keySchemaModel](t.Context()),
-			expectError: true,
+			expectError: false,
 		},
 		"fully known": {
 			value: fwtypes.NewListNestedObjectValueOfValueSliceMust(t.Context(), []keySchemaModel{
