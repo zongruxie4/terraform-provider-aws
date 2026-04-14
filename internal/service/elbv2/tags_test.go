@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/aws/smithy-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -22,6 +23,9 @@ func TestBatchListTags(t *testing.T) {
 	testCases := map[string]struct {
 		tagsByIdentifier map[string][]awstypes.Tag
 	}{
+		"empty": {
+			tagsByIdentifier: map[string][]awstypes.Tag{},
+		},
 		"single": {
 			tagsByIdentifier: map[string][]awstypes.Tag{
 				"id1": {
@@ -89,6 +93,17 @@ type mockTagDescriber struct {
 }
 
 func (m *mockTagDescriber) DescribeTags(ctx context.Context, params *elasticloadbalancingv2.DescribeTagsInput, optFns ...func(*elasticloadbalancingv2.Options)) (*elasticloadbalancingv2.DescribeTagsOutput, error) {
+	if len(params.ResourceArns) == 0 {
+		return nil, &smithy.OperationError{
+			ServiceID:     "Elastic Load Balancing v2",
+			OperationName: "DescribeTags",
+			Err: &smithy.GenericAPIError{
+				Code:    "ValidationError",
+				Message: "An ARN must be specified",
+			},
+		}
+	}
+
 	output := &elasticloadbalancingv2.DescribeTagsOutput{
 		TagDescriptions: []awstypes.TagDescription{},
 	}

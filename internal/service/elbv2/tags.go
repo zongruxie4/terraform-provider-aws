@@ -17,6 +17,10 @@ type tagDescriber interface {
 }
 
 func batchListTags(ctx context.Context, conn tagDescriber, identifiers []string, optFns ...func(*elasticloadbalancingv2.Options)) (map[string][]awstypes.Tag, error) {
+	if len(identifiers) == 0 {
+		return make(map[string][]awstypes.Tag, 0), nil
+	}
+
 	input := elasticloadbalancingv2.DescribeTagsInput{
 		ResourceArns: identifiers,
 	}
