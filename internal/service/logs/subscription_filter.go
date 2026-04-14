@@ -213,7 +213,7 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error {
+func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
