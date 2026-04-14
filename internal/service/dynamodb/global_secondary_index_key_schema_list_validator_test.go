@@ -45,6 +45,17 @@ func TestGlobalSecondaryIndexKeySchemaListValidator(t *testing.T) {
 			}),
 			expectError: false,
 		},
+
+		"single unknown type": {
+			value: fwtypes.NewListNestedObjectValueOfValueSliceMust(t.Context(), []keySchemaModel{
+				{
+					AttributeName: types.StringValue("attribute_name"),
+					AttributeType: fwtypes.StringEnumValue(awstypes.ScalarAttributeTypeS),
+					KeyType:       fwtypes.StringEnumUnknown[awstypes.KeyType](),
+				},
+			}),
+			expectError: false,
+		},
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {

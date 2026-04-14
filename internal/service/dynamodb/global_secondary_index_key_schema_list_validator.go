@@ -44,7 +44,11 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 		return
 	}
 
-	if keySchemas[0].KeyType.ValueEnum() != awstypes.KeyTypeHash {
+	firstKeySchema := keySchemas[0]
+	if firstKeySchema.KeyType.IsUnknown() {
+		return
+	}
+	if firstKeySchema.KeyType.ValueEnum() != awstypes.KeyTypeHash {
 		elementPath := request.Path.AtListIndex(0)
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			elementPath,
