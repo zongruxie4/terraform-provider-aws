@@ -1,21 +1,54 @@
-resource "aws_eks_addon" "test" {
+resource "aws_eks_capability" "test" {
 {{- template "region" }}
-  cluster_name = aws_eks_cluster.test.name
-  addon_name   = "vpc-cni"
+  cluster_name              = aws_eks_cluster.test.name
+  capability_name           = "${var.rName}-capability"
+  type                      = "KRO"
+  role_arn                  = aws_iam_role.capability.arn
+  delete_propagation_policy = "RETAIN"
 
 {{- template "tags" . }}
+
+  depends_on = [aws_iam_role_policy_attachment.capability]
 }
 
 resource "aws_eks_cluster" "test" {
 {{- template "region" }}
-  name     = var.rName
+  name     = "${var.rName}-cluster"
   role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+
+resource "aws_iam_role" "capability" {
+  name = "${var.rName}-capability"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "capabilities.eks.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "capability" {
+  role       = aws_iam_role.capability.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
 }
 
 data "aws_partition" "current" {}
