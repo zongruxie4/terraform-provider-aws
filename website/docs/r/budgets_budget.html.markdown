@@ -458,7 +458,7 @@ Refer to [AWS Expression documentation](https://docs.aws.amazon.com/aws-cost-man
 
 #### Metrics
 
-`filter_expression` requires `metrics` to be set as well. Value is list type and can have only one element. Possible values: "UnblendedCost", "BlendedCost", "AmortizedCost", "NetUnblendedCost", "NetAmortizedCost", "UsageQuantity", "NormalizedUsageAmount", "Hours".
+`metrics` defines how AWS calculates the budget amount. Set `metrics` when using `filter_expression`. This argument is a list with a single value. Valid values are `UnblendedCost`, `BlendedCost`, `AmortizedCost`, `NetUnblendedCost`, `NetAmortizedCost`, `UsageQuantity`, `NormalizedUsageAmount`, and `Hours`.
 
 ## Import
 
