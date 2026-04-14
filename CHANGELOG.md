@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_api_gateway_integration` ([#47370](https://github.com/hashicorp/terraform-provider-aws/issues/47370))
 * **New List Resource:** `aws_api_gateway_method` ([#47365](https://github.com/hashicorp/terraform-provider-aws/issues/47365))
+* **New List Resource:** `aws_api_gateway_resource` ([#47382](https://github.com/hashicorp/terraform-provider-aws/issues/47382))
 * **New List Resource:** `aws_api_gateway_rest_api` ([#47404](https://github.com/hashicorp/terraform-provider-aws/issues/47404))
 * **New List Resource:** `aws_nat_gateway` ([#47349](https://github.com/hashicorp/terraform-provider-aws/issues/47349))
 * **New List Resource:** `aws_sns_topic_policy` ([#47445](https://github.com/hashicorp/terraform-provider-aws/issues/47445))
@@ -26,14 +27,18 @@ ENHANCEMENTS:
 * resource/aws_budgets_budget: Add `metrics` attribute ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
 * resource/aws_directory_service_directory: add `enable_directory_data_access` argument ([#44736](https://github.com/hashicorp/terraform-provider-aws/issues/44736))
 * resource/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` argument ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
+* resource/aws_elasticache_user: Add `passwords_wo` and `passwords_wo_version` write-only arguments ([#45988](https://github.com/hashicorp/terraform-provider-aws/issues/45988))
 * resource/aws_launch_configuration: Add Resource Identity support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_opensearch_domain: Add `deployment_strategy_options` configuration block ([#47401](https://github.com/hashicorp/terraform-provider-aws/issues/47401))
 
 BUG FIXES:
 
+* data-source/aws_outposts_asset: Fix nil pointer dereference panic when asset has no `ComputeAttributes` or `AssetLocation` ([#47450](https://github.com/hashicorp/terraform-provider-aws/issues/47450))
 * resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to Required ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_budgets_budget: Add missing metrics attribute required for filter_expression ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
+* resource/aws_cloudfront_multitenant_distribution: Fix `function_association` and `lambda_function_association` block ordering producing inconsistent result after apply when multiple associations are configured ([#46378](https://github.com/hashicorp/terraform-provider-aws/issues/46378))
 * resource/aws_cloudfront_multitenant_distribution: Fix `origin` block ordering producing inconsistent result after apply when multiple origins are configured ([#47199](https://github.com/hashicorp/terraform-provider-aws/issues/47199))
+* resource/aws_dynamodb_table: Prevents validation error when global secondary index `range_key` is set to empty string ([#47427](https://github.com/hashicorp/terraform-provider-aws/issues/47427))
 * resource/aws_neptune_global_cluster: Fix a regression in the minor version upgrade workflow for `MySQL` engine types triggered by upstream changes to the API error response text ([#47448](https://github.com/hashicorp/terraform-provider-aws/issues/47448))
 * resource/aws_rds_global_cluster: Fix a regression in the minor version upgrade workflow for `MySQL` engine types triggered by upstream changes to the API error response text ([#47448](https://github.com/hashicorp/terraform-provider-aws/issues/47448))
 
