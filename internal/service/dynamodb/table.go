@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dynamodb
 
 import (
@@ -21,7 +23,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,7 +52,6 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -105,6 +106,9 @@ func resourceTable() *schema.Resource {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
@@ -269,7 +273,7 @@ func resourceTable() *schema.Resource {
 					Type:          schema.TypeList,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+					ConflictsWith: []string{"restore_backup_arn", "restore_source_name", "restore_source_table_arn"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"input_compression_type": {
@@ -465,16 +469,22 @@ func resourceTable() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidUTCTimestamp,
 				},
+				"restore_backup_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"import_table", "restore_source_name", "restore_source_table_arn"},
+				},
 				"restore_source_table_arn": {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"import_table", "restore_source_name"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_name"},
 				},
 				"restore_source_name": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"import_table", "restore_source_table_arn"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_table_arn"},
 				},
 				"restore_to_latest_time": {
 					Type:     schema.TypeBool,
@@ -708,6 +718,72 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreTableToPointInTime(ctx, input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+		if err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
+		}
+	} else if backupARN, ok := d.GetOk("restore_backup_arn"); ok {
+		input := &dynamodb.RestoreTableFromBackupInput{
+			TargetTableName: aws.String(tableName),
+			BackupArn:       aws.String(backupARN.(string)),
+		}
+
+		billingModeOverride := awstypes.BillingMode(d.Get("billing_mode").(string))
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []awstypes.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]any)
+				if err := validateGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Get(names.AttrName).(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, *gsiObject)
+			}
+			input.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
+
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OnDemandThroughputOverride = expandOnDemandThroughput(v.([]any)[0].(map[string]any))
+		}
+
+		if _, ok := d.GetOk("write_capacity"); ok {
+			if _, ok := d.GetOk("read_capacity"); ok {
+				capacityMap := map[string]any{
+					"write_capacity": d.Get("write_capacity"),
+					"read_capacity":  d.Get("read_capacity"),
+				}
+				input.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
+			}
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]any))
+		}
+
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
+			return conn.RestoreTableFromBackup(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
 				return true, err
@@ -1440,10 +1516,10 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
-			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
+			// ValidationException: Cannot add or delete the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
 				!tfawserr.ErrMessageContains(err, errCodeValidationException, "MultiRegionConsistency must be set as STRONG when GlobalTableWitnessUpdates parameter is present") &&
-				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "the local region through ReplicaUpdates.") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
 		}
@@ -2158,8 +2234,16 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					}
 					ops = append(ops, update)
 				}
-				// Separating the WarmThroughput updates from the others
-				if warmThroughputChanged {
+				// Only update WarmThroughput if the user has set it in the new config (not omitted or empty)
+				newWarmThroughputOmitted := true
+				if v, ok := newMap["warm_throughput"]; ok {
+					if arr, ok := v.([]any); ok {
+						if len(arr) > 0 && arr[0] != nil {
+							newWarmThroughputOmitted = false
+						}
+					}
+				}
+				if warmThroughputChanged && !newWarmThroughputOmitted {
 					update := awstypes.GlobalSecondaryIndexUpdate{
 						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 							IndexName:      aws.String(idxName),
@@ -2198,11 +2282,26 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
 
+	// Config uses either hash_key or key_schema syntax, but not both.
+	// If hash_key matches, key_schema is redundant, remove it.
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
 	if oOk && nOk && oHk == nHk && oHk != "" {
 		delete(oldAttributes, "key_schema")
 		delete(newAttributes, "key_schema")
+	}
+
+	// If key_schema matches, hash_key/range_key are redundant, remove them.
+	// Only when key_schema is a non-empty list, to avoid matching on nil/empty defaults.
+	oKs, oKsOk := oldAttributes["key_schema"]
+	nKs, nKsOk := newAttributes["key_schema"]
+	oKsList, _ := oKs.([]any)
+	nKsList, _ := nKs.([]any)
+	if oKsOk && nKsOk && len(oKsList) > 0 && len(nKsList) > 0 && reflect.DeepEqual(oKs, nKs) {
+		delete(oldAttributes, "hash_key")
+		delete(newAttributes, "hash_key")
+		delete(oldAttributes, "range_key")
+		delete(newAttributes, "range_key")
 	}
 
 	return !reflect.DeepEqual(oldAttributes, newAttributes)
@@ -2915,7 +3014,7 @@ func expandLocalSecondaryIndexes(cfg []any, keySchemaM map[string]any) []awstype
 
 func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 	a := &dynamodb.ImportTableInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
@@ -3194,7 +3293,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
 	name := planRaw.GetAttr(names.AttrName)
-	if name.IsKnown() {
+	if name.IsKnown() && d.Id() != "" {
 		table, err := findTableByName(ctx, conn, name.AsString())
 		if err != nil && !retry.NotFound(err) {
 			return err
@@ -3278,6 +3377,9 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 		return
 	}
 
+	if !gsis.IsKnown() || gsis.IsNull() {
+		return
+	}
 	for i, gsiElem := range tfcty.ValueElements(gsis) {
 		gsiElemPath := gsisPath.Index(i)
 		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
@@ -3320,6 +3422,10 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
+
+	if !keySchema.IsKnown() || keySchema.IsNull() {
+		return
+	}
 	for i, gsi := range tfcty.ValueElements(keySchema) {
 		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
 		switch keyType {
@@ -3577,7 +3683,16 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() {
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "range_key":
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}
@@ -3590,6 +3705,17 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "warm_throughput":
+				// AWS automatically sets warm_throughput
+				// values for on-demand tables, but these should not cause diffs when
+				// the user hasn't explicitly configured warm_throughput.
+				if p.IsNull() || (p.IsKnown() && p.LengthInt() == 0) {
+					continue
 				}
 				if !ctyValueLegacyEquals(s, p) {
 					return nil

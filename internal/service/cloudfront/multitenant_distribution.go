@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -25,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -400,8 +402,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-			"origin": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[originModel](ctx),
+			"origin": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
@@ -426,7 +428,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"origin_path": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							Default:  stringdefault.StaticString(""),
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
@@ -700,7 +701,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
 	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
+	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
@@ -1041,7 +1042,7 @@ type multiTenantDistributionResourceModel struct {
 	ID                            types.String                                                 `tfsdk:"id"`
 	InProgressInvalidationBatches types.Int32                                                  `tfsdk:"in_progress_invalidation_batches"`
 	LastModifiedTime              timetypes.RFC3339                                            `tfsdk:"last_modified_time"`
-	Origin                        fwtypes.ListNestedObjectValueOf[originModel]                 `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
+	Origin                        fwtypes.SetNestedObjectValueOf[originModel]                  `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
 	OriginGroup                   fwtypes.ListNestedObjectValueOf[originGroupModel]            `tfsdk:"origin_group" autoflex:",xmlwrapper=Items,omitempty"`
 	Restrictions                  fwtypes.ListNestedObjectValueOf[restrictionsModel]           `tfsdk:"restrictions"`
 	Status                        types.String                                                 `tfsdk:"status"`
@@ -1061,7 +1062,7 @@ type originModel struct {
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
-	OriginPath                types.String                                             `tfsdk:"origin_path"`
+	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
@@ -1148,8 +1149,8 @@ type cacheBehaviorModel struct {
 type customErrorResponseModel struct {
 	ErrorCachingMinTtl types.Int64  `tfsdk:"error_caching_min_ttl"`
 	ErrorCode          types.Int64  `tfsdk:"error_code"`
-	ResponseCode       types.String `tfsdk:"response_code"`
-	ResponsePagePath   types.String `tfsdk:"response_page_path"`
+	ResponseCode       types.String `tfsdk:"response_code" autoflex:",omitempty"`
+	ResponsePagePath   types.String `tfsdk:"response_page_path" autoflex:",omitempty"`
 }
 
 type restrictionsModel struct {
@@ -1222,6 +1223,10 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 
 	for i := range origins.Items {
 		origin := &origins.Items[i]
+		// CloudFront requires OriginPath to always be present, even as empty string.
+		if origin.OriginPath == nil {
+			origin.OriginPath = aws.String("")
+		}
 		// If custom, S3, and VPC origin configs are all missing, add an empty S3 origin config
 		// One or the other must be specified, but the S3 origin can be "empty"
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
