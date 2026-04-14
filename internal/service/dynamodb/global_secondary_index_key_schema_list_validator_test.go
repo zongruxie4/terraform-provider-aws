@@ -20,6 +20,10 @@ func TestGlobalSecondaryIndexKeySchemaListValidator(t *testing.T) {
 		value       fwtypes.ListNestedObjectValueOf[keySchemaModel]
 		expectError bool
 	}{
+		"unknown": {
+			value:       fwtypes.NewListNestedObjectValueOfUnknown[keySchemaModel](t.Context()),
+			expectError: false,
+		},
 		"null": {
 			value:       fwtypes.NewListNestedObjectValueOfNull[keySchemaModel](t.Context()),
 			expectError: true,

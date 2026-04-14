@@ -30,7 +30,11 @@ func (v globalSecondaryIndexKeySchemaListValidator) MarkdownDescription(_ contex
 }
 
 func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+	if request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if request.ConfigValue.IsNull() {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			fmt.Sprintf(`must contain at least %d and at most %d elements with "key_type" %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
