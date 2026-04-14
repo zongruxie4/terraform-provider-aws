@@ -124,7 +124,7 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"rule": schema.ListNestedBlock{
+			names.AttrRule: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -132,7 +132,7 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"schedule": schema.ListNestedBlock{
+						names.AttrSchedule: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[scheduleModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -140,13 +140,13 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"duration": schema.StringAttribute{
+									names.AttrDuration: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 50),
 										},
 									},
-									"expression": schema.StringAttribute{
+									names.AttrExpression: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 256),

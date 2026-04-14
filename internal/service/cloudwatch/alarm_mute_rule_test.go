@@ -24,7 +24,7 @@ import (
 func TestAccCloudWatchAlarmMuteRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarmmuterule cloudwatch.GetAlarmMuteRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_alarm_mute_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccCloudWatchAlarmMuteRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "mute_type"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.0.duration", "PT4H"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.0.expression", "cron(0 2 * * *)"),
@@ -70,7 +70,7 @@ func TestAccCloudWatchAlarmMuteRule_disappears(t *testing.T) {
 	}
 
 	var alarmmuterule cloudwatch.GetAlarmMuteRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_alarm_mute_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -164,7 +164,7 @@ func testAccPreCheckAlarmMuteRule(ctx context.Context, t *testing.T) {
 func TestAccCloudWatchAlarmMuteRule_startAndExpireDates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarmmuterule cloudwatch.GetAlarmMuteRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_alarm_mute_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -185,7 +185,7 @@ func TestAccCloudWatchAlarmMuteRule_startAndExpireDates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "expire_date"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.0.duration", "PT4H"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.schedule.0.expression", "cron(0 2 * * *)"),
@@ -193,7 +193,7 @@ func TestAccCloudWatchAlarmMuteRule_startAndExpireDates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mute_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mute_targets.0.alarm_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccCloudWatchAlarmMuteRule_startAndExpireDates(t *testing.T) {
 func TestAccCloudWatchAlarmMuteRule_multipleMuteTargets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarmmuterule cloudwatch.GetAlarmMuteRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_alarm_mute_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -246,7 +246,7 @@ func TestAccCloudWatchAlarmMuteRule_multipleMuteTargets(t *testing.T) {
 func TestAccCloudWatchAlarmMuteRule_atExpression(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarmmuterule cloudwatch.GetAlarmMuteRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_alarm_mute_rule.test"
 
 	// Generate a future date (1 year from now) to ensure the alarm mute rule doesn't expire
@@ -284,7 +284,7 @@ func TestAccCloudWatchAlarmMuteRule_atExpression(t *testing.T) {
 
 func TestAccCloudWatchAlarmMuteRule_invalidTimestampPrecision(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

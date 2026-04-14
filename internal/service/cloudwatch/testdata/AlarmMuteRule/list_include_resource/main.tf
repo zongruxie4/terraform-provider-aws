@@ -6,6 +6,13 @@ resource "aws_cloudwatch_alarm_mute_rule" "test" {
 
   name = "${var.rName}-${count.index}"
 
+  rule {
+    schedule {
+      duration   = "PT4H"
+      expression = "cron(0 2 * * *)"
+    }
+  }
+
   tags = var.resource_tags
 }
 
