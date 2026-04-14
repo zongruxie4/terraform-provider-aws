@@ -106,11 +106,15 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Resource (%s): %s", d.Id(), err)
 	}
 
+	resourceResourceFlatten(d, resource)
+
+	return diags
+}
+
+func resourceResourceFlatten(d *schema.ResourceData, resource *apigateway.GetResourceOutput) {
 	d.Set("parent_id", resource.ParentId)
 	d.Set("path_part", resource.PathPart)
 	d.Set(names.AttrPath, resource.Path)
-
-	return diags
 }
 
 func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOperation {

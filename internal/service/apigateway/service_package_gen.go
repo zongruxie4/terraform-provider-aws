@@ -365,6 +365,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 		},
 		{
+			Factory:  newResourceResourceAsListResource,
+			TypeName: "aws_api_gateway_resource",
+			Name:     "Resource",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("rest_api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+		},
+		{
 			Factory:  newRestAPIResourceAsListResource,
 			TypeName: "aws_api_gateway_rest_api",
 			Name:     "REST API",
