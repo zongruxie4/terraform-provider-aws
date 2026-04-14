@@ -320,11 +320,11 @@ resource "aws_dynamodb_table" "example" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = true
   }
 
@@ -335,7 +335,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.region)
   key          = "Architect"
   value        = "Gigi"
 }
@@ -363,6 +363,7 @@ The following arguments are optional:
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
+* `restore_backup_arn` - (Optional) ARN of backup to restore.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.
 * `restore_source_table_arn` - (Optional) ARN of the source table to restore. Must be supplied for cross-region restores.
