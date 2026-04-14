@@ -402,8 +402,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-			"origin": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[originModel](ctx),
+			"origin": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
@@ -428,7 +428,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"origin_path": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							Default:  stringdefault.StaticString(""),
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
@@ -1043,7 +1042,7 @@ type multiTenantDistributionResourceModel struct {
 	ID                            types.String                                                 `tfsdk:"id"`
 	InProgressInvalidationBatches types.Int32                                                  `tfsdk:"in_progress_invalidation_batches"`
 	LastModifiedTime              timetypes.RFC3339                                            `tfsdk:"last_modified_time"`
-	Origin                        fwtypes.ListNestedObjectValueOf[originModel]                 `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
+	Origin                        fwtypes.SetNestedObjectValueOf[originModel]                  `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
 	OriginGroup                   fwtypes.ListNestedObjectValueOf[originGroupModel]            `tfsdk:"origin_group" autoflex:",xmlwrapper=Items,omitempty"`
 	Restrictions                  fwtypes.ListNestedObjectValueOf[restrictionsModel]           `tfsdk:"restrictions"`
 	Status                        types.String                                                 `tfsdk:"status"`
@@ -1063,7 +1062,7 @@ type originModel struct {
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
-	OriginPath                types.String                                             `tfsdk:"origin_path"`
+	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
@@ -1224,6 +1223,10 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 
 	for i := range origins.Items {
 		origin := &origins.Items[i]
+		// CloudFront requires OriginPath to always be present, even as empty string.
+		if origin.OriginPath == nil {
+			origin.OriginPath = aws.String("")
+		}
 		// If custom, S3, and VPC origin configs are all missing, add an empty S3 origin config
 		// One or the other must be specified, but the S3 origin can be "empty"
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
