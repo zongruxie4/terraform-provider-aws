@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_api_gateway_integration` ([#47370](https://github.com/hashicorp/terraform-provider-aws/issues/47370))
 * **New List Resource:** `aws_api_gateway_method` ([#47365](https://github.com/hashicorp/terraform-provider-aws/issues/47365))
 * **New List Resource:** `aws_api_gateway_rest_api` ([#47404](https://github.com/hashicorp/terraform-provider-aws/issues/47404))
 * **New List Resource:** `aws_nat_gateway` ([#47349](https://github.com/hashicorp/terraform-provider-aws/issues/47349))
@@ -11,6 +12,7 @@ ENHANCEMENTS:
 * data-source/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` attribute ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
 * data-source/aws_opensearch_domain: Add `deployment_strategy_options` block ([#47401](https://github.com/hashicorp/terraform-provider-aws/issues/47401))
 * resource/aws_api_gateway_integration: Add resource identity support ([#47357](https://github.com/hashicorp/terraform-provider-aws/issues/47357))
+* resource/aws_api_gateway_integration_response: Add resource identity support ([#47366](https://github.com/hashicorp/terraform-provider-aws/issues/47366))
 * resource/aws_api_gateway_method: Add resource identity support ([#47310](https://github.com/hashicorp/terraform-provider-aws/issues/47310))
 * resource/aws_api_gateway_method_response: Add resource identity support ([#47360](https://github.com/hashicorp/terraform-provider-aws/issues/47360))
 * resource/aws_api_gateway_resource: Add resource identity support ([#47358](https://github.com/hashicorp/terraform-provider-aws/issues/47358))
@@ -30,6 +32,7 @@ BUG FIXES:
 
 * resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to Required ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_budgets_budget: Add missing metrics attribute required for filter_expression ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
+* resource/aws_cloudfront_multitenant_distribution: Fix `origin` block ordering producing inconsistent result after apply when multiple origins are configured ([#47199](https://github.com/hashicorp/terraform-provider-aws/issues/47199))
 
 ## 6.40.0 (April 8, 2026)
 
