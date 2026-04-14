@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_alarm_mute_rule" "test" {
+{{- template "region" }}
   name = var.rName
 
   rule {
