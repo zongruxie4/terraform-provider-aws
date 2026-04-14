@@ -210,6 +210,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 		},
+		{
+			Factory:  newSubscriptionFilterResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_subscription_filter",
+			Name:     "Subscription Filter",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
 	})
 }
 

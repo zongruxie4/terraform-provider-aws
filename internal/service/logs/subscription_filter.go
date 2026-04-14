@@ -184,14 +184,9 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
-	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
-	d.Set("distribution", subscriptionFilter.Distribution)
-	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
-	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
-	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
-	d.Set(names.AttrName, subscriptionFilter.FilterName)
-	d.Set(names.AttrRoleARN, subscriptionFilter.RoleArn)
+	if err := resourceSubscriptionFilterFlatten(ctx, subscriptionFilter, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -216,6 +211,19 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error {
+	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
+	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
+	d.Set("distribution", subscriptionFilter.Distribution)
+	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
+	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
+	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
+	d.Set(names.AttrName, subscriptionFilter.FilterName)
+	d.Set(names.AttrRoleARN, subscriptionFilter.RoleArn)
+
+	return nil
 }
 
 func subscriptionFilterCreateResourceID(logGroupName string) string {
