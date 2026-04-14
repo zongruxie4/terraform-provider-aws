@@ -94,6 +94,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the alarm mute rule.
 * `expire_date` - (Optional) Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) when the mute rule expires. Seconds must be set to `00` (e.g., `2026-12-31T23:59:00Z`). Must not be set when using `at()` expressions.
 * `mute_targets` - (Optional) Alarms to mute. See [`mute_targets` block](#mute_targets) below for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_date` - (Optional) Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) when the mute rule becomes active. Seconds must be set to `00` (e.g., `2026-01-01T00:00:00Z`). Must not be set when using `at()` expressions.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
