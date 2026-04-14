@@ -399,7 +399,7 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 
 	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
 	// if they're destroyed at all, requiring sweeping.
-	_ = acctest.SkipIfEnvVarNotSet(t, "AWS_CLOUDFRONT_LAMBDA_EDGE_TEST_OKAY")
+	_ = acctest.SkipIfEnvVarNotSet(t, "CLOUDFRONT_LAMBDA_EDGE_TEST")
 
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
