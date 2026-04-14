@@ -53,7 +53,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
