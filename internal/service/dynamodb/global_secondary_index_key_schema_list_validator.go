@@ -61,8 +61,11 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
 	for i, v := range keySchemas {
-		switch v.KeyType.ValueEnum() {
-		case awstypes.KeyTypeHash:
+		switch {
+		case v.KeyType.IsUnknown():
+			return
+
+		case v.KeyType.ValueEnum() == awstypes.KeyTypeHash:
 			if lastKeyType == awstypes.KeyTypeRange {
 				elementPath := request.Path.AtListIndex(i)
 				response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
@@ -73,7 +76,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 			}
 			hashCount++
 
-		case awstypes.KeyTypeRange:
+		case v.KeyType.ValueEnum() == awstypes.KeyTypeRange:
 			rangeCount++
 		}
 		lastKeyType = v.KeyType.ValueEnum()
