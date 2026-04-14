@@ -39,6 +39,11 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 
 	keySchemas := fwdiag.Must(keySchemaAttr.ToSlice(ctx))
 
+	// Empty value is handled by `Required` on element attributes and `listvalidator.SizeAtLeast(1)`
+	if len(keySchemas) == 0 {
+		return
+	}
+
 	if keySchemas[0].KeyType.ValueEnum() != awstypes.KeyTypeHash {
 		elementPath := request.Path.AtListIndex(0)
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
