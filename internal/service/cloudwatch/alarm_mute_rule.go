@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -236,19 +237,7 @@ func (r *alarmMuteRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	// Normalize timestamps to UTC to ensure consistent timezone representation.
-	// This is necessary to prevent diffs caused by AWS API response.
-	// error sample without normalization: .expire_date: was cty.StringVal("2026-12-31T23:59:00Z"), but now cty.StringVal("2027-01-01T08:59:00+09:00").
-	if out.StartDate != nil {
-		utc := out.StartDate.UTC()
-		out.StartDate = &utc
-	}
-	if out.ExpireDate != nil {
-		utc := out.ExpireDate.UTC()
-		out.ExpireDate = &utc
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	resp.Diagnostics.Append(r.flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -336,6 +325,25 @@ func (r *alarmMuteRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
+}
+
+func (r *alarmMuteRuleResource) flatten(ctx context.Context, out *cloudwatch.GetAlarmMuteRuleOutput, data *alarmMuteRuleResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Normalize timestamps to UTC to ensure consistent timezone representation.
+	// This is necessary to prevent diffs caused by AWS API response.
+	// error sample without normalization: .expire_date: was cty.StringVal("2026-12-31T23:59:00Z"), but now cty.StringVal("2027-01-01T08:59:00+09:00").
+	if out.StartDate != nil {
+		utc := out.StartDate.UTC()
+		out.StartDate = &utc
+	}
+	if out.ExpireDate != nil {
+		utc := out.ExpireDate.UTC()
+		out.ExpireDate = &utc
+	}
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+
+	return diags
 }
 
 func findAlarmMuteRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*cloudwatch.GetAlarmMuteRuleOutput, error) {
