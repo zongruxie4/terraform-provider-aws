@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -344,6 +345,94 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"etag"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *testing.T) {
+	t.Parallel()
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
+	t.Parallel()
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
+
+	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
+	// if they're destroyed at all, requiring sweeping.
+	_ = acctest.SkipIfEnvVarNotSet(t, "CLOUDFRONT_LAMBDA_EDGE_TEST")
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
 			},
 		},
 	})
@@ -786,6 +875,117 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, rName)
 }
 
+func testAccMultiTenantDistributionConfig_functionAssociation(rName string, swapBlocks bool) string {
+	functionAssociationBlocks := `
+    function_association {
+      event_type   = "viewer-response"
+      function_arn = aws_cloudfront_function.viewer_response.arn
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.viewer_request.arn
+    }  
+`
+	if swapBlocks == true {
+		functionAssociationBlocks = `
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.viewer_request.arn
+    }  
+    
+    function_association {
+      event_type   = "viewer-response"
+      function_arn = aws_cloudfront_function.viewer_response.arn
+    }
+`
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cloudfront_function" "viewer_request" {
+  name    = "viewer-request-%[1]s"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOT
+function handler(event) {
+    var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        body: 'Example body generated by CloudFront function.'
+    };
+    return response;
+}
+EOT
+}
+
+resource "aws_cloudfront_function" "viewer_response" {
+  name    = "viewer-response-%[1]s"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOT
+function handler(event) {
+    var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        body: 'Example body generated by CloudFront function.'
+    };
+    return response;
+}
+EOT
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  comment = "Test distribution with function associations"
+  enabled = false
+
+  origin {
+    domain_name = "example.com"
+    id          = "example-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      ip_address_type        = "ipv4"
+      origin_read_timeout    = 30
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
+
+    %[2]s
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, functionAssociationBlocks)
+}
+
 func testAccMultiTenantDistributionConfig_originOrder(swapped bool) string {
 	origin1 := `
   origin {
@@ -870,4 +1070,124 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, origins)
+}
+
+func testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName string, swapBlocks bool) string {
+	lambdaFunctionAssociationBlocks := `
+    lambda_function_association {
+      event_type         = "viewer-response"
+      lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
+    }
+
+    lambda_function_association {
+      event_type         = "viewer-request"
+      lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
+      include_body       = true
+    }
+`
+	if swapBlocks {
+		lambdaFunctionAssociationBlocks = `
+    lambda_function_association {
+      event_type         = "viewer-request"
+      lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
+      include_body       = true
+    }
+
+    lambda_function_association {
+      event_type         = "viewer-response"
+      lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
+    }
+`
+	}
+
+	// CloudFront requires us-east-1
+	// lintignore:AWSAT003
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "lambda" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "lambda.amazonaws.com",
+          "edgelambda.amazonaws.com"
+        ]
+      }
+    }]
+  })
+}
+
+resource "aws_lambda_function" "viewer_request" {
+  region        = "us-east-1"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "viewer-request-%[1]s"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  publish       = true
+  skip_destroy  = true
+}
+
+resource "aws_lambda_function" "viewer_response" {
+  region        = "us-east-1"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "viewer-response-%[1]s"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  publish       = true
+  skip_destroy  = true
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  comment = "Test distribution with lambda function associations"
+  enabled = false
+
+  origin {
+    domain_name = "example.com"
+    id          = "example-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
+
+    %[2]s
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, rName, lambdaFunctionAssociationBlocks)
 }

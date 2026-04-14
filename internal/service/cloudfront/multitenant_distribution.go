@@ -235,8 +235,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -244,13 +244,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -262,7 +263,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -349,8 +351,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -358,13 +360,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -376,7 +379,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -700,6 +704,9 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	// This is needed for S3 origins using Origin Access Control (OAC)
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
+	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+	fixCacheBehaviors(input.DistributionConfigWithTags.DistributionConfig)
+
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
 
@@ -827,6 +834,9 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
 		fixOriginConfigs(input.DistributionConfig.Origins)
+
+		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+		fixCacheBehaviors(input.DistributionConfig)
 
 		// Ensure ConnectionMode remains tenant-only
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -1109,18 +1119,18 @@ type memberModel struct {
 }
 
 type defaultCacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
@@ -1130,19 +1140,19 @@ type allowedMethodsModel struct {
 }
 
 type cacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	PathPattern               types.String                                                    `tfsdk:"path_pattern"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	PathPattern               types.String                                                   `tfsdk:"path_pattern"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
@@ -1171,13 +1181,13 @@ type viewerCertificateModel struct {
 
 type functionAssociationModel struct {
 	EventType   fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	FunctionARN types.String                           `tfsdk:"function_arn"`
+	FunctionARN fwtypes.ARN                            `tfsdk:"function_arn"`
 }
 
 type lambdaFunctionAssociationModel struct {
 	EventType         fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	IncludeBody       types.Bool                             `tfsdk:"include_body"`
-	LambdaFunctionARN types.String                           `tfsdk:"lambda_function_arn"`
+	IncludeBody       types.Bool                             `tfsdk:"include_body" autoflex:",omitempty"`
+	LambdaFunctionARN fwtypes.ARN                            `tfsdk:"lambda_function_arn"`
 }
 
 type tenantConfigModel struct {
@@ -1232,6 +1242,38 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
 			origin.S3OriginConfig = &awstypes.S3OriginConfig{
 				OriginAccessIdentity: aws.String(""),
+			}
+		}
+	}
+}
+
+// fixCacheBehaviors ensures lambda function associations have IncludeBody set (even as false) when required by CloudFront.
+func fixCacheBehaviors(config *awstypes.DistributionConfig) {
+	if config == nil {
+		return
+	}
+
+	// Fix default cache behavior
+	if config.DefaultCacheBehavior != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
+		for i := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
+			assoc := &config.DefaultCacheBehavior.LambdaFunctionAssociations.Items[i]
+			if assoc.IncludeBody == nil {
+				assoc.IncludeBody = aws.Bool(false)
+			}
+		}
+	}
+
+	// Fix cache behaviors
+	if config.CacheBehaviors != nil {
+		for i := range config.CacheBehaviors.Items {
+			behavior := &config.CacheBehaviors.Items[i]
+			if behavior.LambdaFunctionAssociations != nil {
+				for j := range behavior.LambdaFunctionAssociations.Items {
+					assoc := &behavior.LambdaFunctionAssociations.Items[j]
+					if assoc.IncludeBody == nil {
+						assoc.IncludeBody = aws.Bool(false)
+					}
+				}
 			}
 		}
 	}
