@@ -644,8 +644,8 @@ func (capabilityImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"capability_name": parts[1],
-		"cluster_name":    parts[0],
+		"capability_name":     parts[1],
+		names.AttrClusterName: parts[0],
 	}
 
 	return id, result, nil
