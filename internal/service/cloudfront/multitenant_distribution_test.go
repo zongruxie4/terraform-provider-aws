@@ -1100,7 +1100,8 @@ func testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName string
 `
 	}
 
-	//lintignore:AWSAT003 - CloudFront requires us-east-1
+	// CloudFront requires us-east-1
+	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
