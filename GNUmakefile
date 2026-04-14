@@ -399,7 +399,7 @@ go-build: ## [CI] Provider Checks / go-build
 
 go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar" internal/
+	@misspell -error -source auto -i "littel,ceasar,ect" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
@@ -619,12 +619,25 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
@@ -635,12 +648,25 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
@@ -740,14 +766,6 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
-
-semgrep-vcr: ## Enable VCR support with Semgrep --autofix
-	@echo "make: Enable VCR support with Semgrep --autofix"
-	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
-	@echo "this target may need to be run twice."
-	@semgrep $(SEMGREP_ARGS) --autofix \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config internal/vcr/.semgrep-vcr.yml
 
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
@@ -891,6 +909,9 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
+test-naming: ## Check test naming conventions
+	@.ci/scripts/check-test-naming.sh
+
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -1017,12 +1038,6 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-
-vcr-enable: ## Enable VCR testing
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) fmt
-	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -1231,7 +1246,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep-vcr \
 	skaff \
 	skaff-check-compile \
 	smoke \
@@ -1261,7 +1275,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
-	vcr-enable \
 	website \
 	website-link-check \
 	website-link-check-ghrc \
