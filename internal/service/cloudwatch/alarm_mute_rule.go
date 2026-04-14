@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -38,9 +37,11 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_alarm_mute_rule", name="Alarm Mute Rule")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
 // @Testing(importStateIdAttribute="name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch;cloudwatch.GetAlarmMuteRuleOutput")
+// @Testing(hasNoPreExistingResource=true)
 func newAlarmMuteRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &alarmMuteRuleResource{}
 
@@ -49,6 +50,7 @@ func newAlarmMuteRuleResource(_ context.Context) (resource.ResourceWithConfigure
 
 type alarmMuteRuleResource struct {
 	framework.ResourceWithModel[alarmMuteRuleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -334,10 +336,6 @@ func (r *alarmMuteRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
-}
-
-func (r *alarmMuteRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
 func findAlarmMuteRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*cloudwatch.GetAlarmMuteRuleOutput, error) {
