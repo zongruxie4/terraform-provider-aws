@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -81,7 +82,7 @@ func (l *alarmMuteRuleListResource) List(ctx context.Context, request list.ListR
 
 			var data alarmMuteRuleResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, out, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}

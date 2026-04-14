@@ -229,7 +229,7 @@ func (r *alarmMuteRuleResource) Read(ctx context.Context, req resource.ReadReque
 	name := fwflex.StringValueFromFramework(ctx, state.Name)
 	out, err := findAlarmMuteRuleByName(ctx, conn, name)
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -238,7 +238,7 @@ func (r *alarmMuteRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	resp.Diagnostics.Append(r.flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -432,7 +432,7 @@ func (v timeMinutePrecisionValidator) ValidateString(ctx context.Context, reques
 
 	parsedTime, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+		smerr.AddOne(ctx, &response.Diagnostics, validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			fmt.Sprintf("Could not parse timestamp: %s", err),
 			value,
@@ -442,7 +442,7 @@ func (v timeMinutePrecisionValidator) ValidateString(ctx context.Context, reques
 
 	if parsedTime.Second() != 0 {
 		correctedTime := parsedTime.Truncate(time.Minute).Format(time.RFC3339)
-		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+		smerr.AddOne(ctx, &response.Diagnostics, validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			fmt.Sprintf("%s. Suggested value: %s", v.Description(ctx), correctedTime),
 			value,
