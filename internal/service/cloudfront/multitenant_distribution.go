@@ -714,6 +714,9 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	// This is needed for S3 origins using Origin Access Control (OAC)
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
+	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+	fixCacheBehaviors(input.DistributionConfigWithTags.DistributionConfig)
+
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
 
@@ -841,6 +844,9 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
 		fixOriginConfigs(input.DistributionConfig.Origins)
+
+		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+		fixCacheBehaviors(input.DistributionConfig)
 
 		// Ensure ConnectionMode remains tenant-only
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -1190,7 +1196,7 @@ type functionAssociationModel struct {
 
 type lambdaFunctionAssociationModel struct {
 	EventType         fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	IncludeBody       types.Bool                             `tfsdk:"include_body"`
+	IncludeBody       types.Bool                             `tfsdk:"include_body" autoflex:",omitempty"`
 	LambdaFunctionARN types.String                           `tfsdk:"lambda_function_arn"`
 }
 
@@ -1242,6 +1248,38 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
 			origin.S3OriginConfig = &awstypes.S3OriginConfig{
 				OriginAccessIdentity: aws.String(""),
+			}
+		}
+	}
+}
+
+// fixCacheBehaviors ensures lambda function associations have IncludeBody set (even as false) when required by CloudFront.
+func fixCacheBehaviors(config *awstypes.DistributionConfig) {
+	if config == nil {
+		return
+	}
+
+	// Fix default cache behavior
+	if config.DefaultCacheBehavior != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
+		for i := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
+			assoc := &config.DefaultCacheBehavior.LambdaFunctionAssociations.Items[i]
+			if assoc.IncludeBody == nil {
+				assoc.IncludeBody = aws.Bool(false)
+			}
+		}
+	}
+
+	// Fix cache behaviors
+	if config.CacheBehaviors != nil {
+		for i := range config.CacheBehaviors.Items {
+			behavior := &config.CacheBehaviors.Items[i]
+			if behavior.LambdaFunctionAssociations != nil {
+				for j := range behavior.LambdaFunctionAssociations.Items {
+					assoc := &behavior.LambdaFunctionAssociations.Items[j]
+					if assoc.IncludeBody == nil {
+						assoc.IncludeBody = aws.Bool(false)
+					}
+				}
 			}
 		}
 	}
