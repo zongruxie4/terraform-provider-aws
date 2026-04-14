@@ -572,15 +572,14 @@ func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFu
 
 func WarnStringIsNotEmpty(v any, path cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
-	s := v.(string)
 
-	if s == "" {
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Warning,
-			Summary:       "Empty String",
-			Detail:        "Value must not be an empty string.\n\nThis will be an error in a future release of the provider.",
-			AttributePath: path,
-		})
+	switch s := v.(type) {
+	case string:
+		if s == "" {
+			diags = append(diags, errs.NewInvalidValueAttributeWillBeError(path, "Value must not be an empty string"))
+		}
+	default:
+		diags = append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
 	}
 
 	return diags
