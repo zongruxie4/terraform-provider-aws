@@ -11,7 +11,10 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   role_arn        = aws_iam_role.test.arn
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+  region = var.region
+
+}
 
 resource "aws_cloudwatch_log_group" "test" {
   region = var.region
