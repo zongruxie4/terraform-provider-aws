@@ -229,7 +229,9 @@ func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *aw
 func subscriptionFilterCreateResourceID(logGroupName string) string {
 	var buf bytes.Buffer
 
-	fmt.Fprintf(&buf, "%s-", logGroupName) // only one filter allowed per log_group_name at the moment
+	// Each log group can have up to two subscription filters associated with it.
+	// However, having multiple resources with the same 'id' attribute valuse is OK.
+	fmt.Fprintf(&buf, "%s-", logGroupName)
 
 	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }

@@ -98,9 +98,6 @@ func TestAccLogsSubscriptionFilter_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -115,9 +112,6 @@ func TestAccLogsSubscriptionFilter_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatch_log_subscription_filter.test", identity1.Checks()),
@@ -126,12 +120,6 @@ func TestAccLogsSubscriptionFilter_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("distribution"), tfknownvalue.StringExact(awstypes.DistributionByLogStream)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("filter_pattern"), knownvalue.StringExact("logtype test")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
 					}),
 				},
 			},

@@ -4,5 +4,7 @@
 list "aws_cloudwatch_log_subscription_filter" "test" {
   provider = aws
 
-  log_group_name = aws_cloudwatch_log_group.test.name
+  config {
+    log_group_name = aws_cloudwatch_log_group.test.name
+  }
 }

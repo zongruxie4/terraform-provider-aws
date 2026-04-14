@@ -64,7 +64,6 @@ func (l *subscriptionFilterListResource) List(ctx context.Context, request list.
 		logging.ResourceAttributeKey(names.AttrLogGroupName): logGroupName,
 	})
 
-	// TIP: -- 4. Get information about a resource from AWS
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
 			LogGroupName: aws.String(logGroupName),
@@ -76,13 +75,14 @@ func (l *subscriptionFilterListResource) List(ctx context.Context, request list.
 				return
 			}
 
-			name := aws.ToString(item.FilterName)
+			logGroupName, name := aws.ToString(item.LogGroupName), aws.ToString(item.FilterName)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
 
 			result := request.NewListResult(ctx)
 
 			rd := l.ResourceData()
-			rd.SetId(name)
+			rd.SetId(subscriptionFilterCreateResourceID(logGroupName))
+			rd.Set(names.AttrLogGroupName, logGroupName)
 			rd.Set(names.AttrName, name)
 
 			if request.IncludeResource {
