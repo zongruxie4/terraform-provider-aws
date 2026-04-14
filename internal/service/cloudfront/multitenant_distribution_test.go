@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -392,6 +393,7 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 }
 
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
+// lintignore:AWSAT003
 func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
 	t.Parallel()
 
@@ -401,7 +403,11 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
@@ -1066,12 +1072,12 @@ func testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName string
 	lambdaFunctionAssociationBlocks := `
     lambda_function_association {
       event_type         = "viewer-response"
-      lambda_function_arn = aws_lambda_function.viewer_response.arn
+      lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
     }
 
     lambda_function_association {
       event_type         = "viewer-request"
-      lambda_function_arn = aws_lambda_function.viewer_request.arn
+      lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
       include_body       = true
     }
 `
@@ -1079,17 +1085,18 @@ func testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName string
 		lambdaFunctionAssociationBlocks = `
     lambda_function_association {
       event_type         = "viewer-request"
-      lambda_function_arn = aws_lambda_function.viewer_request.arn
+      lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
       include_body       = true
     }
 
     lambda_function_association {
       event_type         = "viewer-response"
-      lambda_function_arn = aws_lambda_function.viewer_response.arn
+      lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
     }
 `
 	}
 
+	//lintignore:AWSAT003 - CloudFront requires us-east-1
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1111,6 +1118,7 @@ resource "aws_iam_role" "lambda" {
 }
 
 resource "aws_lambda_function" "viewer_request" {
+  region        = "us-east-1"
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "viewer-request-%[1]s"
   role          = aws_iam_role.lambda.arn
@@ -1120,6 +1128,7 @@ resource "aws_lambda_function" "viewer_request" {
 }
 
 resource "aws_lambda_function" "viewer_response" {
+  region        = "us-east-1"
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "viewer-response-%[1]s"
   role          = aws_iam_role.lambda.arn
