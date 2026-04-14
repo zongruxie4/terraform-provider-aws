@@ -1,12 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_sns_topic" "test" {
-  count = var.resource_count
-
-  name = "${var.rName}-${count.index}"
-}
-
 resource "aws_sns_topic_policy" "test" {
   count = var.resource_count
 
@@ -29,6 +23,12 @@ resource "aws_sns_topic_policy" "test" {
       Resource = aws_sns_topic.test[count.index].arn
     }]
   })
+}
+
+resource "aws_sns_topic" "test" {
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
 }
 
 variable "rName" {
