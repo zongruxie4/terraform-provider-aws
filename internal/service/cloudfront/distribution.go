@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,6 +33,11 @@ import (
 
 // @SDKResource("aws_cloudfront_distribution", name="Distribution")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(importIgnore="retain_on_delete;wait_for_deployment", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -42,6 +48,10 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 				output, err := findDistributionByID(ctx, conn, d.Id())
