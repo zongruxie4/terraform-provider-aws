@@ -1,0 +1,4 @@
+
+```release-note:new-list-resource
+aws_api_gateway_resource
+```
