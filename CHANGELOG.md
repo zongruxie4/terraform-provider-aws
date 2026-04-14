@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_notification: Add plan-time validation of `topic_arn` ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_autoscaling_policy: Add Resource Identity support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
 * resource/aws_autoscaling_traffic_source_attachment: Add import support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
+* resource/aws_budgets_budget: Add `metrics` attribute ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
 * resource/aws_directory_service_directory: add `enable_directory_data_access` argument ([#44736](https://github.com/hashicorp/terraform-provider-aws/issues/44736))
 * resource/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` argument ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
 * resource/aws_launch_configuration: Add Resource Identity support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
@@ -28,6 +29,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to Required ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
+* resource/aws_budgets_budget: Add missing metrics attribute required for filter_expression ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
 
 ## 6.40.0 (April 8, 2026)
 
