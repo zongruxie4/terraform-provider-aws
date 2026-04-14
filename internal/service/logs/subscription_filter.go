@@ -28,21 +28,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_subscription_filter", name="Subscription Filter")
+// @IdentityAttribute("log_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("subscriptionFilterImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.SubscriptionFilter")
+// @Testing(importStateIdFunc=testAccSubscriptionFilterImportStateIDFunc)
+// @Testing(importIgnore="apply_on_transformed_logs")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubscriptionFilterPut,
 		ReadWithoutTimeout:   resourceSubscriptionFilterRead,
 		UpdateWithoutTimeout: resourceSubscriptionFilterPut,
 		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceSubscriptionFilterImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"apply_on_transformed_logs": {
@@ -102,7 +107,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutSubscriptionFilterInput{
+	input := cloudwatchlogs.PutSubscriptionFilterInput{
 		DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 		FilterName:     aws.String(name),
 		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
@@ -130,7 +135,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
-			return conn.PutSubscriptionFilter(ctx, input)
+			return conn.PutSubscriptionFilter(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Could not deliver test message to specified") {
@@ -196,10 +201,11 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
-	_, err := conn.DeleteSubscriptionFilter(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{
+	input := cloudwatchlogs.DeleteSubscriptionFilterInput{
 		FilterName:   aws.String(d.Get(names.AttrName).(string)),
 		LogGroupName: aws.String(d.Get(names.AttrLogGroupName).(string)),
-	})
+	}
+	_, err := conn.DeleteSubscriptionFilter(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -210,22 +216,6 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
-}
-
-func resourceSubscriptionFilterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "|")
-	if len(idParts) < 2 {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())
-	}
-
-	logGroupName := idParts[0]
-	filterNamePrefix := idParts[1]
-
-	d.Set(names.AttrLogGroupName, logGroupName)
-	d.Set(names.AttrName, filterNamePrefix)
-	d.SetId(subscriptionFilterCreateResourceID(filterNamePrefix))
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func subscriptionFilterCreateResourceID(logGroupName string) string {
@@ -286,4 +276,40 @@ func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, i
 	}
 
 	return output, nil
+}
+
+const subscriptionFilterImportIDSeparator = "|"
+
+func subscriptionFilterParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, subscriptionFilterImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected log-group-name%[2]sfilter-name>", id, subscriptionFilterImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = subscriptionFilterImportID{}
+)
+
+type subscriptionFilterImportID struct{}
+
+func (subscriptionFilterImportID) Parse(id string) (string, map[string]any, error) {
+	logGroupName, filterName, err := subscriptionFilterParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrLogGroupName: logGroupName,
+		names.AttrName:         filterName,
+	}
+
+	return subscriptionFilterCreateResourceID(logGroupName), result, nil
+}
+
+func (subscriptionFilterImportID) Create(d *schema.ResourceData) string {
+	return subscriptionFilterCreateResourceID(d.Get(names.AttrLogGroupName).(string))
 }
