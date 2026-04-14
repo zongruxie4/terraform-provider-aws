@@ -26,11 +26,11 @@ resource "aws_eks_cluster" "test" {
   role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
-    subnet_ids = aws_subnet.test[*].id
+    subnet_ids = aws_subnet.public[*].id
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy,
     aws_main_route_table_association.test,
   ]
 }
@@ -60,9 +60,33 @@ resource "aws_iam_role" "cluster" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.cluster.name
+}
+
+data "aws_service_principal" "eks_fargate_pods" {
+  service_name = "eks-fargate-pods"
+}
+
+resource "aws_iam_role" "pod" {
+  name = "${var.rName}-pod"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = data.aws_service_principal.eks_fargate_pods.name
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "pod-AmazonEKSFargatePodExecutionRolePolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
+  role       = aws_iam_role.pod.name
 }
 
 resource "aws_vpc" "test" {
