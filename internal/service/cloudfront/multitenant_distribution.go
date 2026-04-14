@@ -32,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -245,10 +244,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											validators.ARN(),
-										},
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -266,10 +263,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											validators.ARN(),
-										},
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -365,10 +360,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											validators.ARN(),
-										},
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -386,10 +379,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											validators.ARN(),
-										},
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -1190,13 +1181,13 @@ type viewerCertificateModel struct {
 
 type functionAssociationModel struct {
 	EventType   fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	FunctionARN types.String                           `tfsdk:"function_arn"`
+	FunctionARN fwtypes.ARN                            `tfsdk:"function_arn"`
 }
 
 type lambdaFunctionAssociationModel struct {
 	EventType         fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
 	IncludeBody       types.Bool                             `tfsdk:"include_body" autoflex:",omitempty"`
-	LambdaFunctionARN types.String                           `tfsdk:"lambda_function_arn"`
+	LambdaFunctionARN fwtypes.ARN                            `tfsdk:"lambda_function_arn"`
 }
 
 type tenantConfigModel struct {
