@@ -193,7 +193,7 @@ resource "aws_budgets_budget" "simple" {
 }
 ```
 
-Create a budget with AND filter for unblended costs
+Create a budget with AND filter for blended costs
 
 ```terraform
 resource "aws_budgets_budget" "and_example" {
@@ -203,7 +203,7 @@ resource "aws_budgets_budget" "and_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  metrics = ["UnblendedCost"]
+  metrics = ["BlendedCost"]
   # Each `and` block is one operand. AND requires at least 2 operands.
   filter_expression {
     and {
@@ -222,7 +222,7 @@ resource "aws_budgets_budget" "and_example" {
 }
 ```
 
-Create a budget with OR filter for unblended costs
+Create a budget with OR filter for amortized costs
 
 ```terraform
 resource "aws_budgets_budget" "or_example" {
@@ -232,7 +232,7 @@ resource "aws_budgets_budget" "or_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  metrics = ["UnblendedCost"]
+  metrics = ["AmortizedCost"]
   # Each `or` block is one operand. OR requires at least 2 operands.
   filter_expression {
     or {
@@ -251,7 +251,7 @@ resource "aws_budgets_budget" "or_example" {
 }
 ```
 
-Create a budget with NOT filter for unblended costs
+Create a budget with NOT filter for net unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "not_example" {
@@ -261,7 +261,7 @@ resource "aws_budgets_budget" "not_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  metrics = ["UnblendedCost"]
+  metrics = ["NetUnblendedCost"]
   filter_expression {
     not {
       dimensions {
@@ -273,7 +273,7 @@ resource "aws_budgets_budget" "not_example" {
 }
 ```
 
-Create a budget with a compound filter for unblended costs
+Create a budget with a compound filter for net amortized costs
 
 ```terraform
 resource "aws_budgets_budget" "compound_example" {
@@ -283,7 +283,7 @@ resource "aws_budgets_budget" "compound_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  metrics = ["UnblendedCost"]
+  metrics = ["NetAmortizedCost"]
   filter_expression {
     # First OR operand: an AND expression
     or {
