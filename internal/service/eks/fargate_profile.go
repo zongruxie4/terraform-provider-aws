@@ -7,6 +7,7 @@ package eks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -288,6 +289,10 @@ func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterNam
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.FargateProfile); ok {
+		if status, health := output.Status, output.Health; status == types.FargateProfileStatusCreateFailed && health != nil {
+			retry.SetLastError(err, fargateProfileIssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -305,6 +310,9 @@ func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterNam
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.FargateProfile); ok {
+		if status, health := output.Status, output.Health; status == types.FargateProfileStatusDeleteFailed && health != nil {
+			retry.SetLastError(err, fargateProfileIssuesError(health.Issues))
+		}
 		return output, err
 	}
 
@@ -357,6 +365,24 @@ func flattenFargateProfileSelectors(apiObjects []types.FargateProfileSelector) [
 	}
 
 	return tfList
+}
+
+func fargateProfileIssueError(apiObject types.FargateProfileIssue) error {
+	return fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message))
+}
+
+func fargateProfileIssuesError(apiObjects []types.FargateProfileIssue) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		err := fargateProfileIssueError(apiObject)
+
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 const fargateProfileResourceIDSeparator = ":"
