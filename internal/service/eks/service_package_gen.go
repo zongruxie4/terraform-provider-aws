@@ -204,6 +204,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("fargate_profile_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      fargateProfileImportID{},
+			},
 		},
 		{
 			Factory:  resourceIdentityProviderConfig,

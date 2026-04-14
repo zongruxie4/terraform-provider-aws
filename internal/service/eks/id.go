@@ -8,25 +8,6 @@ import (
 	"strings"
 )
 
-const fargateProfileResourceIDSeparator = ":"
-
-func FargateProfileCreateResourceID(clusterName, fargateProfileName string) string {
-	parts := []string{clusterName, fargateProfileName}
-	id := strings.Join(parts, fargateProfileResourceIDSeparator)
-
-	return id
-}
-
-func FargateProfileParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, fargateProfileResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sfargate-profile-name", id, fargateProfileResourceIDSeparator)
-}
-
 const identityProviderConfigResourceIDSeparator = ":"
 
 func IdentityProviderConfigCreateResourceID(clusterName, configName string) string {

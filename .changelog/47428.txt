@@ -13,3 +13,7 @@ resource/aws_eks_addon: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_eks_capability: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_fargate_profile: Add Resource Identity support
+```
