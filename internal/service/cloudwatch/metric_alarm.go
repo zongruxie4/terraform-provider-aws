@@ -352,7 +352,6 @@ func resourceMetricAlarm() *schema.Resource {
 				_, metricQueryOk := diff.GetOk("metric_query")
 				_, statisticOk := diff.GetOk("statistic")
 				_, extendedStatisticOk := diff.GetOk("extended_statistic")
-				_, comparisonOperatorOk := diff.GetOk("comparison_operator")
 
 				// Must specify either MetricName, metric_query, or evaluation_criteria
 				if !metricNameOk && !metricQueryOk {
@@ -361,7 +360,8 @@ func resourceMetricAlarm() *schema.Resource {
 
 				// Traditional metric alarms require comparison_operator and evaluation_periods
 				if metricNameOk || metricQueryOk {
-					if !comparisonOperatorOk {
+					comparisonOp := diff.Get("comparison_operator").(string)
+					if comparisonOp == "" {
 						return errors.New("comparison_operator is required for traditional metric alarms")
 					}
 					if _, ok := diff.GetOk("evaluation_periods"); !ok {
@@ -555,8 +555,12 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	}
 
 	// Handle traditional metric alarms
-	apiObject.ComparisonOperator = types.ComparisonOperator(d.Get("comparison_operator").(string))
-	apiObject.EvaluationPeriods = aws.Int32(int32(d.Get("evaluation_periods").(int)))
+	if v, ok := d.GetOk("comparison_operator"); ok {
+		apiObject.ComparisonOperator = types.ComparisonOperator(v.(string))
+	}
+	if v, ok := d.GetOk("evaluation_periods"); ok {
+		apiObject.EvaluationPeriods = aws.Int32(int32(v.(int)))
+	}
 	apiObject.TreatMissingData = aws.String(d.Get("treat_missing_data").(string))
 
 	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
