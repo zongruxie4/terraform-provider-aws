@@ -352,6 +352,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 
 func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *testing.T) {
 	t.Parallel()
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -392,10 +393,13 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 	})
 }
 
-// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
-// lintignore:AWSAT003
 func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
 	t.Parallel()
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
+
+	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
+	// if they're destroyed at all, requiring sweeping.
+	_ = acctest.SkipIfEnvVarNotSet(t, "AWS_CLOUDFRONT_LAMBDA_EDGE_TEST_OKAY")
 
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -1125,6 +1129,7 @@ resource "aws_lambda_function" "viewer_request" {
   handler       = "index.handler"
   runtime       = "nodejs20.x"
   publish       = true
+  skip_destroy  = true
 }
 
 resource "aws_lambda_function" "viewer_response" {
@@ -1135,6 +1140,7 @@ resource "aws_lambda_function" "viewer_response" {
   handler       = "index.handler"
   runtime       = "nodejs20.x"
   publish       = true
+  skip_destroy  = true
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
