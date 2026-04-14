@@ -5,7 +5,6 @@ package cloudwatch_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -17,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -111,42 +109,38 @@ func testAccCheckAlarmMuteRuleDestroy(ctx context.Context, t *testing.T) resourc
 				continue
 			}
 
-			name := rs.Primary.Attributes[names.AttrName]
-			_, err := tfcloudwatch.FindAlarmMuteRuleByName(ctx, conn, name)
+			_, err := tfcloudwatch.FindAlarmMuteRuleByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.CloudWatch, create.ErrActionCheckingDestroyed, tfcloudwatch.ResNameAlarmMuteRule, name, err)
+				continue
 			}
 
-			return create.Error(names.CloudWatch, create.ErrActionCheckingDestroyed, tfcloudwatch.ResNameAlarmMuteRule, name, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Alarm Mute Rule %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAlarmMuteRuleExists(ctx context.Context, t *testing.T, name string, alarmmuterule *cloudwatch.GetAlarmMuteRuleOutput) resource.TestCheckFunc {
+func testAccCheckAlarmMuteRuleExists(ctx context.Context, t *testing.T, n string, v *cloudwatch.GetAlarmMuteRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameAlarmMuteRule, name, errors.New("not found"))
-		}
-
-		ruleName := rs.Primary.Attributes[names.AttrName]
-		if ruleName == "" {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameAlarmMuteRule, name, errors.New("name not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
-		resp, err := tfcloudwatch.FindAlarmMuteRuleByName(ctx, conn, ruleName)
+		resp, err := tfcloudwatch.FindAlarmMuteRuleByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+
 		if err != nil {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameAlarmMuteRule, ruleName, err)
+			return err
 		}
 
-		*alarmmuterule = *resp
+		*v = *resp
 
 		return nil
 	}

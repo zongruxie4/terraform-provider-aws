@@ -7,7 +7,6 @@ package cloudwatch
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -29,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -47,10 +46,6 @@ func newAlarmMuteRuleResource(_ context.Context) (resource.ResourceWithConfigure
 
 	return r, nil
 }
-
-const (
-	ResNameAlarmMuteRule = "Alarm Mute Rule"
-)
 
 type alarmMuteRuleResource struct {
 	framework.ResourceWithModel[alarmMuteRuleResourceModel]
@@ -77,6 +72,13 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 					stringvalidator.LengthAtMost(1024),
 				},
 			},
+			"expire_date": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Optional:   true,
+				Validators: []validator.String{
+					validateTimeMinutePrecision(),
+				},
+			},
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -91,13 +93,6 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 					validateTimeMinutePrecision(),
 				},
 			},
-			"expire_date": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Optional:   true,
-				Validators: []validator.String{
-					validateTimeMinutePrecision(),
-				},
-			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AlarmMuteRuleStatus](),
 				Computed:   true,
@@ -106,6 +101,25 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"mute_targets": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[muteTargetsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"alarm_names": schema.ListAttribute{
+							ElementType: types.StringType,
+							CustomType:  fwtypes.ListOfStringType,
+							Required:    true,
+							Validators: []validator.List{
+								// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-mute-rules.html#defining-alarm-mute-rules
+								listvalidator.SizeAtMost(100),
+							},
+						},
+					},
+				},
+			},
 			"rule": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleModel](ctx),
 				Validators: []validator.List{
@@ -147,24 +161,6 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"mute_targets": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[muteTargetsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"alarm_names": schema.ListAttribute{
-							ElementType: types.StringType,
-							Required:    true,
-							Validators: []validator.List{
-								// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-mute-rules.html#defining-alarm-mute-rules
-								listvalidator.SizeAtMost(100),
-							},
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -179,19 +175,15 @@ func (r *alarmMuteRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var input cloudwatch.PutAlarmMuteRuleInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.PutAlarmMuteRule(ctx, &input)
+	_, err := conn.PutAlarmMuteRule(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -213,12 +205,10 @@ func (r *alarmMuteRuleResource) Create(ctx context.Context, req resource.CreateR
 		alarmMuteRule.ExpireDate = &utc
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, alarmMuteRule, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, alarmMuteRule, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.ARN = flex.StringToFramework(ctx, alarmMuteRule.AlarmMuteRuleArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -232,14 +222,15 @@ func (r *alarmMuteRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	out, err := findAlarmMuteRuleByName(ctx, conn, state.Name.ValueString())
+	name := fwflex.StringValueFromFramework(ctx, state.Name)
+	out, err := findAlarmMuteRuleByName(ctx, conn, name)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -255,12 +246,10 @@ func (r *alarmMuteRuleResource) Read(ctx context.Context, req resource.ReadReque
 		out.ExpireDate = &utc
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.ARN = flex.StringToFramework(ctx, out.AlarmMuteRuleArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -275,34 +264,32 @@ func (r *alarmMuteRuleResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+
 	if diff.HasChanges() {
 		var input cloudwatch.PutAlarmMuteRuleInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.PutAlarmMuteRule(ctx, &input)
+		_, err := conn.PutAlarmMuteRule(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
 	}
 
 	// Always read back from AWS, even for tag-only updates
-	alarmMuteRule, err := findAlarmMuteRuleByName(ctx, conn, plan.Name.ValueString())
+	alarmMuteRule, err := findAlarmMuteRuleByName(ctx, conn, name)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -318,12 +305,10 @@ func (r *alarmMuteRuleResource) Update(ctx context.Context, req resource.UpdateR
 		alarmMuteRule.ExpireDate = &utc
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, alarmMuteRule, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, alarmMuteRule, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.ARN = flex.StringToFramework(ctx, alarmMuteRule.AlarmMuteRuleArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -337,17 +322,16 @@ func (r *alarmMuteRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, state.Name)
 	input := cloudwatch.DeleteAlarmMuteRuleInput{
-		AlarmMuteRuleName: state.Name.ValueStringPointer(),
+		AlarmMuteRuleName: aws.String(name),
 	}
-
 	_, err := conn.DeleteAlarmMuteRule(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 }
@@ -361,14 +345,19 @@ func findAlarmMuteRuleByName(ctx context.Context, conn *cloudwatch.Client, name 
 		AlarmMuteRuleName: aws.String(name),
 	}
 
-	out, err := conn.GetAlarmMuteRule(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
+	return findAlarmMuteRule(ctx, conn, &input)
+}
 
+func findAlarmMuteRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetAlarmMuteRuleInput) (*cloudwatch.GetAlarmMuteRuleOutput, error) {
+	out, err := conn.GetAlarmMuteRule(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -381,7 +370,7 @@ func findAlarmMuteRuleByName(ctx context.Context, conn *cloudwatch.Client, name 
 
 type alarmMuteRuleResourceModel struct {
 	framework.WithRegionModel
-	ARN                  types.String                                      `tfsdk:"arn"`
+	AlarmMuteRuleARN     types.String                                      `tfsdk:"arn"`
 	Description          types.String                                      `tfsdk:"description"`
 	ExpireDate           timetypes.RFC3339                                 `tfsdk:"expire_date"`
 	LastUpdatedTimestamp timetypes.RFC3339                                 `tfsdk:"last_updated_timestamp"`
@@ -406,7 +395,7 @@ type scheduleModel struct {
 }
 
 type muteTargetsModel struct {
-	AlarmNames fwtypes.ListValueOf[types.String] `tfsdk:"alarm_names"`
+	AlarmNames fwtypes.ListOfString `tfsdk:"alarm_names"`
 }
 
 // This validator ensures the timestamp has seconds set to 00.
