@@ -43,6 +43,7 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch;cloudwatch.GetAlarmMuteRuleOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheckAlarmMuteRule")
 func newAlarmMuteRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &alarmMuteRuleResource{}
 

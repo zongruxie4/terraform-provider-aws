@@ -31,7 +31,7 @@ func TestAccCloudWatchAlarmMuteRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,7 +77,7 @@ func TestAccCloudWatchAlarmMuteRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -146,7 +146,7 @@ func testAccCheckAlarmMuteRuleExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckAlarmMuteRule(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 	input := &cloudwatch.ListAlarmMuteRulesInput{}
@@ -171,7 +171,7 @@ func TestAccCloudWatchAlarmMuteRule_startAndExpireDates(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -217,7 +217,7 @@ func TestAccCloudWatchAlarmMuteRule_multipleMuteTargets(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -257,7 +257,7 @@ func TestAccCloudWatchAlarmMuteRule_atExpression(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -290,7 +290,7 @@ func TestAccCloudWatchAlarmMuteRule_invalidTimestampPrecision(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAlarmMuteRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
