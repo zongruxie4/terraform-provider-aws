@@ -13,9 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,1224 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-	algorithmARN := "arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm" //lintignore:AWSAT003,AWSAT005
-	trainingImage := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"               //lintignore:AWSAT003
-
-	testCases := []struct {
-		name   string
-		saved  fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel]
-		remote fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel]
-		want   fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel]
-	}{
-		{
-			name: "saved algorithm name and omitted metrics are preserved",
-			saved: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName:     types.StringValue("example-algorithm"),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringValue(algorithmARN),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName:     types.StringValue("example-algorithm"),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-		},
-		{
-			name:  "import canonicalizes algorithm arn to name",
-			saved: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringValue(algorithmARN),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName:     types.StringValue("example-algorithm"),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-		},
-		{
-			name:  "unknown saved value is a no op",
-			saved: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringValue(algorithmARN),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringValue(algorithmARN),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringNull(),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-		},
-		{
-			name: "training image keeps configured metrics",
-			saved: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringNull(),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("test:msd"),
-					Regex: types.StringValue(`#quality_metric: host=\S+, test msd <loss>=(\S+)`),
-				}}),
-				TrainingImage:     types.StringValue(trainingImage),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringNull(),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringValue(trainingImage),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringNull(),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("test:msd"),
-					Regex: types.StringValue(`#quality_metric: host=\S+, test msd <loss>=(\S+)`),
-				}}),
-				TrainingImage:     types.StringValue(trainingImage),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-		},
-		{
-			name:  "training image import drops injected metrics",
-			saved: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName: types.StringNull(),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-					Name:  types.StringValue("validation:accuracy"),
-					Regex: types.StringValue("validation:accuracy=(.*?);"),
-				}}),
-				TrainingImage:     types.StringValue(trainingImage),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-				AlgorithmName:     types.StringNull(),
-				MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-				TrainingImage:     types.StringValue(trainingImage),
-				TrainingInputMode: types.StringValue("File"),
-			}}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.remote
-			var diags diag.Diagnostics
-
-			tfsagemaker.NormalizeAlgorithmSpecification(ctx, testCase.saved, &got, &diags)
-
-			if diags.HasError() {
-				t.Fatalf("unexpected error: %v", diags)
-			}
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningAlgorithmName(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name  string
-		value types.String
-		want  types.String
-	}{
-		{
-			name:  "plain name is unchanged",
-			value: types.StringValue("example-algorithm"),
-			want:  types.StringValue("example-algorithm"),
-		},
-		{
-			name:  "arn is reduced to trailing name",
-			value: types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"), //lintignore:AWSAT003,AWSAT005
-			want:  types.StringValue("example-algorithm"),
-		},
-		{
-			name:  "null is unchanged",
-			value: types.StringNull(),
-			want:  types.StringNull(),
-		},
-		{
-			name:  "unknown is unchanged",
-			value: types.StringUnknown(),
-			want:  types.StringUnknown(),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfsagemaker.NormalizeHyperParameterTuningAlgorithmName(testCase.value)
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningRetryStrategy(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		name   string
-		saved  fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningRetryStrategyModel]
-		remote fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningRetryStrategyModel]
-		want   fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningRetryStrategyModel]
-	}{
-		{
-			name:  "saved null suppresses remote retry strategy",
-			saved: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-				MaximumRetryAttempts: types.Int64Value(3),
-			}),
-			want: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-		},
-		{
-			name: "saved value is preserved",
-			saved: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-				MaximumRetryAttempts: types.Int64Value(2),
-			}),
-			remote: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-			want: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-				MaximumRetryAttempts: types.Int64Value(2),
-			}),
-		},
-		{
-			name:  "unknown saved value is a no op",
-			saved: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-				MaximumRetryAttempts: types.Int64Value(5),
-			}),
-			want: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-				MaximumRetryAttempts: types.Int64Value(5),
-			}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.remote
-
-			tfsagemaker.NormalizeRetryStrategy(ctx, testCase.saved, &got)
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningStaticHyperParameters(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		name   string
-		saved  fwtypes.MapOfString
-		remote fwtypes.MapOfString
-		want   fwtypes.MapOfString
-	}{
-		{
-			name:  "saved null filters injected underscore keys",
-			saved: fwtypes.NewMapValueOfNull[types.String](ctx),
-			remote: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"_tuning_objective_metric": types.StringValue("test:msd"),
-				"k":                        types.StringValue("2"),
-			}),
-			want: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"k": types.StringValue("2"),
-			}),
-		},
-		{
-			name: "saved value is preserved",
-			saved: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"epochs": types.StringValue("10"),
-			}),
-			remote: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"_tuning_objective_metric": types.StringValue("test:msd"),
-			}),
-			want: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"epochs": types.StringValue("10"),
-			}),
-		},
-		{
-			name:  "unknown saved value is a no op",
-			saved: fwtypes.NewMapValueOfUnknown[types.String](ctx),
-			remote: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"epochs": types.StringValue("20"),
-			}),
-			want: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"epochs": types.StringValue("20"),
-			}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.remote
-
-			tfsagemaker.NormalizeStaticHyperParameters(ctx, testCase.saved, &got)
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningTrainingJobDefinitionConfig(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		name   string
-		saved  *tfsagemaker.HyperParameterTrainingJobDefinitionModel
-		remote *tfsagemaker.HyperParameterTrainingJobDefinitionModel
-		want   *tfsagemaker.HyperParameterTrainingJobDefinitionModel
-	}{
-		{
-			name: "saved config blocks are preserved",
-			saved: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningResourceConfigModel{
-					AllocationStrategy: fwtypes.StringEnumNull[awstypes.HyperParameterTuningAllocationStrategy](),
-					InstanceConfigs:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceConfigModel](ctx),
-					InstanceCount:      types.Int64Value(1),
-					InstanceType:       fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					VolumeKMSKeyID:     types.StringNull(),
-					VolumeSizeInGB:     types.Int64Value(30),
-				}),
-				HyperParameterRanges: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("instance-group-1")}),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumValue(awstypes.OutputCompressionTypeGzip),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Value(7200),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-			remote: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfNull[types.String](ctx),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumNull[awstypes.OutputCompressionType](),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningTrainingResourceConfigModel{
-					InstanceCount:            types.Int64Value(1),
-					InstanceGroups:           fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceGroupModel](ctx),
-					InstancePlacementConfig:  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstancePlacementConfigModel](ctx),
-					InstanceType:             fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					KeepAlivePeriodInSeconds: types.Int64Null(),
-					TrainingPlanARN:          types.StringNull(),
-					VolumeKMSKeyID:           types.StringNull(),
-					VolumeSizeInGB:           types.Int64Value(30),
-				}),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Null(),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-			want: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningResourceConfigModel{
-					AllocationStrategy: fwtypes.StringEnumNull[awstypes.HyperParameterTuningAllocationStrategy](),
-					InstanceConfigs:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceConfigModel](ctx),
-					InstanceCount:      types.Int64Value(1),
-					InstanceType:       fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					VolumeKMSKeyID:     types.StringNull(),
-					VolumeSizeInGB:     types.Int64Value(30),
-				}),
-				HyperParameterRanges: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("instance-group-1")}),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumValue(awstypes.OutputCompressionTypeGzip),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Value(7200),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-		},
-		{
-			name: "unknown saved config blocks are a no op",
-			saved: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification:                fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-			remote: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification:                fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfNull[types.String](ctx),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumNull[awstypes.OutputCompressionType](),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningTrainingResourceConfigModel{
-					InstanceCount:            types.Int64Value(1),
-					InstanceGroups:           fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceGroupModel](ctx),
-					InstancePlacementConfig:  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstancePlacementConfigModel](ctx),
-					InstanceType:             fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					KeepAlivePeriodInSeconds: types.Int64Null(),
-					TrainingPlanARN:          types.StringNull(),
-					VolumeKMSKeyID:           types.StringNull(),
-					VolumeSizeInGB:           types.Int64Value(30),
-				}),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Null(),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-			want: &tfsagemaker.HyperParameterTrainingJobDefinitionModel{
-				AlgorithmSpecification:                fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfNull[types.String](ctx),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumNull[awstypes.OutputCompressionType](),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningTrainingResourceConfigModel{
-					InstanceCount:            types.Int64Value(1),
-					InstanceGroups:           fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceGroupModel](ctx),
-					InstancePlacementConfig:  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstancePlacementConfigModel](ctx),
-					InstanceType:             fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					KeepAlivePeriodInSeconds: types.Int64Null(),
-					TrainingPlanARN:          types.StringNull(),
-					VolumeKMSKeyID:           types.StringNull(),
-					VolumeSizeInGB:           types.Int64Value(30),
-				}),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Null(),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := *testCase.remote
-
-			tfsagemaker.NormalizeTrainingJobDefinitionConfig(testCase.saved, &got)
-
-			assertHPTTrainingJobDefinitionConfigEqual(t, &got, testCase.want)
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningTrainingJobDefinition(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		name   string
-		saved  fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-		remote fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-		want   fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-	}{
-		{
-			name:  "saved null canonicalizes remote definition",
-			saved: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTrainingJobDefinitionModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName: types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"), //lintignore:AWSAT003,AWSAT005
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-						Name:  types.StringValue("validation:accuracy"),
-						Regex: types.StringValue("validation:accuracy=(.*?);"),
-					}}),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-					MaximumRetryAttempts: types.Int64Value(2),
-				}),
-				RoleARN: types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-					"_tuning_objective_metric": types.StringValue("test:msd"),
-					"k":                        types.StringValue("2"),
-				}),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:   fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-					MaximumRetryAttempts: types.Int64Value(2),
-				}),
-				RoleARN: types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-					"k": types.StringValue("2"),
-				}),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:   fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-		},
-		{
-			name: "saved values are preserved",
-			saved: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningResourceConfigModel{
-					AllocationStrategy: fwtypes.StringEnumNull[awstypes.HyperParameterTuningAllocationStrategy](),
-					InstanceConfigs:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceConfigModel](ctx),
-					InstanceCount:      types.Int64Value(1),
-					InstanceType:       fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					VolumeKMSKeyID:     types.StringNull(),
-					VolumeSizeInGB:     types.Int64Value(30),
-				}),
-				HyperParameterRanges: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("instance-group-1")}),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumValue(awstypes.OutputCompressionTypeGzip),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-					MaximumRetryAttempts: types.Int64Value(2),
-				}),
-				RoleARN: types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-					"epochs": types.StringValue("10"),
-				}),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Value(7200),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName: types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"), //lintignore:AWSAT003,AWSAT005
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{
-						Name:  types.StringValue("validation:accuracy"),
-						Regex: types.StringValue("validation:accuracy=(.*?);"),
-					}}),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfNull[types.String](ctx),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumNull[awstypes.OutputCompressionType](),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningTrainingResourceConfigModel{
-					InstanceCount:            types.Int64Value(1),
-					InstanceGroups:           fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceGroupModel](ctx),
-					InstancePlacementConfig:  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstancePlacementConfigModel](ctx),
-					InstanceType:             fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					KeepAlivePeriodInSeconds: types.Int64Null(),
-					TrainingPlanARN:          types.StringNull(),
-					VolumeKMSKeyID:           types.StringNull(),
-					VolumeSizeInGB:           types.Int64Value(30),
-				}),
-				RetryStrategy:         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"_tuning_objective_metric": types.StringValue("test:msd")}),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Null(),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningResourceConfigModel{
-					AllocationStrategy: fwtypes.StringEnumNull[awstypes.HyperParameterTuningAllocationStrategy](),
-					InstanceConfigs:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInstanceConfigModel](ctx),
-					InstanceCount:      types.Int64Value(1),
-					InstanceType:       fwtypes.StringEnumValue(awstypes.TrainingInstanceTypeMlM5Large),
-					VolumeKMSKeyID:     types.StringNull(),
-					VolumeSizeInGB:     types.Int64Value(30),
-				}),
-				HyperParameterRanges: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningInputDataConfigModel{
-					ChannelName:     types.StringValue("train"),
-					CompressionType: fwtypes.StringEnumNull[awstypes.CompressionType](),
-					ContentType:     types.StringNull(),
-					DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningDataSourceModel{
-						FileSystemDataSource: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningFileSystemDataSourceModel](ctx),
-						S3DataSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningS3DataSourceModel{
-							AttributeNames:         fwtypes.NewSetValueOfNull[types.String](ctx),
-							HubAccessConfig:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningHubAccessConfigModel](ctx),
-							InstanceGroupNames:     fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{types.StringValue("instance-group-1")}),
-							ModelAccessConfig:      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningModelAccessConfigModel](ctx),
-							S3DataDistributionType: fwtypes.StringEnumNull[awstypes.S3DataDistribution](),
-							S3DataType:             fwtypes.StringEnumValue(awstypes.S3DataTypeS3Prefix),
-							S3URI:                  types.StringValue("s3://example/input"),
-						}),
-					}),
-					InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
-					RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
-					ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningShuffleConfigModel](ctx),
-				}),
-				OutputDataConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningOutputDataConfigModel{
-					CompressionType: fwtypes.StringEnumValue(awstypes.OutputCompressionTypeGzip),
-					KMSKeyID:        types.StringNull(),
-					S3OutputPath:    types.StringValue("s3://example/output"),
-				}),
-				ResourceConfig: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningRetryStrategyModel{
-					MaximumRetryAttempts: types.Int64Value(2),
-				}),
-				RoleARN:               types.StringNull(),
-				StaticHyperParameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"epochs": types.StringValue("10")}),
-				StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.HyperParameterTuningStoppingConditionModel{
-					MaxPendingTimeInSeconds: types.Int64Value(7200),
-					MaxRuntimeInSeconds:     types.Int64Value(3600),
-					MaxWaitTimeInSeconds:    types.Int64Null(),
-				}),
-				TuningObjective: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-		},
-		{
-			name:  "unknown saved value is a no op",
-			saved: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTrainingJobDefinitionModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-algorithm"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.remote
-			var diags diag.Diagnostics
-
-			tfsagemaker.NormalizeTrainingJobDefinition(ctx, testCase.saved, &got, &diags)
-
-			if diags.HasError() {
-				t.Fatalf("unexpected error: %v", diags)
-			}
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestNormalizeHyperParameterTuningTrainingJobDefinitions(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := []struct {
-		name   string
-		saved  fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-		remote fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-		want   fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTrainingJobDefinitionModel]
-	}{
-		{
-			name:  "saved null canonicalizes each remote definition",
-			saved: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTrainingJobDefinitionModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-1"), //lintignore:AWSAT003,AWSAT005
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{Name: types.StringValue("m1"), Regex: types.StringValue("r1")}}),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"_a": types.StringValue("1"), "x": types.StringValue("2")}),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}, {
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-2"), //lintignore:AWSAT003,AWSAT005
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{{Name: types.StringValue("m2"), Regex: types.StringValue("r2")}}),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"_b": types.StringValue("1"), "y": types.StringValue("2")}),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-1"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"x": types.StringValue("2")}),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}, {
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-2"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"y": types.StringValue("2")}),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-		},
-		{
-			name:  "unknown saved value is a no op",
-			saved: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTrainingJobDefinitionModel](ctx),
-			remote: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-1"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-			want: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTrainingJobDefinitionModel{{
-				AlgorithmSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{{
-					AlgorithmName:     types.StringValue("example-1"),
-					MetricDefinitions: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx),
-					TrainingImage:     types.StringNull(),
-					TrainingInputMode: types.StringValue("File"),
-				}}),
-				CheckpointConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningCheckpointConfigModel](ctx),
-				DefinitionName:                        types.StringNull(),
-				EnableInterContainerTrafficEncryption: types.BoolNull(),
-				EnableManagedSpotTraining:             types.BoolNull(),
-				EnableNetworkIsolation:                types.BoolNull(),
-				Environment:                           fwtypes.NewMapValueOfNull[types.String](ctx),
-				HyperParameterTuningResourceConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningResourceConfigModel](ctx),
-				HyperParameterRanges:                  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningParameterRangesModel](ctx),
-				InputDataConfig:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningInputDataConfigModel](ctx),
-				OutputDataConfig:                      fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningOutputDataConfigModel](ctx),
-				ResourceConfig:                        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTrainingResourceConfigModel](ctx),
-				RetryStrategy:                         fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningRetryStrategyModel](ctx),
-				RoleARN:                               types.StringNull(),
-				StaticHyperParameters:                 fwtypes.NewMapValueOfNull[types.String](ctx),
-				StoppingCondition:                     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningStoppingConditionModel](ctx),
-				TuningObjective:                       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningTuningObjectiveModel](ctx),
-				VPCConfig:                             fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningJobVPCConfigModel](ctx),
-			}}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.remote
-			var diags diag.Diagnostics
-
-			tfsagemaker.NormalizeTrainingJobDefinitions(ctx, testCase.saved, &got, &diags)
-
-			if diags.HasError() {
-				t.Fatalf("unexpected error: %v", diags)
-			}
-
-			if !got.Equal(testCase.want) {
-				t.Errorf("got = %#v, want = %#v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func assertHPTTrainingJobDefinitionConfigEqual(
-	t *testing.T,
-	got *tfsagemaker.HyperParameterTrainingJobDefinitionModel,
-	want *tfsagemaker.HyperParameterTrainingJobDefinitionModel,
-) {
-	t.Helper()
-
-	if !got.HyperParameterTuningResourceConfig.Equal(want.HyperParameterTuningResourceConfig) {
-		t.Errorf("got HyperParameterTuningResourceConfig = %#v, want = %#v", got.HyperParameterTuningResourceConfig, want.HyperParameterTuningResourceConfig)
-	}
-
-	if !got.ResourceConfig.Equal(want.ResourceConfig) {
-		t.Errorf("got ResourceConfig = %#v, want = %#v", got.ResourceConfig, want.ResourceConfig)
-	}
-
-	if !got.OutputDataConfig.Equal(want.OutputDataConfig) {
-		t.Errorf("got OutputDataConfig = %#v, want = %#v", got.OutputDataConfig, want.OutputDataConfig)
-	}
-
-	if !got.StoppingCondition.Equal(want.StoppingCondition) {
-		t.Errorf("got StoppingCondition = %#v, want = %#v", got.StoppingCondition, want.StoppingCondition)
-	}
-
-	if !got.InputDataConfig.Equal(want.InputDataConfig) {
-		t.Errorf("got InputDataConfig = %#v, want = %#v", got.InputDataConfig, want.InputDataConfig)
-	}
-}
 
 func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1367,6 +150,7 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
+					"training_job_definition.0.static_hyper_parameters",
 				},
 				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 			},
@@ -1727,6 +511,47 @@ func TestAccSageMakerHyperParameterTuningJob_objective(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.objective.0.metric_name", "test:msd"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.objective.0.type", "Minimize"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitionAlgorithmName(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_trainingJobDefinitionAlgorithmName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttrPair(resourceName, "training_job_definition.0.algorithm_specification.0.algorithm_name", "aws_sagemaker_algorithm.test", names.AttrARN),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_job_definition"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"training_input_mode": knownvalue.StringExact("File"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -2603,9 +1428,9 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
       s3_output_path   = "s3://${aws_s3_bucket.test.bucket}/output/"
     }
 
-    retry_strategy {
+    retry_strategy = [{
       maximum_retry_attempts = 2
-    }
+    }]
 
     stopping_condition {
       max_pending_time_in_seconds = 7200
@@ -3043,7 +1868,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     role_arn = aws_iam_role.test.arn
 
     algorithm_specification {
-      algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+      algorithm_name      = aws_sagemaker_algorithm.test.arn
       training_input_mode = "File"
     }
 
@@ -3102,7 +1927,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     role_arn = aws_iam_role.test.arn
 
     algorithm_specification {
-      algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+      algorithm_name      = aws_sagemaker_algorithm.test.arn
       training_input_mode = "File"
     }
 
@@ -3370,6 +2195,87 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 `, rName))
 }
 
+func testAccHyperParameterTuningJobConfig_trainingJobDefinitionAlgorithmName(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+  name = %[1]q
+
+  config {
+    strategy = "Bayesian"
+
+    objective {
+      metric_name = "validation:accuracy"
+      type        = "Maximize"
+    }
+
+    parameter_ranges {
+      continuous_parameter_ranges {
+        max_value = "0.5"
+        min_value = "0.1"
+        name      = "learning_rate"
+      }
+    }
+
+    resource_limits {
+      max_number_of_training_jobs = 2
+      max_parallel_training_jobs  = 1
+    }
+  }
+
+  training_job_definition {
+    role_arn = aws_iam_role.test.arn
+
+    algorithm_specification {
+      algorithm_name      = aws_sagemaker_algorithm.test.arn
+      training_input_mode = "File"
+    }
+
+    input_data_config {
+      channel_name = "train"
+      content_type = "text/csv"
+      input_mode   = "File"
+
+      data_source {
+        s3_data_source {
+          s3_data_type = "S3Prefix"
+          s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+        }
+      }
+    }
+
+    input_data_config {
+      channel_name = "test"
+      content_type = "text/csv"
+      input_mode   = "File"
+
+      data_source {
+        s3_data_source {
+          s3_data_type = "S3Prefix"
+          s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+        }
+      }
+    }
+
+    output_data_config {
+      s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+    }
+
+    resource_config {
+      instance_count    = 1
+      instance_type     = "ml.m5.large"
+      volume_size_in_gb = 30
+    }
+
+    stopping_condition {
+      max_runtime_in_seconds = 3600
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
+}
+`, rName))
+}
+
 func testAccHyperParameterTuningJobConfig_trainingJobDefinitionEnvironment(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
@@ -3406,7 +2312,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     }
 
     algorithm_specification {
-      algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+      algorithm_name      = aws_sagemaker_algorithm.test.arn
       training_input_mode = "File"
     }
 

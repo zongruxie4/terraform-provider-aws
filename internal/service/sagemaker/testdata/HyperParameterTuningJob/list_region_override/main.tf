@@ -33,7 +33,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     role_arn = aws_iam_role.test.arn
 
     algorithm_specification {
-      algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+      algorithm_name      = aws_sagemaker_algorithm.test.arn
       training_input_mode = "File"
     }
 

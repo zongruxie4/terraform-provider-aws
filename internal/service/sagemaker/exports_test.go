@@ -143,16 +143,9 @@ var (
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
-	NormalizeAlgoSpecMetricDefinitions         = normalizeAlgoSpecMetricDefinitions
-	NormalizeStoppingCondition                 = normalizeStoppingCondition
-	NormalizeTrainingJobDefinition             = normalizeTrainingJobDefinition
-	NormalizeTrainingJobDefinitions            = normalizeTrainingJobDefinitions
-	NormalizeTrainingJobDefinitionConfig       = normalizeTrainingJobDefinitionConfig
-	NormalizeStaticHyperParameters             = normalizeStaticHyperParameters
-	NormalizeRetryStrategy                     = normalizeRetryStrategy
-	NormalizeAlgorithmSpecification            = normalizeAlgorithmSpecification
-	NormalizeHyperParameterTuningAlgorithmName = normalizeHyperParameterTuningAlgorithmName
-	ServerlessJobConfigEqualityFunc            = serverlessJobConfigEqualityFunc
+	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition         = normalizeStoppingCondition
+	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

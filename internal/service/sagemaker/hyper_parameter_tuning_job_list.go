@@ -79,7 +79,7 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 						return
 					}
 
-					l.flatten(ctx, output, &data, &result.Diagnostics)
+					result.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
 				}
 
 				if result.Diagnostics.HasError() {

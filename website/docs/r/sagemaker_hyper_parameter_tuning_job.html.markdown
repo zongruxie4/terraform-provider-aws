@@ -241,7 +241,7 @@ Each block supports:
 
 #### algorithm_specification
 
-* `algorithm_name` - (Optional) Built-in algorithm name or ARN.
+* `algorithm_name` - (Optional) SageMaker algorithm ARN.
 * `training_image` - (Optional) Container image used for training.
 * `training_input_mode` - (Required) Training input mode.
 * `metric_definitions` - (Optional) Metric extraction rules.
