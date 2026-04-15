@@ -42,19 +42,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_elb_hosted_zone_id",
 			Name:     "Hosted Zone ID",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 		{
 			Factory:  dataSourceServiceAccount,
 			TypeName: "aws_elb_service_account",
 			Name:     "Service Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 	}
 }

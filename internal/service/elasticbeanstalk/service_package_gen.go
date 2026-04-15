@@ -40,10 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceHostedZone,
 			TypeName: "aws_elastic_beanstalk_hosted_zone",
 			Name:     "Hosted Zone",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 		{
 			Factory:  dataSourceSolutionStack,

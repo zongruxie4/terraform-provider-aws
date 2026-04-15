@@ -111,11 +111,8 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 		},
 {{- end }}
@@ -136,11 +133,8 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 		},
 {{- end }}
@@ -172,11 +166,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 		},
 {{- end }}
@@ -207,11 +198,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
@@ -328,11 +316,8 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
@@ -434,11 +419,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 		},
 {{- end }}
@@ -467,11 +449,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
@@ -573,11 +552,8 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
-			{{- else }}
-				Region: unique.Make(inttypes.ServicePackageResourceRegion {
-					IsOverrideEnabled:             {{ $regionOverrideEnabled }},
-					IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-				}),
+			{{- else if not $value.ValidateRegionOverrideInPartition }}
+				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
 			{{- if .TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

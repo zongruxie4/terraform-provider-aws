@@ -82,10 +82,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_lb_hosted_zone_id",
 			Name:     "Hosted Zone ID",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 		{
 			Factory:  dataSourceListener,

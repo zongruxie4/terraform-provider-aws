@@ -48,6 +48,14 @@ func ResourceRegionDeprecatedOverride() unique.Handle[ServicePackageResourceRegi
 	})
 }
 
+// ResourceRegionNoPartitionValidation returns the resource region configuration indicating that per-resource Region override is enabled but the value is not validated against the partition.
+func ResourceRegionNoPartitionValidation() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: false,
+	})
+}
+
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
