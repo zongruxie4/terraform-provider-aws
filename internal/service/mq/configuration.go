@@ -101,7 +101,6 @@ func resourceConfiguration() *schema.Resource {
 			},
 			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
-				Default:  false,
 				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
