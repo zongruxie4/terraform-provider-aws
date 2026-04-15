@@ -388,7 +388,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Hyper Parameter Tuning Job.
 * `failure_reason` - Reason returned by SageMaker AI when a job fails.
 * `status` - Current tuning job status.
-* `tags_all` - Map of tags assigned to the resource, including provider default tags.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
