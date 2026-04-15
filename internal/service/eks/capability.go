@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -630,22 +631,31 @@ type SSOIdentity struct {
 	Type fwtypes.StringEnum[awstypes.SsoIdentityType] `tfsdk:"type"`
 }
 
+const capabilityImportIDSeparator = intflex.ResourceIdSeparator
+
+func capabilityParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, capabilityImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]scapability-name", id, capabilityImportIDSeparator)
+}
+
 var _ inttypes.ImportIDParser = capabilityImportID{}
 
 type capabilityImportID struct{}
 
 func (capabilityImportID) Parse(id string) (string, map[string]any, error) {
-	const (
-		capabilityImportIDParts = 2
-	)
-	parts, err := intflex.ExpandResourceId(id, capabilityImportIDParts, true)
+	clusterName, capabilityName, err := capabilityParseImportID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
 	result := map[string]any{
-		"capability_name":     parts[1],
-		names.AttrClusterName: parts[0],
+		"capability_name":     capabilityName,
+		names.AttrClusterName: clusterName,
 	}
 
 	return id, result, nil
