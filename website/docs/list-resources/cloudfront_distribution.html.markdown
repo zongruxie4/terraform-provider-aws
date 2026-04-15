@@ -20,4 +20,4 @@ list "aws_cloudfront_distribution" "example" {
 
 ## Argument Reference
 
-This list resource has no resource-specific arguments.
+This list resource does not support any arguments.
