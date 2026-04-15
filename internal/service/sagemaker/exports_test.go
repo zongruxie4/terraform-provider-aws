@@ -25,6 +25,29 @@ type (
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+
+	HyperParameterTrainingJobDefinitionModel   = hyperParameterTrainingJobDefinitionModel
+	HyperParameterAlgorithmSpecificationModel  = algorithmSpecificationModel
+	HyperParameterMetricDefinitionModel        = hyperParameterTuningMetricDefinitionModel
+	CheckpointConfigModel                      = checkpointConfigModel
+	ParameterRangesModel                       = parameterRangesModel
+	HyperParameterInputDataConfigModel         = inputDataConfigModel
+	HyperParameterDataSourceModel              = hyperParameterTuningDataSourceModel
+	HyperParameterFileSystemDataSourceModel    = hyperParameterTuningFileSystemDataSourceModel
+	HyperParameterHubAccessConfigModel         = hyperParameterTuningHubAccessConfigModel
+	HyperParameterModelAccessConfigModel       = hyperParameterTuningModelAccessConfigModel
+	HyperParameterS3DataSourceModel            = s3DataSourceModel
+	HyperParameterShuffleConfigModel           = hyperParameterTuningShuffleConfigModel
+	HyperParameterOutputDataConfigModel        = hyperParameterTuningOutputDataConfigModel
+	HyperParameterTrainingResourceConfigModel  = trainingResourceConfigModel
+	HyperParameterTuningResourceConfigModel    = hyperParameterTuningResourceConfigModel
+	HyperParameterInstanceConfigModel          = hyperParameterTuningInstanceConfigModel
+	HyperParameterInstanceGroupModel           = hyperParameterTuningInstanceGroupModel
+	HyperParameterInstancePlacementConfigModel = hyperParameterTuningInstancePlacementConfigModel
+	RetryStrategyModel                         = retryStrategyModel
+	HyperParameterStoppingConditionModel       = hyperParameterTuningStoppingConditionModel
+	TuningObjectiveModel                       = tuningObjectiveModel
+	HyperParameterTuningJobVPCConfigModel      = hyperParameterTuningJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -121,7 +144,10 @@ var (
 
 	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
 	NormalizeStoppingCondition         = normalizeStoppingCondition
-	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
+
+	RestoreTrainingJobDefinitionNoFlattenFields = restoreTrainingJobDefinitionNoFlattenFields
+
+	ServerlessJobConfigEqualityFunc = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
