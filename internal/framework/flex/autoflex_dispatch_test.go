@@ -560,10 +560,6 @@ func TestExpandExpander(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
-func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
-	return &v
-}
-
 func TestExpandInterface(t *testing.T) {
 	t.Parallel()
 
@@ -577,7 +573,7 @@ func TestExpandInterface(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
-			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
+			WantTarget: new(&awsInterfaceInterfaceImpl{
 				AWSField: "value1",
 			}),
 		},
@@ -725,7 +721,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
-			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
+			WantTarget: new(&awsInterfaceInterfaceImpl{
 				AWSField: "value1",
 			}),
 		},
