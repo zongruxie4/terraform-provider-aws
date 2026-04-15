@@ -6,6 +6,7 @@ FEATURES:
 * **New List Resource:** `aws_api_gateway_method` ([#47365](https://github.com/hashicorp/terraform-provider-aws/issues/47365))
 * **New List Resource:** `aws_api_gateway_resource` ([#47382](https://github.com/hashicorp/terraform-provider-aws/issues/47382))
 * **New List Resource:** `aws_api_gateway_rest_api` ([#47404](https://github.com/hashicorp/terraform-provider-aws/issues/47404))
+* **New List Resource:** `aws_cloudfront_distribution` ([#47459](https://github.com/hashicorp/terraform-provider-aws/issues/47459))
 * **New List Resource:** `aws_cloudwatch_alarm_mute_rule` ([#46750](https://github.com/hashicorp/terraform-provider-aws/issues/46750))
 * **New List Resource:** `aws_cloudwatch_log_subscription_filter` ([#47451](https://github.com/hashicorp/terraform-provider-aws/issues/47451))
 * **New List Resource:** `aws_nat_gateway` ([#47349](https://github.com/hashicorp/terraform-provider-aws/issues/47349))
