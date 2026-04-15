@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -89,6 +90,11 @@ func TestAccMQConfiguration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmq.ResourceConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -270,14 +276,30 @@ func TestAccMQConfiguration_skipDestroy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop, // this purposely leaves dangling resources, since skip_destroy = true
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_skipDestroy(rName),
+				Config: testAccConfigurationConfig_skipDestroy(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccConfigurationConfig_skipDestroy(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccConfigurationConfig_skipDestroy(rName, false), // Set back to an explicit false to prevent dangling resources
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 		},
@@ -438,14 +460,14 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_skipDestroy(rName string) string {
+func testAccConfigurationConfig_skipDestroy(rName string, skipDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
   name           = %[1]q
   engine_type    = "ActiveMQ"
   engine_version = "5.19"
-  skip_destroy   = true
+  skip_destroy   = %[2]t
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -453,7 +475,7 @@ resource "aws_mq_configuration" "test" {
 </broker>
 DATA
 }
-`, rName)
+`, rName, skipDestroy)
 }
 
 func testAccConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
