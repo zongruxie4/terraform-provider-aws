@@ -3,6 +3,7 @@
 
 resource "aws_cloudfront_distribution" "test" {
   enabled = false
+  comment = var.rName
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]

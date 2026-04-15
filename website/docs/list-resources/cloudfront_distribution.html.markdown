@@ -17,3 +17,7 @@ list "aws_cloudfront_distribution" "example" {
   provider = aws
 }
 ```
+
+## Argument Reference
+
+This list resource has no resource-specific arguments.
