@@ -42,6 +42,7 @@ resource "aws_cloudfront_distribution" "test" {
     cloudfront_default_certificate = true
   }
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
