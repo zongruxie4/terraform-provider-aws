@@ -35,7 +35,7 @@ func jsonHandler(statusCode int, body any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-amz-json-1.0")
 		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(body) //nolint:errcheck
+		json.NewEncoder(w).Encode(body) //nolint:errcheck // just testing
 	}
 }
 
