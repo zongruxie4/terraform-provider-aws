@@ -134,7 +134,7 @@ The following arguments are optional:
 
 ### autotune
 
-* `mode` - (Required) Autotune mode.
+* `mode` - (Required) Autotune mode. Valid value is `Enabled`.
 
 ### config
 

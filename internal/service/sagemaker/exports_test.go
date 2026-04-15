@@ -25,29 +25,6 @@ type (
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
-
-	HyperParameterTrainingJobDefinitionModel         = hyperParameterTrainingJobDefinitionModel
-	HyperParameterTuningAlgorithmSpecificationModel  = algorithmSpecificationModel
-	HyperParameterTuningCheckpointConfigModel        = checkpointConfigModel
-	HyperParameterTuningParameterRangesModel         = parameterRangesModel
-	HyperParameterTuningMetricDefinitionModel        = hyperParameterTuningMetricDefinitionModel
-	HyperParameterTuningInputDataConfigModel         = inputDataConfigModel
-	HyperParameterTuningDataSourceModel              = hyperParameterTuningDataSourceModel
-	HyperParameterTuningFileSystemDataSourceModel    = hyperParameterTuningFileSystemDataSourceModel
-	HyperParameterTuningHubAccessConfigModel         = hyperParameterTuningHubAccessConfigModel
-	HyperParameterTuningModelAccessConfigModel       = hyperParameterTuningModelAccessConfigModel
-	HyperParameterTuningS3DataSourceModel            = s3DataSourceModel
-	HyperParameterTuningShuffleConfigModel           = hyperParameterTuningShuffleConfigModel
-	HyperParameterTuningOutputDataConfigModel        = hyperParameterTuningOutputDataConfigModel
-	HyperParameterTuningResourceConfigModel          = hyperParameterTuningResourceConfigModel
-	HyperParameterTuningInstanceConfigModel          = hyperParameterTuningInstanceConfigModel
-	HyperParameterTuningRetryStrategyModel           = retryStrategyModel
-	HyperParameterTuningStoppingConditionModel       = hyperParameterTuningStoppingConditionModel
-	HyperParameterTuningTrainingResourceConfigModel  = trainingResourceConfigModel
-	HyperParameterTuningInstanceGroupModel           = hyperParameterTuningInstanceGroupModel
-	HyperParameterTuningInstancePlacementConfigModel = hyperParameterTuningInstancePlacementConfigModel
-	HyperParameterTuningTuningObjectiveModel         = tuningObjectiveModel
-	HyperParameterTuningJobVPCConfigModel            = hyperParameterTuningJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -65,7 +42,6 @@ var (
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
-	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
