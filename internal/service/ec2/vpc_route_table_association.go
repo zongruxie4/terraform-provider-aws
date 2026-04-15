@@ -34,6 +34,7 @@ import (
 // @Testing(importStateIdFunc=testAccRouteTabAssocImportStateIdFunc)
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.39.0")
+// @Testing(identityTestCases="subnet;gateway")
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
@@ -126,11 +127,15 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
 
+	resourceRouteTableAssociationFlatten(association, d)
+
+	return diags
+}
+
+func resourceRouteTableAssociationFlatten(association *awstypes.RouteTableAssociation, d *schema.ResourceData) {
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)
 	d.Set(names.AttrSubnetID, association.SubnetId)
-
-	return diags
 }
 
 func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
