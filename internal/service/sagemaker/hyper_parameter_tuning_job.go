@@ -1619,7 +1619,7 @@ func restoreTrainingJobDefinitionNoFlattenFields(
 		return
 	}
 
-	for i := 0; i < min(len(savedDefinitions), len(targetDefinitions)); i++ {
+	for i := range savedDefinitions {
 		restoreAlgorithmSpecificationNoFlattenFields(ctx, savedDefinitions[i].AlgorithmSpecification, &targetDefinitions[i].AlgorithmSpecification, diags)
 		if diags.HasError() {
 			return
