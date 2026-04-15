@@ -24,7 +24,7 @@ func newTestClient(t *testing.T, handler http.HandlerFunc) *odb.Client {
 	t.Cleanup(ts.Close)
 
 	return odb.New(odb.Options{
-		Region:       "us-east-1",
+		Region:       "us-east-1", //lintignore:AWSAT003
 		BaseEndpoint: aws.String(ts.URL),
 		Credentials:  credentials.NewStaticCredentialsProvider("AKID", "SECRET", "SESSION"),
 	})
