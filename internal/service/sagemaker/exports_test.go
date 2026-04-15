@@ -144,10 +144,9 @@ var (
 
 	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
 	NormalizeStoppingCondition         = normalizeStoppingCondition
+	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
 
 	RestoreTrainingJobDefinitionNoFlattenFields = restoreTrainingJobDefinitionNoFlattenFields
-
-	ServerlessJobConfigEqualityFunc = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
