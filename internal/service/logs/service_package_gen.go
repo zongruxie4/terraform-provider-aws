@@ -180,6 +180,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudwatch_log_subscription_filter",
 			Name:     "Subscription Filter",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      subscriptionFilterImportID{},
+			},
 		},
 		{
 			Factory:  resourceQueryDefinition,
@@ -201,6 +209,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  newSubscriptionFilterResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_subscription_filter",
+			Name:     "Subscription Filter",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
 		},
 	})
 }
