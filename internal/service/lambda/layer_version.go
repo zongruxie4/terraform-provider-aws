@@ -27,21 +27,25 @@ import (
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const mutexLayerKey = `aws_lambda_layer_version`
 
 // @SDKResource("aws_lambda_layer_version", name="Layer Version")
+// @IdentityAttribute("layer_name")
+// @IdentityAttribute("version")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetLayerVersionOutput")
+// @Testing(existsTakesT=true, destroyTakesT=true)
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importIgnore="filename;skip_destroy", plannableImportAction="Replace")
+// @ImportIDHandler("layerVersionImportID")
 func resourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayerVersionCreate,
 		ReadWithoutTimeout:   resourceLayerVersionRead,
 		DeleteWithoutTimeout: resourceLayerVersionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -328,4 +332,26 @@ func findLayerVersion(ctx context.Context, conn *lambda.Client, input *lambda.Ge
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = layerVersionImportID{}
+
+type layerVersionImportID struct{}
+
+func (layerVersionImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (layerVersionImportID) Parse(id string) (string, map[string]any, error) {
+	layerName, version, err := layerVersionParseResourceID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]any{
+		"layer_name": layerName,
+		"version":    strconv.FormatInt(version, 10),
+	}
+
+	return id, results, nil
 }
