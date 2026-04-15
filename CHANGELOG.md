@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_api_gateway_integration` ([#47370](https://github.com/hashicorp/terraform-provider-aws/issues/47370))
 * **New List Resource:** `aws_api_gateway_method` ([#47365](https://github.com/hashicorp/terraform-provider-aws/issues/47365))
+* **New List Resource:** `aws_api_gateway_method_response` ([#47387](https://github.com/hashicorp/terraform-provider-aws/issues/47387))
 * **New List Resource:** `aws_api_gateway_resource` ([#47382](https://github.com/hashicorp/terraform-provider-aws/issues/47382))
 * **New List Resource:** `aws_api_gateway_rest_api` ([#47404](https://github.com/hashicorp/terraform-provider-aws/issues/47404))
 * **New List Resource:** `aws_apigatewayv2_route` ([#47452](https://github.com/hashicorp/terraform-provider-aws/issues/47452))
@@ -34,6 +35,7 @@ ENHANCEMENTS:
 * resource/aws_budgets_budget: Add `metrics` attribute ([#47047](https://github.com/hashicorp/terraform-provider-aws/issues/47047))
 * resource/aws_cloudwatch_log_subscription_filter: Add Resource Identity support ([#47451](https://github.com/hashicorp/terraform-provider-aws/issues/47451))
 * resource/aws_directory_service_directory: add `enable_directory_data_access` argument ([#44736](https://github.com/hashicorp/terraform-provider-aws/issues/44736))
+* resource/aws_dynamodb_table: Add Resource Identity support ([#47301](https://github.com/hashicorp/terraform-provider-aws/issues/47301))
 * resource/aws_ecs_task_definition: Add `volume.s3files_volume_configuration` argument ([#47363](https://github.com/hashicorp/terraform-provider-aws/issues/47363))
 * resource/aws_elasticache_user: Add `passwords_wo` and `passwords_wo_version` write-only arguments ([#45988](https://github.com/hashicorp/terraform-provider-aws/issues/45988))
 * resource/aws_launch_configuration: Add Resource Identity support ([#47381](https://github.com/hashicorp/terraform-provider-aws/issues/47381))
