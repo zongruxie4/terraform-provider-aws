@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // newTestClient creates an ODB client that points at a local httptest server.
@@ -72,8 +73,8 @@ func TestStatusNetwork_ValidOutput(t *testing.T) {
 
 	conn := newTestClient(t, jsonHandler(http.StatusOK, map[string]any{
 		"odbNetwork": map[string]any{
-			"odbNetworkId": "odn-12345",
-			"status":       "AVAILABLE",
+			"odbNetworkId":   "odn-12345",
+			names.AttrStatus: "AVAILABLE",
 		},
 	}))
 	refreshFunc := statusNetwork(ctx, conn, "odn-12345")
@@ -98,8 +99,8 @@ func TestStatusNetwork_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	conn := newTestClient(t, jsonHandler(http.StatusBadRequest, map[string]any{
-		"__type":  "ResourceNotFoundException",
-		"message": "ODB network not found",
+		"__type":          "ResourceNotFoundException",
+		names.AttrMessage: "ODB network not found",
 	}))
 	refreshFunc := statusNetwork(ctx, conn, "odn-doesnotexist")
 
@@ -135,8 +136,8 @@ func TestStatusManagedService_NilManagedServices(t *testing.T) {
 	// Return an OdbNetwork with no managedServices field.
 	conn := newTestClient(t, jsonHandler(http.StatusOK, map[string]any{
 		"odbNetwork": map[string]any{
-			"odbNetworkId": "odn-12345",
-			"status":       "AVAILABLE",
+			"odbNetworkId":   "odn-12345",
+			names.AttrStatus: "AVAILABLE",
 		},
 	}))
 	refreshFunc := statusManagedService(ctx, conn, "odn-12345", s3ManagedResourceStatus)
@@ -187,11 +188,11 @@ func TestStatusManagedService_WithManagedServices(t *testing.T) {
 
 	conn := newTestClient(t, jsonHandler(http.StatusOK, map[string]any{
 		"odbNetwork": map[string]any{
-			"odbNetworkId": "odn-12345",
-			"status":       "AVAILABLE",
+			"odbNetworkId":   "odn-12345",
+			names.AttrStatus: "AVAILABLE",
 			"managedServices": map[string]any{
 				"s3Access": map[string]any{
-					"status": "ENABLED",
+					names.AttrStatus: "ENABLED",
 				},
 			},
 		},
@@ -218,8 +219,8 @@ func TestStatusManagedService_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	conn := newTestClient(t, jsonHandler(http.StatusBadRequest, map[string]any{
-		"__type":  "ResourceNotFoundException",
-		"message": "ODB network not found",
+		"__type":          "ResourceNotFoundException",
+		names.AttrMessage: "ODB network not found",
 	}))
 	refreshFunc := statusManagedService(ctx, conn, "odn-doesnotexist", s3ManagedResourceStatus)
 
