@@ -121,12 +121,12 @@ resource "aws_cloudwatch_metric_alarm" "promql_alarm" {
   evaluation_criteria {
     promql_criteria {
       query           = "avg(cpu_utilization_percent) > 80"
-      pending_period  = 300  # 5 minutes
-      recovery_period = 120  # 2 minutes
+      pending_period  = 300 # 5 minutes
+      recovery_period = 120 # 2 minutes
     }
   }
 
-  evaluation_interval = 30  # seconds
+  evaluation_interval = 30 # seconds
 
   alarm_actions = [aws_sns_topic.alerts.arn]
 }
