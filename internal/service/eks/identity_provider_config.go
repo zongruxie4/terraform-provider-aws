@@ -62,6 +62,10 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"identity_provider_config_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"oidc": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -188,6 +192,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
 	d.Set(names.AttrClusterName, oidc.ClusterName)
+	d.Set("identity_provider_config_name", oidc.IdentityProviderConfigName)
 	if err := d.Set("oidc", []any{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}

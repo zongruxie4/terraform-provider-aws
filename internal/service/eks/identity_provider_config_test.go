@@ -179,7 +179,7 @@ func testAccCheckIdentityProviderConfigExists(ctx context.Context, t *testing.T,
 
 		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
-		output, err := tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["oidc.0.identity_provider_config_name"])
+		output, err := tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["identity_provider_config_name"])
 
 		if err != nil {
 			return err
@@ -200,7 +200,7 @@ func testAccCheckIdentityProviderConfigDestroy(ctx context.Context, t *testing.T
 				continue
 			}
 
-			_, err := tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["oidc.0.identity_provider_config_name"])
+			_, err := tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["identity_provider_config_name"])
 
 			if retry.NotFound(err) {
 				continue
@@ -210,7 +210,7 @@ func testAccCheckIdentityProviderConfigDestroy(ctx context.Context, t *testing.T
 				return err
 			}
 
-			return fmt.Errorf("EKS Identity Provider Config %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EKS Identity Profile Config %s still exists", rs.Primary.ID)
 		}
 
 		return nil
