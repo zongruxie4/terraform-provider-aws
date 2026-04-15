@@ -107,7 +107,9 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ $value.Name }}",
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -129,7 +131,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ $value.Name }}",
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -312,7 +316,9 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				{{- end }}
 			}),
 			{{- end }}
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -415,7 +421,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 				{{- end }}
 			}),
 			{{- end }}
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -445,7 +453,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- end }}
 			}),
 			{{- end }}
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -548,7 +558,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ $value.Name }}",
-			{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
