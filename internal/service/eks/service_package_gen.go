@@ -71,6 +71,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "association_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute(names.AttrAssociationID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      podIdentityAssociationImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
 }
