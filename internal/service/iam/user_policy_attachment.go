@@ -78,7 +78,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	attachedPolicy, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.AttachedPolicy, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 
@@ -91,6 +91,8 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy Attachment (%s): %s", id, err)
 	}
+
+	resourceUserPolicyAttachmentFlatten(d, user, attachedPolicy)
 
 	return diags
 }
@@ -185,6 +187,11 @@ func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.
 	}
 
 	return output, nil
+}
+
+func resourceUserPolicyAttachmentFlatten(d *schema.ResourceData, user string, attachedPolicy *awstypes.AttachedPolicy) {
+	d.Set("user", user)
+	d.Set("policy_arn", attachedPolicy.PolicyArn)
 }
 
 func createUserPolicyAttachmentImportID(d *schema.ResourceData) string {
