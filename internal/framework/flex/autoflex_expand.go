@@ -1918,7 +1918,6 @@ func potentialXMLWrapperStructUncached(t reflect.Type) bool {
 	// - One slice field (Items, Elements, Members, etc.)
 	// - One Quantity field (*int32)
 	for field := range t.Fields() {
-		field := field
 		fieldType := field.Type
 
 		// Check for slice field
@@ -1942,7 +1941,6 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 	}
 
 	for field := range t.Fields() {
-		field := field
 		if field.Type.Kind() == reflect.Slice {
 			return field.Name
 		}
@@ -2216,7 +2214,6 @@ func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type)
 	hasOtherFields := false
 
 	for field := range structType.Fields() {
-		field := field
 		fieldName := field.Name
 
 		if field.Type.Kind() == reflect.Slice {
@@ -2433,7 +2430,6 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		hasCollectionFields := false
 
 		for sourceField := range typeFrom.Fields() {
-			sourceField := sourceField
 			sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
@@ -2452,7 +2448,6 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 			// Check if any collection field has omitempty=false (should create zero-value)
 			shouldCreateZeroValue := false
 			for sourceField := range typeFrom.Fields() {
-				sourceField := sourceField
 				sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 				if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 					switch sourceValue.(type) {
@@ -2472,7 +2467,6 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 
 				// Mark all collection fields as processed
 				for sourceField := range typeFrom.Fields() {
-					sourceField := sourceField
 					sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 					if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 						switch sourceValue.(type) {

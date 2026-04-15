@@ -1302,7 +1302,6 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		allFieldsZero := true
 		for _, sourceField := range vFrom.Fields() {
-			sourceField := sourceField
 			isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
 				sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
 				sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
@@ -2963,7 +2962,6 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 	hasOtherFields := false
 
 	for field := range structType.Fields() {
-		field := field
 		fieldName := field.Name
 		fieldType := field.Type
 
