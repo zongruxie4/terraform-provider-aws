@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1990,27 +1989,12 @@ func testAccCheckVPCGuardDutySecurityGroupExists(ctx context.Context, t *testing
 		if id := aws.ToString(vpcID); id != "" {
 			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-			sgInput := &ec2.DescribeSecurityGroupsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{id},
-					},
-					{
-						Name:   aws.String("group-name"),
-						Values: []string{fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)
+			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, id, guardDutyGroupName)
 			if err != nil {
 				return fmt.Errorf("error describing security groups: %w", err)
 			}
-			if len(sgOutput.SecurityGroups) == 0 {
+			if len(sgs) == 0 {
 				return fmt.Errorf("expected GuardDuty security group with GuardDutyManaged=true tag to exist, but none found")
 			}
 
@@ -2025,27 +2009,11 @@ func testAccCheckVPCGuardDutyEndpointExists(ctx context.Context, t *testing.T, v
 		if id := aws.ToString(vpcID); id != "" {
 			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-			endpointsInput := &ec2.DescribeVpcEndpointsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{id},
-					},
-					{
-						Name:   aws.String("service-name"),
-						Values: []string{tfec2.GuardDutyServiceNamePattern},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
 			if err != nil {
 				return fmt.Errorf("error describing VPC endpoints: %w", err)
 			}
-			if len(endpointsOutput.VpcEndpoints) == 0 {
+			if len(endpoints) == 0 {
 				return fmt.Errorf("expected GuardDuty VPC endpoint with GuardDutyManaged=true tag to exist, but none found")
 			}
 
@@ -2085,28 +2053,12 @@ func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, v
 		}
 
 		if id := aws.ToString(vpcID); id != "" {
-			endpointsInput := &ec2.DescribeVpcEndpointsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{id},
-					},
-					{
-						Name:   aws.String("service-name"),
-						Values: []string{tfec2.GuardDutyServiceNamePattern},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty VPC endpoints: %w", err)
 			}
 			activeEndpoints := 0
-			for _, ep := range endpointsOutput.VpcEndpoints {
+			for _, ep := range endpoints {
 				if string(ep.State) != "deleted" {
 					activeEndpoints++
 				}
@@ -2115,28 +2067,13 @@ func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, v
 				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
 			}
 
-			sgInput := &ec2.DescribeSecurityGroupsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{id},
-					},
-					{
-						Name:   aws.String("group-name"),
-						Values: []string{fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)
+			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, id, guardDutyGroupName)
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
 			}
-			if len(sgOutput.SecurityGroups) > 0 {
-				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgOutput.SecurityGroups))
+			if len(sgs) > 0 {
+				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgs))
 			}
 		}
 

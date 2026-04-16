@@ -444,12 +444,13 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diags
 	}
 
+	// Emit GuardDuty IAM permission warnings as diag.Diagnostics so they are
+	// visible to the user even when logs are not enabled.
+	for _, w := range guardDutyWarnings {
+		diags = sdkdiag.AppendWarningf(diags, "%s", w)
+	}
+
 	if err != nil {
-		if len(guardDutyWarnings) > 0 {
-			for _, w := range guardDutyWarnings {
-				diags = sdkdiag.AppendWarningf(diags, "%s", w)
-			}
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC (%s): %s", d.Id(), err)
 	}
 
@@ -800,30 +801,29 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 }
 
 func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, string, error) {
-	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC", map[string]any{names.AttrVPCID: vpcID})
+	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
 
 	guardDutyGroupName := fmt.Sprintf("%s%s", guardDutySecurityGroupPrefix, vpcID)
 
 	sgs, err := findGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 	if err != nil {
 		if IsUnauthorizedError(err) {
-			tflog.Warn(ctx, "Insufficient IAM permissions to describe GuardDuty security groups", map[string]any{names.AttrVPCID: vpcID})
-			warningMsg := fmt.Sprintf(
+			tflog.Warn(ctx, "Insufficient IAM permissions to describe GuardDuty security groups")
+			return 0, fmt.Sprintf(
 				"During deletion of VPC %s, Terraform attempted to check for and delete "+
 					"GuardDuty-managed security groups that may have been causing a DependencyViolation, "+
 					"but lacked sufficient IAM permissions (ec2:DescribeSecurityGroups) to do so. If GuardDuty is enabled "+
-					"in this VPC, these permissions may be required for automatic cleanup.", vpcID)
-			return 0, warningMsg, nil
+					"in this VPC, these permissions may be required for automatic cleanup.", vpcID), nil
 		}
 		return 0, "", formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
 	}
 
 	if len(sgs) == 0 {
-		tflog.Debug(ctx, "No GuardDuty security groups found in VPC", map[string]any{names.AttrVPCID: vpcID})
+		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
 		return 0, "", nil
 	}
 
-	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{names.AttrVPCID: vpcID, "count": len(sgs)})
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{"count": len(sgs)})
 
 	deletedCount := 0
 	for _, sg := range sgs {
@@ -864,7 +864,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 }
 
 func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) (string, error) {
-	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion", map[string]any{names.AttrVPCID: vpcID})
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion")
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
@@ -881,11 +881,11 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	}
 
 	if len(endpoints) == 0 {
-		tflog.Debug(ctx, "No GuardDuty VPC endpoints found", map[string]any{names.AttrVPCID: vpcID})
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
 		return "", nil
 	}
 
-	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), deleting", map[string]any{names.AttrVPCID: vpcID, "count": len(endpoints)})
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), deleting", map[string]any{"count": len(endpoints)})
 
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
@@ -895,7 +895,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 			continue
 		}
 
-		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID, names.AttrVPCID: vpcID})
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
 
 		deleteInput := ec2.DeleteVpcEndpointsInput{
 			VpcEndpointIds: []string{endpointID},
@@ -918,7 +918,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 			return "", fmt.Errorf("deleting GuardDuty VPC endpoint %s in VPC %s: %w", endpointID, vpcID, err)
 		}
 
-		if _, err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
 				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state, continuing", map[string]any{"endpoint_id": endpointID})
 				continue
@@ -926,7 +926,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach deleted state in VPC %s: %w", endpointID, vpcID, err)
 		}
 
-		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID, names.AttrVPCID: vpcID})
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
 	}
 
 	return "", nil

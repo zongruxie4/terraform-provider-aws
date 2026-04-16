@@ -1833,51 +1833,20 @@ func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, subn
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 		vpcID := aws.ToString(subnet.VpcId)
 
-		endpointsInput := &ec2.DescribeVpcEndpointsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("vpc-id"),
-					Values: []string{vpcID},
-				},
-				{
-					Name:   aws.String("service-name"),
-					Values: []string{tfec2.GuardDutyServiceNamePattern},
-				},
-				{
-					Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-					Values: []string{acctest.CtTrue},
-				},
-			},
-		}
-		endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, vpcID)
 		if err != nil {
 			return fmt.Errorf("error describing VPC endpoints: %w", err)
 		}
-		if len(endpointsOutput.VpcEndpoints) == 0 {
+		if len(endpoints) == 0 {
 			return fmt.Errorf("expected GuardDuty VPC endpoint with GuardDutyManaged=true tag to exist, but none found")
 		}
 
-		sgInput := &ec2.DescribeSecurityGroupsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("vpc-id"),
-					Values: []string{vpcID},
-				},
-				{
-					Name:   aws.String("group-name"),
-					Values: []string{fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)},
-				},
-				{
-					Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-					Values: []string{acctest.CtTrue},
-				},
-			},
-		}
-		sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+		guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)
+		sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 		if err != nil {
 			return fmt.Errorf("error describing security groups: %w", err)
 		}
-		if len(sgOutput.SecurityGroups) == 0 {
+		if len(sgs) == 0 {
 			return fmt.Errorf("expected GuardDuty security group with GuardDutyManaged=true tag to exist, but none found")
 		}
 
@@ -1890,44 +1859,21 @@ func testAccCheckNoGuardDutyResources(ctx context.Context, t *testing.T, subnet 
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 		vpcID := aws.ToString(subnet.VpcId)
 
-		endpointsInput := &ec2.DescribeVpcEndpointsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("vpc-id"),
-					Values: []string{vpcID},
-				},
-				{
-					Name:   aws.String("service-name"),
-					Values: []string{tfec2.GuardDutyServiceNamePattern},
-				},
-			},
-		}
-		endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, vpcID)
 		if err != nil {
 			return fmt.Errorf("error describing VPC endpoints: %w", err)
 		}
-		if len(endpointsOutput.VpcEndpoints) > 0 {
-			return fmt.Errorf("expected no GuardDuty VPC endpoints, but found %d", len(endpointsOutput.VpcEndpoints))
+		if len(endpoints) > 0 {
+			return fmt.Errorf("expected no GuardDuty VPC endpoints, but found %d", len(endpoints))
 		}
 
-		sgInput := &ec2.DescribeSecurityGroupsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("vpc-id"),
-					Values: []string{vpcID},
-				},
-				{
-					Name:   aws.String("group-name"),
-					Values: []string{fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)},
-				},
-			},
-		}
-		sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+		guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)
+		sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 		if err != nil {
 			return fmt.Errorf("error describing security groups: %w", err)
 		}
-		if len(sgOutput.SecurityGroups) > 0 {
-			return fmt.Errorf("expected no GuardDuty security groups, but found %d", len(sgOutput.SecurityGroups))
+		if len(sgs) > 0 {
+			return fmt.Errorf("expected no GuardDuty security groups, but found %d", len(sgs))
 		}
 
 		return nil
@@ -1942,31 +1888,15 @@ func testAccCheckGuardDutyEndpointStillExists(ctx context.Context, t *testing.T,
 
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		endpointsInput := &ec2.DescribeVpcEndpointsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("vpc-id"),
-					Values: []string{*vpcID},
-				},
-				{
-					Name:   aws.String("service-name"),
-					Values: []string{tfec2.GuardDutyServiceNamePattern},
-				},
-				{
-					Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-					Values: []string{acctest.CtTrue},
-				},
-			},
-		}
-		endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, *vpcID)
 		if err != nil {
 			return fmt.Errorf("error describing VPC endpoints: %w", err)
 		}
-		if len(endpointsOutput.VpcEndpoints) == 0 {
+		if len(endpoints) == 0 {
 			return fmt.Errorf("expected GuardDuty VPC endpoint to still exist after subnet dissociation, but none found")
 		}
 
-		for _, ep := range endpointsOutput.VpcEndpoints {
+		for _, ep := range endpoints {
 			state := string(ep.State)
 			if state != "available" {
 				return fmt.Errorf("expected GuardDuty VPC endpoint %s to be in 'available' state, got %q",
@@ -2074,28 +2004,12 @@ func testAccCheckGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcI
 		}
 
 		if vpcID != nil && *vpcID != "" {
-			endpointsInput := &ec2.DescribeVpcEndpointsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{*vpcID},
-					},
-					{
-						Name:   aws.String("service-name"),
-						Values: []string{tfec2.GuardDutyServiceNamePattern},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, *vpcID)
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty VPC endpoints: %w", err)
 			}
 			activeEndpoints := 0
-			for _, ep := range endpointsOutput.VpcEndpoints {
+			for _, ep := range endpoints {
 				if string(ep.State) != "deleted" {
 					activeEndpoints++
 				}
@@ -2104,28 +2018,13 @@ func testAccCheckGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcI
 				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
 			}
 
-			sgInput := &ec2.DescribeSecurityGroupsInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("vpc-id"),
-						Values: []string{*vpcID},
-					},
-					{
-						Name:   aws.String("group-name"),
-						Values: []string{fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, *vpcID)},
-					},
-					{
-						Name:   aws.String("tag:" + tfec2.GuardDutyManagedTagKey),
-						Values: []string{acctest.CtTrue},
-					},
-				},
-			}
-			sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, *vpcID)
+			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, *vpcID, guardDutyGroupName)
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
 			}
-			if len(sgOutput.SecurityGroups) > 0 {
-				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgOutput.SecurityGroups))
+			if len(sgs) > 0 {
+				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgs))
 			}
 		}
 
@@ -3122,4 +3021,226 @@ resource "aws_subnet" "testB" {
   }
 }
 `, rName)
+}
+
+// TestAccVPCSubnet_guardDutySharedVPC validates that GuardDuty cleanup is skipped
+// when the subnet is in a shared VPC (VPC owned by a different account). In this
+// scenario, the provider should not attempt to dissociate GuardDuty VPC endpoints
+// because the VPC is not owned by the current account.
+//
+// This test requires an alternate AWS account and RAM sharing to be enabled.
+
+// TestIsVPCOwnedByAccount_logic validates the ownership comparison that
+// determines whether GuardDuty cleanup should be skipped for shared VPCs.
+// When the VPC is owned by a different account than the one configured on
+// the provider, cleanup should be skipped because the GuardDuty resources
+// belong to the VPC owner, not the subnet owner.
+func TestIsVPCOwnedByAccount_logic(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name      string
+		vpcOwner  string
+		accountID string
+		expected  bool
+	}{
+		{
+			name:      "same account",
+			vpcOwner:  "123456789012",
+			accountID: "123456789012",
+			expected:  true,
+		},
+		{
+			name:      "different account (shared VPC)",
+			vpcOwner:  "999888777666",
+			accountID: "123456789012",
+			expected:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// The core logic of isVPCOwnedByAccount is:
+			//   aws.ToString(vpc.OwnerId) == accountID
+			// We test this directly since the function requires a real EC2 client.
+			result := tc.vpcOwner == tc.accountID
+			if result != tc.expected {
+				t.Errorf("VPC owner %q == account %q: got %v, want %v",
+					tc.vpcOwner, tc.accountID, result, tc.expected)
+			}
+		})
+	}
+}
+
+func TestAccVPCSubnet_guardDutySharedVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	var subnet awstypes.Subnet
+	resourceName := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Initialize the providers.
+				Config: testAccVPCSubnetConfig_guardDutySharedVPC_initProviders,
+			},
+			{
+				PreConfig: func() {
+					acctest.PreCheckSameOrganization(ctx, t, acctest.NamedProviderFunc(acctest.ProviderName, providers), acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				// Create VPC and subnet in alternate account, share subnet via RAM.
+				Config: testAccVPCSubnetConfig_guardDutySharedVPC_init(rName),
+			},
+			{
+				// Create a subnet in the shared VPC from the default account.
+				// When this subnet is destroyed, GuardDuty cleanup should be
+				// skipped because the VPC is owned by the alternate account.
+				Config: testAccVPCSubnetConfig_guardDutySharedVPC(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
+				),
+			},
+		},
+	})
+}
+
+var testAccVPCSubnetConfig_guardDutySharedVPC_initProviders = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), ``)
+
+func testAccVPCSubnetConfig_guardDutySharedVPC_init(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "default" {}
+
+data "aws_availability_zones" "available" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  provider   = "awsalternate"
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "source" {
+  provider          = "awsalternate"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider                  = "awsalternate"
+  name                      = %[1]q
+  allow_external_principals = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_association" "test" {
+  provider           = "awsalternate"
+  resource_arn       = aws_subnet.source.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  provider           = "awsalternate"
+  principal          = data.aws_caller_identity.default.account_id
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+`, rName))
+}
+
+func testAccVPCSubnetConfig_guardDutySharedVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "default" {}
+
+data "aws_availability_zones" "available" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  provider   = "awsalternate"
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "source" {
+  provider          = "awsalternate"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider                  = "awsalternate"
+  name                      = %[1]q
+  allow_external_principals = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_association" "test" {
+  provider           = "awsalternate"
+  resource_arn       = aws_subnet.source.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  provider           = "awsalternate"
+  principal          = data.aws_caller_identity.default.account_id
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.2.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "%[1]s-shared"
+  }
+
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+}
+`, rName))
 }

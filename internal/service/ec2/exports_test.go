@@ -321,10 +321,7 @@ var (
 	HasGuardDutyManagedTag                                      = hasGuardDutyManagedTag
 	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
 	FindGuardDutySecurityGroups                                 = findGuardDutySecurityGroups
-	GuardDutyServiceNamePattern                                 = guardDutyServiceNamePattern
 	GuardDutySecurityGroupPrefix                                = guardDutySecurityGroupPrefix
-	GuardDutyManagedTagKey                                      = guardDutyManagedTagKey
-	GuardDutyManagedTagValue                                    = guardDutyManagedTagValue
 )
 
 type (
