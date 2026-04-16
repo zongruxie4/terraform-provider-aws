@@ -5,6 +5,7 @@ resource "aws_route53_zone" "test" {
   comment = var.rName
   name    = "${var.zoneName}."
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
