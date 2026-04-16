@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_route53_zone" "test" {
-  name = "${var.zoneName}."
+  comment = var.rName
+  name    = "${var.zoneName}."
 }
 variable "rName" {
   description = "Name for resource"
