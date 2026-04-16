@@ -35,13 +35,13 @@ resource "aws_ebs_volume_copy" "example" {
 
 This resource supports the following arguments:
 
-- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference). This must match the Region of the source EBS volume referenced by `source_volume_id`.
-- `source_volume_id` - (Optional) ID of the source EBS volume to copy. This argument must be set when creating a new EBS volume copy. Changing this value forces replacement of the resource.
-- `size` - (Optional) Size of the copied volume, in GiB.
 - `iops` - (Optional) Provisioned IOPS for the copied volume. Use only with volume types that support provisioned IOPS, such as `gp3`.
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference). This must match the Region of the source EBS volume referenced by `source_volume_id`.
+- `size` - (Optional) Size of the copied volume, in GiB.
+- `source_volume_id` - (Required) ID of the source EBS volume to copy. Changing this value forces replacement of the resource.
+- `tags` - (Optional) A map of tags to assign to the copied volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 - `throughput` - (Optional) Throughput for the copied volume, in MiB/s. Valid only when `volume_type` is `gp3`.
 - `volume_type` - (Optional) Type of the copied EBS volume. Valid values include `gp2`, `gp3`, `io1`, `io2`, `sc1`, `st1`, and `standard`.
-- `tags` - (Optional) A map of tags to assign to the copied volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE:** When changing the `size`, `iops` or `type` of a volume, there are [considerations](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-volume-types.html) to be aware of.
 
@@ -52,7 +52,6 @@ This resource exports the following attributes in addition to the arguments abov
 - `arn` - Amazon Resource Name (ARN) of the copied EBS volume.
 - `availability_zone` - Availability Zone for the copied volume.
 - `id` - ID of the copied EBS volume.
-- `source_volume_id` - ID of the source EBS volume from which the copy was created.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -65,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS volume copies using the copied volume ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EBS Volume Copy using the volume ID. For example:
 
 ```terraform
 import {
@@ -74,7 +73,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EBS volume copies using the copied volume ID. For example:
+Using `terraform import`, import an EBS Volume Copy using the volume ID. For example:
 
 ```console
 % terraform import aws_ebs_volume_copy.example vol-049df61146c4d7901
