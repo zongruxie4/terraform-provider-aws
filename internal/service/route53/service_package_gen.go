@@ -166,7 +166,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceZoneAssociation,
