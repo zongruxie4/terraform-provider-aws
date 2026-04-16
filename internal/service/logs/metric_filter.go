@@ -371,19 +371,6 @@ func flattenMetricTransformations(apiObjects []awstypes.MetricTransformation) []
 	return tfList
 }
 
-func resourceMetricFilterImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected <log_group_name>:<name>", d.Id())
-	}
-	logGroupName := idParts[0]
-	name := idParts[1]
-	d.Set(names.AttrLogGroupName, logGroupName)
-	d.Set(names.AttrName, name)
-	d.SetId(name)
-	return []*schema.ResourceData{d}, nil
-}
-
 const metricFilterImportIDSeparator = ":"
 
 func metricFilterParseImportID(id string) (string, string, error) {
