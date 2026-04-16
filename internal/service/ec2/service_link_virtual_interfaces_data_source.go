@@ -34,7 +34,6 @@ type serviceLinkVirtualInterfacesDataSource struct {
 func (d *serviceLinkVirtualInterfacesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrIDs: schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
@@ -72,7 +71,6 @@ func (d *serviceLinkVirtualInterfacesDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.IDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(output, func(v awstypes.ServiceLinkVirtualInterface) string {
 		return aws.ToString(v.ServiceLinkVirtualInterfaceId)
 	}))
@@ -83,7 +81,6 @@ func (d *serviceLinkVirtualInterfacesDataSource) Read(ctx context.Context, req d
 type serviceLinkVirtualInterfacesDataSourceModel struct {
 	framework.WithRegionModel
 	Filters customFilters        `tfsdk:"filter"`
-	ID      types.String         `tfsdk:"id"`
 	IDs     fwtypes.ListOfString `tfsdk:"ids"`
 	Tags    tftags.Map           `tfsdk:"tags"`
 }

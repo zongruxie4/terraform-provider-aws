@@ -40,5 +40,4 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - AWS Region.
 * `ids` - List of EC2 Service Link Virtual Interface identifiers.
