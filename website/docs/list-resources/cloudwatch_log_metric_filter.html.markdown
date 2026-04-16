@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_cloudwatch_log_metric_filter
 
-Lists CloudWatch Logs Metric Stream resources.
+Lists CloudWatch Logs Metric Filter resources.
 
 ## Example Usage
 
