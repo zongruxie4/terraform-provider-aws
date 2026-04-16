@@ -843,7 +843,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 	// Handle EvaluationCriteria (PromQL alarms).
 	if alarm.EvaluationCriteria != nil {
 		if err := d.Set("evaluation_criteria", flattenEvaluationCriteria(alarm.EvaluationCriteria)); err != nil {
-			return fmt.Errorf("setting evaluation_criteria: %w", err)
+			return smarterr.NewError(fmt.Errorf("setting evaluation_criteria: %w", err))
 		}
 		d.Set("evaluation_interval", alarm.EvaluationInterval)
 
@@ -867,7 +867,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set("comparison_operator", alarm.ComparisonOperator)
 		d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
 		if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
-			return fmt.Errorf("setting dimensions: %w", err)
+			return smarterr.NewError(fmt.Errorf("setting dimensions: %w", err))
 		}
 		d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
 		d.Set("evaluation_periods", alarm.EvaluationPeriods)
@@ -875,7 +875,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set(names.AttrMetricName, alarm.MetricName)
 		if len(alarm.Metrics) > 0 {
 			if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
-				return fmt.Errorf("setting metric_query: %w", err)
+				return smarterr.NewError(fmt.Errorf("setting metric_query: %w", err))
 			}
 		}
 		d.Set(names.AttrNamespace, alarm.Namespace)
