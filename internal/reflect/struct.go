@@ -16,23 +16,42 @@ import (
 // index components from each struct as used by `reflect.Value.FieldByIndex`
 func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return func(yield func(reflect.StructField) bool) {
-		structFields_(typ, []int{}, yield)
+		structFields_(typ, yield)
 	}
 }
 
-func structFields_(typ reflect.Type, parentIndex []int, yield func(reflect.StructField) bool) bool {
+func structFields_(typ reflect.Type, yield func(reflect.StructField) bool) bool {
 	for i := range typ.NumField() {
 		field := typ.Field(i)
 
 		if field.Anonymous {
-			fieldIndexSequence := append(parentIndex, i) //nolint:gocritic // append re-assign is intentional
-			if !structFields_(field.Type, fieldIndexSequence, yield) {
+			fieldIndexSequence := []int{i}
+			if !structFieldsInner_(field.Type, fieldIndexSequence, yield) {
 				return false
 			}
 			continue
 		}
 
-		field.Index = append(parentIndex, i) //nolint:gocritic // append re-assign is intentional
+		if !yield(field) {
+			return false
+		}
+	}
+	return true
+}
+
+func structFieldsInner_(typ reflect.Type, parentIndex []int, yield func(reflect.StructField) bool) bool {
+	for i := range typ.NumField() {
+		field := typ.Field(i)
+		field.Index = append(parentIndex, field.Index...)
+
+		if field.Anonymous {
+			fieldIndexSequence := append(parentIndex, i) //nolint:gocritic // append re-assign is intentional
+			if !structFieldsInner_(field.Type, fieldIndexSequence, yield) {
+				return false
+			}
+			continue
+		}
+
 		if !yield(field) {
 			return false
 		}
