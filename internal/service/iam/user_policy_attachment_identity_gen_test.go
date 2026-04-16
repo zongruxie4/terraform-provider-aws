@@ -106,7 +106,7 @@ func TestAccIAMUserPolicyAttachment_Identity_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.40.0
+// Resource Identity was added after v6.41.0
 func TestAccIAMUserPolicyAttachment_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -123,7 +123,7 @@ func TestAccIAMUserPolicyAttachment_Identity_ExistingResource_basic(t *testing.T
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/UserPolicyAttachment/basic_v6.40.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/UserPolicyAttachment/basic_v6.41.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -164,7 +164,7 @@ func TestAccIAMUserPolicyAttachment_Identity_ExistingResource_basic(t *testing.T
 	})
 }
 
-// Resource Identity was added after v6.40.0
+// Resource Identity was added after v6.41.0
 func TestAccIAMUserPolicyAttachment_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -186,7 +186,7 @@ func TestAccIAMUserPolicyAttachment_Identity_ExistingResource_noRefreshNoChange(
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/UserPolicyAttachment/basic_v6.40.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/UserPolicyAttachment/basic_v6.41.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

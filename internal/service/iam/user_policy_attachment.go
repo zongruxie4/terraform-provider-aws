@@ -30,7 +30,7 @@ import (
 // @IdentityAttribute("policy_arn")
 // @IdAttrFormat("{user}/{policy_arn}")
 // @ImportIDHandler("userPolicyAttachmentImportID")
-// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,

@@ -452,7 +452,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("user", true),
 				inttypes.StringIdentityAttribute("policy_arn", true),
@@ -542,7 +542,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newUserPolicyAttachmentResourceAsListResource,
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("user", true),
 				inttypes.StringIdentityAttribute("policy_arn", true),
