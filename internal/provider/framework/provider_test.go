@@ -32,7 +32,7 @@ import (
 // 	}
 // }
 
-func BenchmarkFrameworkProviderDataSourceSchemaInitialization(b *testing.B) {
+func BenchmarkFrameworkProvider_SchemaInitialization_DataSource(b *testing.B) {
 	ctx := b.Context()
 	primary, err := sdkv2.NewProvider(ctx)
 	if err != nil {
@@ -54,7 +54,7 @@ func BenchmarkFrameworkProviderDataSourceSchemaInitialization(b *testing.B) {
 	}
 }
 
-func BenchmarkFrameworkProviderResourceSchemaInitialization(b *testing.B) {
+func BenchmarkFrameworkProvider_SchemaInitialization_Resource(b *testing.B) {
 	ctx := b.Context()
 	primary, err := sdkv2.NewProvider(ctx)
 	if err != nil {
