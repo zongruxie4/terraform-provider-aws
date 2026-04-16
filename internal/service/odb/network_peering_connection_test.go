@@ -777,12 +777,7 @@ resource "aws_odb_network_peering_connection" "test" {
   tags = {
     "env" = "dev"
   }
-
 }
-
-
-
-
 `, oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(networkName), vpcName, peerNetworkConnectionName)
 
 	return peeringWithTags, peeringWithoutTags
