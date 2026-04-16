@@ -33,17 +33,21 @@ import (
 )
 
 // @SDKResource("aws_route53_zone", name="Hosted Zone")
+// @Testing(name="Zone")
 // @Tags(identifierAttribute="zone_id", resourceType="hostedzone")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53;route53.GetHostedZoneOutput")
+// @IdentityAttribute("zone_id")
+// @Testing(idAttrDuplicates="zone_id")
+// @Testing(domainTfVar="zoneName")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
 func resourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
 		ReadWithoutTimeout:   resourceZoneRead,
 		UpdateWithoutTimeout: resourceZoneUpdate,
 		DeleteWithoutTimeout: resourceZoneDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
