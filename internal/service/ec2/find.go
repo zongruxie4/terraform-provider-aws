@@ -1404,20 +1404,18 @@ func findServiceLinkVirtualInterface(ctx context.Context, conn *ec2.Client, inpu
 func findServiceLinkVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) ([]awstypes.ServiceLinkVirtualInterface, error) {
 	var output []awstypes.ServiceLinkVirtualInterface
 
-	for {
-		page, err := conn.DescribeServiceLinkVirtualInterfaces(ctx, input)
-
-		if err != nil {
-			return nil, err
+	err := describeServiceLinkVirtualInterfacesPages(ctx, conn, input, func(page *ec2.DescribeServiceLinkVirtualInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		output = append(output, page.ServiceLinkVirtualInterfaces...)
 
-		if page.NextToken == nil {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = page.NextToken
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
