@@ -43,13 +43,6 @@ func IsA[T error](err error) bool {
 	return ok
 }
 
-// As is equivalent to errors.As(), but returns the value in-line
-func As[T error](err error) (T, bool) {
-	var as T
-	ok := errors.As(err, &as)
-	return as, ok
-}
-
 var _ ErrorWithErrorMessage = &MessageError{}
 
 // MessageError is a simple error type that implements the errorMessager
