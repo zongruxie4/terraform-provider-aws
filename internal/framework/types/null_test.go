@@ -67,9 +67,9 @@ func TestNullValueOf_primitiveTypes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fwtypes.NullValueOf(context.Background(), testCase.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			got, diags := fwtypes.NullValueOf(context.Background(), testCase.input)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
 
 			if e, a := testCase.expected, got; !e.Equal(a) {
@@ -109,9 +109,9 @@ func TestNullValueOf_listTypes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fwtypes.NullValueOf(context.Background(), testCase.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			got, diags := fwtypes.NullValueOf(context.Background(), testCase.input)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
 
 			if e, a := testCase.expected, got; !e.Equal(a) {
@@ -151,9 +151,9 @@ func TestNullValueOf_setTypes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fwtypes.NullValueOf(context.Background(), testCase.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			got, diags := fwtypes.NullValueOf(context.Background(), testCase.input)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
 
 			if e, a := testCase.expected, got; !e.Equal(a) {
@@ -193,9 +193,9 @@ func TestNullValueOf_mapTypes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fwtypes.NullValueOf(context.Background(), testCase.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			got, diags := fwtypes.NullValueOf(context.Background(), testCase.input)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
 
 			if e, a := testCase.expected, got; !e.Equal(a) {
@@ -244,9 +244,9 @@ func TestNullValueOf_objectTypes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fwtypes.NullValueOf(ctx, testCase.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			got, diags := fwtypes.NullValueOf(ctx, testCase.input)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
 
 			if e, a := testCase.expected, got; !e.Equal(a) {
