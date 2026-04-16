@@ -38,7 +38,7 @@ const mutexLayerKey = `aws_lambda_layer_version`
 // @IdentityAttribute("version", optional=true, testNotNull=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetLayerVersionOutput")
 // @Testing(existsTakesT=true, destroyTakesT=true)
-// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(preIdentityVersion="v6.41.0")
 // @Testing(importIgnore="filename;skip_destroy", plannableImportAction="Replace")
 // @ImportIDHandler("layerVersionImportID")
 func resourceLayerVersion() *schema.Resource {
