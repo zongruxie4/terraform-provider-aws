@@ -691,14 +691,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   vpc_id             = aws_vpc.test.id
   subnet_ids         = [aws_subnet.secondary_a.id]
 }
-
-
-
-
-
-
-
-
 `, vpcName)
 }
 
