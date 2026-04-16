@@ -254,6 +254,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity("function_name"),
 		},
 		{
+			Factory:  newLayerVersionResourceAsListResource,
+			TypeName: "aws_lambda_layer_version",
+			Name:     "Layer Version",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("layer_name", true),
+				inttypes.StringIdentityAttribute(names.AttrVersion, false),
+			}),
+		},
+		{
 			Factory:  permissionResourceAsListResource,
 			TypeName: "aws_lambda_permission",
 			Name:     "Permission",
