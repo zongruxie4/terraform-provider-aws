@@ -439,7 +439,8 @@ func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resou
 
 func (r *resourceNetworkPeeringConnection) FindAddRemovePeeredNetworkCIDR(planCIDRs, sateCiders []string) map[string]int {
 	addedRemovedCidrs := make(map[string]int)
-	//1 indicates newly added cidrs. Here we are assuming that all cidrs are new.
+	// 1 = CIDRs to add, -1 = CIDRs to remove
+	// Here we are assuming that all cidrs are new.
 	for _, nCidr := range planCIDRs {
 		addedRemovedCidrs[nCidr] = 1
 	}
