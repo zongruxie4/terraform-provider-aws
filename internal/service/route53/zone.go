@@ -211,8 +211,14 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceZoneFlatten(ctx, conn, d, meta.(*conns.AWSClient), output)...)
+}
+
+func resourceZoneFlatten(ctx context.Context, conn *route53.Client, d *schema.ResourceData, awsClient *conns.AWSClient, output *route53.GetHostedZoneOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
-	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), zoneID))
+	d.Set(names.AttrARN, zoneARN(ctx, awsClient, zoneID))
 	d.Set(names.AttrComment, "")
 	d.Set("delegation_set_id", "")
 	if v := output.HostedZone.Features; v != nil {
@@ -237,6 +243,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set(names.AttrComment, output.HostedZone.Config.Comment)
 
 		if output.HostedZone.Config.PrivateZone {
+			var err error
 			nameServers, err = findNameServersByZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string))
 
 			if err != nil {
