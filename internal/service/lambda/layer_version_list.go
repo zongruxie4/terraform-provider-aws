@@ -74,7 +74,7 @@ func (l *layerVersionListResource) List(ctx context.Context, request list.ListRe
 				tflog.Info(ctx, "Reading Lambda Layer Version")
 				diags := resourceLayerVersionRead(ctx, rd, awsClient)
 				if diags.HasError() {
-					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": fmt.Sprintf("%s", diags)})
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": fmt.Sprintf("reading Lambda Layer Version (%s)", id)})
 					continue
 				}
 				if rd.Id() == "" {

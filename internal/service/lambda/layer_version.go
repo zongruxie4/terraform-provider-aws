@@ -299,14 +299,12 @@ func layerVersionParseResourceID(id string) (layerName string, version int64, er
 	if !arn.IsARN(id) {
 		parts := strings.SplitN(id, "/", 2)
 		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-			version, err = strconv.ParseInt(parts[1], 10, 64)
-			if err == nil {
-				layerName = parts[0]
-				return
+			v, parseErr := strconv.ParseInt(parts[1], 10, 64)
+			if parseErr == nil {
+				return parts[0], v, nil
 			}
 		}
-		err = fmt.Errorf("lambda_layer ID must be a valid Layer ARN or <layer-name>/<version>")
-		return
+		return "", 0, fmt.Errorf("lambda_layer ID must be a valid Layer ARN or <layer-name>/<version>")
 	}
 	v, err := arn.Parse(id)
 	if err != nil {
