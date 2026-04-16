@@ -4,14 +4,17 @@
 package route53resolver
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -79,10 +82,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_rule_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule_association",
-		F:    sweepRuleAssociations,
-	})
+	awsv2.Register("aws_route53_resolver_rule_association", sweepRuleAssociations)
 
 	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
 		Name: "aws_route53_resolver_rule",
@@ -500,12 +500,7 @@ func sweepQueryLogsConfig(region string) error {
 	return nil
 }
 
-func sweepRuleAssociations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepRuleAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverRuleAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -513,17 +508,16 @@ func sweepRuleAssociations(region string) error {
 	pages := route53resolver.NewListResolverRuleAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Rule Association sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Rule Associations (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverRuleAssociations {
+			// Cannot associate or disassociate system defined rules
+			if strings.Contains(strings.ToLower(aws.ToString(v.Id)), "autodefined") {
+				continue
+			}
+
 			r := resourceRuleAssociation()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
@@ -534,13 +528,7 @@ func sweepRuleAssociations(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Rule Associations (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepRules(region string) error {
