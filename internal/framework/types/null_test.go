@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -89,9 +90,18 @@ func TestNullValueOf_listTypes(t *testing.T) {
 			input:    fwtypes.NewListValueOfMust[types.String](context.Background(), []attr.Value{}),
 			expected: fwtypes.NewListValueOfNull[types.String](context.Background()),
 		},
+		"typed uninitialized": {
+			input:    fwtypes.ListValueOf[types.String]{},
+			expected: fwtypes.NewListValueOfNull[types.String](context.Background()),
+		},
 		"raw": {
 			input:    types.ListValueMust(types.StringType, []attr.Value{}),
 			expected: types.ListNull(types.StringType),
+		},
+		"raw uninitialized": {
+			input: basetypes.ListValue{},
+			// To get "missing type"
+			expected: types.ListNull(basetypes.ListValue{}.Type(context.Background()).(attr.TypeWithElementType).ElementType()),
 		},
 	}
 
@@ -122,9 +132,18 @@ func TestNullValueOf_setTypes(t *testing.T) {
 			input:    fwtypes.NewSetValueOfMust[types.String](context.Background(), []attr.Value{}),
 			expected: fwtypes.NewSetValueOfNull[types.String](context.Background()),
 		},
+		"typed uninitialized": {
+			input:    fwtypes.SetValueOf[types.String]{},
+			expected: fwtypes.NewSetValueOfNull[types.String](context.Background()),
+		},
 		"raw": {
 			input:    types.SetValueMust(types.StringType, []attr.Value{}),
 			expected: types.SetNull(types.StringType),
+		},
+		"raw uninitialized": {
+			input: basetypes.SetValue{},
+			// To get "missing type"
+			expected: types.SetNull(basetypes.SetValue{}.Type(context.Background()).(attr.TypeWithElementType).ElementType()),
 		},
 	}
 
@@ -155,9 +174,18 @@ func TestNullValueOf_mapTypes(t *testing.T) {
 			input:    fwtypes.NewMapValueOfMust[types.String](context.Background(), map[string]attr.Value{}),
 			expected: fwtypes.NewMapValueOfNull[types.String](context.Background()),
 		},
+		"typed uninitialized": {
+			input:    fwtypes.MapValueOf[types.String]{},
+			expected: fwtypes.NewMapValueOfNull[types.String](context.Background()),
+		},
 		"raw": {
 			input:    types.MapValueMust(types.StringType, map[string]attr.Value{}),
 			expected: types.MapNull(types.StringType),
+		},
+		"raw uninitialized": {
+			input: basetypes.MapValue{},
+			// To get "missing type"
+			expected: types.MapNull(basetypes.MapValue{}.Type(context.Background()).(attr.TypeWithElementType).ElementType()),
 		},
 	}
 
@@ -196,11 +224,19 @@ func TestNullValueOf_objectTypes(t *testing.T) {
 			}),
 			expected: fwtypes.NewObjectValueOfNull[object](ctx),
 		},
+		"typed uninitialized": {
+			input:    fwtypes.ObjectValueOf[object]{},
+			expected: fwtypes.NewObjectValueOfNull[object](ctx),
+		},
 		"raw": {
 			input: types.ObjectValueMust(fwtypes.AttributeTypesMust[object](ctx), map[string]attr.Value{
 				"name": types.StringValue("test"),
 			}),
 			expected: types.ObjectNull(fwtypes.AttributeTypesMust[object](ctx)),
+		},
+		"raw uninitialized": {
+			input:    basetypes.ObjectValue{},
+			expected: basetypes.ObjectValue{},
 		},
 	}
 
