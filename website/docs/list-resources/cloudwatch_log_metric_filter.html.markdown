@@ -3,7 +3,7 @@ subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_metric_filter"
 description: |-
-  Lists CloudWatch Logs Metric Stream resources.
+  Lists CloudWatch Logs Metric Filter resources.
 ---
 
 # List Resource: aws_cloudwatch_log_metric_filter
