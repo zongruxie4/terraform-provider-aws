@@ -8,6 +8,7 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -116,15 +117,15 @@ func resourceMetricAlarm() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"query": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 10000),
-									},
 									"pending_period": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 86400),
+									},
+									"query": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 10000),
 									},
 									"recovery_period": {
 										Type:         schema.TypeInt,
@@ -453,7 +454,9 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	resourceMetricAlarmFlatten(ctx, d, alarm)
+	if err := resourceMetricAlarmFlatten(ctx, d, alarm); err != nil {
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+	}
 
 	return diags
 }
@@ -521,7 +524,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		Tags:      getTagsIn(ctx),
 	}
 
-	// Set common fields for both PromQL and traditional alarms
+	// Set common fields for both PromQL and traditional alarms.
 	if v, ok := d.GetOk("alarm_actions"); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.AlarmActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -538,7 +541,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.OKActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	// Handle evaluation_criteria (PromQL alarms)
+	// Handle evaluation_criteria (PromQL alarms).
 	if v, ok := d.GetOk("evaluation_criteria"); ok && len(v.([]any)) > 0 {
 		apiObject.EvaluationCriteria = expandEvaluationCriteria(v.([]any)[0].(map[string]any))
 
@@ -549,19 +552,14 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		return apiObject
 	}
 
-	// Handle traditional metric alarms - set fields that are only for traditional alarms
+	// Handle traditional metric alarms - set fields that are only for traditional alarms.
 	if v := d.Get("actions_enabled"); v != nil {
 		apiObject.ActionsEnabled = aws.Bool(v.(bool))
 	}
 
-	// Handle traditional metric alarms
 	if v, ok := d.GetOk("comparison_operator"); ok {
 		apiObject.ComparisonOperator = types.ComparisonOperator(v.(string))
 	}
-	if v, ok := d.GetOk("evaluation_periods"); ok {
-		apiObject.EvaluationPeriods = aws.Int32(int32(v.(int)))
-	}
-	apiObject.TreatMissingData = aws.String(d.Get("treat_missing_data").(string))
 
 	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
 		apiObject.DatapointsToAlarm = aws.Int32(int32(v.(int)))
@@ -573,6 +571,10 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 
 	if v, ok := d.GetOk("evaluate_low_sample_count_percentiles"); ok {
 		apiObject.EvaluateLowSampleCountPercentile = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("evaluation_periods"); ok {
+		apiObject.EvaluationPeriods = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("extended_statistic"); ok {
@@ -604,6 +606,8 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	} else {
 		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
+
+	apiObject.TreatMissingData = aws.String(d.Get("treat_missing_data").(string))
 
 	if v, ok := d.GetOk(names.AttrUnit); ok {
 		apiObject.Unit = types.StandardUnit(v.(string))
@@ -788,22 +792,22 @@ func expandEvaluationCriteria(tfMap map[string]any) types.EvaluationCriteria {
 	}
 
 	if v, ok := tfMap["promql_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
-		promqlMap := v[0].(map[string]any)
+		tfMap := v[0].(map[string]any)
 
-		criteria := types.AlarmPromQLCriteria{
-			Query: aws.String(promqlMap["query"].(string)),
+		apiObject := types.AlarmPromQLCriteria{
+			Query: aws.String(tfMap["query"].(string)),
 		}
 
-		if v, ok := promqlMap["pending_period"]; ok && v.(int) != 0 {
-			criteria.PendingPeriod = aws.Int32(int32(v.(int)))
+		if v, ok := tfMap["pending_period"]; ok && v.(int) != 0 {
+			apiObject.PendingPeriod = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := promqlMap["recovery_period"]; ok && v.(int) != 0 {
-			criteria.RecoveryPeriod = aws.Int32(int32(v.(int)))
+		if v, ok := tfMap["recovery_period"]; ok && v.(int) != 0 {
+			apiObject.RecoveryPeriod = aws.Int32(int32(v.(int)))
 		}
 
 		return &types.EvaluationCriteriaMemberPromQLCriteria{
-			Value: criteria,
+			Value: apiObject,
 		}
 	}
 
@@ -827,7 +831,7 @@ func expandMetricAlarmDimensions(tfMap map[string]any) []types.Dimension {
 	return apiObjects
 }
 
-func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *types.MetricAlarm) {
+func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *types.MetricAlarm) error {
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)
@@ -836,9 +840,11 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
 	d.Set("ok_actions", alarm.OKActions)
 
-	// Handle EvaluationCriteria (PromQL alarms)
+	// Handle EvaluationCriteria (PromQL alarms).
 	if alarm.EvaluationCriteria != nil {
-		d.Set("evaluation_criteria", flattenEvaluationCriteria(alarm.EvaluationCriteria))
+		if err := d.Set("evaluation_criteria", flattenEvaluationCriteria(alarm.EvaluationCriteria)); err != nil {
+			return fmt.Errorf("setting evaluation_criteria: %w", err)
+		}
 		d.Set("evaluation_interval", alarm.EvaluationInterval)
 
 		// Clear traditional metric alarm fields for PromQL alarms
@@ -860,13 +866,17 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		// Handle traditional metric alarms
 		d.Set("comparison_operator", alarm.ComparisonOperator)
 		d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
-		d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions))
+		if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
+			return fmt.Errorf("setting dimensions: %w", err)
+		}
 		d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
 		d.Set("evaluation_periods", alarm.EvaluationPeriods)
 		d.Set("extended_statistic", alarm.ExtendedStatistic)
 		d.Set(names.AttrMetricName, alarm.MetricName)
 		if len(alarm.Metrics) > 0 {
-			d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics))
+			if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
+				return fmt.Errorf("setting metric_query: %w", err)
+			}
 		}
 		d.Set(names.AttrNamespace, alarm.Namespace)
 		d.Set("period", alarm.Period)
@@ -885,4 +895,6 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
 	}
+
+	return nil
 }
