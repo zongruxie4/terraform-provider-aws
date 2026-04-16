@@ -46,13 +46,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newServiceLinkVirtualInterfacesDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interfaces",
 			Name:     "Service Link Virtual Interfaces",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newSpotDataFeedSubscriptionDataSource,
