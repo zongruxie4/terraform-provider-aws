@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -107,13 +108,7 @@ func resourceMetricFilter() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
-				StateFunc: func(v any) string {
-					s, ok := v.(string)
-					if !ok {
-						return ""
-					}
-					return strings.TrimSpace(s)
-				},
+				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 			},
 		},
 	}
@@ -172,13 +167,9 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
-	d.Set(names.AttrLogGroupName, mf.LogGroupName)
-	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting metric_transformation: %s", err)
+	if err := resourceMetricFilterFlatten(ctx, mf, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set(names.AttrName, mf.FilterName)
-	d.Set("pattern", mf.FilterPattern)
 
 	return diags
 }
@@ -210,6 +201,18 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func resourceMetricFilterFlatten(_ context.Context, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
+	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
+	d.Set(names.AttrLogGroupName, mf.LogGroupName)
+	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
+		return fmt.Errorf("setting metric_transformation: %w", err)
+	}
+	d.Set(names.AttrName, mf.FilterName)
+	d.Set("pattern", mf.FilterPattern)
+
+	return nil
 }
 
 func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.MetricFilter, error) {
