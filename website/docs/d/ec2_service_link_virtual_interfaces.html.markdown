@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ec2_service_link_virtual_interfaces
 
-Provides a list of EC2 Service Link Virtual Interface IDs matching the provided filters. More information can be found in the [Outposts User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/how-outposts-works.html#region-connectivity).
+Provides a list of EC2 Service Link Virtual Interface IDs matching the provided filters. More information can be found in the [Outposts User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/how-outposts-works.html#how-service-link).
 
 ## Example Usage
 
