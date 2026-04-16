@@ -682,7 +682,6 @@ resource "aws_subnet" "secondary_a" {
   }
 }
 
-
 resource "aws_ec2_transit_gateway" "test" {
 }
 
