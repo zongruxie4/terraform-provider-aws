@@ -204,26 +204,33 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 			VolumeId: aws.String(id),
 		}
 
-		if !plan.Iops.Equal(state.Iops) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
+		if !plan.Iops.Equal(state.Iops) {
 			input.Iops = plan.Iops.ValueInt32Pointer()
 		}
 
-		if !plan.Size.Equal(state.Size) && !plan.Size.IsUnknown() && !plan.Size.IsNull() {
+		if !plan.Size.Equal(state.Size) {
 			input.Size = plan.Size.ValueInt32Pointer()
 		}
 
-		if !plan.Throughput.IsUnknown() && !plan.Throughput.IsNull() {
-			if v := plan.Throughput.ValueInt32(); v > 0 && plan.VolumeType.ValueString() == string(awstypes.VolumeTypeGp3) {
-				input.Throughput = aws.Int32(v)
-			}
+		// "If no throughput value is specified, the existing value is retained."
+		// Not currently correct, so always specify any non-zero throughput value.
+		// Throughput is valid only for gp3 volumes.
+		if v := plan.Throughput.ValueInt32(); v > 0 && plan.VolumeType.ValueString() == string(awstypes.VolumeTypeGp3) {
+			input.Throughput = aws.Int32(v)
 		}
 
 		if !plan.VolumeType.Equal(state.VolumeType) {
 			volumeType := awstypes.VolumeType(plan.VolumeType.ValueString())
 			input.VolumeType = volumeType
 
-			if (volumeType == awstypes.VolumeTypeIo1 || volumeType == awstypes.VolumeTypeIo2 || volumeType == awstypes.VolumeTypeGp3) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
-				input.Iops = plan.Iops.ValueInt32Pointer()
+			// Get Iops value because in the ec2.ModifyVolumeInput API,
+			// if you change the volume type to io1, io2, or gp3, the default is 3,000.
+			// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVolume.html
+			switch volumeType {
+			case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
+				if !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
+					input.Iops = plan.Iops.ValueInt32Pointer()
+				}
 			}
 		}
 
@@ -285,48 +292,57 @@ func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *ebsVolumeCopyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var volumeType types.String
+	var volumeTypeCfg types.String
 	var iops, throughput types.Int32
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrVolumeType), &volumeType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrVolumeType), &volumeTypeCfg))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrIOPS), &iops))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrThroughput), &throughput))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if volumeType.IsNull() || volumeType.IsUnknown() {
+	if volumeTypeCfg.IsNull() || volumeTypeCfg.IsUnknown() {
 		return
 	}
+	volumeType := awstypes.VolumeType(volumeTypeCfg.ValueString())
 
-	vt := awstypes.VolumeType(volumeType.ValueString())
-
-	if !throughput.IsNull() && !throughput.IsUnknown() && throughput.ValueInt32() > 0 && vt != awstypes.VolumeTypeGp3 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root(names.AttrThroughput),
-			"Invalid Throughput Configuration",
-			fmt.Sprintf("`throughput` must not be set when `volume_type` is %q.", vt),
-		)
-	}
-
-	if !iops.IsNull() && !iops.IsUnknown() && iops.ValueInt32() > 0 {
-		switch vt {
-		case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
+	if throughput.ValueInt32() > 0 {
+		switch volumeType {
+		case awstypes.VolumeTypeGp3:
+			// Valid only for gp3
 		default:
 			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrIOPS),
-				"Invalid IOPS Configuration",
-				fmt.Sprintf("`iops` must not be set when `volume_type` is %q.", vt),
+				path.Root(names.AttrThroughput),
+				"Invalid Throughput Configuration",
+				fmt.Sprintf("`throughput` must not be set when `volume_type` is %q.", volumeType),
 			)
 		}
 	}
 
-	if (vt == awstypes.VolumeTypeIo1 || vt == awstypes.VolumeTypeIo2) && (iops.IsNull() || iops.IsUnknown() || iops.ValueInt32() == 0) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root(names.AttrIOPS),
-			"Missing IOPS Configuration",
-			fmt.Sprintf("`iops` must be set when `volume_type` is %q.", vt),
-		)
+	if iops.ValueInt32() > 0 {
+		switch volumeType {
+		case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
+		// Valid only for io1, io2, and gp3
+		default:
+			resp.Diagnostics.AddAttributeError(
+				path.Root(names.AttrIOPS),
+				"Invalid IOPS Configuration",
+				fmt.Sprintf("`iops` must not be set when `volume_type` is %q.", volumeType),
+			)
+		}
+	}
+
+	if iops.IsNull() || iops.IsUnknown() || iops.ValueInt32() == 0 {
+		switch volumeType {
+		// Required for io1, io2
+		case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2:
+			resp.Diagnostics.AddAttributeError(
+				path.Root(names.AttrIOPS),
+				"Missing IOPS Configuration",
+				fmt.Sprintf("`iops` must be set when `volume_type` is %q.", volumeType),
+			)
+		}
 	}
 }
 
@@ -346,35 +362,14 @@ func (r *ebsVolumeCopyResource) ModifyPlan(ctx context.Context, req resource.Mod
 		return
 	}
 
-	if !planVolumeType.IsNull() && !planVolumeType.IsUnknown() {
-		vt := awstypes.VolumeType(planVolumeType.ValueString())
-
-		if !configThroughput.IsNull() && !configThroughput.IsUnknown() && configThroughput.ValueInt32() > 0 && vt != awstypes.VolumeTypeGp3 {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrThroughput),
-				"Invalid Throughput Configuration",
-				fmt.Sprintf("`throughput` must not be set when `volume_type` is %q.", vt),
-			)
-		}
-
-		if !configIops.IsNull() && !configIops.IsUnknown() && configIops.ValueInt32() > 0 {
-			switch vt {
-			case awstypes.VolumeTypeIo1, awstypes.VolumeTypeIo2, awstypes.VolumeTypeGp3:
-			default:
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrIOPS),
-					"Invalid IOPS Configuration",
-					fmt.Sprintf("`iops` must not be set when `volume_type` is %q.", vt),
-				)
-			}
-		}
-	}
-
+	// Certain volume types (e.g. GP3) have default iops values which may
+	// differ from computed values stored in state.
+	// Set planned values to unknown when volume type changes to avoid
+	// 'Provider produced inconsistent result after apply'.
 	if !planVolumeType.Equal(stateVolumeType) {
 		if configIops.IsNull() && !configIops.IsUnknown() {
 			smerr.AddEnrich(ctx, &resp.Diagnostics, resp.Plan.SetAttribute(ctx, path.Root(names.AttrIOPS), types.Int32Unknown()))
 		}
-
 		if configThroughput.IsNull() && !configThroughput.IsUnknown() {
 			smerr.AddEnrich(ctx, &resp.Diagnostics, resp.Plan.SetAttribute(ctx, path.Root(names.AttrThroughput), types.Int32Unknown()))
 		}

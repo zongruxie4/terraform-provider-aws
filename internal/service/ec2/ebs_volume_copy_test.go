@@ -261,6 +261,7 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				// Config: testAccEBSVolumeCopyConfig_iops(3000),
 				Config: testAccEBSVolumeCopyConfig_volumeTypeGP3(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
@@ -274,6 +275,34 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolumeCopy_invalidConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEBSVolumeCopyConfig_invalidThroughput(),
+				ExpectError: regexache.MustCompile(`Invalid Throughput Configuration`),
+			},
+			{
+				Config:      testAccEBSVolumeCopyConfig_invalidIOPS(),
+				ExpectError: regexache.MustCompile(`Invalid IOPS Configuration`),
+			},
+			{
+				Config:      testAccEBSVolumeCopyConfig_missingIOPS(),
+				ExpectError: regexache.MustCompile(`Missing IOPS Configuration`),
 			},
 		},
 	})
@@ -419,4 +448,48 @@ resource "aws_ebs_volume_copy" "test" {
   volume_type      = "gp3"
 }
 `)
+}
+
+// Throughput should only be configured for gp3 volume types
+func testAccEBSVolumeCopyConfig_invalidThroughput() string {
+	return `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_ebs_volume_copy" "test" {
+	source_volume_id = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/does-not-exist"
+  volume_type      = "io1"
+  throughput       = 125
+}
+`
+}
+
+// IOPS should only be set for io1, io2, or gp3 volume types
+func testAccEBSVolumeCopyConfig_invalidIOPS() string {
+	return `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_ebs_volume_copy" "test" {
+	source_volume_id = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/does-not-exist"
+  volume_type      = "standard"
+  iops             = 3000
+}
+`
+}
+
+// IOPS must be set for io1 or io2 volume types
+func testAccEBSVolumeCopyConfig_missingIOPS() string {
+	return `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_ebs_volume_copy" "test" {
+	source_volume_id = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/does-not-exist"
+  volume_type      = "io1"
+}
+`
 }
