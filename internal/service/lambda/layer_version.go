@@ -35,7 +35,7 @@ const mutexLayerKey = `aws_lambda_layer_version`
 
 // @SDKResource("aws_lambda_layer_version", name="Layer Version")
 // @IdentityAttribute("layer_name")
-// @IdentityAttribute("version")
+// @IdentityAttribute("version", optional=true, testNotNull=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetLayerVersionOutput")
 // @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(preIdentityVersion="v6.40.0")
@@ -245,6 +245,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, output.LayerVersionArn)
+	d.SetId(aws.ToString(output.LayerVersionArn))
 	d.Set("code_sha256", output.Content.CodeSha256)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
@@ -290,6 +291,19 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func layerVersionParseResourceID(id string) (layerName string, version int64, err error) {
+	// Support layer_name/version format (used for identity-based import).
+	if !arn.IsARN(id) {
+		parts := strings.SplitN(id, "/", 2)
+		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+			version, err = strconv.ParseInt(parts[1], 10, 64)
+			if err == nil {
+				layerName = parts[0]
+				return
+			}
+		}
+		err = fmt.Errorf("lambda_layer ID must be a valid Layer ARN or <layer-name>/<version>")
+		return
+	}
 	v, err := arn.Parse(id)
 	if err != nil {
 		return
@@ -339,19 +353,21 @@ var _ inttypes.SDKv2ImportID = layerVersionImportID{}
 type layerVersionImportID struct{}
 
 func (layerVersionImportID) Create(d *schema.ResourceData) string {
-	return d.Id()
+	return d.Get("layer_name").(string) + "/" + d.Get(names.AttrVersion).(string)
 }
 
 func (layerVersionImportID) Parse(id string) (string, map[string]any, error) {
 	layerName, version, err := layerVersionParseResourceID(id)
 	if err != nil {
-		return id, nil, err
+		return "", nil, err
 	}
 
+	normalizedID := layerName + "/" + strconv.FormatInt(version, 10)
 	results := map[string]any{
-		"layer_name": layerName,
-		"version":    strconv.FormatInt(version, 10),
+		"layer_name":          layerName,
+		names.AttrVersion:     strconv.FormatInt(version, 10),
+		names.AttrSkipDestroy: false,
 	}
 
-	return id, results, nil
+	return normalizedID, results, nil
 }
