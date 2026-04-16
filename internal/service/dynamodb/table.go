@@ -51,7 +51,9 @@ const (
 
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,10 +61,6 @@ func resourceTable() *schema.Resource {
 		ReadWithoutTimeout:   resourceTableRead,
 		UpdateWithoutTimeout: resourceTableUpdate,
 		DeleteWithoutTimeout: resourceTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(createTableTimeout),
