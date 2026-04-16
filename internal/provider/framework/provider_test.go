@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
-// go test -bench=. -benchmem -run=Bench -v ./internal/provider/framework
+// To run these benchmarks:
+// go test -bench=. -benchmem -run=^$ -v ./internal/provider/framework
 
 // This logs Initialization an annoying number of times
 // func BenchmarkFrameworkProviderInitialization(b *testing.B) {
