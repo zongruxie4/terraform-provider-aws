@@ -108,7 +108,7 @@ func listLayerVersionsAll(ctx context.Context, conn *lambda.Client) iter.Seq2[la
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(layerVersionListItem{}, fmt.Errorf("listing Lambda Layers: %w", err))
+				yield(inttypes.Zero[layerVersionListItem](), fmt.Errorf("listing Lambda Layers: %w", err))
 				return
 			}
 
@@ -120,7 +120,7 @@ func listLayerVersionsAll(ctx context.Context, conn *lambda.Client) iter.Seq2[la
 				for versionPages.HasMorePages() {
 					versionPage, err := versionPages.NextPage(ctx)
 					if err != nil {
-						yield(layerVersionListItem{}, fmt.Errorf("listing Lambda Layer (%s) Versions: %w", layerName, err))
+						yield(inttypes.Zero[layerVersionListItem](), fmt.Errorf("listing Lambda Layer (%s) Versions: %w", layerName, err))
 						return
 					}
 
