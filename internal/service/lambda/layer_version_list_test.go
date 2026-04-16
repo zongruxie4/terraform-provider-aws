@@ -50,7 +50,9 @@ func TestAccLambdaLayerVersion_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("layer_name"), knownvalue.StringExact(rName+"-0")),
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("layer_name"), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 
@@ -64,9 +66,11 @@ func TestAccLambdaLayerVersion_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambda_layer_version.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_lambda_layer_version.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_lambda_layer_version.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_lambda_layer_version.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_lambda_layer_version.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_lambda_layer_version.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
