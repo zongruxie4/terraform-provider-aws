@@ -244,6 +244,13 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
+	flattenLayerVersion(d, layerName, output)
+	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
+
+	return diags
+}
+
+func flattenLayerVersion(d *schema.ResourceData, layerName string, output *lambda.GetLayerVersionOutput) {
 	d.Set(names.AttrARN, output.LayerVersionArn)
 	d.SetId(aws.ToString(output.LayerVersionArn))
 	d.Set("code_sha256", output.Content.CodeSha256)
@@ -258,9 +265,6 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
 	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", output.Content.CodeSize)
-	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
-
-	return diags
 }
 
 func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
