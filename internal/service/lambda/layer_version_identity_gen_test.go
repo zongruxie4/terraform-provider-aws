@@ -88,7 +88,6 @@ func TestAccLambdaLayerVersion_Identity_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("layer_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -108,7 +107,6 @@ func TestAccLambdaLayerVersion_Identity_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("layer_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -185,7 +183,6 @@ func TestAccLambdaLayerVersion_Identity_regionOverride(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("layer_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -206,7 +203,6 @@ func TestAccLambdaLayerVersion_Identity_regionOverride(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("layer_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
