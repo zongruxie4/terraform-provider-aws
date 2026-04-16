@@ -66,8 +66,6 @@ func RegisterSweepers() {
 		F: sweepEBSVolumes,
 	})
 
-	awsv2.Register("aws_ebs_volume_copy", sweepEBSVolumeCopies)
-
 	resource.AddTestSweepers("aws_ebs_snapshot", &resource.Sweeper{
 		Name: "aws_ebs_snapshot",
 		F:    sweepEBSSnapshots,

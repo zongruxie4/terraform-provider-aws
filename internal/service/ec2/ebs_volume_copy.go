@@ -24,14 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -429,38 +426,4 @@ type ebsVolumeCopyResourceModel struct {
 	Throughput       types.Int32    `tfsdk:"throughput"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	VolumeType       types.String   `tfsdk:"volume_type"`
-}
-
-func sweepEBSVolumeCopies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.EC2Client(ctx)
-	input := ec2.DescribeVolumesInput{}
-	var sweepResources []sweep.Sweepable
-
-	pages := ec2.NewDescribeVolumesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Volumes {
-			if v.SourceVolumeId == nil {
-				continue
-			}
-
-			if v.State != awstypes.VolumeStateAvailable {
-				continue
-			}
-
-			sweepResources = append(sweepResources,
-				sweepfw.NewSweepResource(
-					newEBSVolumeCopyResource,
-					client,
-					sweepfw.NewAttribute(names.AttrID, aws.ToString(v.VolumeId)),
-				),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
