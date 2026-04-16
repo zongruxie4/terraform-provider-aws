@@ -135,14 +135,14 @@ func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Method Response (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("response_models", methodResponse.ResponseModels); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting response_models: %s", err)
-	}
-	if err := d.Set("response_parameters", methodResponse.ResponseParameters); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting response_parameters: %s", err)
-	}
+	resourceMethodResponseFlatten(d, methodResponse)
 
 	return diags
+}
+
+func resourceMethodResponseFlatten(d *schema.ResourceData, methodResponse *apigateway.GetMethodResponseOutput) {
+	d.Set("response_models", methodResponse.ResponseModels)
+	d.Set("response_parameters", methodResponse.ResponseParameters)
 }
 
 func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

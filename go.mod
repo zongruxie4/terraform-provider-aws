@@ -80,13 +80,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.21
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.8
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1
-	github.com/aws/aws-sdk-go-v2/service/connect v1.168.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.169.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.13
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.6
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.8
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.57.2
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.14
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.0
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.13
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.14
 	github.com/aws/aws-sdk-go-v2/service/eks v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.52.0
@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.16
-	github.com/aws/aws-sdk-go-v2/service/glue v1.139.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.2
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.21
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.4
@@ -139,12 +139,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.13
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.5
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.4
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.20
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.14
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.8
-	github.com/aws/aws-sdk-go-v2/service/iot v1.72.5
+	github.com/aws/aws-sdk-go-v2/service/iot v1.72.6
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.14
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.20
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.49.2
@@ -165,9 +165,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.21
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.36.1
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.20
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.23
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.15
-	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1
@@ -232,12 +232,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.239.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.240.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.12
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.12
@@ -307,7 +307,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
-	github.com/hashicorp/terraform-plugin-mux v0.23.0
+	github.com/hashicorp/terraform-plugin-mux v0.23.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.0
 	github.com/hashicorp/terraform-plugin-testing v1.15.0
 	github.com/jaswdr/faker/v2 v2.9.1
