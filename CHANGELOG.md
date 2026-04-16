@@ -11,12 +11,15 @@ NOTES:
 FEATURES:
 
 * **New List Resource:** `aws_apigatewayv2_api` ([#47472](https://github.com/hashicorp/terraform-provider-aws/issues/47472))
+* **New List Resource:** `aws_cloudwatch_log_metric_filter` ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * **New List Resource:** `aws_iam_user_policy_attachment` ([#47467](https://github.com/hashicorp/terraform-provider-aws/issues/47467))
 * **New List Resource:** `aws_route53_zone` ([#47494](https://github.com/hashicorp/terraform-provider-aws/issues/47494))
 * **New List Resource:** `aws_sqs_queue_policy` ([#47489](https://github.com/hashicorp/terraform-provider-aws/issues/47489))
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_log_metric_filter: Add Resource Identity support ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
+* resource/aws_cloudwatch_metric_alarm: Add `evaluation_criteria` and `evaluation_interval` arguments in support of PromQL queries. Change `comparison_operator` and `evaluation_periods` to Optional ([#47449](https://github.com/hashicorp/terraform-provider-aws/issues/47449))
 * resource/aws_eks_access_entry: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_eks_access_policy_association: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_eks_addon: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
