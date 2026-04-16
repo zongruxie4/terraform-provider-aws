@@ -667,7 +667,6 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
   cidr_block = "16.1.0.0/16"
 }
 
-
 # Subnets in primary CIDR
 resource "aws_subnet" "secondary_a" {
   depends_on = [
