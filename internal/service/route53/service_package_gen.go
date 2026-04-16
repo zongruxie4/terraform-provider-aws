@@ -197,6 +197,17 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.WithMutableIdentity(),
 			),
 		},
+		{
+			Factory:  newZoneResourceAsListResource,
+			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "zone_id",
+				ResourceType:        "hostedzone",
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+		},
 	})
 }
 
