@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -93,11 +92,9 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"source_volume_id": schema.StringAttribute{
-				Computed: true,
-				Optional: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -112,24 +109,17 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().EC2Client(ctx)
+	awsClient := r.Meta()
+	conn := awsClient.EC2Client(ctx)
 
 	var plan ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if plan.SourceVolumeID.IsUnknown() || plan.SourceVolumeID.IsNull() || plan.SourceVolumeID.ValueString() == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("source_volume_id"),
-			"Missing Source Volume ID",
-			"`source_volume_id` must be set when creating aws_ebs_volume_copy.",
-		)
-		return
-	}
 
 	var input ec2.CopyVolumesInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("EBSVolumeCopy")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -137,48 +127,44 @@ func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateR
 
 	out, err := conn.CopyVolumes(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "Copy of "+plan.SourceVolumeID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, "source_volume_id", plan.SourceVolumeID.String())
 		return
 	}
-	if out == nil || len(out.Volumes) == 0 {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, "Copy of "+plan.SourceVolumeID.String())
-		return
-	}
-	if out.Volumes[0].VolumeId == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty volume ID"), smerr.ID, "Copy of "+plan.SourceVolumeID.String())
+	if out == nil || len(out.Volumes) == 0 || out.Volumes[0].VolumeId == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "source_volume_id", plan.SourceVolumeID.String())
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	volume, err := waitVolumeCreated(ctx, conn, *out.Volumes[0].VolumeId, createTimeout)
+	id := aws.ToString(out.Volumes[0].VolumeId)
+	plan.ID = types.StringValue(id)
+	plan.ARN = types.StringValue(ebsVolumeARN(ctx, awsClient, id))
+
+	waitOut, err := waitVolumeCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, *out.Volumes[0].VolumeId)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, volume, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.ID = types.StringPointerValue(volume.VolumeId)
-	plan.SourceVolumeID = types.StringPointerValue(volume.SourceVolumeId)
-	plan.ARN = fwflex.StringValueToFramework(ctx, r.Meta().RegionalARN(ctx, names.EC2, "volume/"+aws.ToString(volume.VolumeId)))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *ebsVolumeCopyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().EC2Client(ctx)
+	awsClient := r.Meta()
+	conn := awsClient.EC2Client(ctx)
 
 	var state ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	id := state.ID.ValueString()
 
-	out, err := findEBSVolumeByID(ctx, conn, state.ID.ValueString())
-
+	out, err := findEBSVolumeByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -189,25 +175,18 @@ func (r *ebsVolumeCopyResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.ARN = fwflex.StringValueToFramework(ctx, r.Meta().RegionalARN(ctx, names.EC2, "volume/"+aws.ToString(out.VolumeId)))
-	state.SourceVolumeID = types.StringPointerValue(out.SourceVolumeId)
-	setTagsOut(ctx, out.Tags)
+	state.ARN = types.StringValue(ebsVolumeARN(ctx, awsClient, id))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *ebsVolumeCopyResource) flatten(ctx context.Context, ebsVolumeCopy *awstypes.Volume, data *ebsVolumeCopyResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, ebsVolumeCopy, data)...)
-	return diags
-}
-
 func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().EC2Client(ctx)
+	awsClient := r.Meta()
+	conn := awsClient.EC2Client(ctx)
 
 	var plan, state ebsVolumeCopyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -215,18 +194,14 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	id := state.ID.ValueString()
 
-	_, d := fwflex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !plan.Iops.Equal(state.Iops) || !plan.Size.Equal(state.Size) || !plan.Throughput.Equal(state.Throughput) || !plan.VolumeType.Equal(state.VolumeType) {
+	if !plan.Iops.Equal(state.Iops) ||
+		!plan.Size.Equal(state.Size) ||
+		!plan.Throughput.Equal(state.Throughput) ||
+		!plan.VolumeType.Equal(state.VolumeType) {
 		input := ec2.ModifyVolumeInput{
-			VolumeId: state.ID.ValueStringPointer(),
+			VolumeId: aws.String(id),
 		}
 
 		if !plan.Iops.Equal(state.Iops) && !plan.Iops.IsUnknown() && !plan.Iops.IsNull() {
@@ -262,21 +237,17 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		volume, err := waitVolumeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		waitOut, err := waitVolumeUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, volume, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		plan.ID = types.StringPointerValue(volume.VolumeId)
-		plan.SourceVolumeID = types.StringPointerValue(volume.SourceVolumeId)
-		plan.ARN = fwflex.StringValueToFramework(ctx, r.Meta().RegionalARN(ctx, names.EC2, "volume/"+aws.ToString(volume.VolumeId)))
+		state.ARN = types.StringValue(ebsVolumeARN(ctx, awsClient, id))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -285,17 +256,15 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var id types.String
-	var tfTimeouts timeouts.Value
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, path.Root(names.AttrID), &id))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, path.Root(names.AttrTimeouts), &tfTimeouts))
+	var state ebsVolumeCopyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	id := state.ID.ValueString()
 
 	input := ec2.DeleteVolumeInput{
-		VolumeId: id.ValueStringPointer(),
+		VolumeId: aws.String(id),
 	}
 
 	_, err := conn.DeleteVolume(ctx, &input)
@@ -304,14 +273,13 @@ func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteR
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, tfTimeouts)
-	_, err = waitVolumeDeleted(ctx, conn, id.ValueString(), deleteTimeout)
+	_, err = waitVolumeDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
