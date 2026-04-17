@@ -6,7 +6,7 @@ description: |-
   Lists Config Remediation Configuration resources.
 ---
 
-# List Resource: aws_configservice_remediation_configuration
+# List Resource: aws_config_remediation_configuration
 
 Lists Config Remediation Configuration resources.
 
