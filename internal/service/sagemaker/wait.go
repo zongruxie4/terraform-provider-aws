@@ -836,6 +836,7 @@ func waitTrainingJobStopped(ctx context.Context, conn *sagemaker.Client, id stri
 }
 
 func waitHyperParameterTuningJobCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
+	// Do not wait for terminal completion. Hyper parameter tuning jobs can run for a long time.
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target: enum.Slice(
