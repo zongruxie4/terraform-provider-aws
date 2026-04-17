@@ -10,6 +10,8 @@ description: |-
 
 Manages an AWS SageMaker AI Hyper Parameter Tuning Job.
 
+~> **NOTE:** This resource does not wait for the tuning job to complete before returning. Terraform may complete apply before the job reaches a terminal state.
+
 ## Example Usage
 
 ### Basic Usage
@@ -120,8 +122,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the tuning job.
 * `config` - (Required) Tuning job settings. See [`config`](#config).
+* `name` - (Required) Name of the tuning job.
 
 The following arguments are optional:
 
@@ -138,13 +140,13 @@ The following arguments are optional:
 
 ### config
 
-* `random_seed` - (Optional) Random seed for tuning.
-* `strategy` - (Required) Search strategy for tuning.
-* `training_job_early_stopping_type` - (Optional) Early stopping behavior for training jobs.
 * `objective` - (Optional) Objective metric used by tuning. See [`objective`](#objective).
 * `parameter_ranges` - (Optional) Hyperparameter search ranges. See [`parameter_ranges`](#parameter_ranges).
+* `random_seed` - (Optional) Random seed for tuning.
 * `resource_limits` - (Required) Training job limits for tuning. See [`resource_limits`](#resource_limits).
+* `strategy` - (Required) Search strategy for tuning.
 * `strategy_config` - (Optional) Extra strategy options. See [`strategy_config`](#strategy_config).
+* `training_job_early_stopping_type` - (Optional) Early stopping behavior for training jobs.
 * `tuning_job_completion_criteria` - (Optional) Conditions to complete tuning. See [`tuning_job_completion_criteria`](#tuning_job_completion_criteria).
 
 #### objective
@@ -200,9 +202,9 @@ The following arguments are optional:
 
 #### tuning_job_completion_criteria
 
-* `target_objective_metric_value` - (Optional) Target metric value that can stop tuning.
 * `best_objective_not_improving` - (Optional) Stop condition for non-improving jobs. See [`best_objective_not_improving`](#best_objective_not_improving).
 * `convergence_detected` - (Optional) Stop condition based on convergence. See [`convergence_detected`](#convergence_detected).
+* `target_objective_metric_value` - (Optional) Target metric value that can stop tuning.
 
 ##### best_objective_not_improving
 
@@ -220,21 +222,21 @@ The following arguments are optional:
 
 Each block supports:
 
+* `algorithm_specification` - (Required) Algorithm settings. See [`algorithm_specification`](#algorithm_specification).
+* `checkpoint_config` - (Optional) Checkpoint output location. See [`checkpoint_config`](#checkpoint_config).
 * `definition_name` - (Optional) Name for this definition.
 * `enable_inter_container_traffic_encryption` - (Optional) Whether to encrypt traffic between containers.
 * `enable_managed_spot_training` - (Optional) Whether to use managed spot training.
 * `enable_network_isolation` - (Optional) Whether to isolate network access for containers.
 * `environment` - (Optional) Map of environment variables.
-* `role_arn` - (Required) IAM role ARN used by SageMaker AI.
-* `static_hyper_parameters` - (Optional) Map of fixed hyperparameters.
-* `algorithm_specification` - (Required) Algorithm settings. See [`algorithm_specification`](#algorithm_specification).
-* `checkpoint_config` - (Optional) Checkpoint output location. See [`checkpoint_config`](#checkpoint_config).
-* `hyper_parameter_tuning_resource_config` - (Optional) Tuning resource settings. See [`hyper_parameter_tuning_resource_config`](#hyper_parameter_tuning_resource_config).
 * `hyper_parameter_ranges` - (Optional) Hyperparameter ranges for this definition. See [`parameter_ranges`](#parameter_ranges).
+* `hyper_parameter_tuning_resource_config` - (Optional) Tuning resource settings. See [`hyper_parameter_tuning_resource_config`](#hyper_parameter_tuning_resource_config).
 * `input_data_config` - (Optional) Input data channels. See [`input_data_config`](#input_data_config).
 * `output_data_config` - (Required) Output data settings. See [`output_data_config`](#output_data_config).
 * `resource_config` - (Optional) Training resources. See [`resource_config`](#resource_config).
+* `role_arn` - (Required) IAM role ARN used by SageMaker AI.
 * `retry_strategy` - (Optional) Retry settings. See [`retry_strategy`](#retry_strategy).
+* `static_hyper_parameters` - (Optional) Map of fixed hyperparameters.
 * `stopping_condition` - (Required) Stopping settings. See [`stopping_condition`](#stopping_condition).
 * `tuning_objective` - (Optional) Objective for this training definition. See [`tuning_objective`](#tuning_objective).
 * `vpc_config` - (Optional) VPC settings. See [`vpc_config`](#vpc_config).
@@ -242,9 +244,9 @@ Each block supports:
 #### algorithm_specification
 
 * `algorithm_name` - (Optional) SageMaker algorithm ARN.
+* `metric_definitions` - (Optional) Metric extraction rules.
 * `training_image` - (Optional) Container image used for training.
 * `training_input_mode` - (Required) Training input mode.
-* `metric_definitions` - (Optional) Metric extraction rules.
 
 Provide exactly one of `algorithm_name` or `training_image`.
 
@@ -261,11 +263,11 @@ Provide exactly one of `algorithm_name` or `training_image`.
 #### hyper_parameter_tuning_resource_config
 
 * `allocation_strategy` - (Optional) Allocation strategy for tuning resources.
+* `instance_configs` - (Optional) Per-instance-type resource settings. See [`instance_configs`](#instance_configs).
 * `instance_count` - (Optional) Number of training instances.
 * `instance_type` - (Optional) Training instance type.
 * `volume_kms_key_id` - (Optional) KMS key ID for volume encryption.
 * `volume_size_in_gb` - (Optional) Volume size in GB.
-* `instance_configs` - (Optional) Per-instance-type resource settings. See [`instance_configs`](#instance_configs).
 
 Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `instance_configs` is set.
 
@@ -280,9 +282,9 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 * `channel_name` - (Required) Input channel name.
 * `compression_type` - (Optional) Compression type.
 * `content_type` - (Optional) Content type string.
+* `data_source` - (Required) Data source settings. See [`data_source`](#data_source).
 * `input_mode` - (Optional) Input mode.
 * `record_wrapper_type` - (Optional) Record wrapper format.
-* `data_source` - (Required) Data source settings. See [`data_source`](#data_source).
 * `shuffle_config` - (Optional) Shuffling settings. See [`shuffle_config`](#shuffle_config).
 
 #### data_source
@@ -300,12 +302,12 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 #### s3_data_source
 
 * `attribute_names` - (Optional) Attribute names for Pipe mode.
+* `hub_access_config` - (Optional) Hub access settings. See [`hub_access_config`](#hub_access_config).
 * `instance_group_names` - (Optional) Instance group names used with this channel.
+* `model_access_config` - (Optional) Model access settings. See [`model_access_config`](#model_access_config).
 * `s3_data_distribution_type` - (Optional) Distribution mode for S3 data.
 * `s3_data_type` - (Required) S3 data type.
 * `s3_uri` - (Required) S3 or HTTPS source URI.
-* `hub_access_config` - (Optional) Hub access settings. See [`hub_access_config`](#hub_access_config).
-* `model_access_config` - (Optional) Model access settings. See [`model_access_config`](#model_access_config).
 
 ##### hub_access_config
 
@@ -328,13 +330,13 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 #### resource_config
 
 * `instance_count` - (Optional) Number of instances.
+* `instance_groups` - (Optional) Instance group settings. See [`instance_groups`](#instance_groups).
+* `instance_placement_config` - (Optional) Placement settings. See [`instance_placement_config`](#instance_placement_config).
 * `instance_type` - (Optional) Instance type.
 * `keep_alive_period_in_seconds` - (Optional) Warm pool keep-alive period in seconds.
 * `training_plan_arn` - (Optional) Training plan ARN.
 * `volume_kms_key_id` - (Optional) KMS key ID for volume encryption.
 * `volume_size_in_gb` - (Optional) Volume size in GB.
-* `instance_groups` - (Optional) Instance group settings. See [`instance_groups`](#instance_groups).
-* `instance_placement_config` - (Optional) Placement settings. See [`instance_placement_config`](#instance_placement_config).
 
 #### instance_groups
 
@@ -374,8 +376,8 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 
 ### warm_start_config
 
-* `warm_start_type` - (Optional) Warm start mode.
 * `parent_hyper_parameter_tuning_jobs` - (Optional) Parent tuning jobs for warm start.
+* `warm_start_type` - (Optional) Warm start mode.
 
 #### parent_hyper_parameter_tuning_jobs
 
