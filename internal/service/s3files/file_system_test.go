@@ -128,7 +128,7 @@ func TestAccS3FilesFileSystem_acceptBucketWarning(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &fileSystem),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3files", regexache.MustCompile(`file-system/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "accept_bucket_warning", "true"),
+					resource.TestCheckResourceAttr(resourceName, "accept_bucket_warning", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.LifeCycleStateAvailable)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
