@@ -5,7 +5,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
   count  = var.resource_count
   region = var.region
 
-  name = "${substr(var.rName, 0, 20)}-${count.index}"
+  name = "${var.rName}-${count.index}"
 
   config {
     strategy = "Bayesian"
