@@ -15,6 +15,4 @@ resource "aws_ebs_volume" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
+{{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}

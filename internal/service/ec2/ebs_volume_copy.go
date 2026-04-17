@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_ebs_volume_copy", name="EBS Volume Copy")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsVolumeCopyResource{}
 

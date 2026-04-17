@@ -253,6 +253,53 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSVolumeCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ebs_volume_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSVolumeCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEBSVolumeCopyConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2EBSVolumeCopy_invalidConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -385,6 +432,31 @@ resource "aws_ebs_volume_copy" "test" {
   volume_type      = "gp3"
 }
 `)
+}
+
+func testAccEBSVolumeCopyConfig_tags1(tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccEBSVolumeCopyConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSVolumeCopyConfigBaseConfig(), fmt.Sprintf(`
+resource "aws_ebs_volume_copy" "test" {
+  source_volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 // Throughput should only be configured for gp3 volume types
