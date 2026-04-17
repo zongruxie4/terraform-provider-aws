@@ -432,9 +432,10 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var guardDutyWarnings []string
 
 	// First attempt at deletion.
-	_, err = conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
+	input := ec2.DeleteSubnetInput{
 		SubnetId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteSubnet(ctx, &input)
 
 	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
 	// proactive. This keeps the change invisible to customers who have never

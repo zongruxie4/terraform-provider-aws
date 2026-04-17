@@ -3046,14 +3046,14 @@ func TestIsVPCOwnedByAccount_logic(t *testing.T) {
 	}{
 		{
 			name:      "same account",
-			vpcOwner:  "123456789012",
-			accountID: "123456789012",
+			vpcOwner:  acctest.Ct12Digit,
+			accountID: acctest.Ct12Digit,
 			expected:  true,
 		},
 		{
 			name:      "different account (shared VPC)",
 			vpcOwner:  "999888777666",
-			accountID: "123456789012",
+			accountID: acctest.Ct12Digit,
 			expected:  false,
 		},
 	}
