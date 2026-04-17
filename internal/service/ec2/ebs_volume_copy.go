@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -59,13 +60,13 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrIOPS: schema.Int32Attribute{
 				Computed: true,
 				Optional: true,
@@ -80,6 +81,12 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
+			"source_volume_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrThroughput: schema.Int32Attribute{
@@ -90,16 +97,11 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			names.AttrVolumeType: schema.StringAttribute{
-				Computed: true,
-				Optional: true,
+				CustomType: fwtypes.StringEnumType[awstypes.VolumeType](),
+				Computed:   true,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"source_volume_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -227,12 +229,12 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
-		if v := plan.Throughput.ValueInt32(); v > 0 && plan.VolumeType.ValueString() == string(awstypes.VolumeTypeGp3) {
+		if v := plan.Throughput.ValueInt32(); v > 0 && plan.VolumeType.ValueEnum() == awstypes.VolumeTypeGp3 {
 			input.Throughput = aws.Int32(v)
 		}
 
 		if !plan.VolumeType.Equal(state.VolumeType) {
-			volumeType := awstypes.VolumeType(plan.VolumeType.ValueString())
+			volumeType := plan.VolumeType.ValueEnum()
 			input.VolumeType = volumeType
 
 			// Get Iops value because in the ec2.ModifyVolumeInput API,
@@ -304,7 +306,7 @@ func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *ebsVolumeCopyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var volumeTypeCfg types.String
+	var volumeTypeCfg fwtypes.StringEnum[awstypes.VolumeType]
 	var iops, throughput types.Int32
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrVolumeType), &volumeTypeCfg))
@@ -317,7 +319,7 @@ func (r *ebsVolumeCopyResource) ValidateConfig(ctx context.Context, req resource
 	if volumeTypeCfg.IsNull() || volumeTypeCfg.IsUnknown() {
 		return
 	}
-	volumeType := awstypes.VolumeType(volumeTypeCfg.ValueString())
+	volumeType := volumeTypeCfg.ValueEnum()
 
 	if throughput.ValueInt32() > 0 {
 		switch volumeType {
@@ -363,7 +365,7 @@ func (r *ebsVolumeCopyResource) ModifyPlan(ctx context.Context, req resource.Mod
 		return
 	}
 
-	var planVolumeType, stateVolumeType types.String
+	var planVolumeType, stateVolumeType fwtypes.StringEnum[awstypes.VolumeType]
 	var configIops, configThroughput types.Int32
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, path.Root(names.AttrVolumeType), &planVolumeType))
@@ -390,15 +392,15 @@ func (r *ebsVolumeCopyResource) ModifyPlan(ctx context.Context, req resource.Mod
 
 type ebsVolumeCopyResourceModel struct {
 	framework.WithRegionModel
-	ARN              types.String   `tfsdk:"arn"`
-	AvailabilityZone types.String   `tfsdk:"availability_zone"`
-	ID               types.String   `tfsdk:"id"`
-	Iops             types.Int32    `tfsdk:"iops"`
-	Size             types.Int32    `tfsdk:"size"`
-	SourceVolumeID   types.String   `tfsdk:"source_volume_id"`
-	Tags             tftags.Map     `tfsdk:"tags"`
-	TagsAll          tftags.Map     `tfsdk:"tags_all"`
-	Throughput       types.Int32    `tfsdk:"throughput"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	VolumeType       types.String   `tfsdk:"volume_type"`
+	ARN              types.String                            `tfsdk:"arn"`
+	AvailabilityZone types.String                            `tfsdk:"availability_zone"`
+	ID               types.String                            `tfsdk:"id"`
+	Iops             types.Int32                             `tfsdk:"iops"`
+	Size             types.Int32                             `tfsdk:"size"`
+	SourceVolumeID   types.String                            `tfsdk:"source_volume_id"`
+	Tags             tftags.Map                              `tfsdk:"tags"`
+	TagsAll          tftags.Map                              `tfsdk:"tags_all"`
+	Throughput       types.Int32                             `tfsdk:"throughput"`
+	Timeouts         timeouts.Value                          `tfsdk:"timeouts"`
+	VolumeType       fwtypes.StringEnum[awstypes.VolumeType] `tfsdk:"volume_type"`
 }
