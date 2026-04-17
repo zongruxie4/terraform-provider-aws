@@ -1597,6 +1597,16 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 	}
 }
 
+// restoreTrainingJobDefinitionNoFlattenFields restores nested
+// training_job_definition and training_job_definitions values that do not
+// reliably round-trip through the SageMaker API. Some of these fields are not
+// returned by AWS, while others may come back with service-set values that do
+// not reflect explicit user intent, so we copy the
+// configuration-backed values back into state after flex.Flatten. This
+// includes algorithm_specification metric_definitions,
+// static_hyper_parameters, input_data_config, output_data_config,
+// stopping_condition, resource_config, and
+// hyper_parameter_tuning_resource_config.
 func restoreTrainingJobDefinitionNoFlattenFields(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
@@ -1653,6 +1663,10 @@ func restoreTrainingJobDefinitionNoFlattenFields(
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, targetDefinitions)
 }
 
+// restoreAlgorithmSpecificationNoFlattenFields restores
+// algorithm_specification.metric_definitions from configuration when the
+// SageMaker API response does not reliably round-trip that nested value through
+// flex.Flatten.
 func restoreAlgorithmSpecificationNoFlattenFields(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel],
