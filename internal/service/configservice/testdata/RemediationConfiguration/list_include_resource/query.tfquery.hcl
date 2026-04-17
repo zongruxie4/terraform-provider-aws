@@ -6,7 +6,7 @@ list "aws_config_remediation_configuration" "test" {
 
   include_resource = true
 
-  config  {
+  config {
     config_rule_names = aws_config_config_rule.test.*.name
   }
 }

@@ -4,7 +4,7 @@
 list "aws_config_remediation_configuration" "test" {
   provider = aws
 
-  config  {
+  config {
     config_rule_names = aws_config_config_rule.test.*.name
   }
 }
