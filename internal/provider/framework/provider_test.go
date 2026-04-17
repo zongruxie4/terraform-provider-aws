@@ -48,7 +48,10 @@ func BenchmarkFrameworkProvider_validateResourceSchemas(b *testing.B) {
 	// Reset memory counters to zero, so that we only measure the schema validation.
 	b.ResetTimer()
 	for b.Loop() {
-		provider.validateResourceSchemas(ctx)
+		err := provider.validateResourceSchemas(ctx)
+		if err != nil {
+			b.Fatalf("Validating resource schemas: %s", err)
+		}
 	}
 }
 
