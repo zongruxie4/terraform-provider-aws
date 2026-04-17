@@ -10,15 +10,21 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_service_link_virtual_interface` ([#47478](https://github.com/hashicorp/terraform-provider-aws/issues/47478))
+* **New Data Source:** `aws_ec2_service_link_virtual_interfaces` ([#47478](https://github.com/hashicorp/terraform-provider-aws/issues/47478))
 * **New List Resource:** `aws_apigatewayv2_api` ([#47472](https://github.com/hashicorp/terraform-provider-aws/issues/47472))
 * **New List Resource:** `aws_cloudwatch_log_metric_filter` ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * **New List Resource:** `aws_iam_user_policy_attachment` ([#47467](https://github.com/hashicorp/terraform-provider-aws/issues/47467))
 * **New List Resource:** `aws_lambda_layer_version` ([#47496](https://github.com/hashicorp/terraform-provider-aws/issues/47496))
 * **New List Resource:** `aws_route53_zone` ([#47494](https://github.com/hashicorp/terraform-provider-aws/issues/47494))
 * **New List Resource:** `aws_sqs_queue_policy` ([#47489](https://github.com/hashicorp/terraform-provider-aws/issues/47489))
+* **New Resource:** `aws_ebs_volume_copy` ([#47311](https://github.com/hashicorp/terraform-provider-aws/issues/47311))
 
 ENHANCEMENTS:
 
+* data-source/aws_identitystore_user: Add `user_status` attribute ([#47323](https://github.com/hashicorp/terraform-provider-aws/issues/47323))
+* data-source/aws_identitystore_users: Add `user_status` attribute ([#47323](https://github.com/hashicorp/terraform-provider-aws/issues/47323))
+* data-source/aws_network_interface: Add `ena_srd_specification` attribute ([#46669](https://github.com/hashicorp/terraform-provider-aws/issues/46669))
 * resource/aws_cloudwatch_log_metric_filter: Add Resource Identity support ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * resource/aws_cloudwatch_metric_alarm: Add `evaluation_criteria` and `evaluation_interval` arguments in support of PromQL queries. Change `comparison_operator` and `evaluation_periods` to Optional ([#47449](https://github.com/hashicorp/terraform-provider-aws/issues/47449))
 * resource/aws_eks_access_entry: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
@@ -30,10 +36,13 @@ ENHANCEMENTS:
 * resource/aws_eks_node_group: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_eks_pod_identity_association: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_fargate_profile: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
+* resource/aws_identitystore_user: Add `user_status` attribute ([#47323](https://github.com/hashicorp/terraform-provider-aws/issues/47323))
 * resource/aws_imagebuilder_lifecycle_policy: Support wildcard semantic version for `resource_selection.recipe.semantic_version` ([#47443](https://github.com/hashicorp/terraform-provider-aws/issues/47443))
 * resource/aws_lambda_layer_version: Add resource identity support ([#47496](https://github.com/hashicorp/terraform-provider-aws/issues/47496))
 * resource/aws_mq_configuration: Add `skip_destroy` argument ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
 * resource/aws_mq_configuration: Implement resource deletion ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
+* resource/aws_network_interface: Add `ena_srd_specification` argument to support ENA Express ([#46669](https://github.com/hashicorp/terraform-provider-aws/issues/46669))
+* resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.expanded_prefixes_data_export` and `storage_lens_configuration.prefix_delimiter` arguments ([#47205](https://github.com/hashicorp/terraform-provider-aws/issues/47205))
 * resource/network_peering_connection: Peer cidr management through `peer_network_cidrs` argument. ([#46207](https://github.com/hashicorp/terraform-provider-aws/issues/46207))
 
 BUG FIXES:
