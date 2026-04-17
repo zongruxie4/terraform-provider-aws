@@ -125,11 +125,18 @@ func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateR
 	}
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume)
 
-	out, err := conn.CopyVolumes(ctx, &input)
+	outRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.CreateTimeout(ctx, plan.Timeouts),
+		func(ctx context.Context) (any, error) {
+			return conn.CopyVolumes(ctx, &input)
+		},
+		errCodeCopyVolumesLimitExceeded,
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, "source_volume_id", plan.SourceVolumeID.String())
 		return
 	}
+
+	out := outRaw.(*ec2.CopyVolumesOutput)
 	if out == nil || len(out.Volumes) == 0 || out.Volumes[0].VolumeId == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "source_volume_id", plan.SourceVolumeID.String())
 		return
