@@ -64,8 +64,7 @@ func FieldByTag(v any, tagKey, tagValue string) (reflect.StructField, bool) {
 	if t.Kind() != reflect.Struct {
 		return reflect.StructField{}, false
 	}
-	for i := range t.NumField() {
-		f := t.Field(i)
+	for f := range t.Fields() {
 		if val, ok := f.Tag.Lookup(tagKey); ok {
 			if name, _, _ := strings.Cut(val, ","); name == tagValue {
 				return f, true
