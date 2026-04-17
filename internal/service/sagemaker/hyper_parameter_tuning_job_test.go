@@ -311,6 +311,37 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerHyperParameterTuningJob_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceHyperParameterTuningJob, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerHyperParameterTuningJob_metricDefinitions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
