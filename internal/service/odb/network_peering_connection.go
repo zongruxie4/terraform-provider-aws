@@ -346,49 +346,50 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if diff.HasChanges() {
-		var input odb.UpdateOdbPeeringConnectionInput
-		var planPeeredCidrs []string
-		plan.PeerNetworkCidrs.ElementsAs(ctx, &planPeeredCidrs, false)
-		var statePeeredCidrs []string
-		state.PeerNetworkCidrs.ElementsAs(ctx, &statePeeredCidrs, false)
-		addedRemovedCidrs := r.FindAddRemovePeeredNetworkCIDR(planPeeredCidrs, statePeeredCidrs)
-		if len(addedRemovedCidrs) > 0 {
-			var addedPeeredCidrs []string
-			var removedPeeredCidrs []string
+	if !diff.HasChanges() {
+		return
+	}
+	var input odb.UpdateOdbPeeringConnectionInput
+	var planPeeredCidrs []string
+	plan.PeerNetworkCidrs.ElementsAs(ctx, &planPeeredCidrs, false)
+	var statePeeredCidrs []string
+	state.PeerNetworkCidrs.ElementsAs(ctx, &statePeeredCidrs, false)
+	addedRemovedCidrs := r.FindAddRemovePeeredNetworkCIDR(planPeeredCidrs, statePeeredCidrs)
+	if len(addedRemovedCidrs) > 0 {
+		var addedPeeredCidrs []string
+		var removedPeeredCidrs []string
 
-			for k, v := range addedRemovedCidrs {
-				switch v {
-				case -1:
-					removedPeeredCidrs = append(removedPeeredCidrs, k)
-				case 1:
-					addedPeeredCidrs = append(addedPeeredCidrs, k)
-				}
-			}
-			if len(removedPeeredCidrs) > 0 {
-				input.PeerNetworkCidrsToBeRemoved = removedPeeredCidrs
-			}
-			if len(addedPeeredCidrs) > 0 {
-				input.PeerNetworkCidrsToBeAdded = addedPeeredCidrs
+		for k, v := range addedRemovedCidrs {
+			switch v {
+			case -1:
+				removedPeeredCidrs = append(removedPeeredCidrs, k)
+			case 1:
+				addedPeeredCidrs = append(addedPeeredCidrs, k)
 			}
 		}
+		if len(removedPeeredCidrs) > 0 {
+			input.PeerNetworkCidrsToBeRemoved = removedPeeredCidrs
+		}
+		if len(addedPeeredCidrs) > 0 {
+			input.PeerNetworkCidrsToBeAdded = addedPeeredCidrs
+		}
+	}
 
-		input.OdbPeeringConnectionId = state.OdbPeeringConnectionId.ValueStringPointer()
-		out, err := conn.UpdateOdbPeeringConnection(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.OdbPeeringConnectionId == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetwork, state.OdbPeeringConnectionId.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+	input.OdbPeeringConnectionId = state.OdbPeeringConnectionId.ValueStringPointer()
+	out, err := conn.UpdateOdbPeeringConnection(ctx, &input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.OdbPeeringConnectionId == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetwork, state.OdbPeeringConnectionId.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	updatedNetworkPeeringConnections, err := waitNetworkPeeringConnectionUpdated(ctx, conn, state.OdbPeeringConnectionId.ValueString(), updateTimeout)
