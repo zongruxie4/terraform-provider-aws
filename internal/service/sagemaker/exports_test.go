@@ -66,6 +66,7 @@ var (
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
+	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
