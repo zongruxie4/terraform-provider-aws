@@ -43,192 +43,305 @@ func resourceStorageLensConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"config_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"storage_lens_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_level": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"activity_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			s3BucketDestinationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidAccountID,
+							},
+							names.AttrARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"encryption": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sse_kms": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKeyID: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									"advanced_cost_optimization_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
+										"sse_s3": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{},
 											},
 										},
 									},
-									"advanced_data_protection_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
+								},
+							},
+							names.AttrFormat: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.Format](),
+							},
+							"output_schema_version": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				}
+			}
+			storageLensTableDestinationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"encryption": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sse_kms": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKeyID: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									"advanced_performance_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
+										"sse_s3": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{},
 											},
 										},
 									},
-									"bucket_level": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"activity_metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Optional: true,
+								},
+							},
+						},
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"config_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"storage_lens_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_level": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"activity_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"advanced_cost_optimization_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"advanced_data_protection_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"advanced_performance_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"bucket_level": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"activity_metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"advanced_cost_optimization_metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Optional: true,
+													"advanced_cost_optimization_metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"advanced_data_protection_metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Optional: true,
+													"advanced_data_protection_metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"advanced_performance_metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Optional: true,
+													"advanced_performance_metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"detailed_status_code_metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Optional: true,
+													"detailed_status_code_metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"prefix_level": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"storage_metrics": {
-																Type:     schema.TypeList,
-																Required: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrEnabled: {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																		},
-																		"selection_criteria": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"delimiter": {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																					},
-																					"max_depth": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																					},
-																					"min_storage_bytes_percentage": {
-																						Type:         schema.TypeFloat,
-																						Optional:     true,
-																						ValidateFunc: validation.FloatBetween(1.0, 100),
+													"prefix_level": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"storage_metrics": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrEnabled: {
+																				Type:     schema.TypeBool,
+																				Optional: true,
+																			},
+																			"selection_criteria": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				MaxItems: 1,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"delimiter": {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																						},
+																						"max_depth": {
+																							Type:     schema.TypeInt,
+																							Optional: true,
+																						},
+																						"min_storage_bytes_percentage": {
+																							Type:         schema.TypeFloat,
+																							Optional:     true,
+																							ValidateFunc: validation.FloatBetween(1.0, 100),
+																						},
 																					},
 																				},
 																			},
@@ -241,157 +354,15 @@ func resourceStorageLensConfiguration() *schema.Resource {
 												},
 											},
 										},
-									},
-									"detailed_status_code_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"aws_org": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						"data_export": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloud_watch_metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-											},
-										},
-									},
-									"s3_bucket_destination": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAccountID: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidAccountID,
-												},
-												names.AttrARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"encryption": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"sse_kms": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrKeyID: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: verify.ValidARN,
-																		},
-																	},
-																},
-															},
-															"sse_s3": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{},
-																},
-															},
-														},
-													},
-												},
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.Format](),
-												},
-												"output_schema_version": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
-												},
-												names.AttrPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"storage_lens_table_destination": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"encryption": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"sse_kms": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrKeyID: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: verify.ValidARN,
-																		},
-																	},
-																},
-															},
-															"sse_s3": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{},
-																},
-															},
-														},
+										"detailed_status_code_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
 													},
 												},
 											},
@@ -399,185 +370,119 @@ func resourceStorageLensConfiguration() *schema.Resource {
 									},
 								},
 							},
-						},
-						"expanded_prefixes_data_export": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_bucket_destination": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAccountID: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidAccountID,
-												},
-												names.AttrARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"encryption": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"sse_kms": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrKeyID: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: verify.ValidARN,
-																		},
-																	},
-																},
-															},
-															"sse_s3": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{},
-																},
-															},
-														},
-													},
-												},
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.Format](),
-												},
-												"output_schema_version": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
-												},
-												names.AttrPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"storage_lens_table_destination": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"encryption": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"sse_kms": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrKeyID: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: verify.ValidARN,
-																		},
-																	},
-																},
-															},
-															"sse_s3": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"exclude": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"buckets": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+							"aws_org": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrARN: {
 											Type:         schema.TypeString,
+											Required:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 									},
-									"regions": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidRegionName,
+								},
+							},
+							"data_export": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloud_watch_metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+												},
+											},
+										},
+										"s3_bucket_destination":          s3BucketDestinationSchema(),
+										"storage_lens_table_destination": storageLensTableDestinationSchema(),
+									},
+								},
+							},
+							"expanded_prefixes_data_export": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_bucket_destination":          s3BucketDestinationSchema(),
+										"storage_lens_table_destination": storageLensTableDestinationSchema(),
+									},
+								},
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"exclude": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"buckets": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
+										},
+										"regions": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidRegionName,
+											},
 										},
 									},
 								},
 							},
-						},
-						"include": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"buckets": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
+							"include": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"buckets": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
 										},
-									},
-									"regions": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidRegionName,
+										"regions": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidRegionName,
+											},
 										},
 									},
 								},
 							},
-						},
-						"prefix_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
+							"prefix_delimiter": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -862,10 +767,6 @@ func expandStorageLensConfiguration(tfMap map[string]any) *types.StorageLensConf
 		apiObject.AwsOrg = expandStorageLensAwsOrg(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["expanded_prefixes_data_export"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ExpandedPrefixesDataExport = expandExpandedPrefixesDataExport(v[0].(map[string]any))
-	}
-
 	if v, ok := tfMap["data_export"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]any))
 	}
@@ -878,12 +779,16 @@ func expandStorageLensConfiguration(tfMap map[string]any) *types.StorageLensConf
 		apiObject.Exclude = expandExclude(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["prefix_delimiter"].(string); ok && v != "" {
-		apiObject.PrefixDelimiter = aws.String(v)
+	if v, ok := tfMap["expanded_prefixes_data_export"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ExpandedPrefixesDataExport = expandStorageLensExpandedPrefixesDataExport(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Include = expandInclude(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["prefix_delimiter"].(string); ok && v != "" {
+		apiObject.PrefixDelimiter = aws.String(v)
 	}
 
 	return apiObject
@@ -1119,7 +1024,7 @@ func expandStorageLensDataExport(tfMap map[string]any) *types.StorageLensDataExp
 	return apiObject
 }
 
-func expandExpandedPrefixesDataExport(tfMap map[string]any) *types.StorageLensExpandedPrefixesDataExport {
+func expandStorageLensExpandedPrefixesDataExport(tfMap map[string]any) *types.StorageLensExpandedPrefixesDataExport {
 	if tfMap == nil {
 		return nil
 	}
@@ -1290,22 +1195,22 @@ func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) 
 		tfMap["data_export"] = []any{flattenStorageLensDataExport(v)}
 	}
 
-	if v := apiObject.ExpandedPrefixesDataExport; v != nil {
-		tfMap["expanded_prefixes_data_export"] = []any{flattenExpandedPrefixesDataExport(v)}
-	}
-
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.Exclude; v != nil {
 		tfMap["exclude"] = []any{flattenExclude(v)}
 	}
 
-	if v := apiObject.PrefixDelimiter; v != nil {
-		tfMap["prefix_delimiter"] = aws.ToString(v)
+	if v := apiObject.ExpandedPrefixesDataExport; v != nil {
+		tfMap["expanded_prefixes_data_export"] = []any{flattenStorageLensExpandedPrefixesDataExport(v)}
 	}
 
 	if v := apiObject.Include; v != nil {
 		tfMap["include"] = []any{flattenInclude(v)}
+	}
+
+	if v := apiObject.PrefixDelimiter; v != nil {
+		tfMap["prefix_delimiter"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1522,7 +1427,7 @@ func flattenStorageLensDataExport(apiObject *types.StorageLensDataExport) map[st
 	return tfMap
 }
 
-func flattenExpandedPrefixesDataExport(apiObject *types.StorageLensExpandedPrefixesDataExport) map[string]any {
+func flattenStorageLensExpandedPrefixesDataExport(apiObject *types.StorageLensExpandedPrefixesDataExport) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
