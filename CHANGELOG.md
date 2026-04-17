@@ -32,6 +32,7 @@ ENHANCEMENTS:
 * resource/aws_imagebuilder_lifecycle_policy: Support wildcard semantic version for `resource_selection.recipe.semantic_version` ([#47443](https://github.com/hashicorp/terraform-provider-aws/issues/47443))
 * resource/aws_mq_configuration: Add `skip_destroy` argument ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
 * resource/aws_mq_configuration: Implement resource deletion ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
+* resource/network_peering_connection: Peer cidr management through `peer_network_cidrs` argument. ([#46207](https://github.com/hashicorp/terraform-provider-aws/issues/46207))
 
 BUG FIXES:
 
