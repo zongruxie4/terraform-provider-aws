@@ -35,7 +35,10 @@ import (
 
 // @FrameworkResource("aws_ebs_volume_copy", name="EBS Volume Copy")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(generator=false)
+// @Testing(hasNoPreExistingResource=true)
 func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsVolumeCopyResource{}
 
@@ -49,7 +52,7 @@ func newEBSVolumeCopyResource(_ context.Context) (resource.ResourceWithConfigure
 type ebsVolumeCopyResource struct {
 	framework.ResourceWithModel[ebsVolumeCopyResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
