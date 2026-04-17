@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -26,6 +27,7 @@ func TestAccSageMakerHyperParameterTuningJob_List_basic(t *testing.T) {
 	resourceName1 := "aws_sagemaker_hyper_parameter_tuning_job.test[0]"
 	resourceName2 := "aws_sagemaker_hyper_parameter_tuning_job.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 20)]
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -50,12 +52,12 @@ func TestAccSageMakerHyperParameterTuningJob_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 			{
@@ -67,11 +69,11 @@ func TestAccSageMakerHyperParameterTuningJob_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_sagemaker_hyper_parameter_tuning_job.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_sagemaker_hyper_parameter_tuning_job.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -84,6 +86,7 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 
 	resourceName1 := "aws_sagemaker_hyper_parameter_tuning_job.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 20)]
 
 	identity1 := tfstatecheck.Identity()
 
@@ -110,8 +113,8 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-0")),
 				},
 			},
 			{
@@ -126,11 +129,11 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_sagemaker_hyper_parameter_tuning_job.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"strategy": knownvalue.StringExact("Bayesian"),
@@ -178,6 +181,7 @@ func TestAccSageMakerHyperParameterTuningJob_List_regionOverride(t *testing.T) {
 	resourceName1 := "aws_sagemaker_hyper_parameter_tuning_job.test[0]"
 	resourceName2 := "aws_sagemaker_hyper_parameter_tuning_job.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName = rName[:min(len(rName), 20)]
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -204,12 +208,12 @@ func TestAccSageMakerHyperParameterTuningJob_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(acctest.CtName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("sagemaker", "hyper-parameter-tuning-job/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 			{
@@ -222,7 +226,9 @@ func TestAccSageMakerHyperParameterTuningJob_List_regionOverride(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_sagemaker_hyper_parameter_tuning_job.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					tfquerycheck.ExpectIdentityFunc("aws_sagemaker_hyper_parameter_tuning_job.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 		},
