@@ -10,15 +10,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,9 +22,8 @@ import (
 
 func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var ebsVolumeCopy awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
+	volumeResourceName := "aws_ebs_volume.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -42,9 +37,9 @@ func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_volume_id", volumeResourceName, names.AttrID),
 				),
 			},
 			{
@@ -58,11 +53,6 @@ func TestAccEC2EBSVolumeCopy_basic(t *testing.T) {
 
 func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var ebsVolumeCopy awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -77,10 +67,18 @@ func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfec2.ResourceEBSVolumeCopy, resourceName, ebsVolumeCopyDisappearsStateFunc),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEBSVolumeCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -88,11 +86,6 @@ func TestAccEC2EBSVolumeCopy_disappears(t *testing.T) {
 
 func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -107,7 +100,7 @@ func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
 				),
 			},
@@ -119,15 +112,14 @@ func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_updateSize(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
-					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -135,11 +127,6 @@ func TestAccEC2EBSVolumeCopy_updateSize(t *testing.T) {
 
 func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,7 +141,7 @@ func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_iops(3000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 				),
@@ -167,16 +154,15 @@ func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_iops(4000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
-					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -184,11 +170,6 @@ func TestAccEC2EBSVolumeCopy_updateIops(t *testing.T) {
 
 func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -203,7 +184,7 @@ func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_throughput(125),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
 				),
@@ -216,16 +197,15 @@ func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_throughput(150),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
-					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "150"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -233,11 +213,6 @@ func TestAccEC2EBSVolumeCopy_updateThroughput(t *testing.T) {
 
 func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var ebsVolumeCopy1, ebsVolumeCopy2 awstypes.Volume
 	resourceName := "aws_ebs_volume_copy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -252,7 +227,7 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 			{
 				Config: testAccEBSVolumeCopyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy1),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -261,20 +236,18 @@ func TestAccEC2EBSVolumeCopy_updateVolumeType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				// Config: testAccEBSVolumeCopyConfig_iops(3000),
 				Config: testAccEBSVolumeCopyConfig_volumeTypeGP3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, resourceName, &ebsVolumeCopy2),
-					testAccCheckEBSVolumeCopyNotRecreated(&ebsVolumeCopy1, &ebsVolumeCopy2),
+					testAccCheckEBSVolumeCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "gp3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -333,10 +306,6 @@ func testAccCheckEBSVolumeCopyDestroy(ctx context.Context, t *testing.T) resourc
 }
 
 func testAccCheckEBSVolumeCopyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
-	return testAccCheckEBSVolumeCopyExistsWithVolume(ctx, t, name, nil)
-}
-
-func testAccCheckEBSVolumeCopyExistsWithVolume(ctx context.Context, t *testing.T, name string, ebsVolumeCopy *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -349,41 +318,9 @@ func testAccCheckEBSVolumeCopyExistsWithVolume(ctx context.Context, t *testing.T
 
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		resp, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, "EBS Volume Copy", rs.Primary.ID, err)
-		}
-
-		if ebsVolumeCopy != nil {
-			*ebsVolumeCopy = *resp
-		}
-
-		return nil
-	}
-}
-
-func ebsVolumeCopyDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	if is.ID == "" {
-		return errors.New(`identifying attribute "id" not defined`)
-	}
-
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrID), is.ID)); err != nil {
-		return err
-	}
-
-	if _, ok := state.Schema.GetAttributes()[names.AttrRegion]; ok {
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrRegion), acctest.Region())); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckEBSVolumeCopyNotRecreated(before, after *awstypes.Volume) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.VolumeId), aws.ToString(after.VolumeId); before != after {
-			return errors.New("EC2 EBS Volume Copy was recreated")
 		}
 
 		return nil
