@@ -204,7 +204,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("layer_name", true),
-				inttypes.StringIdentityAttribute(names.AttrVersion, false),
+				inttypes.StringIdentityAttribute(names.AttrVersion, true),
 			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -260,7 +260,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("layer_name", true),
-				inttypes.StringIdentityAttribute(names.AttrVersion, false),
+				inttypes.StringIdentityAttribute(names.AttrVersion, true),
 			}),
 		},
 		{

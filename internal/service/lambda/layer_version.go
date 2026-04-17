@@ -35,11 +35,11 @@ const mutexLayerKey = `aws_lambda_layer_version`
 
 // @SDKResource("aws_lambda_layer_version", name="Layer Version")
 // @IdentityAttribute("layer_name")
-// @IdentityAttribute("version", optional=true, testNotNull=true)
+// @IdentityAttribute("version")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetLayerVersionOutput")
 // @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(preIdentityVersion="v6.41.0")
-// @Testing(importIgnore="filename;skip_destroy", plannableImportAction="Replace")
+// @Testing(importIgnore="filename;skip_destroy", plannableImportAction="NoOp")
 // @ImportIDHandler("layerVersionImportID")
 func resourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
@@ -91,6 +91,10 @@ func resourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff when importing: filename is never returned by the API.
+					return old == "" && d.Id() != ""
+				},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -112,18 +116,27 @@ func resourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"s3_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"signing_job_arn": {
 				Type:     schema.TypeString,
