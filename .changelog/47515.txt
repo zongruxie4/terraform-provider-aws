@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_msk_cluster: Fix `broker_node_group_info` `vpc_connectivity` updates by correcting the Terraform state path used in `GetOk`
+```
