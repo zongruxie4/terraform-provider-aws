@@ -185,7 +185,7 @@ func TestAccCloudWatchAlarmMuteRule_multipleMuteTargets(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mute_targets"), knownvalue.ListPartial(map[int]knownvalue.Check{
 						0: knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"alarm_names": knownvalue.ListSizeExact(3),
+							"alarm_names": knownvalue.SetSizeExact(3),
 						}),
 					})),
 				},
@@ -210,7 +210,7 @@ func TestAccCloudWatchAlarmMuteRule_multipleMuteTargets(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mute_targets"), knownvalue.ListPartial(map[int]knownvalue.Check{
 						0: knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"alarm_names": knownvalue.ListSizeExact(3),
+							"alarm_names": knownvalue.SetSizeExact(3),
 						}),
 					})),
 				},
