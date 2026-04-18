@@ -540,7 +540,7 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	var enableCrossRegion *[]string = nil
+	var enableCrossRegion *[]string
 	if diff.HasChanges() {
 		var input odb.UpdateOdbNetworkInput
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
@@ -793,7 +793,7 @@ func waitForSingleCrossRegionRestoreSourcesStatus(ctx context.Context, conn *odb
 	_, err := waitForManagedService(ctx, odbtypes.Access(status), conn, id, timeout,
 		func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			for _, src := range managedService.CrossRegionS3RestoreSourcesAccess {
-				if *src.Region == crossRegionRestore {
+				if aws.ToString(src.Region) == crossRegionRestore {
 					return src.Status
 				}
 			}

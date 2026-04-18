@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -90,7 +91,7 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNetworkResourceTestEntity.networkWithAllParams(rName, "julia.com"),
+				Config: oracleDBNetworkResourceTestEntity.networkWithAllParams(rName, "julia.com", endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
 					resource.TestCheckResourceAttr(
@@ -101,7 +102,7 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(
 						resourceName,
 						"cross_region_s3_restore_sources_access.*",
-						"us-west-2",
+						endpoints.UsWest2RegionID,
 					),
 				),
 			},
@@ -149,7 +150,7 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 			{
-				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName),
+				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
@@ -192,7 +193,7 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName),
+				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
 				),
@@ -390,7 +391,7 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName),
+				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
 					resource.TestCheckResourceAttr(
@@ -401,7 +402,7 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(
 						resourceName,
 						"cross_region_s3_restore_sources_access.*",
-						"us-west-2",
+						endpoints.UsWest2RegionID,
 					),
 				),
 			},
@@ -412,7 +413,7 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 			{
-				Config: oracleDBNetworkResourceTestEntity.updateNetworkCrossRegionRestore(rName),
+				Config: oracleDBNetworkResourceTestEntity.updateNetworkCrossRegionRestore(rName, endpoints.UsEast2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
@@ -429,7 +430,7 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(
 						resourceName,
 						"cross_region_s3_restore_sources_access.*",
-						"us-east-2",
+						endpoints.UsEast2RegionID,
 					),
 				),
 			},
@@ -572,7 +573,7 @@ resource "aws_odb_network" "test" {
 	return networkRes
 }
 
-func (oracleDBNetworkResourceTest) basicNetworkWithActiveManagedService(rName string) string {
+func (oracleDBNetworkResourceTest) basicNetworkWithActiveManagedService(rName, rRegion string) string {
 	networkRes := fmt.Sprintf(`
 
 
@@ -591,18 +592,18 @@ resource "aws_odb_network" "test" {
   zero_etl_access                        = "ENABLED"
   sts_access                             = "ENABLED"
   kms_access                             = "ENABLED"
-  cross_region_s3_restore_sources_access = ["us-west-2"]
+  cross_region_s3_restore_sources_access = [%[2]q]
   delete_associated_resources            = true
 }
 
 
 
 
-`, rName)
+`, rName, rRegion)
 	return networkRes
 }
 
-func (oracleDBNetworkResourceTest) networkWithAllParams(rName, customDomainName string) string {
+func (oracleDBNetworkResourceTest) networkWithAllParams(rName, customDomainName, rRegion string) string {
 	networkRes := fmt.Sprintf(`
 
 
@@ -621,7 +622,7 @@ resource "aws_odb_network" "test" {
   zero_etl_access                        = "DISABLED"
   sts_access                             = "DISABLED"
   kms_access                             = "DISABLED"
-  cross_region_s3_restore_sources_access = ["us-west-2"]
+  cross_region_s3_restore_sources_access = [%[3]q]
   custom_domain_name                     = %[2]q
   delete_associated_resources            = true
 }
@@ -629,7 +630,7 @@ resource "aws_odb_network" "test" {
 
 
 
-`, rName, customDomainName)
+`, rName, customDomainName, rRegion)
 	return networkRes
 }
 
@@ -662,7 +663,7 @@ resource "aws_odb_network" "test" {
 	return networkRes
 }
 
-func (oracleDBNetworkResourceTest) updateNetworkCrossRegionRestore(rName string) string {
+func (oracleDBNetworkResourceTest) updateNetworkCrossRegionRestore(rName, rRegion string) string {
 	networkRes := fmt.Sprintf(`
 
 
@@ -681,10 +682,10 @@ resource "aws_odb_network" "test" {
   zero_etl_access                        = "ENABLED"
   sts_access                             = "ENABLED"
   kms_access                             = "ENABLED"
-  cross_region_s3_restore_sources_access = ["us-east-2"]
+  cross_region_s3_restore_sources_access = [%[2]q]
   delete_associated_resources            = true
 }
 
-`, rName)
+`, rName, rRegion)
 	return networkRes
 }
