@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +23,6 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var integration awstypes.Integration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
@@ -37,7 +35,7 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
@@ -60,7 +58,6 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var integration awstypes.Integration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
@@ -73,7 +70,7 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceIntegration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,13 +88,11 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 }
 
 func TestAccRDSIntegration_optional(t *testing.T) {
-	ctx := acctest.Context(t)
-
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var integration awstypes.Integration
+	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
@@ -110,7 +105,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_optional(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.mytable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
@@ -136,7 +131,6 @@ func TestAccRDSIntegration_update(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var integration awstypes.Integration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
@@ -150,7 +144,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rName, "include: *.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 				),
@@ -163,7 +157,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: *.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 				),
@@ -176,7 +170,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: test.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.*"),
 				),
@@ -189,7 +183,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rName, "include: mydb.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: mydb.*"),
 				),
@@ -229,7 +223,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *awstypes.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -238,15 +232,8 @@ func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, 
 
 		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
-		output, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		_, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
+		return err
 	}
 }
 
