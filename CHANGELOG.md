@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * data-source/aws_identitystore_user: Add `user_status` attribute ([#47323](https://github.com/hashicorp/terraform-provider-aws/issues/47323))
 * data-source/aws_identitystore_users: Add `user_status` attribute ([#47323](https://github.com/hashicorp/terraform-provider-aws/issues/47323))
 * data-source/aws_network_interface: Add `ena_srd_specification` attribute ([#46669](https://github.com/hashicorp/terraform-provider-aws/issues/46669))
+* data-source/aws_odb_network: Enhancements to support cross-region restore. ([#46317](https://github.com/hashicorp/terraform-provider-aws/issues/46317))
 * resource/aws_cloudwatch_log_metric_filter: Add Resource Identity support ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * resource/aws_cloudwatch_metric_alarm: Add `evaluation_criteria` and `evaluation_interval` arguments in support of PromQL queries. Change `comparison_operator` and `evaluation_periods` to Optional ([#47449](https://github.com/hashicorp/terraform-provider-aws/issues/47449))
 * resource/aws_eks_access_entry: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
@@ -42,13 +43,16 @@ ENHANCEMENTS:
 * resource/aws_mq_configuration: Add `skip_destroy` argument ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
 * resource/aws_mq_configuration: Implement resource deletion ([#47273](https://github.com/hashicorp/terraform-provider-aws/issues/47273))
 * resource/aws_network_interface: Add `ena_srd_specification` argument to support ENA Express ([#46669](https://github.com/hashicorp/terraform-provider-aws/issues/46669))
+* resource/aws_odb_network: Enhancements to support cross-region restore. ([#46317](https://github.com/hashicorp/terraform-provider-aws/issues/46317))
 * resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.expanded_prefixes_data_export` and `storage_lens_configuration.prefix_delimiter` arguments ([#47205](https://github.com/hashicorp/terraform-provider-aws/issues/47205))
+* resource/aws_s3files_file_system: Add `accept_bucket_warning` argument ([#47510](https://github.com/hashicorp/terraform-provider-aws/issues/47510))
 * resource/network_peering_connection: Peer cidr management through `peer_network_cidrs` argument. ([#46207](https://github.com/hashicorp/terraform-provider-aws/issues/46207))
 
 BUG FIXES:
 
 * resource/aws_appintegrations_data_integration: Fix `source_uri` regular expression validation ([#47498](https://github.com/hashicorp/terraform-provider-aws/issues/47498))
 * resource/aws_cloudwatch_alarm_mute_rule: Fix `mute_targets.alarm_names` ordering causing "Provider produced inconsistent result after apply" errors ([#47507](https://github.com/hashicorp/terraform-provider-aws/issues/47507))
+* resource/aws_msk_cluster: Fix a request parameter error when updating `broker_node_group_info.vpc_connectivity` configuration block. This fixes a regression introduced in [v6.40.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6400-april-8-2026) ([#47515](https://github.com/hashicorp/terraform-provider-aws/issues/47515))
 * resource/aws_odb_network: Fix `runtime error: invalid memory address or nil pointer dereference` panic in `statusManagedService()` and `statusNetwork()` when `FindOracleDBNetworkResourceByID` returns a nil result during resource creation ([#47159](https://github.com/hashicorp/terraform-provider-aws/issues/47159))
 
 ## 6.41.0 (April 15, 2026)
