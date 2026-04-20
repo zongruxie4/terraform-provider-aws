@@ -12,6 +12,8 @@ Manages an ECS Express service. The Express service provides a simplified way to
 
 Express services automatically handle infrastructure provisioning and updates through rolling deployments, ensuring high availability during service modifications. When you update an Express service, a new service revision is created and deployed with zero downtime.
 
+-> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy` or `aws_iam_role_policy_attachment` resources. Otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
+
 ## Example Usage
 
 ### Basic Usage
