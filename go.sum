@@ -497,8 +497,8 @@ github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.1 h1:qGO40xLjGl5UgwXoaeuv
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.1/go.mod h1:MtEnnltJF7k6LXbX6Iebc4yFY9oRbQFNd8BiiS2icLs=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.14 h1:p6DFIUeFNf0JVY66fA/V425halO9I9rwi4UCuQV7Vro=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.14/go.mod h1:ocQuLDz/wuYgW1+rObpgS0oaJdNkgna0hSStlVzkjms=
-github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.12 h1:bWi0xemSUrZQmhYQ2HcOkdV+6ojRjTPPWpivuoIM6Is=
-github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.12/go.mod h1:XXW8c695456eRiYQowXjGe22cfVOr5DDuOfktu5AwBg=
+github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.13 h1:S6TmKlnWYMW/lo/SdP/zXRdGnYr3IBY0s86ze0gAabs=
+github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.13/go.mod h1:C9x3MP7AmBujyp+CVx7FKIRbY04cUB9Ap1GckKeGfd8=
 github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.12 h1:ELlQrvX3wuwQLOvwCeuJZ/V++AjEHj4K0ky+gg+W2yw=
 github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.12/go.mod h1:xX3af77PDbVrtonLh/vkfzyuV/1eA1XYZRjh9GKjqVU=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.35.21 h1:pmVeHIPpOg4Hdr0r6+KNWAOTtOZZYiVvyazkGvysOFw=
