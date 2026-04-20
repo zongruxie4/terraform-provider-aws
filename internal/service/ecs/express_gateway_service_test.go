@@ -57,7 +57,6 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("current_deployment"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_path"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"access_type": tfknownvalue.StringExact(awstypes.AccessTypePublic),
@@ -875,6 +874,11 @@ resource "aws_ecs_express_gateway_service" "test" {
       value = "first"
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `)
 }
@@ -900,6 +904,11 @@ resource "aws_ecs_express_gateway_service" "test" {
       value = "fourth"
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `)
 }
