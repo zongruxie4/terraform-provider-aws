@@ -29,7 +29,6 @@ import (
 // @Testing(preIdentityVersion="v6.41.0")
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(identityTest=false)
 func resourceAccount() *schema.Resource {
 	resourceV0 := &schema.Resource{Schema: map[string]*schema.Schema{}}
 
