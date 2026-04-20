@@ -553,8 +553,8 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:    []string{gatewayServiceStatusActive},
-		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
+		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
+		Target:     []string{gatewayServiceStatusInactive},
 		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
@@ -587,15 +587,8 @@ func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Clien
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
-				mockService := &awstypes.ECSExpressGatewayService{
-					ServiceArn: aws.String(gatewayServiceARN),
-					Status: &awstypes.ExpressGatewayServiceStatus{
-						StatusCode: awstypes.ExpressGatewayServiceStatusCodeInactive,
-					},
-				}
-				return mockService, gatewayServiceStatusInactive, nil
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
+				return nil, "", nil
 			}
 			return nil, "", smarterr.NewError(err)
 		}
