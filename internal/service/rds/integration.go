@@ -381,7 +381,7 @@ func waitIntegrationUpdated(ctx context.Context, conn *rds.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
