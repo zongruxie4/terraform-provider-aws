@@ -30,17 +30,19 @@ import (
 
 // @SDKResource("aws_ebs_volume", name="EBS Volume")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Volume")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="final_snapshot")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(name="Volume")
 func resourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
 		ReadWithoutTimeout:   resourceEBSVolumeRead,
 		UpdateWithoutTimeout: resourceEBSVolumeUpdate,
 		DeleteWithoutTimeout: resourceEBSVolumeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
