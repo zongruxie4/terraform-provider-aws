@@ -499,19 +499,19 @@ func TestAccGlueConnection_dynamoDB(t *testing.T) {
 func TestAccGlueConnection_mySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_mySQL(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "MYSQL"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.HOST", "testhost"),
