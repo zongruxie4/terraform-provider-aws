@@ -29,7 +29,8 @@ import (
 // @FrameworkResource("aws_cloudwatch_otel_enrichment", name="OTel Enrichment")
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true, hasNoPreExistingResource=true, generator=false)
-func newOtelEnrichmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+// @Testing(preCheck="testAccPreCheckOTelEnrichment")
+func newOTelEnrichmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &otelEnrichmentResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
@@ -76,7 +77,7 @@ func (r *otelEnrichmentResource) Create(ctx context.Context, req resource.Create
 	}
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	_, err = waitOtelEnrichmentReady(ctx, conn, createTimeout)
+	_, err = waitOTelEnrichmentReady(ctx, conn, createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, "operation", "waiting for CloudWatch OTel Enrichment start")
 		return
@@ -96,7 +97,7 @@ func (r *otelEnrichmentResource) Read(ctx context.Context, req resource.ReadRequ
 
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	out, err := findOtelEnrichment(ctx, conn)
+	out, err := findOTelEnrichment(ctx, conn)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -129,14 +130,14 @@ func (r *otelEnrichmentResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err = waitOtelEnrichmentDeleted(ctx, conn, deleteTimeout)
+	_, err = waitOTelEnrichmentDeleted(ctx, conn, deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, "operation", "waiting for CloudWatch OTel Enrichment stop")
 		return
 	}
 }
 
-func findOtelEnrichmentStatus(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetOTelEnrichmentInput) (*cloudwatch.GetOTelEnrichmentOutput, error) {
+func findOTelEnrichmentStatus(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetOTelEnrichmentInput) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	out, err := conn.GetOTelEnrichment(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -154,9 +155,9 @@ func findOtelEnrichmentStatus(ctx context.Context, conn *cloudwatch.Client, inpu
 	return out, nil
 }
 
-func findOtelEnrichment(ctx context.Context, conn *cloudwatch.Client) (*cloudwatch.GetOTelEnrichmentOutput, error) {
+func findOTelEnrichment(ctx context.Context, conn *cloudwatch.Client) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	var input cloudwatch.GetOTelEnrichmentInput
-	out, err := findOtelEnrichmentStatus(ctx, conn, &input)
+	out, err := findOTelEnrichmentStatus(ctx, conn, &input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
@@ -170,14 +171,14 @@ func findOtelEnrichment(ctx context.Context, conn *cloudwatch.Client) (*cloudwat
 	return out, nil
 }
 
-func waitOtelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) { //nolint:unparam
+func waitOTelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, _ time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) { //nolint:unparam
 	// For now, just return immediately since we don't have waiter logic
-	return findOtelEnrichment(ctx, conn)
+	return findOTelEnrichment(ctx, conn)
 }
 
-func waitOtelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) { //nolint:unparam
+func waitOTelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, _ time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) { //nolint:unparam
 	var input cloudwatch.GetOTelEnrichmentInput
-	out, err := findOtelEnrichmentStatus(ctx, conn, &input)
+	out, err := findOTelEnrichmentStatus(ctx, conn, &input)
 	if retry.NotFound(err) {
 		return nil, smarterr.NewError(err)
 	}

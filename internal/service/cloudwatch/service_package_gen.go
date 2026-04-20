@@ -67,7 +67,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newOtelEnrichmentResource,
+			Factory:  newOTelEnrichmentResource,
 			TypeName: "aws_cloudwatch_otel_enrichment",
 			Name:     "OTel Enrichment",
 			Region:   inttypes.ResourceRegionDefault(),

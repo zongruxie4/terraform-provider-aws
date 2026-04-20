@@ -41,7 +41,10 @@ func testAccCloudWatchOTelEnrichment_Identity_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckOTelEnrichment(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckOTelEnrichmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -115,7 +118,10 @@ func testAccCloudWatchOTelEnrichment_Identity_regionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckOTelEnrichment(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

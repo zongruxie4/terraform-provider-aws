@@ -23,14 +23,14 @@ import (
 func TestAccCloudWatchOTelEnrichment_serial(t *testing.T) {
 	t.Parallel()
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccCloudWatchOTelEnrichment_basic,
-		acctest.CtDisappears: testAccCloudWatchOTelEnrichment_disappears,
+		acctest.CtBasic:      testAccOTelEnrichment_basic,
+		acctest.CtDisappears: testAccOTelEnrichment_disappears,
 		"Identity":           testAccCloudWatchOTelEnrichment_identitySerial,
 	}
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCloudWatchOTelEnrichment_basic(t *testing.T) {
+func testAccOTelEnrichment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_otel_enrichment.test"
 
@@ -38,7 +38,7 @@ func testAccCloudWatchOTelEnrichment_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckOTelEnrichment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,7 +54,7 @@ func testAccCloudWatchOTelEnrichment_basic(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOTelEnrichment_disappears(t *testing.T) {
+func testAccOTelEnrichment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_otel_enrichment.test"
 
@@ -62,7 +62,7 @@ func testAccCloudWatchOTelEnrichment_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckOTelEnrichment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,7 +126,7 @@ func testAccCheckOTelEnrichmentExists(ctx context.Context, t *testing.T, name st
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckOTelEnrichment(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 	input := cloudwatch.GetOTelEnrichmentInput{}

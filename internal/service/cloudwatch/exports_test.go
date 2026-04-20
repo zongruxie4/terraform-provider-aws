@@ -12,7 +12,7 @@ var (
 	ResourceDashboard                     = resourceDashboard
 	ResourceMetricAlarm                   = resourceMetricAlarm
 	ResourceMetricStream                  = resourceMetricStream
-	ResourceOtelEnrichment                = newOtelEnrichmentResource
+	ResourceOtelEnrichment                = newOTelEnrichmentResource
 
 	FindAlarmMuteRuleByName                                    = findAlarmMuteRuleByName
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
@@ -21,5 +21,5 @@ var (
 	FindDashboardByName                                        = findDashboardByName
 	FindMetricAlarmByName                                      = findMetricAlarmByName
 	FindMetricStreamByName                                     = findMetricStreamByName
-	FindOtelEnrichment                                         = findOtelEnrichment
+	FindOtelEnrichment                                         = findOTelEnrichment
 )
