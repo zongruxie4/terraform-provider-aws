@@ -1779,6 +1779,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_volume_attachment",
 			Name:     "EBS Volume Attachment",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrDeviceName, true),
+				inttypes.StringIdentityAttribute("volume_id", true),
+				inttypes.StringIdentityAttribute(names.AttrInstanceID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      volumeAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceVPC,
