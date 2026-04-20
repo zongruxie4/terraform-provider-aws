@@ -877,6 +877,15 @@ func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID
 	return aws.ToString(vpc.OwnerId) == accountID, nil
 }
 
+// dissociateGuardDutyVPCEndpoints removes GuardDuty-managed VPC endpoint associations
+// from a subnet to unblock deletion. The VPC ownership check (isVPCOwnedByAccount) is
+// a defensive guard for shared VPC scenarios: when GuardDuty is enabled with shared VPC
+// support, the VPC endpoint is always created in the VPC owner's account, so only the
+// owner can manage it. In practice, participant accounts in a shared VPC cannot create
+// or delete subnets (they receive UnauthorizedOperation), so this code path is only
+// reachable by the VPC owner. The ownership check ensures correctness if this assumption
+// ever changes.
+// See: https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-shared-vpc.html
 func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) (string, error) {
 	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
 	if err != nil {

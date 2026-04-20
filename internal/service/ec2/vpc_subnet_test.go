@@ -3023,18 +3023,19 @@ resource "aws_subnet" "testB" {
 `, rName)
 }
 
-// TestAccVPCSubnet_guardDutySharedVPC validates that GuardDuty cleanup is skipped
-// when the subnet is in a shared VPC (VPC owned by a different account). In this
-// scenario, the provider should not attempt to dissociate GuardDuty VPC endpoints
-// because the VPC is not owned by the current account.
-//
-// This test requires an alternate AWS account and RAM sharing to be enabled.
-
 // TestIsVPCOwnedByAccount_logic validates the ownership comparison that
 // determines whether GuardDuty cleanup should be skipped for shared VPCs.
 // When the VPC is owned by a different account than the one configured on
 // the provider, cleanup should be skipped because the GuardDuty resources
 // belong to the VPC owner, not the subnet owner.
+//
+// Note: An acceptance test for shared VPC GuardDuty cleanup is not viable because
+// participant accounts in a shared VPC cannot create or delete subnets — only the
+// VPC owner can. The participant receives UnauthorizedOperation (403), never
+// DependencyViolation, so the GuardDuty cleanup code path is unreachable.
+// When GuardDuty is enabled with shared VPC support, the VPC endpoint is created
+// in the VPC owner's account regardless of which account triggered it.
+// See: https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-shared-vpc.html
 func TestIsVPCOwnedByAccount_logic(t *testing.T) {
 	t.Parallel()
 
@@ -3072,175 +3073,4 @@ func TestIsVPCOwnedByAccount_logic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestAccVPCSubnet_guardDutySharedVPC(t *testing.T) {
-	ctx := acctest.Context(t)
-	providers := make(map[string]*schema.Provider)
-	var subnet awstypes.Subnet
-	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				// Initialize the providers.
-				Config: testAccVPCSubnetConfig_guardDutySharedVPC_initProviders,
-			},
-			{
-				PreConfig: func() {
-					acctest.PreCheckSameOrganization(ctx, t, acctest.NamedProviderFunc(acctest.ProviderName, providers), acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
-				},
-				// Create VPC and subnet in alternate account, share subnet via RAM.
-				Config: testAccVPCSubnetConfig_guardDutySharedVPC_init(rName),
-			},
-			{
-				// Create a subnet in the shared VPC from the default account.
-				// When this subnet is destroyed, GuardDuty cleanup should be
-				// skipped because the VPC is owned by the alternate account.
-				Config: testAccVPCSubnetConfig_guardDutySharedVPC(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
-				),
-			},
-		},
-	})
-}
-
-var testAccVPCSubnetConfig_guardDutySharedVPC_initProviders = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), ``)
-
-func testAccVPCSubnetConfig_guardDutySharedVPC_init(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "default" {}
-
-data "aws_availability_zones" "available" {
-  provider = "awsalternate"
-  state    = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  provider   = "awsalternate"
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "source" {
-  provider          = "awsalternate"
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ram_resource_share" "test" {
-  provider                  = "awsalternate"
-  name                      = %[1]q
-  allow_external_principals = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ram_resource_association" "test" {
-  provider           = "awsalternate"
-  resource_arn       = aws_subnet.source.arn
-  resource_share_arn = aws_ram_resource_share.test.arn
-}
-
-resource "aws_ram_principal_association" "test" {
-  provider           = "awsalternate"
-  principal          = data.aws_caller_identity.default.account_id
-  resource_share_arn = aws_ram_resource_share.test.arn
-}
-`, rName))
-}
-
-func testAccVPCSubnetConfig_guardDutySharedVPC(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "default" {}
-
-data "aws_availability_zones" "available" {
-  provider = "awsalternate"
-  state    = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  provider   = "awsalternate"
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "source" {
-  provider          = "awsalternate"
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ram_resource_share" "test" {
-  provider                  = "awsalternate"
-  name                      = %[1]q
-  allow_external_principals = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ram_resource_association" "test" {
-  provider           = "awsalternate"
-  resource_arn       = aws_subnet.source.arn
-  resource_share_arn = aws_ram_resource_share.test.arn
-}
-
-resource "aws_ram_principal_association" "test" {
-  provider           = "awsalternate"
-  principal          = data.aws_caller_identity.default.account_id
-  resource_share_arn = aws_ram_resource_share.test.arn
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.2.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "%[1]s-shared"
-  }
-
-  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
-}
-`, rName))
 }
