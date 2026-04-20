@@ -1163,10 +1163,6 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := resourceLaunchTemplateFlatten(ctx, conn, c, lt, ltv, d); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	setTagsOut(ctx, lt.Tags)
 
 	return diags
