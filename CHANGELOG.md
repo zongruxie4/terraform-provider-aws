@@ -18,9 +18,11 @@ FEATURES:
 * **New List Resource:** `aws_iam_user_policy_attachment` ([#47467](https://github.com/hashicorp/terraform-provider-aws/issues/47467))
 * **New List Resource:** `aws_lambda_layer_version` ([#47496](https://github.com/hashicorp/terraform-provider-aws/issues/47496))
 * **New List Resource:** `aws_route53_zone` ([#47494](https://github.com/hashicorp/terraform-provider-aws/issues/47494))
+* **New List Resource:** `aws_sagemaker_hyper_parameter_tuning_job` ([#47138](https://github.com/hashicorp/terraform-provider-aws/issues/47138))
 * **New List Resource:** `aws_sqs_queue_policy` ([#47489](https://github.com/hashicorp/terraform-provider-aws/issues/47489))
 * **New Resource:** `aws_cloudwatch_otel_enrichment` ([#47275](https://github.com/hashicorp/terraform-provider-aws/issues/47275))
 * **New Resource:** `aws_ebs_volume_copy` ([#47311](https://github.com/hashicorp/terraform-provider-aws/issues/47311))
+* **New Resource:** `aws_sagemaker_hyper_parameter_tuning_job` ([#47138](https://github.com/hashicorp/terraform-provider-aws/issues/47138))
 
 ENHANCEMENTS:
 
