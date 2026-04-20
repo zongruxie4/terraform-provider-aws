@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -325,7 +325,7 @@ func (r *resourceFederatedCatalog) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	out, err := findFederatedCatalogByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -474,8 +474,7 @@ func findFederatedCatalogByID(ctx context.Context, conn *glue.Client, id string)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+				LastError: err,
 			})
 		}
 
@@ -483,14 +482,13 @@ func findFederatedCatalogByID(ctx context.Context, conn *glue.Client, id string)
 	}
 
 	if out == nil || out.Catalog == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	actualName := aws.ToString(out.Catalog.Name)
 	if actualName != name {
 		return nil, smarterr.NewError(&retry.NotFoundError{
-			Message:     fmt.Sprintf("catalog name mismatch: expected %s, got %s", name, actualName),
-			LastRequest: &input,
+			Message: fmt.Sprintf("catalog name mismatch: expected %s, got %s", name, actualName),
 		})
 	}
 
