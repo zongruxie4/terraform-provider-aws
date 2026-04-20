@@ -11,8 +11,3 @@ resource "aws_securityhub_action_target" "test" {
   name        = "Test action"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

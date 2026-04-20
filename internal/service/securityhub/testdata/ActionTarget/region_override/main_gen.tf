@@ -15,11 +15,6 @@ resource "aws_securityhub_action_target" "test" {
   name        = "Test action"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"
