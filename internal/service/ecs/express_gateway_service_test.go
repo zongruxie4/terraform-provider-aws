@@ -622,6 +622,11 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -648,6 +653,11 @@ resource "aws_ecs_express_gateway_service" "test" {
     auto_scaling_metric       = "AVERAGE_CPU"
     auto_scaling_target_value = 60
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -665,6 +675,11 @@ resource "aws_ecs_express_gateway_service" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -683,6 +698,11 @@ resource "aws_ecs_express_gateway_service" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -787,6 +807,12 @@ resource "aws_ecs_express_gateway_service" "test" {
     subnets         = [aws_subnet.test_subnet1.id, aws_subnet.test_subnet2.id]
     security_groups = [aws_security_group.test.id]
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+    aws_iam_role_policy_attachment.task_role,
+  ]
 }
 `, rName))
 }
@@ -800,6 +826,11 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 
 resource "aws_ecs_express_gateway_service" "duplicate" {
