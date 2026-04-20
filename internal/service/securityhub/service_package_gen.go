@@ -66,10 +66,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_securityhub_account",
 			Name:     "Account",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-			},
 		},
 		{
 			Factory:  resourceActionTarget,

@@ -20,7 +20,6 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"MigrateV0":                   testAccAccount_migrateV0,
 			"Full":                        testAccAccount_full,
 			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
-			"Identity": testAccSecurityHubAccount_identitySerial,
 		},
 		"AutomationRule": {
 			acctest.CtBasic:      testAccAutomationRule_basic,
