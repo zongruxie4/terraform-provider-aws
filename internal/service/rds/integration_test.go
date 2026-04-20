@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -76,6 +77,14 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceIntegration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -116,6 +125,79 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSIntegration_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var integration awstypes.Integration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_update(rName, rName, "include: *.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: *.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: test.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rName, "include: mydb.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: mydb.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -405,86 +487,6 @@ resource "aws_rds_integration" "test" {
 `, rName))
 }
 
-func TestAccRDSIntegration_update(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	ctx := acctest.Context(t)
-	var integration awstypes.Integration
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_rds_integration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_update(rName, rName, "include: *.*"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
-					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Update integration_name
-			{
-				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: *.*"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
-					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
-				),
-			},
-			// Update data_filter
-			{
-				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: test.*"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
-					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.*"),
-				),
-			},
-			// Update both integration_name and data_filter
-			{
-				Config: testAccIntegrationConfig_update(rName, rName, "include: mydb.*"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
-					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: mydb.*"),
-				),
-			},
-		},
-	})
-}
-
-func testAccIntegrationConfig_update(rName, integrationName, dataFilter string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
-resource "aws_rds_integration" "test" {
-  integration_name = %[1]q
-  source_arn       = aws_rds_cluster.test.arn
-  target_arn       = aws_redshiftserverless_namespace.test.arn
-  data_filter      = %[2]q
-
-  depends_on = [
-    aws_rds_cluster.test,
-    aws_rds_cluster_instance.test,
-    aws_redshiftserverless_namespace.test,
-    aws_redshiftserverless_workgroup.test,
-    aws_redshift_resource_policy.test,
-  ]
-}
-`, integrationName, dataFilter))
-}
-
 func testAccIntegrationConfig_optional(rName string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -539,4 +541,23 @@ resource "aws_rds_integration" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccIntegrationConfig_update(rName, integrationName, dataFilter string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_integration" "test" {
+  integration_name = %[1]q
+  source_arn       = aws_rds_cluster.test.arn
+  target_arn       = aws_redshiftserverless_namespace.test.arn
+  data_filter      = %[2]q
+
+  depends_on = [
+    aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
+    aws_redshiftserverless_namespace.test,
+    aws_redshiftserverless_workgroup.test,
+    aws_redshift_resource_policy.test,
+  ]
+}
+`, integrationName, dataFilter))
 }
