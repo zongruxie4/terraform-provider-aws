@@ -950,14 +950,7 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
@@ -974,17 +967,29 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return outputRaw.(*ecs.UpdateExpressGatewayServiceOutput), nil
+}
+
+func expressGatewayRetryable(err error) (bool, error) {
+	if errs.Contains(err, "is not authorized to perform") || // This message can occur with at least AccessDeniedException, ClientException, and InvalidParameterException
+		errs.Contains(err, "AWS was not able to validate the provided access credentials") || // This message can occur with at least ClientException and InvalidParameterException
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "The security token included in the request is invalid") {
+		return true, err
+	}
+	return false, err
+}
+
+// newListExpressGatewayServicesPaginator returns a new paginator for ListServices that only returns Customer-managed Services.
+func newListExpressGatewayServicesPaginator(conn *ecs.Client, input *ecs.ListServicesInput) *ecs.ListServicesPaginator {
+	return ecs.NewListServicesPaginator(conn, &ecs.ListServicesInput{
+		Cluster:                input.Cluster,
+		LaunchType:             input.LaunchType,
+		ResourceManagementType: awstypes.ResourceManagementTypeEcs,
+	})
 }
