@@ -53,10 +53,18 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cluster"), knownvalue.StringExact("default")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("current_deployment"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_path"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_type": tfknownvalue.StringExact(awstypes.AccessTypePublic),
+							"endpoint":    tfknownvalue.RegionalHostnameOnDotAWSRegexp("ecs", regexache.MustCompile(`https://ng-\w+`)),
+						},
+						),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_target"), knownvalue.ListSizeExact(1)),
