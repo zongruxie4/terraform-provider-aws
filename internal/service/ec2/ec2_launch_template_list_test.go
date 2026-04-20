@@ -72,6 +72,53 @@ func TestAccEC2LaunchTemplate_List_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_List_filter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_launch_template.expected[0]"
+	resourceName2 := "aws_launch_template.expected[1]"
+	resourceName3 := "aws_launch_template.other"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+	identity3 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/LaunchTemplate/list_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					identity2.GetIdentity(resourceName2),
+					identity3.GetIdentity(resourceName3),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LaunchTemplate/list_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_launch_template.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_launch_template.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_launch_template.test[0]"
