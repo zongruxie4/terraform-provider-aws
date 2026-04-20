@@ -53,7 +53,6 @@ func (l *remediationConfigurationListResource) ListResourceConfigSchema(ctx cont
 func (l *remediationConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ConfigServiceClient(ctx)
 
-	// TIP: -- 2. Fetch the config
 	var query listRemediationConfigurationModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
