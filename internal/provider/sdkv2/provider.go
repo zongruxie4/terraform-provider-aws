@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -29,10 +29,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -583,7 +584,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					if f := r.SchemaFunc; f != nil {
 						r.SchemaFunc = func() map[string]*schema.Schema {
@@ -695,7 +696,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
@@ -794,7 +795,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				} else if resource.Identity.IsCustomInherentRegion {
 					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
-					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
+					r.Importer = newParameterizedIdentityImporter(resource.Identity, resource.Import)
 				}
 			}
 
@@ -813,6 +814,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+						if s := c.RandomnessSource(); s != nil {
+							ctx = vcr.NewContext(ctx, s)
+						}
 					}
 
 					if getProviderMeta != nil {
@@ -1237,11 +1241,12 @@ func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyCon
 }
 
 func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
+	return append(diags, errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`))
 }
 
 const (
@@ -1249,12 +1254,13 @@ const (
 )
 
 func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewErrorDiagnostic(
+	return append(diags, errs.NewErrorDiagnostic(
 		summaryInvalidEnvironmentVariableValue,
 		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
-	)}
+	))
 }
