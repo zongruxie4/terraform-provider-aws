@@ -94,10 +94,20 @@ func resourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrNamespace: {
-				Type:     schema.TypeString,
+			"namespace_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrNamespace: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"pod_identity_association": {
 				Type:     schema.TypeSet,
@@ -166,10 +176,8 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.ConfigurationValues = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrNamespace); ok {
-		input.NamespaceConfig = &types.AddonNamespaceConfigRequest{
-			Namespace: aws.String(v.(string)),
-		}
+	if v, ok := d.GetOk("namespace_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NamespaceConfig = expandAddonNamespaceConfigRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
@@ -252,7 +260,13 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
-	d.Set(names.AttrNamespace, d.Get(names.AttrNamespace)) // Create-only.
+	if addon.NamespaceConfig != nil {
+		if err := d.Set("namepace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting namepace_config: %s", err)
+		}
+	} else {
+		d.Set("namepace_config", nil)
+	}
 	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else if err := d.Set("pod_identity_association", tfList); err != nil {
@@ -361,6 +375,34 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func expandAddonNamespaceConfigRequest(tfMap map[string]any) *types.AddonNamespaceConfigRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AddonNamespaceConfigRequest{}
+
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAddonNamespaceConfigResponse(apiObject *types.AddonNamespaceConfigResponse) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Namespace; v != nil {
+		tfMap[names.AttrNamespace] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }
 
 func expandAddonPodIdentityAssociations(tfList []any) []types.AddonPodIdentityAssociations {
