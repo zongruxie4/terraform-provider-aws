@@ -412,20 +412,20 @@ func TestAccRDSIntegration_update(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_update(rName, rName, "include: *.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 				),
@@ -439,7 +439,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: *.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 				),
@@ -448,7 +448,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: test.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.*"),
 				),
@@ -457,7 +457,7 @@ func TestAccRDSIntegration_update(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName, rName, "include: mydb.*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: mydb.*"),
 				),

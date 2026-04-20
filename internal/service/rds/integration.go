@@ -246,17 +246,13 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 			input.IntegrationName = fwflex.StringFromFramework(ctx, new.IntegrationName)
 		}
 
-		_, err := conn.ModifyIntegration(ctx, input)
-
-		if err != nil {
+		if _, err := conn.ModifyIntegration(ctx, input); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Integration (%s)", old.ID.ValueString()), err.Error())
-
 			return
 		}
 
 		if _, err := waitIntegrationUpdated(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Integration (%s) update", old.ID.ValueString()), err.Error())
-
 			return
 		}
 	}
@@ -375,10 +371,10 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 }
 
 func waitIntegrationUpdated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
