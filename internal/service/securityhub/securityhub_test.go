@@ -37,6 +37,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtDisappears: testAccActionTarget_disappears,
 			"Description":        testAccActionTarget_Description,
 			"Name":               testAccActionTarget_Name,
+			"Identity":           testAccSecurityHubActionTarget_identitySerial,
 		},
 		"ConfigurationPolicy": {
 			acctest.CtBasic:      testAccConfigurationPolicy_basic,
