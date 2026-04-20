@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -29,8 +31,6 @@ import (
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -87,7 +87,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutDestination(ctx, input)
 	})
 
@@ -142,7 +142,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutDestination(ctx, input)
 		})
 

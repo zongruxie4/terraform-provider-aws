@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -27,20 +27,23 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer    = findCatalogTableOptimizer
-	FindClassifierByName         = findClassifierByName
-	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
-	FindCrawlerByName            = findCrawlerByName
-	FindDatabaseByName           = findDatabaseByName
-	FindDataQualityRulesetByName = findDataQualityRulesetByName
-	FindDevEndpointByName        = findDevEndpointByName
-	FindFederatedCatalogByID     = findFederatedCatalogByID
-	FindJobByName                = findJobByName
-	FindPartitionByValues        = findPartitionByValues
-	FindPartitionIndexByName     = findPartitionIndexByName
-	FindRegistryByID             = findRegistryByID
-	FindResourcePolicy           = findResourcePolicy
-	FindSchemaByID               = findSchemaByID
-	FindTableByName              = findTableByName
-	FindTriggerByName            = findTriggerByName
+	FindCatalogTableOptimizer       = findCatalogTableOptimizer
+	FindClassifierByName            = findClassifierByName
+	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
+	FindCrawlerByName               = findCrawlerByName
+	FindDatabase                    = findDatabase
+	FindDatabaseByTwoPartKey        = findDatabaseByTwoPartKey
+	FindDataQualityRulesetByName    = findDataQualityRulesetByName
+	FindDevEndpointByName           = findDevEndpointByName
+	FindFederatedCatalogByID        = findFederatedCatalogByID
+	FindJobByName                   = findJobByName
+	FindPartitionByValues           = findPartitionByValues
+	FindPartitionIndexByFourPartKey = findPartitionIndexByFourPartKey
+	FindPartitionIndex              = findPartitionIndex
+	FindRegistryByID                = findRegistryByID
+	FindResourcePolicy              = findResourcePolicy
+	FindSchemaByID                  = findSchemaByID
+	FindTable                       = findTable
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTriggerByName               = findTriggerByName
 )
