@@ -304,6 +304,8 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
 					"training_job_definition.0.static_hyper_parameters",
+					"status",
+					"failure_reason",
 				},
 				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 			},
@@ -905,11 +907,15 @@ func TestAccSageMakerHyperParameterTuningJob_completionCriteria(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, acctest.CtName),
-				ImportStateVerify:                    true,
+				ResourceName:      resourceName,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, acctest.CtName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"status",
+					"failure_reason",
+				},
 				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 			},
 		},
@@ -1051,6 +1057,8 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
+					"status",
+					"failure_reason",
 				},
 			},
 		},
