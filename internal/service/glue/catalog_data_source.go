@@ -18,20 +18,20 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_glue_federated_catalog", name="Federated Catalog")
-func newDataSourceFederatedCatalog(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceFederatedCatalog{}, nil
+// @FrameworkDataSource("aws_glue_catalog", name="Catalog")
+func newDataSourceCatalog(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceCatalog{}, nil
 }
 
 const (
-	DSNameFederatedCatalog = "Federated Catalog Data Source"
+	DSNameCatalog = "Catalog Data Source"
 )
 
-type dataSourceFederatedCatalog struct {
-	framework.DataSourceWithModel[dataSourceFederatedCatalogModel]
+type dataSourceCatalog struct {
+	framework.DataSourceWithModel[dataSourceCatalogModel]
 }
 
-func (d *dataSourceFederatedCatalog) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceCatalog) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -65,9 +65,9 @@ func (d *dataSourceFederatedCatalog) Schema(ctx context.Context, req datasource.
 	}
 }
 
-func (d *dataSourceFederatedCatalog) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceCatalog) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().GlueClient(ctx)
-	var data dataSourceFederatedCatalogModel
+	var data dataSourceCatalogModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -85,7 +85,7 @@ func (d *dataSourceFederatedCatalog) Read(ctx context.Context, req datasource.Re
 	}
 
 	id := fmt.Sprintf("%s,%s", catalogId, catalogName)
-	out, err := findFederatedCatalogByID(ctx, conn, id)
+	out, err := findCatalogByID(ctx, conn, id)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
@@ -131,7 +131,7 @@ func (d *dataSourceFederatedCatalog) Read(ctx context.Context, req datasource.Re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceFederatedCatalogModel struct {
+type dataSourceCatalogModel struct {
 	framework.WithRegionModel
 	ARN              types.String                                           `tfsdk:"arn"`
 	CatalogId        types.String                                           `tfsdk:"catalog_id"`

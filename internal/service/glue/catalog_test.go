@@ -20,15 +20,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueFederatedCatalog_basic(t *testing.T) {
+func TestAccGlueCatalog_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var federatedcatalog glue.GetCatalogOutput
+	var catalog glue.GetCatalogOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
+	resourceName := "aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -38,12 +38,12 @@ func TestAccGlueFederatedCatalog_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Config: testAccCatalogConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, t, resourceName, &federatedcatalog),
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "s3tablescatalog"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test S3 Tables federated catalog"),
@@ -62,15 +62,15 @@ func TestAccGlueFederatedCatalog_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueFederatedCatalog_disappears(t *testing.T) {
+func TestAccGlueCatalog_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var federatedcatalog glue.GetCatalogOutput
+	var catalog glue.GetCatalogOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
+	resourceName := "aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -80,13 +80,13 @@ func TestAccGlueFederatedCatalog_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Config: testAccCatalogConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, t, resourceName, &federatedcatalog),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceFederatedCatalog, resourceName),
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalog, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,15 +94,15 @@ func TestAccGlueFederatedCatalog_disappears(t *testing.T) {
 	})
 }
 
-func TestAccGlueFederatedCatalog_catalogProperties(t *testing.T) {
+func TestAccGlueCatalog_catalogProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var federatedcatalog glue.GetCatalogOutput
+	var catalog glue.GetCatalogOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
+	resourceName := "aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -112,12 +112,12 @@ func TestAccGlueFederatedCatalog_catalogProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Config: testAccCatalogConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, t, resourceName, &federatedcatalog),
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "s3tablescatalog"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test S3 Tables federated catalog"),
@@ -136,7 +136,7 @@ func TestAccGlueFederatedCatalog_catalogProperties(t *testing.T) {
 	})
 }
 
-func TestAccGlueFederatedCatalog_configurationError(t *testing.T) {
+func TestAccGlueCatalog_configurationError(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -152,25 +152,25 @@ func TestAccGlueFederatedCatalog_configurationError(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFederatedCatalogConfig_missingConfiguration(rName),
+				Config:      testAccCatalogConfig_missingConfiguration(rName),
 				ExpectError: regexache.MustCompile("Missing Required Configuration"),
 			},
 		},
 	})
 }
 
-func TestAccGlueFederatedCatalog_Disappears_catalogProperties(t *testing.T) {
+func TestAccGlueCatalog_Disappears_catalogProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var federatedcatalog glue.GetCatalogOutput
+	var catalog glue.GetCatalogOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
+	resourceName := "aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -180,13 +180,13 @@ func TestAccGlueFederatedCatalog_Disappears_catalogProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Config: testAccCatalogConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, t, resourceName, &federatedcatalog),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceFederatedCatalog, resourceName),
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalog, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -194,16 +194,16 @@ func TestAccGlueFederatedCatalog_Disappears_catalogProperties(t *testing.T) {
 	})
 }
 
-func testAccCheckFederatedCatalogDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCatalogDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_glue_federated_catalog" {
+			if rs.Type != "aws_glue_catalog" {
 				continue
 			}
 
-			_, err := tfglue.FindFederatedCatalogByID(ctx, conn, rs.Primary.ID)
+			_, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				return nil
 			}
@@ -218,7 +218,7 @@ func testAccCheckFederatedCatalogDestroy(ctx context.Context, t *testing.T) reso
 	}
 }
 
-func testAccCheckFederatedCatalogExists(ctx context.Context, t *testing.T, name string, federatedcatalog *glue.GetCatalogOutput) resource.TestCheckFunc {
+func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string, catalog *glue.GetCatalogOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -231,12 +231,12 @@ func testAccCheckFederatedCatalogExists(ctx context.Context, t *testing.T, name 
 
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-		resp, err := tfglue.FindFederatedCatalogByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return smarterr.NewError(err)
 		}
 
-		*federatedcatalog = glue.GetCatalogOutput{
+		*catalog = glue.GetCatalogOutput{
 			Catalog: resp,
 		}
 
@@ -252,19 +252,19 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccFederatedCatalogConfig_missingConfiguration(rName string) string {
+func testAccCatalogConfig_missingConfiguration(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_glue_federated_catalog" "test" {
+resource "aws_glue_catalog" "test" {
   name        = %[1]q
   description = "Test federated catalog without required configuration"
 }
 `, rName)
 }
 
-func testAccFederatedCatalogConfig_s3Tables(rName string) string {
+func testAccCatalogConfig_s3Tables(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFederatedCatalogConfig_s3TablesBase(rName), `
-resource "aws_glue_federated_catalog" "test" {
+		testAccCatalogConfig_s3TablesBase(rName), `
+resource "aws_glue_catalog" "test" {
   name        = "s3tablescatalog"
   description = "Test S3 Tables federated catalog"
 
@@ -279,7 +279,7 @@ resource "aws_glue_federated_catalog" "test" {
 	)
 }
 
-func testAccFederatedCatalogConfig_s3TablesBase(rName string) string {
+func testAccCatalogConfig_s3TablesBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

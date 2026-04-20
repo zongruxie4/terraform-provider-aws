@@ -33,9 +33,9 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_glue_federated_catalog", name="Federated Catalog")
-func newResourceFederatedCatalog(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFederatedCatalog{}
+// @FrameworkResource("aws_glue_catalog", name="Catalog")
+func newResourceCatalog(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceCatalog{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -45,17 +45,17 @@ func newResourceFederatedCatalog(_ context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameFederatedCatalog = "Federated Catalog"
-	s3TablesCatalogName     = "s3tablescatalog"
+	ResNameCatalog      = "Catalog"
+	s3TablesCatalogName = "s3tablescatalog"
 )
 
-type resourceFederatedCatalog struct {
-	framework.ResourceWithModel[resourceFederatedCatalogModel]
+type resourceCatalog struct {
+	framework.ResourceWithModel[resourceCatalogModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceFederatedCatalog) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -139,9 +139,9 @@ func (r *resourceFederatedCatalog) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceFederatedCatalog) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var plan resourceFederatedCatalogModel
+	var plan resourceCatalogModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,7 +247,7 @@ func (r *resourceFederatedCatalog) Create(ctx context.Context, req resource.Crea
 	}
 	id := fmt.Sprintf("%s,%s", catalogId, catalogName)
 	plan.ID = types.StringValue(id)
-	catalog, err := findFederatedCatalogByID(ctx, conn, id)
+	catalog, err := findCatalogByID(ctx, conn, id)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
@@ -316,15 +316,15 @@ func (r *resourceFederatedCatalog) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceFederatedCatalog) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var state resourceFederatedCatalogModel
+	var state resourceCatalogModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findFederatedCatalogByID(ctx, conn, state.ID.ValueString())
+	out, err := findCatalogByID(ctx, conn, state.ID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -406,8 +406,8 @@ func (r *resourceFederatedCatalog) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFederatedCatalog) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceFederatedCatalogModel
+func (r *resourceCatalog) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceCatalogModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -431,9 +431,9 @@ func (r *resourceFederatedCatalog) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceFederatedCatalog) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var state resourceFederatedCatalogModel
+	var state resourceCatalogModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -460,7 +460,7 @@ func (r *resourceFederatedCatalog) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func findFederatedCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
+func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
 	catalogId, name, err := readCatalogResourceID(id)
 	if err != nil {
 		return nil, smarterr.NewError(err)
@@ -510,7 +510,7 @@ func resolveCatalogID(catalogId, name string) string {
 	return catalogId
 }
 
-type resourceFederatedCatalogModel struct {
+type resourceCatalogModel struct {
 	framework.WithRegionModel
 	ARN               types.String                                            `tfsdk:"arn"`
 	CatalogId         types.String                                            `tfsdk:"catalog_id"`

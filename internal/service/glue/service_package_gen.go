@@ -25,9 +25,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceFederatedCatalog,
-			TypeName: "aws_glue_federated_catalog",
-			Name:     "Federated Catalog",
+			Factory:  newDataSourceCatalog,
+			TypeName: "aws_glue_catalog",
+			Name:     "Catalog",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -42,15 +42,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newCatalogTableOptimizerResource,
-			TypeName: "aws_glue_catalog_table_optimizer",
-			Name:     "Catalog Table Optimizer",
+			Factory:  newResourceCatalog,
+			TypeName: "aws_glue_catalog",
+			Name:     "Catalog",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newResourceFederatedCatalog,
-			TypeName: "aws_glue_federated_catalog",
-			Name:     "Federated Catalog",
+			Factory:  newCatalogTableOptimizerResource,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

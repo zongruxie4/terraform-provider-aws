@@ -13,14 +13,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueFederatedCatalogDataSource_basic(t *testing.T) {
+func TestAccGlueCatalogDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dataSourceName := "data.aws_glue_federated_catalog.test"
+	dataSourceName := "data.aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -30,10 +30,10 @@ func TestAccGlueFederatedCatalogDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogDataSourceConfig_s3Tables(rName),
+				Config: testAccCatalogDataSourceConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3tablescatalog"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCatalogID),
@@ -48,14 +48,14 @@ func TestAccGlueFederatedCatalogDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueFederatedCatalogDataSource_s3Tables(t *testing.T) {
+func TestAccGlueCatalogDataSource_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dataSourceName := "data.aws_glue_federated_catalog.test"
+	dataSourceName := "data.aws_glue_catalog.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -65,10 +65,10 @@ func TestAccGlueFederatedCatalogDataSource_s3Tables(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedCatalogDataSourceConfig_s3Tables(rName),
+				Config: testAccCatalogDataSourceConfig_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3tablescatalog"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCatalogID),
@@ -83,12 +83,12 @@ func TestAccGlueFederatedCatalogDataSource_s3Tables(t *testing.T) {
 	})
 }
 
-func testAccFederatedCatalogDataSourceConfig_s3Tables(rName string) string {
+func testAccCatalogDataSourceConfig_s3Tables(rName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-data "aws_glue_federated_catalog" "test" {
-  name = aws_glue_federated_catalog.test.name
+data "aws_glue_catalog" "test" {
+  name = aws_glue_catalog.test.name
 }
-`, testAccFederatedCatalogConfig_s3Tables(rName))
+`, testAccCatalogConfig_s3Tables(rName))
 }
