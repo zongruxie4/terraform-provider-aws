@@ -28,6 +28,9 @@ import (
 // @SDKResource("aws_internet_gateway", name="Internet Gateway")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.InternetGateway")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayCreate,
@@ -39,10 +42,6 @@ func resourceInternetGateway() *schema.Resource {
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
