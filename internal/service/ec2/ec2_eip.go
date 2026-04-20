@@ -31,16 +31,17 @@ import (
 // @SDKResource("aws_eip", name="EIP")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Address")
+// @Testing(generator=false)
+// @Testing(idAttrDuplicates="id")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
 		ReadWithoutTimeout:   resourceEIPRead,
 		UpdateWithoutTimeout: resourceEIPUpdate,
 		DeleteWithoutTimeout: resourceEIPDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
