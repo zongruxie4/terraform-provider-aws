@@ -2027,6 +2027,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
+			Factory:  newLaunchTemplateResourceAsListResource,
+			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
 			Factory:  newNATGatewayResourceAsListResource,
 			TypeName: "aws_nat_gateway",
 			Name:     "NAT Gateway",
