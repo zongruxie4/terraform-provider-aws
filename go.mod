@@ -265,7 +265,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.22
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.15
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.20
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.21
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.1
