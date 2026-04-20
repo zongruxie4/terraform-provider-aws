@@ -482,8 +482,7 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T)
 				return err
 			}
 
-			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) ||
-				string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeDraining) {
+			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) {
 				return nil
 			}
 
