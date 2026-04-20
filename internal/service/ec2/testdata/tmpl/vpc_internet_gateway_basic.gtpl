@@ -1,4 +1,6 @@
 resource "aws_internet_gateway" "test" {
 {{- template "region" }}
-{{- template "tags" . }}
+  tags = {
+    Name = var.rName
+  }
 }

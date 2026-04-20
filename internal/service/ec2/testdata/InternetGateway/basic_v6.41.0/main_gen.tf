@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_internet_gateway" "test" {
+  tags = {
+    Name = var.rName
+  }
 }
 
 variable "rName" {

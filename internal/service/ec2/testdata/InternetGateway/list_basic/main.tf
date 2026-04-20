@@ -2,13 +2,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_internet_gateway" "test" {
-  tags = {
-    Name = var.rName
-  }
+  count = var.resource_count
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
   nullable    = false
 }
