@@ -45,11 +45,11 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Federated Catalog.
 * `description` - Description of the federated catalog.
 * `federated_catalog` - Configuration block for federated catalog parameters:
-  * `identifier` - Unique identifier for the federated catalog.
-  * `connection_name` - Name of the connection for the federated catalog.
+    * `identifier` - Unique identifier for the federated catalog.
+    * `connection_name` - Name of the connection for the federated catalog.
 * `catalog_properties` - Configuration block for catalog properties:
-  * `data_lake_access_properties` - Configuration block for data lake access properties:
-    * `catalog_type` - Type of catalog (e.g., "aws:redshift").
-    * `data_lake_access` - Whether data lake access is enabled for the catalog.
-    * `data_transfer_role` - ARN of the IAM role for data transfer operations.
-    * `kms_key` - KMS key for encryption.
+    * `data_lake_access_properties` - Configuration block for data lake access properties:
+        * `catalog_type` - Type of catalog (e.g., "aws:redshift").
+        * `data_lake_access` - Whether data lake access is enabled for the catalog.
+        * `data_transfer_role` - ARN of the IAM role for data transfer operations.
+        * `kms_key` - KMS key for encryption.
