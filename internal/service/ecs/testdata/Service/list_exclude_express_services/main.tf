@@ -15,6 +15,8 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 
+# Used in `query.tfquery.hcl`
+# tflint-ignore: terraform_unused_declarations
 data "aws_ecs_cluster" "default" {
   cluster_name = "default"
 
