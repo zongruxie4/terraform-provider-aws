@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_securityhub_action_target: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_securityhub_configuration_policy_association: Add Resource Identity support
+```
