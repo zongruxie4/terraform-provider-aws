@@ -1,14 +1,14 @@
 ---
 subcategory: "Glue"
 layout: "aws"
-page_title: "AWS: aws_glue_federated_catalog"
+page_title: "AWS: aws_glue_catalog"
 description: |-
-  Manages an AWS Glue Federated Catalog.
+  Manages an AWS Glue Catalog.
 ---
 
-# Resource: aws_glue_federated_catalog
+# Resource: aws_glue_catalog
 
-Manages an AWS Glue Federated Catalog. Federated catalogs allow you to connect external data sources like Amazon S3 Tables to AWS Glue.
+Manages an AWS Glue Catalog. Catalogs allow you to connect external data sources like Amazon S3 Tables to AWS Glue.
 
 More information about AWS Glue and federated catalogs can be found in the [AWS Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/federated-catalogs.html).
 
@@ -82,7 +82,7 @@ resource "aws_lakeformation_resource" "example" {
   role_arn = aws_iam_role.example.arn
 }
 
-resource "aws_glue_federated_catalog" "example" {
+resource "aws_glue_catalog" "example" {
   name        = "s3tablescatalog"
   description = "S3 Tables federated catalog for analytics"
 
@@ -119,7 +119,7 @@ resource "aws_iam_role" "redshift_example" {
   })
 }
 
-resource "aws_glue_federated_catalog" "redshift_example" {
+resource "aws_glue_catalog" "redshift_example" {
   name        = "redshift-catalog"
   description = "Redshift federated catalog for data lake access"
 
@@ -147,6 +147,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the federated catalog.
 * `federated_catalog` - (Optional) Configuration block for federated catalog parameters. See [federated_catalog](#federated_catalog) below.
 * `catalog_properties` - (Optional) Configuration block for catalog properties. See [catalog_properties](#catalog_properties) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### federated_catalog
 
@@ -168,8 +169,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Federated Catalog.
-* `id` - Federated catalog identifier.
+* `arn` - ARN of the Catalog.
+* `id` - Catalog identifier.
 
 ## Timeouts
 
@@ -181,17 +182,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Federated Catalog using the `catalog_id:name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog using the `catalog_id:name`. For example:
 
 ```terraform
 import {
-  to = aws_glue_federated_catalog.example
+  to = aws_glue_catalog.example
   id = "123456789012:s3tablescatalog"
 }
 ```
 
-Using `terraform import`, import Glue Federated Catalog using the `catalog_id:name`. For example:
+Using `terraform import`, import Glue Catalog using the `catalog_id:name`. For example:
 
 ```console
-% terraform import aws_glue_federated_catalog.example 123456789012:s3tablescatalog
+% terraform import aws_glue_catalog.example 123456789012:s3tablescatalog
 ```

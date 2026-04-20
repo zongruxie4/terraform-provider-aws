@@ -1,20 +1,20 @@
 ---
 subcategory: "Glue"
 layout: "aws"
-page_title: "AWS: aws_glue_federated_catalog"
+page_title: "AWS: aws_glue_catalog"
 description: |-
-  Provides details about an AWS Glue Federated Catalog.
+  Provides details about an AWS Glue Catalog.
 ---
-# Data Source: aws_glue_federated_catalog
+# Data Source: aws_glue_catalog
 
-Provides details about an AWS Glue Federated Catalog. Federated catalogs allow you to connect external data sources like Amazon S3 Tables to AWS Glue.
+Provides details about an AWS Glue Catalog. Catalogs allow you to connect external data sources like Amazon S3 Tables to AWS Glue.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_glue_federated_catalog" "example" {
+data "aws_glue_catalog" "example" {
   name = "s3tablescatalog"
 }
 ```
@@ -22,7 +22,7 @@ data "aws_glue_federated_catalog" "example" {
 ### With Specific Catalog ID
 
 ```terraform
-data "aws_glue_federated_catalog" "example" {
+data "aws_glue_catalog" "example" {
   name       = "my-federated-catalog"
   catalog_id = "123456789012"
 }
@@ -32,18 +32,19 @@ data "aws_glue_federated_catalog" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the federated catalog to retrieve.
+* `name` - (Required) Name of the catalog to retrieve.
 
 The following arguments are optional:
 
 * `catalog_id` - (Optional) ID of the catalog. If omitted, this defaults to the AWS Account ID.
+* `region` - (Optional) Region where this data source will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Federated Catalog.
-* `description` - Description of the federated catalog.
+* `arn` - ARN of the Catalog.
+* `description` - Description of the catalog.
 * `federated_catalog` - Configuration block for federated catalog parameters:
     * `identifier` - Unique identifier for the federated catalog.
     * `connection_name` - Name of the connection for the federated catalog.
