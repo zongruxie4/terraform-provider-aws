@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	//"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -29,6 +29,9 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_arczonalshift_autoshift_observer_notification_status", name="Autoshift Observer Notification Status")
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
 func newAutoshiftObserverNotificationStatusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &autoshiftObserverNotificationStatusResource{}
 
@@ -45,6 +48,7 @@ const (
 
 type autoshiftObserverNotificationStatusResource struct {
 	framework.ResourceWithModel[autoshiftObserverNotificationStatusResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -94,8 +98,7 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 		return
 	}
 
-	// For this singleton resource, use a constant ID since there's only one per account
-	plan.ID = types.StringValue("observer_notification_status")
+	plan.ID = types.StringValue(r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -125,8 +128,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 		return
 	}
 
-	// For this singleton resource, use a constant ID since there's only one per account
-	state.ID = types.StringValue("observer_notification_status")
+	state.ID = types.StringValue(r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -172,8 +174,7 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 		}
 	}
 
-	// For this singleton resource, use a constant ID since there's only one per account
-	plan.ID = types.StringValue("observer_notification_status")
+	plan.ID = types.StringValue(r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -198,10 +199,6 @@ func (r *autoshiftObserverNotificationStatusResource) Delete(ctx context.Context
 	}
 
 	resp.State.RemoveResource(ctx)
-}
-
-func (r *autoshiftObserverNotificationStatusResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonalshift.Client, id string) (*arczonalshift.GetAutoshiftObserverNotificationStatusOutput, error) {
