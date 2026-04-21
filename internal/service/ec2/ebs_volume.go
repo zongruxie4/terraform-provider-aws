@@ -217,23 +217,57 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
-	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
-	d.Set(names.AttrEncrypted, volume.Encrypted)
-	d.Set(names.AttrIOPS, volume.Iops)
-	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set(names.AttrSize, volume.Size)
-	d.Set(names.AttrSnapshotID, volume.SnapshotId)
-	d.Set(names.AttrThroughput, volume.Throughput)
-	d.Set(names.AttrType, volume.VolumeType)
-	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
+	if err := resourceEBSVolumeFlatten(ctx, c, volume, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, volume *awstypes.Volume, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrARN, ebsVolumeARN(ctx, awsClient, aws.ToString(volume.VolumeId))); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrARN, err)
+	}
+	if err := d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrAvailabilityZone, err)
+	}
+	if err := d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrCreateTime, err)
+	}
+	if err := d.Set(names.AttrEncrypted, volume.Encrypted); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrEncrypted, err)
+	}
+	if err := d.Set(names.AttrIOPS, volume.Iops); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrIOPS, err)
+	}
+	if err := d.Set(names.AttrKMSKeyID, volume.KmsKeyId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrKMSKeyID, err)
+	}
+	if err := d.Set("multi_attach_enabled", volume.MultiAttachEnabled); err != nil {
+		return fmt.Errorf("setting multi_attach_enabled: %w", err)
+	}
+	if err := d.Set("outpost_arn", volume.OutpostArn); err != nil {
+		return fmt.Errorf("setting outpost_arn: %w", err)
+	}
+	if err := d.Set(names.AttrSize, volume.Size); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSize, err)
+	}
+	if err := d.Set(names.AttrSnapshotID, volume.SnapshotId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSnapshotID, err)
+	}
+	if err := d.Set(names.AttrThroughput, volume.Throughput); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrThroughput, err)
+	}
+	if err := d.Set(names.AttrType, volume.VolumeType); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrType, err)
+	}
+	if err := d.Set("volume_initialization_rate", volume.VolumeInitializationRate); err != nil {
+		return fmt.Errorf("setting volume_initialization_rate: %w", err)
+	}
 
 	setTagsOut(ctx, volume.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

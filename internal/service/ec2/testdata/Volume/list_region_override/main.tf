@@ -2,13 +2,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  count  = var.resource_count
+  region = var.region
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   size              = 1
 }
 
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -21,8 +26,15 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
-variable "rName" {
-  description = "Name for resource"
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
   type        = string
   nullable    = false
 }
