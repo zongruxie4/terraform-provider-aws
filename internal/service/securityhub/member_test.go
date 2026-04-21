@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -116,8 +117,9 @@ func testAccMember_inviteFalse(t *testing.T) {
 	})
 }
 
-func testAccMember_inviteNonOrganization(t *testing.T) {
+func testAccMember_inviteOrganizationMember(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
@@ -125,15 +127,23 @@ func testAccMember_inviteNonOrganization(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_inviteNonOrganization(rName),
+				// Run a simple configuration to initialize the alternate providers.
+				Config: testAccMemberOrganizationMemberConfig_init,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationMemberAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccMemberConfig_inviteOrganizationMember(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &member),
 				),
@@ -218,7 +228,14 @@ resource "aws_securityhub_member" "test" {
 `, accountID, email, invite)
 }
 
-func testAccMemberConfig_inviteNonOrganization(email string) string {
+// Initialize all the providers used by organization member acceptance tests.
+var testAccMemberOrganizationMemberConfig_init = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "delegated" {
+  provider = "awsalternate"
+}
+`)
+
+func testAccMemberConfig_inviteOrganizationMember(email string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
