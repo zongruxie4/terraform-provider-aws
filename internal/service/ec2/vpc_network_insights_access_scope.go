@@ -34,7 +34,7 @@ import (
 
 // @FrameworkResource("aws_ec2_network_insights_access_scope", name="Network Insights Access Scope")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
+// @Testing(generator=false)
 func newNetworkInsightsAccessScopeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &networkInsightsAccessScopeResource{}, nil
 }
