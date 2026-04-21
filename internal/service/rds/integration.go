@@ -219,44 +219,42 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 }
 
 func (r *integrationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old integrationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	var plan, state integrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().RDSClient(ctx)
+	id := plan.ID.ValueString()
 
-	if !new.DataFilter.Equal(old.DataFilter) ||
-		!new.IntegrationName.Equal(old.IntegrationName) {
-		input := &rds.ModifyIntegrationInput{
-			IntegrationIdentifier: fwflex.StringFromFramework(ctx, old.ID),
+	if !plan.DataFilter.Equal(state.DataFilter) ||
+		!plan.IntegrationName.Equal(state.IntegrationName) {
+		input := rds.ModifyIntegrationInput{
+			IntegrationIdentifier: aws.String(id),
 		}
 
-		if !new.DataFilter.Equal(old.DataFilter) {
-			input.DataFilter = fwflex.StringFromFramework(ctx, new.DataFilter)
+		if !plan.DataFilter.Equal(state.DataFilter) {
+			input.DataFilter = plan.DataFilter.ValueStringPointer()
 		}
 
-		if !new.IntegrationName.Equal(old.IntegrationName) {
-			input.IntegrationName = fwflex.StringFromFramework(ctx, new.IntegrationName)
+		if !plan.IntegrationName.Equal(state.IntegrationName) {
+			input.IntegrationName = plan.IntegrationName.ValueStringPointer()
 		}
 
-		if _, err := conn.ModifyIntegration(ctx, input); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Integration (%s)", old.ID.ValueString()), err.Error())
+		if _, err := conn.ModifyIntegration(ctx, &input); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Integration (%s)", id), err.Error())
 			return
 		}
 
-		if _, err := waitIntegrationUpdated(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Integration (%s) update", old.ID.ValueString()), err.Error())
+		if _, err := waitIntegrationUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Integration (%s) update", id), err.Error())
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *integrationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
