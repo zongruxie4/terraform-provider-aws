@@ -260,6 +260,39 @@ func TestAccVPCNetworkInsightsAccessScope_excludePaths(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInsightsAccessScope_multiplePaths(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_access_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAccessScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsAccessScopeConfig_multiplePaths(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkInsightsAccessScopeExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("resource_statement").AtSliceIndex(0).AtMapKey("resource_types"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("AWS::EC2::NetworkInterface"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(1).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("resource_statement").AtSliceIndex(0).AtMapKey("resource_types"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("AWS::EC2::InternetGateway"),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkInsightsAccessScopeExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -398,6 +431,27 @@ resource "aws_ec2_network_insights_access_scope" "test" {
     }
   }
   exclude_paths {
+    source {
+      resource_statement {
+        resource_types = ["AWS::EC2::InternetGateway"]
+      }
+    }
+  }
+}
+`
+}
+
+func testAccVPCNetworkInsightsAccessScopeConfig_multiplePaths() string {
+	return `
+resource "aws_ec2_network_insights_access_scope" "test" {
+  match_paths {
+    source {
+      resource_statement {
+        resource_types = ["AWS::EC2::NetworkInterface"]
+      }
+    }
+  }
+  match_paths {
     source {
       resource_statement {
         resource_types = ["AWS::EC2::InternetGateway"]
