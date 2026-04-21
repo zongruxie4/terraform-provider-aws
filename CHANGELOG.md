@@ -70,6 +70,7 @@ BUG FIXES:
 * resource/aws_eip: Gracefully handle `UnsupportedOperation` errors in isolated regions ([#47091](https://github.com/hashicorp/terraform-provider-aws/issues/47091))
 * resource/aws_msk_cluster: Fix a request parameter error when updating `broker_node_group_info.vpc_connectivity` configuration block. This fixes a regression introduced in [v6.40.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6400-april-8-2026) ([#47515](https://github.com/hashicorp/terraform-provider-aws/issues/47515))
 * resource/aws_odb_network: Fix `runtime error: invalid memory address or nil pointer dereference` panic in `statusManagedService()` and `statusNetwork()` when `FindOracleDBNetworkResourceByID` returns a nil result during resource creation ([#47159](https://github.com/hashicorp/terraform-provider-aws/issues/47159))
+* resource/aws_securityhub_member: Only set `email` if returned by AWS API and don't recompute `invite` from `member_status`. This prevents drift for organization members ([#47106](https://github.com/hashicorp/terraform-provider-aws/issues/47106))
 
 ## 6.41.0 (April 15, 2026)
 
