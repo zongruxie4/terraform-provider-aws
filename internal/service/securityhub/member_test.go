@@ -116,6 +116,37 @@ func testAccMember_inviteFalse(t *testing.T) {
 	})
 }
 
+func testAccMember_inviteNonOrganization(t *testing.T) {
+	ctx := acctest.Context(t)
+	var member types.Member
+	resourceName := "aws_securityhub_member.test"
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemberConfig_inviteNonOrganization(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberExists(ctx, t, resourceName, &member),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckMemberExists(ctx context.Context, t *testing.T, n string, v *types.Member) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -185,4 +216,21 @@ resource "aws_securityhub_member" "test" {
   invite     = %[3]t
 }
 `, accountID, email, invite)
+}
+
+func testAccMemberConfig_inviteNonOrganization(email string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+data "aws_caller_identity" "member" {
+  provider = "awsalternate"
+}
+
+resource "aws_securityhub_member" "test" {
+  depends_on = [aws_securityhub_account.test]
+  account_id = data.aws_caller_identity.member.account_id
+  email      = %[1]q
+  invite     = false
+}
+`, email))
 }
