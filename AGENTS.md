@@ -1,139 +1,179 @@
-# AGENTS Guide
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
-This repository is the Go-based Terraform AWS Provider. Prefer the repo's own Makefile, docs, and local package patterns over generic Go advice.
+# AGENTS.md
 
-## Authoritative Sources
+This file provides guidance for AI agents working in the Terraform AWS Provider repository.
 
-- `GNUmakefile`
-- `docs/makefile-cheat-sheet.md`, `docs/continuous-integration.md`, `docs/development-environment.md`
-- `docs/running-and-writing-acceptance-tests.md`, `docs/unit-tests.md`
-- `docs/naming.md`, `docs/error-handling.md`, `docs/data-handling-and-conversion.md`, `docs/retries-and-waiters.md`
-- `docs/add-a-new-resource.md`, `docs/skaff.md`, `docs/ai-usage.md`
-- `names/caps.md`, `.ci/.golangci*.yml`, `.ci/providerlint/README.md`
+## Overview
 
-## Repo Rule Files
+This is the Go-based Terraform AWS Provider (`github.com/hashicorp/terraform-provider-aws`). It maps AWS API resources to Terraform resources and data sources. The primary language is Go; HCL appears in acceptance test configurations and website documentation.
 
-- No `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` were found.
-- Treat this file plus the docs above as the agent instructions for the repo.
+## Environment Setup
 
-## Environment
+```bash
+make prereq-go   # install the required Go version (see .go-version)
+make tools       # install linters and helper binaries (run once)
+make build       # compile the provider
+```
 
-- Primary language: Go; module path: `github.com/hashicorp/terraform-provider-aws`.
-- Required Go version: `1.25.8`; acceptance tests require Terraform CLI `0.12.26+`.
-- Use `make prereq-go` or any target that depends on it to install the repo Go toolchain.
-- Run `make tools` once to install linters and helper binaries.
-- Use `make skaff` when adding a new resource, data source, or function.
+Acceptance tests require Terraform CLI 0.12.26+ and AWS credentials in the environment (`AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` plus `AWS_DEFAULT_REGION`). The default acceptance test region is `us-west-2`.
 
 ## Common Commands
 
-- Build provider: `make build`; CI-style build: `make go-build`; install dev tools: `make tools`.
-- Format and imports: `make fmt`, `make fmt-check`, `make fix-imports`.
-- Unit tests: `make test`; one package: `make test TEST=./internal/create`; one unit test: `make test TEST=./internal/create TESTARGS='-run TestUniqueId$'`.
-- Service-scoped unit tests: `make test PKG=apprunner`; one service test: `make test PKG=apprunner TESTARGS='-run TestExpand.*'`; compile-only: `make test-compile TEST=./internal/service/apprunner`.
-- Acceptance tests: `make testacc PKG=cloudwatch TESTS=TestAccCloudWatchDashboard_`; one test: `make testacc PKG=cloudwatch TESTS=TestAccCloudWatchDashboard_updateName`; short runs: `make testacc PKG=ecs TESTS='TestAccECSTaskDefinition_' TESTARGS=-short`; alias: `make t PKG=iam T=TestAccIAMRole_basic`.
-- Acceptance test linting: `make testacc-lint PKG=cloudwatch`; `make testacc-tflint PKG=cloudwatch`.
-- Linting: `make import-lint PKG=cloudwatch`; `make provider-lint PKG=cloudwatch`; `make golangci-lint PKG=cloudwatch`; faster shard: `make golangci-lint1 PKG=cloudwatch`.
-- Generation and dependency checks: `make gen`; `make gen-check`; `make deps-check`.
-- Autofix and CI sweeps: `make quick-fix PKG=cloudwatch`; `make ci-quick`; `make ci`.
+### Build
 
-## Test Selection Notes
+```bash
+make build          # build provider binary
+make go-build       # CI-style build check
+```
 
-- `PKG=<service>` and `K=<service>` are interchangeable service scoping variables.
-- `TESTS=<regex>` and `T=<regex>` are the preferred ways to select acceptance tests.
-- `TESTARGS` passes raw `go test` flags and is the easiest way to run a single unit test.
-- `make test` excludes acceptance tests by default with a `-run` pattern; it is for unit tests only.
-- `make testacc` sets `TF_ACC=1` for you.
-- Acceptance tests need AWS credentials in the environment, usually `AWS_PROFILE` or `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, plus `AWS_DEFAULT_REGION`.
-- The documented default acceptance-test region is `us-west-2`.
-- Cross-account tests may need `AWS_ALTERNATE_PROFILE` or `AWS_ALTERNATE_ACCESS_KEY_ID`.
-- Cross-region tests may need `AWS_ALTERNATE_REGION` and `AWS_THIRD_REGION`.
-- Acceptance tests create real AWS resources and can cost money; keep runs tightly scoped.
-- On macOS, `make test` uses temporary `GOCACHE` and `GOTMPDIR` automatically; do not fight that behavior.
+### Format and Imports
 
-## Workflow Rules
+```bash
+make fmt            # fix Go source formatting (gofmt -s)
+make fmt-check      # verify formatting
+make fix-imports    # fix import ordering (goimports)
+```
 
-- Prefer the smallest correct change and follow the local style of the package you touch.
-- Scope commands to the affected package or service before running broad repo-wide targets.
-- Prefer explicit targets over legacy aliases. `make lint` exists but is marked legacy; use `golangci-lint`, `provider-lint`, and `import-lint` directly.
-- If you add or change annotations like `@FrameworkResource` or `@SDKResource`, run `make gen`.
-- If you edit docs or website pages, run the relevant doc or website format and lint targets, not just Go tooling.
-- If you add a new resource, data source, or function, scaffold it with `skaff` instead of copying an older implementation.
+### Unit Tests
 
-## Framework and SDK Choice
+```bash
+make test                                          # all unit tests
+make test PKG=iam                                  # one service package
+make test PKG=iam TESTARGS='-run TestExpandRole$'  # one test
+make test TEST=./internal/create                   # one directory
+```
 
-- Net-new resources should use Terraform Plugin Framework; existing SDKv2 resources usually stay SDKv2 unless the task is explicitly a migration.
-- Framework resources self-register with `@FrameworkResource("aws_service_name", name="Name")`; SDKv2 resources use `@SDKResource("aws_service_name", name="Name")`.
-- Prefer Framework strong typing and provider helpers for new code; do not copy old resources verbatim. Use `skaff`, then adapt generated code.
+### Acceptance Tests (require AWS credentials, create real resources)
 
-## Formatting and Imports
+```bash
+make testacc PKG=cloudwatch TESTS=TestAccCloudWatchDashboard_
+make testacc PKG=iam TESTS=TestAccIAMRole_basic
+make t PKG=iam T=TestAccIAMRole_basic              # alias
+```
 
-- `gofmt -s` is the authoritative formatter; `make fmt` and `make fmt-check` wrap it.
-- `goimports` is the authoritative import organizer; `make fix-imports` wraps it.
-- Import order is enforced as standard library, third-party, then local imports.
-- The repo uses `impi --local . --scheme stdThirdPartyLocal` for import linting.
-- Keep code ASCII unless the file already requires non-ASCII content.
-- Preserve the standard file header on source and doc files: `// Copyright IBM Corp. 2014, 2026` and `// SPDX-License-Identifier: MPL-2.0`.
-- Struct tag order is linted. Keep tags ordered as `json`, `tfsdk`, `autoflex`.
-- `nolint` comments must name a specific linter and explain why the suppression is needed.
-- For Terraform snippets and acceptance-test HCL, use `terrafmt` or `terraform fmt`, not manual alignment.
+### Linting
 
-## Import Alias Conventions
+```bash
+make golangci-lint PKG=<service>   # primary Go linter (preferred over make lint)
+make golangci-lint1 PKG=<service>  # faster single-shard run
+make import-lint PKG=<service>     # import ordering
+make provider-lint PKG=<service>   # provider-specific lint rules
+make testacc-lint PKG=<service>    # acceptance test HCL lint
+```
 
-- Required aliases: SDK `helper/id` as `sdkid`, SDK `helper/retry` as `sdkretry`, plugin-testing `helper/acctest` as `sdkacctest`, and `internal/types` as `inttypes`.
-- `internal/retry` should not be aliased. Preserve existing local aliases like `tftags` or service aliases when they improve clarity.
+### Code Generation
 
-## Naming
+```bash
+make gen        # run all generators (required after changing @FrameworkResource/@SDKResource annotations)
+make gen-check  # verify generated files are up to date
+```
 
-- Service packages live under `internal/service/<serviceidentifier>`; identifiers are lowercase, have no underscores, and prefer the shorter AWS SDK/CLI name when they differ.
-- Go filenames are `snake_case`; data source files end with `_data_source.go`; test files end with `_test.go`; docs are `<service>_<name>.html.markdown` under `website/docs/r/` or `website/docs/d/`.
-- Main constructors are `Resource<ResourceName>()` and `DataSource<ResourceName>()`; CRUD helpers follow `resource<ResourceName>Create`, `Read`, `Update`, `Delete`.
-- Do not include the service name in function names unless needed locally. Use Go MixedCaps for identifiers and `snake_case` for Terraform schema names.
-- Preserve AWS-preferred capitalization and initialisms like `ARN`, `IAM`, `VPC`, `ID`, `API`, `APIGateway`, `CloudWatch`, `DynamoDB`, `FSx`, and `URL`. Never introduce `Id`.
+### Pre-PR Quick Fix
 
-## Data Handling and Schema Rules
+```bash
+make quick-fix PKG=<service>   # fmt, imports, testacc-lint, semgrep, terraform-fmt, copyright
+make ci-quick                  # broader CI subset
+```
 
-- For net-new Framework resources, prefer typed `types.*` model fields and `internal/framework/flex` AutoFlex before writing custom conversion code.
-- In SDKv2 resources, work with root attributes and blocks through `d.Get`, `d.GetOk`, `d.Set`, and `d.SetId`; avoid deep piecemeal writes when setting the parent block once is clearer.
-- If AWS supplies a server-side default, prefer `Optional: true` plus `Computed: true` instead of a provider default. Avoid provider defaults unless required for correct behavior.
-- Use AWS SDK constants instead of duplicating strings. AutoFlex ignores `Tags` by default, so keep tagging logic separate unless you intentionally opt in.
+## Adding a New Resource or Data Source
 
-## Error Handling and Retries
+Always use `skaff` — do not copy an older resource:
 
-- Name the error variable `err`, prefer early returns, and wrap returned errors with context using `fmt.Errorf("...: %w", err)`.
-- Use `errors.As` to inspect Smithy and AWS error types; prefer `tfawserr.ErrCodeEquals` and `tfawserr.ErrMessageContains` for AWS API matching.
-- Use shared retry and waiter helpers instead of custom polling. For net-new code, prefer `internal/retry` over deprecated `tfresource` aliases and reuse existing timeout constants, especially IAM propagation timeouts.
-- Framework resources should add diagnostics with helpers like `create.ProblemStandardMessage`; SDKv2 resources should use helpers like `create.AppendDiagError`.
-- In SDKv2 `Read` paths, only clear state with `d.SetId("")` when the resource is not new; guard with `!d.IsNewResource()`.
+```bash
+make skaff
+skaff resource --name ExampleThing --service example
+```
+
+After scaffolding:
+1. Fill in the schema and CRUD handlers.
+2. Add `@FrameworkResource("aws_example_thing", name="Example Thing")` (Framework) or `@SDKResource(...)` (SDKv2) annotation.
+3. Run `make gen` to register the resource.
+4. Write at minimum: `basic`, `disappears`, and key argument tests.
+
+Net-new resources must use Terraform Plugin Framework. Existing SDKv2 resources stay SDKv2 unless migration is the explicit task.
+
+## Code Style and Conventions
+
+### Naming
+
+- Service packages: `internal/service/<serviceidentifier>` — lowercase, no underscores, prefer the shorter AWS SDK/CLI name.
+- Go files: `snake_case.go`; data sources end with `_data_source.go`; tests end with `_test.go`.
+- Main constructors: `Resource<Name>()` and `DataSource<Name>()`.
+- CRUD helpers: `resource<Name>Create`, `resource<Name>Read`, `resource<Name>Update`, `resource<Name>Delete`.
+- Use Go MixedCaps with correct initialisms: `VPCEndpoint`, `ARN`, `IAM`, `URL`, `API`. Never `Id` — always `ID`.
+- Do not include the service name in function/variable names within the service package.
+- Terraform schema attribute names use `snake_case`.
+
+### Imports
+
+Order: standard library → third-party → local. Enforced by `make import-lint`.
+
+Required aliases:
+- `github.com/hashicorp/terraform-plugin-sdk/v2/helper/id` → `sdkid`
+- `github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry` → `sdkretry`
+- `github.com/hashicorp/terraform-plugin-testing/helper/acctest` → `sdkacctest`
+- `github.com/hashicorp/terraform-provider-aws/internal/types` → `inttypes`
+
+### Schema
+
+- Prefer `Optional: true` + `Computed: true` for attributes with server-side defaults; avoid provider defaults.
+- Use AWS SDK constants instead of duplicating string values.
+- For Framework resources, use `internal/framework/flex` AutoFlex before writing custom conversion code.
+
+### Error Handling
+
+- Name error variables `err`; use early returns.
+- Wrap errors: `fmt.Errorf("doing thing: %w", err)`.
+- Use `tfawserr.ErrCodeEquals` / `tfawserr.ErrMessageContains` for AWS API error matching.
+- In SDKv2 `Read`, only call `d.SetId("")` when `!d.IsNewResource()`.
+- Use `internal/retry` for waiters and retries; do not write custom polling loops.
+
+### Tags
+
+AutoFlex ignores `Tags` by default. Keep tagging logic separate.
+
+### `nolint` Comments
+
+Must name the specific linter and explain why: `//nolint:staticcheck // reason`.
 
 ## Testing Conventions
 
-- Unit tests start with `Test`; acceptance tests start with `TestAcc`; serialized acceptance helpers start with `testAcc`.
-- Acceptance test names should follow `TestAcc<Service><Resource>_<case>` with concise suffixes like `basic`, `tags`, or `disappears`. Unit tests usually should not use underscores unless there is a strong reason.
-- Unit tests should usually call `t.Parallel()`, and subtests usually should too. Acceptance tests do not need `t.Parallel()`; the harness handles concurrency.
-- Follow existing service-test patterns: `acctest.Context(t)`, `acctest.PreCheck`, `acctest.ErrorCheck`, `acctest.ProtoV5ProviderFactories`, destroy checks, and import-state verification.
-- New resources should at minimum have basic, disappears, and argument behavior coverage. Avoid hardcoded AMI IDs, regions, partitions, DNS suffixes, and TypeSet hashes; prefer ARN and region helpers.
-- Place unit tests before acceptance tests when both live in the same file.
+- Unit tests: `Test<FunctionName>` — no service name, usually no underscores, always call `t.Parallel()`.
+- Acceptance tests: `TestAcc<Service><Resource>_<case>` — e.g., `TestAccIAMRole_basic`, `TestAccIAMRole_tags`.
+- Serialized acceptance helpers: `testAcc<Resource>_<case>` (lowercase `t`, no service name).
+- Acceptance tests use: `acctest.Context(t)`, `acctest.PreCheck`, `acctest.ErrorCheck`, `acctest.ProtoV5ProviderFactories`, destroy checks, and import-state verification.
+- Do not hardcode AMI IDs, regions, partitions, or DNS suffixes — use provider helpers.
+- Place unit tests before acceptance tests in the same file.
 
-## Lint-Driven Style
+## Pre-PR Checklist
 
-- Staticcheck initialism rules mirror `names/caps.md`; check that file when naming is contentious.
-- `paralleltest` and `tparallel` are enforced for unit tests.
-- Magic numbers are linted; extract constants when a value has meaning and is reused.
-- New code should not add avoidable lint debt.
-- Generated files are treated strictly by lint tooling; do not hand-edit generated outputs unless the generator expects it.
+1. `make quick-fix PKG=<service>` — auto-fix formatting, imports, HCL, copyright.
+2. `make test PKG=<service>` — unit tests pass.
+3. `make golangci-lint PKG=<service>` — no new lint errors.
+4. `make import-lint PKG=<service>` — import ordering clean.
+5. `make provider-lint PKG=<service>` — provider rules clean.
+6. `make gen` — if annotations or generators were changed; then `make gen-check`.
+7. Acceptance tests — if AWS credentials are available and the change warrants it.
 
-## AI-Specific Rules
+Escalate to `make ci-quick` only when the above are clean or the change is broad.
 
-- No Cursor rule files or Copilot instruction files were found in this repository.
-- Follow `docs/ai-usage.md`: disclose AI use in the PR description, and include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
-- Human reviewers and the human PR author own the final code and must understand it fully.
-- Task-specific AI guides live under `docs/ai-agent-guides/`; consult them for resource identity, list resources, and similar focused tasks.
+## AI Usage Policy
 
-## Practical Pre-PR Sequence
+Per `docs/ai-usage.md`:
+- Disclose AI use in the PR description.
+- Include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
+- The human PR author is fully responsible for all submitted code and must understand it completely.
 
-- Run `make quick-fix PKG=<service>` if you changed a service package.
-- Run the narrowest relevant unit tests.
-- Run the narrowest relevant acceptance tests if AWS access and cost permit.
-- Run `make gen` if annotations or generators were affected.
-- Run `make golangci-lint PKG=<service>`, `make import-lint PKG=<service>`, and `make provider-lint PKG=<service>` before proposing a larger change.
-- Escalate to `make ci-quick` only when the smaller checks are clean or when the change is broad.
+## Authoritative References
+
+- `GNUmakefile` — canonical list of all targets and variables.
+- `docs/naming.md` — naming rules for resources, files, functions, tests.
+- `docs/error-handling.md` — error handling patterns.
+- `docs/data-handling-and-conversion.md` — flatteners, expanders, AutoFlex.
+- `docs/retries-and-waiters.md` — retry and waiter helpers.
+- `docs/running-and-writing-acceptance-tests.md` — acceptance test patterns.
+- `names/caps.md` — enforced capitalization list for initialisms.
+- `.ci/.golangci*.yml` — golangci-lint configuration.
+- `docs/ai-agent-guides/` — task-specific agent guides (resource identity, list resources, etc.).
