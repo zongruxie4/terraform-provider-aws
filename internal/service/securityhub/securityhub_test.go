@@ -71,7 +71,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"Member": {
 			acctest.CtBasic: testAccMember_basic,
-			"invite":        testAccMember_invite,
+			"inviteTrue":    testAccMember_inviteTrue,
+			"inviteFalse":   testAccMember_inviteFalse,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,

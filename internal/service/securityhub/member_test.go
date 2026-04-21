@@ -47,7 +47,7 @@ func testAccMember_basic(t *testing.T) {
 	})
 }
 
-func testAccMember_invite(t *testing.T) {
+func testAccMember_inviteTrue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"
