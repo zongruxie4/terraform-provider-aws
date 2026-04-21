@@ -123,6 +123,43 @@ func TestAccVPCNetworkInsightsAccessScope_matchPaths_resources(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInsightsAccessScope_matchPaths_packetHeaderStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_access_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAccessScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsAccessScopeConfig_matchPathsPacketHeaderStatement(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkInsightsAccessScopeExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("packet_header_statement").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"source_addresses":        knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("10.0.0.0/16")}),
+						"destination_addresses":    knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("192.168.0.0/24")}),
+						"source_ports":             knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("443")}),
+						"destination_ports":        knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("80")}),
+						"source_prefix_lists":      knownvalue.Null(),
+						"destination_prefix_lists": knownvalue.Null(),
+						"protocols":                knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("tcp")}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("resource_statement"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkInsightsAccessScopeExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -185,6 +222,24 @@ resource "aws_ec2_network_insights_access_scope" "test" {
     source {
       resource_statement {
         resources = ["vpc-123456", "vpc-654321"]
+      }
+    }
+  }
+}
+`
+}
+
+func testAccVPCNetworkInsightsAccessScopeConfig_matchPathsPacketHeaderStatement() string {
+	return `
+resource "aws_ec2_network_insights_access_scope" "test" {
+  match_paths {
+    source {
+      packet_header_statement {
+        source_addresses      = ["10.0.0.0/16"]
+        destination_addresses = ["192.168.0.0/24"]
+        source_ports          = ["443"]
+        destination_ports     = ["80"]
+        protocols             = ["tcp"]
       }
     }
   }
