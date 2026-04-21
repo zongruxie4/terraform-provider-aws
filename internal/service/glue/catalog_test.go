@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueCatalog_basic(t *testing.T) {
+func testAccCatalog_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -62,7 +62,7 @@ func TestAccGlueCatalog_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalog_disappears(t *testing.T) {
+func testAccCatalog_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -94,7 +94,7 @@ func TestAccGlueCatalog_disappears(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalog_catalogProperties(t *testing.T) {
+func testAccCatalog_catalogProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -136,7 +136,7 @@ func TestAccGlueCatalog_catalogProperties(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalog_configurationError(t *testing.T) {
+func testAccCatalog_configurationError(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -162,7 +162,7 @@ func TestAccGlueCatalog_configurationError(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalog_Disappears_catalogProperties(t *testing.T) {
+func testAccCatalog_Disappears_catalogProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

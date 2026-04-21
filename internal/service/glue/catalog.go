@@ -548,7 +548,7 @@ func waitCatalogDeleted(ctx context.Context, conn *glue.Client, id string, timeo
 }
 
 func statusCatalog(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findCatalogByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

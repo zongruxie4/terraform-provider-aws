@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueCatalogDataSource_basic(t *testing.T) {
+func testAccCatalogDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -48,7 +48,7 @@ func TestAccGlueCatalogDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalogDataSource_s3Tables(t *testing.T) {
+func testAccCatalogDataSource_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

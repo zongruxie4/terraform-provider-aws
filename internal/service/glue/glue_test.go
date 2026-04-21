@@ -13,6 +13,17 @@ func TestAccGlue_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Catalog": {
+			acctest.CtBasic:                testAccCatalog_basic,
+			acctest.CtDisappears:           testAccCatalog_disappears,
+			"catalogProperties":            testAccCatalog_catalogProperties,
+			"configurationError":           testAccCatalog_configurationError,
+			"Disappears_catalogProperties": testAccCatalog_Disappears_catalogProperties,
+		},
+		"CatalogDataSource": {
+			acctest.CtBasic: testAccCatalogDataSource_basic,
+			"s3Tables":      testAccCatalogDataSource_s3Tables,
+		},
 		"CatalogTableOptimizer": {
 			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,
 			"deleteOrphanFileConfiguration":                   testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration,
