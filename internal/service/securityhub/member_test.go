@@ -81,6 +81,7 @@ func testAccMember_inviteFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -89,7 +90,7 @@ func testAccMember_inviteFalse(t *testing.T) {
 		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_invite("111111111111", "test@example.com", false),
+				Config: testAccMemberConfig_invite("111111111111", rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, "111111111111"),
@@ -98,7 +99,7 @@ func testAccMember_inviteFalse(t *testing.T) {
 			},
 			{
 				// Re-apply the same configuration to verify no drift/replacement
-				Config: testAccMemberConfig_invite("111111111111", "test@example.com", false),
+				Config: testAccMemberConfig_invite("111111111111", rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, "111111111111"),
