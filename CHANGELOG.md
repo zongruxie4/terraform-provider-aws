@@ -7,6 +7,7 @@ BREAKING CHANGES:
 NOTES:
 
 * documentation: CDKTF documentation has been removed from the provider ([#47484](https://github.com/hashicorp/terraform-provider-aws/issues/47484))
+* resource/aws_eip: Because we cannot easily test this behavior in isolated regions, it is best effort and we ask for community help in testing ([#47091](https://github.com/hashicorp/terraform-provider-aws/issues/47091))
 
 FEATURES:
 
@@ -16,6 +17,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatch_log_metric_filter` ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * **New List Resource:** `aws_config_remediation_configuration` ([#47514](https://github.com/hashicorp/terraform-provider-aws/issues/47514))
 * **New List Resource:** `aws_ebs_volume` ([#47551](https://github.com/hashicorp/terraform-provider-aws/issues/47551))
+* **New List Resource:** `aws_eip` ([#47557](https://github.com/hashicorp/terraform-provider-aws/issues/47557))
 * **New List Resource:** `aws_iam_user_policy_attachment` ([#47467](https://github.com/hashicorp/terraform-provider-aws/issues/47467))
 * **New List Resource:** `aws_internet_gateway` ([#47529](https://github.com/hashicorp/terraform-provider-aws/issues/47529))
 * **New List Resource:** `aws_lambda_layer_version` ([#47496](https://github.com/hashicorp/terraform-provider-aws/issues/47496))
@@ -35,6 +37,7 @@ ENHANCEMENTS:
 * data-source/aws_odb_network: Enhancements to support cross-region restore. ([#46317](https://github.com/hashicorp/terraform-provider-aws/issues/46317))
 * resource/aws_cloudwatch_log_metric_filter: Add Resource Identity support ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * resource/aws_cloudwatch_metric_alarm: Add `evaluation_criteria` and `evaluation_interval` arguments in support of PromQL queries. Change `comparison_operator` and `evaluation_periods` to Optional ([#47449](https://github.com/hashicorp/terraform-provider-aws/issues/47449))
+* resource/aws_eip: Add resource identity support ([#47557](https://github.com/hashicorp/terraform-provider-aws/issues/47557))
 * resource/aws_eks_access_entry: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_eks_access_policy_association: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
 * resource/aws_eks_addon: Add Resource Identity support ([#47428](https://github.com/hashicorp/terraform-provider-aws/issues/47428))
@@ -64,6 +67,7 @@ BUG FIXES:
 * resource/aws_appintegrations_data_integration: Fix `source_uri` regular expression validation ([#47498](https://github.com/hashicorp/terraform-provider-aws/issues/47498))
 * resource/aws_cloudwatch_alarm_mute_rule: Fix `mute_targets.alarm_names` ordering causing "Provider produced inconsistent result after apply" errors ([#47507](https://github.com/hashicorp/terraform-provider-aws/issues/47507))
 * resource/aws_ecs_service: Excludes Express-Mode Services from listing. ([#47533](https://github.com/hashicorp/terraform-provider-aws/issues/47533))
+* resource/aws_eip: Gracefully handle `UnsupportedOperation` errors in isolated regions ([#47091](https://github.com/hashicorp/terraform-provider-aws/issues/47091))
 * resource/aws_msk_cluster: Fix a request parameter error when updating `broker_node_group_info.vpc_connectivity` configuration block. This fixes a regression introduced in [v6.40.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6400-april-8-2026) ([#47515](https://github.com/hashicorp/terraform-provider-aws/issues/47515))
 * resource/aws_odb_network: Fix `runtime error: invalid memory address or nil pointer dereference` panic in `statusManagedService()` and `statusNetwork()` when `FindOracleDBNetworkResourceByID` returns a nil result during resource creation ([#47159](https://github.com/hashicorp/terraform-provider-aws/issues/47159))
 
