@@ -25,11 +25,6 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"

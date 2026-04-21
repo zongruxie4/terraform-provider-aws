@@ -37,6 +37,7 @@ import (
 // @Testing(importIgnore="final_snapshot")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(name="Volume")
+// @Testing(generator=false)
 func resourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,

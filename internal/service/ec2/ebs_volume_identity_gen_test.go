@@ -27,7 +27,6 @@ func TestAccEC2EBSVolume_Identity_basic(t *testing.T) {
 
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -41,9 +40,7 @@ func TestAccEC2EBSVolume_Identity_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 				),
@@ -60,10 +57,8 @@ func TestAccEC2EBSVolume_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/Volume/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -76,9 +71,7 @@ func TestAccEC2EBSVolume_Identity_basic(t *testing.T) {
 			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -93,9 +86,7 @@ func TestAccEC2EBSVolume_Identity_basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -114,7 +105,6 @@ func TestAccEC2EBSVolume_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_volume.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -129,8 +119,7 @@ func TestAccEC2EBSVolume_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -147,8 +136,7 @@ func TestAccEC2EBSVolume_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -164,8 +152,7 @@ func TestAccEC2EBSVolume_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -183,8 +170,7 @@ func TestAccEC2EBSVolume_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -206,7 +192,6 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_basic(t *testing.T) {
 
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -219,9 +204,7 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_basic(t *testing.T) {
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic_v6.41.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 				),
@@ -234,9 +217,7 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -264,7 +245,6 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_noRefreshNoChange(t *testing.
 
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -282,9 +262,7 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_noRefreshNoChange(t *testing.
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Volume/basic_v6.41.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 				),
@@ -297,9 +275,7 @@ func TestAccEC2EBSVolume_Identity_ExistingResource_noRefreshNoChange(t *testing.
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Volume/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
