@@ -104,6 +104,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"StandardsSubscription": {
 			acctest.CtBasic:      testAccStandardsSubscription_basic,
 			acctest.CtDisappears: testAccStandardsSubscription_disappears,
+			"Identity":           testAccSecurityHubStandardsSubscription_identitySerial,
 		},
 	}
 
