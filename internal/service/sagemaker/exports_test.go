@@ -17,6 +17,37 @@ type (
 	InstancePlacementConfigModel          = instancePlacementConfigModel
 	StoppingConditionModel                = stoppingConditionModel
 	TransformJobDefinitionModel           = transformJobDefinitionModel
+
+	TrainingJobAlgorithmSpecificationModel = trainingJobAlgorithmSpecificationModel
+	TrainingJobMetricDefinitionModel       = trainingJobMetricDefinitionModel
+	TrainingJobModelPackageConfigModel     = trainingJobModelPackageConfigModel
+	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
+	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
+	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
+	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+
+	HyperParameterTrainingJobDefinitionModel   = hyperParameterTrainingJobDefinitionModel
+	HyperParameterAlgorithmSpecificationModel  = algorithmSpecificationModel
+	HyperParameterMetricDefinitionModel        = hyperParameterTuningMetricDefinitionModel
+	CheckpointConfigModel                      = checkpointConfigModel
+	ParameterRangesModel                       = parameterRangesModel
+	HyperParameterInputDataConfigModel         = inputDataConfigModel
+	HyperParameterDataSourceModel              = hyperParameterTuningDataSourceModel
+	HyperParameterFileSystemDataSourceModel    = hyperParameterTuningFileSystemDataSourceModel
+	HyperParameterHubAccessConfigModel         = hyperParameterTuningHubAccessConfigModel
+	HyperParameterModelAccessConfigModel       = hyperParameterTuningModelAccessConfigModel
+	HyperParameterS3DataSourceModel            = s3DataSourceModel
+	HyperParameterShuffleConfigModel           = hyperParameterTuningShuffleConfigModel
+	HyperParameterOutputDataConfigModel        = hyperParameterTuningOutputDataConfigModel
+	HyperParameterTrainingResourceConfigModel  = trainingResourceConfigModel
+	HyperParameterTuningResourceConfigModel    = hyperParameterTuningResourceConfigModel
+	HyperParameterInstanceConfigModel          = hyperParameterTuningInstanceConfigModel
+	HyperParameterInstanceGroupModel           = hyperParameterTuningInstanceGroupModel
+	HyperParameterInstancePlacementConfigModel = hyperParameterTuningInstancePlacementConfigModel
+	RetryStrategyModel                         = retryStrategyModel
+	HyperParameterStoppingConditionModel       = hyperParameterTuningStoppingConditionModel
+	TuningObjectiveModel                       = tuningObjectiveModel
+	HyperParameterTuningJobVPCConfigModel      = hyperParameterTuningJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -35,6 +66,7 @@ var (
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
+	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
@@ -51,6 +83,7 @@ var (
 	ResourceProject                                = resourceProject
 	ResourceSpace                                  = resourceSpace
 	ResourceStudioLifecycleConfig                  = resourceStudioLifecycleConfig
+	ResourceTrainingJob                            = newResourceTrainingJob
 	ResourceUserProfile                            = resourceUserProfile
 	ResourceWorkforce                              = resourceWorkforce
 	ResourceWorkteam                               = resourceWorkteam
@@ -68,6 +101,7 @@ var (
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
@@ -87,6 +121,7 @@ var (
 	FindServicecatalogPortfolioStatus         = findServicecatalogPortfolioStatus
 	FindSpaceByName                           = findSpaceByName
 	FindStudioLifecycleConfigByName           = findStudioLifecycleConfigByName
+	FindTrainingJobByName                     = findTrainingJobByName
 	FindUserProfileByName                     = findUserProfileByName
 	FindWorkforceByName                       = findWorkforceByName
 	FindWorkteamByName                        = findWorkteamByName
@@ -107,6 +142,12 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
+
+	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition         = normalizeStoppingCondition
+	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
+
+	RestoreTrainingJobDefinitionNoFlattenFields = restoreTrainingJobDefinitionNoFlattenFields
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
