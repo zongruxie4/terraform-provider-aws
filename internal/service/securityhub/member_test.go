@@ -59,6 +59,37 @@ func testAccMember_basic(t *testing.T) {
 	})
 }
 
+func testAccMember_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var member types.Member
+	resourceName := "aws_securityhub_member.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemberConfig_basic("111111111111"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemberExists(ctx, t, resourceName, &member),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceMember(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccMember_inviteTrue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var member types.Member
@@ -122,7 +153,7 @@ func testAccMember_inviteFalse(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.StringExact("111111111111")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEmail), knownvalue.StringExact(acctest.DefaultEmailAddress)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invite"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_status"), knownvalue.StringExact("Invited")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_status"), knownvalue.StringExact("Created")),
 				},
 			},
 			{
