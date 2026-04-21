@@ -223,11 +223,6 @@ resource "aws_securityhub_automation_rule" "example" {
 
 - `arn` (String) Amazon Resource Name (ARN) of the Security Hub automation rule.
 
-#### Optional
-
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
-
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub automation rules using `arn`. For example:
 
 ```terraform
