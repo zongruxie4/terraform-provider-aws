@@ -2135,6 +2135,17 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
+			Factory:  newEBSVolumeAttachmentResourceAsListResource,
+			TypeName: "aws_volume_attachment",
+			Name:     "EBS Volume Attachment",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrDeviceName, true),
+				inttypes.StringIdentityAttribute("volume_id", true),
+				inttypes.StringIdentityAttribute(names.AttrInstanceID, true),
+			}),
+		},
+		{
 			Factory:  newVPCResourceAsListResource,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
