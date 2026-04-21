@@ -130,7 +130,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrAccountID, member.AccountId)
 	// Only set email if returned by AWS API.
 	// For organization members, email is optional and not returned.
-	if member.Email != nil {
+	if member.Email != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set(names.AttrEmail, member.Email)
 	}
 	status := aws.ToString(member.MemberStatus)
