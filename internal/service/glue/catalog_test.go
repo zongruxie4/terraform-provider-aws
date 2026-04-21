@@ -62,6 +62,60 @@ func testAccCatalog_basic(t *testing.T) {
 	})
 }
 
+func testAccCatalog_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var catalog glue.GetCatalogOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCatalogConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccCatalogConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCatalog_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -372,4 +426,55 @@ resource "aws_lakeformation_resource" "test" {
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName)
+}
+
+func testAccCatalogConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_s3TablesBase(rName), fmt.Sprintf(`
+resource "aws_glue_catalog" "test" {
+  name        = "s3tablescatalog"
+  description = "Test S3 Tables federated catalog"
+
+  federated_catalog {
+    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+    connection_name = "aws:s3tables"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, tagKey1, tagValue1),
+	)
+}
+
+func testAccCatalogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_s3TablesBase(rName), fmt.Sprintf(`
+resource "aws_glue_catalog" "test" {
+  name        = "s3tablescatalog"
+  description = "Test S3 Tables federated catalog"
+
+  federated_catalog {
+    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+    connection_name = "aws:s3tables"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2),
+	)
 }
