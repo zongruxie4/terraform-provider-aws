@@ -107,6 +107,11 @@ resource "aws_securityhub_configuration_policy_association" "example" {
 
 - `target_id` (String) Identifier of the target account, organizational unit, or the root that is associated with the configuration.
 
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub configuration policy associations using `target_id`. For example:
 
 ```terraform

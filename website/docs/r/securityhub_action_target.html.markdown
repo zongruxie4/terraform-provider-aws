@@ -61,6 +61,11 @@ resource "aws_securityhub_action_target" "example" {
 
 - `arn` (String) Security Hub custom action ARN.
 
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub custom actions using `arn`. For example:
 
 ```terraform

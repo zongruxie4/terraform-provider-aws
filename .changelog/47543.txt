@@ -25,3 +25,7 @@ resource/aws_securityhub_standards_subscription: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_securityhub_standards_subscription: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_securityhub_member: Add Resource Identity support
+```
