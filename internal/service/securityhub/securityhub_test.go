@@ -53,6 +53,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"FindingAggregator": {
 			acctest.CtBasic:      testAccFindingAggregator_basic,
 			acctest.CtDisappears: testAccFindingAggregator_disappears,
+			"Identity":           testAccSecurityHubFindingAggregator_identitySerial,
 		},
 		"Insight": {
 			acctest.CtBasic:      testAccInsight_basic,
