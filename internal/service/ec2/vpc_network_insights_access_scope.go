@@ -133,9 +133,24 @@ func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resou
 		}
 	}
 
-	accessScopePathBlock := func() schema.ListNestedBlock {
+	matchPathBlock := func() schema.ListNestedBlock {
 		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[accessScopePathModel](ctx),
+			CustomType: fwtypes.NewListNestedObjectTypeOf[matchPathModel](ctx),
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.RequiresReplace(),
+			},
+			NestedObject: schema.NestedBlockObject{
+				Blocks: map[string]schema.Block{
+					names.AttrSource:      pathStatementBlock(),
+					names.AttrDestination: pathStatementBlock(),
+				},
+			},
+		}
+	}
+
+	excludePathBlock := func() schema.ListNestedBlock {
+		return schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[excludePathModel](ctx),
 			PlanModifiers: []planmodifier.List{
 				listplanmodifier.RequiresReplace(),
 			},
@@ -169,8 +184,8 @@ func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resou
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"match_paths":   accessScopePathBlock(),
-			"exclude_paths": accessScopePathBlock(),
+			"match_paths":   matchPathBlock(),
+			"exclude_paths": excludePathBlock(),
 		},
 	}
 }
@@ -337,15 +352,20 @@ func findNetworkInsightsAccessScopeByID(ctx context.Context, conn *ec2.Client, i
 
 type networkInsightsAccessScopeResourceModel struct {
 	framework.WithRegionModel
-	ARN          types.String                                          `tfsdk:"arn"`
-	ExcludePaths fwtypes.ListNestedObjectValueOf[accessScopePathModel] `tfsdk:"exclude_paths"`
-	ID           types.String                                          `tfsdk:"id"`
-	MatchPaths   fwtypes.ListNestedObjectValueOf[accessScopePathModel] `tfsdk:"match_paths"`
-	Tags         tftags.Map                                            `tfsdk:"tags"`
-	TagsAll      tftags.Map                                            `tfsdk:"tags_all"`
+	ARN          types.String                                      `tfsdk:"arn"`
+	ExcludePaths fwtypes.ListNestedObjectValueOf[excludePathModel] `tfsdk:"exclude_paths"`
+	ID           types.String                                      `tfsdk:"id"`
+	MatchPaths   fwtypes.ListNestedObjectValueOf[matchPathModel]   `tfsdk:"match_paths"`
+	Tags         tftags.Map                                        `tfsdk:"tags"`
+	TagsAll      tftags.Map                                        `tfsdk:"tags_all"`
 }
 
-type accessScopePathModel struct {
+type matchPathModel struct {
+	Source      fwtypes.ListNestedObjectValueOf[pathStatementModel] `tfsdk:"source"`
+	Destination fwtypes.ListNestedObjectValueOf[pathStatementModel] `tfsdk:"destination"`
+}
+
+type excludePathModel struct {
 	Source           fwtypes.ListNestedObjectValueOf[pathStatementModel]             `tfsdk:"source"`
 	Destination      fwtypes.ListNestedObjectValueOf[pathStatementModel]             `tfsdk:"destination"`
 	ThroughResources fwtypes.ListNestedObjectValueOf[throughResourcesStatementModel] `tfsdk:"through_resources"`

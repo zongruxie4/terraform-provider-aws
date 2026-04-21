@@ -52,7 +52,6 @@ func TestAccVPCNetworkInsightsAccessScope_basic(t *testing.T) {
 								}),
 							}),
 							names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{}),
-							"through_resources":   knownvalue.ListExact([]knownvalue.Check{}),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclude_paths"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -140,7 +139,7 @@ func TestAccVPCNetworkInsightsAccessScope_matchPaths_packetHeaderStatement(t *te
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("packet_header_statement").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"source_addresses":        knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("10.0.0.0/16")}),
+						"source_addresses":         knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("10.0.0.0/16")}),
 						"destination_addresses":    knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("192.168.0.0/24")}),
 						"source_ports":             knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("443")}),
 						"destination_ports":        knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("80")}),
