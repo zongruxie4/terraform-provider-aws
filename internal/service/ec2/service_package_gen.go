@@ -159,6 +159,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newNetworkInsightsAccessScopeResource,
+			TypeName: "aws_ec2_network_insights_access_scope",
+			Name:     "Network Insights Access Scope",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSecondaryNetworkResource,
 			TypeName: "aws_ec2_secondary_network",
 			Name:     "SecondaryNetwork",
