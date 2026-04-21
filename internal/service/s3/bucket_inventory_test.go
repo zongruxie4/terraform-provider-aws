@@ -125,7 +125,9 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 
 func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf types.InventoryConfiguration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_inventory.test"
 	inventoryName := t.Name()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,8 +137,15 @@ func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+				Config: testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketInventoryExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
