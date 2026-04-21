@@ -273,7 +273,10 @@ resource "aws_glue_catalog" "test" {
     connection_name = "aws:s3tables"
   }
 
-  depends_on = [aws_lakeformation_resource.test]
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
 `,
 	)
@@ -284,6 +287,15 @@ func testAccCatalogConfig_s3TablesBase(rName string) string {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+# Grant Lake Formation admin permissions to the test runner
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
 
 # IAM role for Lake Formation data access
 resource "aws_iam_role" "test" {
@@ -356,6 +368,8 @@ resource "aws_iam_role_policy" "test" {
 resource "aws_lakeformation_resource" "test" {
   arn      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
   role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName)
 }

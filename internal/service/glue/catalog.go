@@ -247,7 +247,8 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 	}
 	id := fmt.Sprintf("%s,%s", catalogId, catalogName)
 	plan.ID = types.StringValue(id)
-	catalog, err := findCatalogByID(ctx, conn, id)
+
+	catalog, err := waitCatalogCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
@@ -458,6 +459,12 @@ func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
+
+	_, err = waitCatalogDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		return
+	}
 }
 
 func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
@@ -473,6 +480,13 @@ func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstyp
 	out, err := conn.GetCatalog(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
+		// Lake Formation returns AccessDeniedException when catalog doesn't exist
+		// and caller lacks Lake Formation permissions
+		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Lake Formation permission") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -493,6 +507,58 @@ func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstyp
 	}
 
 	return out.Catalog, nil
+}
+
+const (
+	statusAvailable = "available"
+)
+
+func waitCatalogCreated(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusAvailable},
+		Refresh:                   statusCatalog(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Catalog); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCatalogDeleted(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusAvailable},
+		Target:  []string{},
+		Refresh: statusCatalog(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Catalog); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusCatalog(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findCatalogByID(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, statusAvailable, nil
+	}
 }
 
 func readCatalogResourceID(id string) (catalogId, name string, err error) {
