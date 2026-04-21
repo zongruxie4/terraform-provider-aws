@@ -136,6 +136,9 @@ func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resou
 	matchPathBlock := func() schema.ListNestedBlock {
 		return schema.ListNestedBlock{
 			CustomType: fwtypes.NewListNestedObjectTypeOf[matchPathModel](ctx),
+			Validators: []validator.List{
+				listvalidator.SizeAtLeast(1),
+			},
 			PlanModifiers: []planmodifier.List{
 				listplanmodifier.RequiresReplace(),
 			},
