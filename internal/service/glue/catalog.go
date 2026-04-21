@@ -24,16 +24,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_glue_catalog", name="Catalog")
+// @Tags(identifierAttribute="arn")
 func newResourceCatalog(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCatalog{}
 
@@ -80,6 +81,8 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"federated_catalog": schema.ListNestedBlock{
@@ -233,6 +236,8 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 
 	input.CatalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
 	input.CatalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
+
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateCatalog(ctx, &input)
 	if err != nil {
@@ -404,6 +409,16 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 	}
 
+	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("listing tags for Glue Catalog (%s)", state.ID.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+	setTagsOut(ctx, tags.Map())
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -415,18 +430,28 @@ func (r *resourceCatalog) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	// Check if non-tag attributes changed
+	if !plan.CatalogId.Equal(state.CatalogId) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.Name.Equal(state.Name) ||
+		!plan.FederatedCatalog.Equal(state.FederatedCatalog) ||
+		!plan.CatalogProperties.Equal(state.CatalogProperties) {
+		resp.Diagnostics.AddError(
+			"Update Not Supported",
+			"AWS Glue catalogs do not support updates. All attributes except tags require replacement.",
+		)
 		return
 	}
 
-	if diff.HasChanges() {
-		resp.Diagnostics.AddError(
-			"Update Not Supported",
-			"AWS Glue federated catalogs do not support updates. All attributes require replacement.",
-		)
-		return
+	// Handle tags update
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		if err := updateTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("updating tags for Glue Catalog (%s)", plan.ID.ValueString()),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -585,6 +610,8 @@ type resourceCatalogModel struct {
 	FederatedCatalog  fwtypes.ListNestedObjectValueOf[federatedCatalogModel]  `tfsdk:"federated_catalog"`
 	ID                types.String                                            `tfsdk:"id"`
 	Name              types.String                                            `tfsdk:"name"`
+	Tags              tftags.Map                                              `tfsdk:"tags"`
+	TagsAll           tftags.Map                                              `tfsdk:"tags_all"`
 	Timeouts          timeouts.Value                                          `tfsdk:"timeouts"`
 }
 
