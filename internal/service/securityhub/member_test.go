@@ -33,7 +33,7 @@ func testAccMember_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, "111111111111"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, ""),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Created"),
 				),
@@ -69,9 +69,10 @@ func testAccMember_inviteTrue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"invite"},
 			},
 		},
 	})
