@@ -2031,9 +2031,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  newLaunchTemplateResourceAsListResource,
-			TypeName: "aws_launch_template",
-			Name:     "Launch Template",
+			Factory:  newInternetGatewayResourceAsListResource,
+			TypeName: "aws_internet_gateway",
+			Name:     "Internet Gateway",
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
@@ -2041,9 +2041,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  newInternetGatewayResourceAsListResource,
-			TypeName: "aws_internet_gateway",
-			Name:     "Internet Gateway",
+			Factory:  newLaunchTemplateResourceAsListResource,
+			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
