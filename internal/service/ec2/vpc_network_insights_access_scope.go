@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -50,6 +52,12 @@ func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resou
 				listvalidator.SizeAtMost(1),
 			},
 			NestedObject: schema.NestedBlockObject{
+				Validators: []validator.Object{
+					tfobjectvalidator.ExactlyOneOfChildren(
+						path.MatchRelative().AtName(names.AttrResources),
+						path.MatchRelative().AtName("resource_types"),
+					),
+				},
 				Attributes: map[string]schema.Attribute{
 					names.AttrResources: schema.ListAttribute{
 						CustomType:  fwtypes.ListOfStringType,

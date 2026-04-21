@@ -91,6 +91,38 @@ func TestAccVPCNetworkInsightsAccessScope_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInsightsAccessScope_matchPaths_resources(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_access_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAccessScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsAccessScopeConfig_matchPathsResources(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkInsightsAccessScopeExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("resource_statement").AtSliceIndex(0).AtMapKey(names.AttrResources), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("vpc-123456"),
+						knownvalue.StringExact("vpc-654321"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("match_paths").AtSliceIndex(0).AtMapKey(names.AttrSource).AtSliceIndex(0).AtMapKey("resource_statement").AtSliceIndex(0).AtMapKey("resource_types"), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkInsightsAccessScopeExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -139,6 +171,20 @@ resource "aws_ec2_network_insights_access_scope" "test" {
     source {
       resource_statement {
         resource_types = ["AWS::EC2::NetworkInterface"]
+      }
+    }
+  }
+}
+`
+}
+
+func testAccVPCNetworkInsightsAccessScopeConfig_matchPathsResources() string {
+	return `
+resource "aws_ec2_network_insights_access_scope" "test" {
+  match_paths {
+    source {
+      resource_statement {
+        resources = ["vpc-123456", "vpc-654321"]
       }
     }
   }
