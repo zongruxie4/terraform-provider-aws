@@ -15,6 +15,7 @@ FEATURES:
 * **New List Resource:** `aws_apigatewayv2_api` ([#47472](https://github.com/hashicorp/terraform-provider-aws/issues/47472))
 * **New List Resource:** `aws_cloudwatch_log_metric_filter` ([#47495](https://github.com/hashicorp/terraform-provider-aws/issues/47495))
 * **New List Resource:** `aws_config_remediation_configuration` ([#47514](https://github.com/hashicorp/terraform-provider-aws/issues/47514))
+* **New List Resource:** `aws_ebs_volume` ([#47551](https://github.com/hashicorp/terraform-provider-aws/issues/47551))
 * **New List Resource:** `aws_iam_user_policy_attachment` ([#47467](https://github.com/hashicorp/terraform-provider-aws/issues/47467))
 * **New List Resource:** `aws_lambda_layer_version` ([#47496](https://github.com/hashicorp/terraform-provider-aws/issues/47496))
 * **New List Resource:** `aws_launch_template` ([#47540](https://github.com/hashicorp/terraform-provider-aws/issues/47540))
