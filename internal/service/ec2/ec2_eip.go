@@ -208,7 +208,8 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
 	if !eipID(d.Id()).IsVPC() {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
@@ -228,29 +229,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
 
-	allocationID := aws.ToString(address.AllocationId)
-	d.Set("allocation_id", allocationID)
-	d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
-	d.Set(names.AttrAssociationID, address.AssociationId)
-	d.Set("carrier_ip", address.CarrierIp)
-	d.Set("customer_owned_ip", address.CustomerOwnedIp)
-	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
-	d.Set(names.AttrDomain, address.Domain)
-	d.Set("instance", address.InstanceId)
-	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
-		d.Set("ipam_pool_id", v)
-	}
-	d.Set("network_border_group", address.NetworkBorderGroup)
-	d.Set("network_interface", address.NetworkInterfaceId)
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-	d.Set("private_ip", address.PrivateIpAddress)
-	if v := aws.ToString(address.PrivateIpAddress); v != "" {
-		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
-	}
-	d.Set("public_ip", address.PublicIp)
-	if v := aws.ToString(address.PublicIp); v != "" {
-		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
-	}
+	resourceEIPFlatten(ctx, awsClient, address, d)
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.
@@ -431,4 +410,40 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 
 func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string {
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
+}
+
+func resourceEIPFlatten(ctx context.Context, awsClient *conns.AWSClient, address *awstypes.Address, d *schema.ResourceData) {
+	allocationID := aws.ToString(address.AllocationId)
+
+	d.Set("allocation_id", allocationID)
+	d.Set(names.AttrARN, eipARN(ctx, awsClient, allocationID))
+	d.Set(names.AttrAssociationID, address.AssociationId)
+	d.Set("carrier_ip", address.CarrierIp)
+	d.Set("customer_owned_ip", address.CustomerOwnedIp)
+	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
+	d.Set(names.AttrDomain, address.Domain)
+	d.Set("instance", address.InstanceId)
+
+	if v := aws.ToString(address.PublicIpv4Pool); strings.HasPrefix(v, publicIPv4PoolIDIPAMPoolPrefix) {
+		d.Set("ipam_pool_id", v)
+	} else {
+		d.Set("ipam_pool_id", nil)
+	}
+
+	d.Set("network_border_group", address.NetworkBorderGroup)
+	d.Set("network_interface", address.NetworkInterfaceId)
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("private_ip", address.PrivateIpAddress)
+	if v := aws.ToString(address.PrivateIpAddress); v != "" {
+		d.Set("private_dns", awsClient.EC2PrivateDNSNameForIP(ctx, v))
+	} else {
+		d.Set("private_dns", nil)
+	}
+
+	d.Set("public_ip", address.PublicIp)
+	if v := aws.ToString(address.PublicIp); v != "" {
+		d.Set("public_dns", awsClient.EC2PublicDNSNameForIP(ctx, v))
+	} else {
+		d.Set("public_dns", nil)
+	}
 }
