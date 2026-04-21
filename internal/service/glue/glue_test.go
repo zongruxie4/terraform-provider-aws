@@ -19,6 +19,7 @@ func TestAccGlue_serial(t *testing.T) {
 			"catalogProperties":            testAccCatalog_catalogProperties,
 			"configurationError":           testAccCatalog_configurationError,
 			"Disappears_catalogProperties": testAccCatalog_Disappears_catalogProperties,
+			"tags":                         testAccCatalog_tags,
 		},
 		"CatalogDataSource": {
 			acctest.CtBasic: testAccCatalogDataSource_basic,

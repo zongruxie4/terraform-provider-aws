@@ -45,7 +45,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceCatalog,
 			TypeName: "aws_glue_catalog",
 			Name:     "Catalog",
-			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newCatalogTableOptimizerResource,
