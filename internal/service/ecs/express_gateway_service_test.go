@@ -23,6 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// NOTE: When running these tests, the Express-Mode Service may get stuck while tearing down.
+// This is most likely due to a permissions issue, as most of the default permissions on the
+// policy "AmazonECSInfrastructureRoleforExpressGatewayServices" are gated on the condition key
+// "aws:ResourceTag/AmazonECSManaged = true".
+// To unblock deletion, add the policy "AdministratorAccess" to the IAM Role for the running Service.
+// Alternatively, destroy the ECS Cluster which contains the Service, which will also delete the Service.
+
 func TestAccECSExpressGatewayService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -514,8 +521,8 @@ func testAccCheckExpressGatewayServiceExists(ctx context.Context, t *testing.T, 
 	}
 }
 
-func testAccExpressGatewayServiceConfig_base(rName string) string {
-	return fmt.Sprintf(`
+func testAccExpressGatewayServiceConfig_base(rName string, waitForSteadyState bool) string {
+	config := fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_vpc" "default" {
@@ -562,7 +569,11 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "execution" {
   role       = aws_iam_role.execution.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = data.aws_iam_policy.AmazonECSTaskExecutionRolePolicy.arn
+}
+
+data "aws_iam_policy" "AmazonECSTaskExecutionRolePolicy" {
+  name = "AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role_policy" "execution_logs" {
@@ -597,12 +608,35 @@ resource "aws_iam_role" "infrastructure" {
 }
 POLICY
 }
+`, rName)
 
+	// Many of the permissions in `AmazonECSInfrastructureRoleforExpressGatewayServices` are
+	// gated on the condition key "aws:ResourceTag/AmazonECSManaged = true".
+	// If we are not waiting for steady state, the resource may be deleted before those tags are applied,
+	// causing permission errors in teardown.
+	if waitForSteadyState {
+		return acctest.ConfigCompose(config, `
 resource "aws_iam_role_policy_attachment" "infrastructure" {
   role       = aws_iam_role.infrastructure.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+  policy_arn = data.aws_iam_policy.AmazonECSInfrastructureRoleforExpressGatewayServices.arn
 }
-`, rName)
+
+data "aws_iam_policy" "AmazonECSInfrastructureRoleforExpressGatewayServices" {
+  name = "AmazonECSInfrastructureRoleforExpressGatewayServices"
+}
+`)
+	} else {
+		return acctest.ConfigCompose(config, `
+resource "aws_iam_role_policy_attachment" "infrastructure" {
+  role       = aws_iam_role.infrastructure.name
+  policy_arn = data.aws_iam_policy.AdministratorAccess.arn
+}
+
+data "aws_iam_policy" "AdministratorAccess" {
+  name = "AdministratorAccess"
+}
+`)
+	}
 }
 
 func testAccExpressGatewayServiceConfig_basic(rName string, waitForSteadyState bool) string {
@@ -611,7 +645,7 @@ func testAccExpressGatewayServiceConfig_basic(rName string, waitForSteadyState b
 		waitForSteadyStateConfig = "wait_for_steady_state = true"
 	}
 
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, waitForSteadyState), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -635,7 +669,7 @@ func testAccExpressGatewayServiceConfig_updated(rName string, waitForSteadyState
 		waitForSteadyStateConfig = "wait_for_steady_state = true"
 	}
 
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, waitForSteadyState), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -661,7 +695,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 }
 
 func testAccExpressGatewayServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -683,7 +717,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 }
 
 func testAccExpressGatewayServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -706,7 +740,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 }
 
 func testAccExpressGatewayServiceConfig_networkConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -816,7 +850,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 }
 
 func testAccExpressGatewayServiceConfig_duplicate(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -850,7 +884,7 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
 // testAccExpressGatewayServiceConfig_environmentVariableOrdering creates a service
 // with env vars in non-alphabetical order.
 func testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -885,7 +919,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 // testAccExpressGatewayServiceConfig_environmentVariableUpdated creates a service
 // with updated env vars to test ordering after add/remove.
 func testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
