@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -24,8 +25,8 @@ func TestAccARCZonalShiftAutoshiftObserverNotificationStatus_serial(t *testing.T
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccARCZonalShiftAutoshiftObserverNotificationStatus_basic,
-		"update":             testAccARCZonalShiftAutoshiftObserverNotificationStatus_update,
 		acctest.CtDisappears: testAccARCZonalShiftAutoshiftObserverNotificationStatus_disappears,
+		"update":             testAccARCZonalShiftAutoshiftObserverNotificationStatus_update,
 		"Identity":           testAccARCZonalShiftAutoshiftObserverNotificationStatus_identitySerial,
 	}
 
@@ -98,6 +99,11 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_update(t *testing.T
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
 					resource.TestCheckResourceAttr(resourceName, "status", "DISABLED"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -144,7 +150,7 @@ func testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx context.Context,
 
 			// This is a singleton resource, so it can't be truly destroyed.
 			// When deleted, it should be set to DISABLED.
-			out, err := findAutoshiftObserverNotificationStatus(ctx, conn, rs.Primary.ID)
+			out, err := findAutoshiftObserverNotificationStatus(ctx, conn)
 			if err != nil {
 				return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, err)
 			}
@@ -171,7 +177,7 @@ func testAccCheckAutoshiftObserverNotificationStatusExists(ctx context.Context, 
 
 		conn := acctest.ProviderMeta(ctx, t).ARCZonalShiftClient(ctx)
 
-		resp, err := findAutoshiftObserverNotificationStatus(ctx, conn, rs.Primary.ID)
+		resp, err := findAutoshiftObserverNotificationStatus(ctx, conn)
 		if err != nil {
 			return create.Error(names.ARCZonalShift, create.ErrActionCheckingExistence, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, err)
 		}
@@ -199,7 +205,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonalshift.Client, id string) (*arczonalshift.GetAutoshiftObserverNotificationStatusOutput, error) {
+func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonalshift.Client) (*arczonalshift.GetAutoshiftObserverNotificationStatusOutput, error) {
 	input := arczonalshift.GetAutoshiftObserverNotificationStatusInput{}
 
 	out, err := conn.GetAutoshiftObserverNotificationStatus(ctx, &input)
