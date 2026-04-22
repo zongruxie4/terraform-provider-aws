@@ -35,13 +35,16 @@ import (
 // @FrameworkResource("aws_ec2_network_insights_access_scope", name="Network Insights Access Scope")
 // @Tags(identifierAttribute="id")
 // @Testing(generator=false)
+// @Testing(hasNoPreExistingResource=true)
+// @IdentityAttribute("id")
+// @ArnFormat("network-insights-access-scope/{id}", attribute="arn")
 func newNetworkInsightsAccessScopeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &networkInsightsAccessScopeResource{}, nil
 }
 
 type networkInsightsAccessScopeResource struct {
 	framework.ResourceWithModel[networkInsightsAccessScopeResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
