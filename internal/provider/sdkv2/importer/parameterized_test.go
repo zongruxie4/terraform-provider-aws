@@ -24,8 +24,8 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 	"region": sdkv2.RegionOptionalComputed(),
 }
 
-func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(attrName)
+func regionalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
 func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
@@ -326,8 +326,8 @@ var globalSingleParameterizedSchema = map[string]*schema.Schema{
 	},
 }
 
-func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(attrName)
+func globalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
 func globalSingleParameterizedIdentitySpecWithMappedName(attrName, resourceAttrName string) inttypes.Identity {

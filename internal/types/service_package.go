@@ -380,12 +380,12 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func RegionalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
-			StringIdentityAttribute(name, true),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}
@@ -414,12 +414,12 @@ func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttribut
 	return identity
 }
 
-func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func GlobalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute(name, true),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}

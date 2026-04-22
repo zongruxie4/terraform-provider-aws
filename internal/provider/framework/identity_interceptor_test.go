@@ -338,7 +338,7 @@ func getIdentityAttributeValue(ctx context.Context, t *testing.T, identity *tfsd
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
 func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {

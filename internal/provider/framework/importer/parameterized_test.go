@@ -44,7 +44,7 @@ var regionalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
 func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
@@ -52,7 +52,7 @@ func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAtt
 }
 
 func regionalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name,
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }
@@ -487,7 +487,7 @@ var globalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func globalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name)
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
 func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
@@ -495,7 +495,7 @@ func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrN
 }
 
 func globalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name,
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }
