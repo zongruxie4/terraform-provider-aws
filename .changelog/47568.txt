@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Waits until the service in `INACTIVE` instead of `DRAINING`.
+```
+
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Handles more transient API errors during creation and deletion.
+```
