@@ -66,8 +66,8 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_path"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"access_type": tfknownvalue.StringExact(awstypes.AccessTypePublic),
-							"endpoint":    tfknownvalue.RegionalHostnameOnDotAWSRegexp("ecs", regexache.MustCompile(`https://ng-\w+`)),
+							"access_type":      tfknownvalue.StringExact(awstypes.AccessTypePublic),
+							names.AttrEndpoint: tfknownvalue.RegionalHostnameOnDotAWSRegexp("ecs", regexache.MustCompile(`https://ng-\w+`)),
 						},
 						),
 					})),
