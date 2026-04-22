@@ -85,31 +85,31 @@ func (r *standardsControlAssociationResource) Create(ctx context.Context, reques
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.BatchUpdateStandardsControlAssociationsInput{
-		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{
-			{
-				AssociationStatus: awstypes.AssociationStatus(data.AssociationStatus.ValueString()),
-				SecurityControlId: data.SecurityControlID.ValueStringPointer(),
-				StandardsArn:      data.StandardsARN.ValueStringPointer(),
-				UpdatedReason:     data.UpdatedReason.ValueStringPointer(),
-			},
-		},
+	var apiObject awstypes.StandardsControlAssociationUpdate
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &apiObject)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
+	securityControlID, standardsARN := fwflex.StringValueFromFramework(ctx, data.SecurityControlID), fwflex.StringValueFromFramework(ctx, data.StandardsARN)
+	id, _ := standardsControlAssociationCreateResourceID(securityControlID, standardsARN)
+	input := securityhub.BatchUpdateStandardsControlAssociationsInput{
+		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{apiObject},
+	}
+
+	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, &input)
 
 	if err == nil {
 		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Standards Control Association", err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("creating SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -121,15 +121,15 @@ func (r *standardsControlAssociationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	if err := data.InitFromID(ctx); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	securityControlID, standardsARN, err := standardsControlAssociationParseResourceID(id)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	securityControlID, standardsARN := data.SecurityControlID.ValueString(), data.StandardsARN.ValueString()
 	output, err := findStandardsControlAssociationByTwoPartKey(ctx, conn, securityControlID, standardsARN)
 
 	if retry.NotFound(err) {
@@ -139,8 +139,7 @@ func (r *standardsControlAssociationResource) Read(ctx context.Context, request 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s/%s)", securityControlID, standardsARN), err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
@@ -161,26 +160,25 @@ func (r *standardsControlAssociationResource) Update(ctx context.Context, reques
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.BatchUpdateStandardsControlAssociationsInput{
-		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{
-			{
-				AssociationStatus: awstypes.AssociationStatus(data.AssociationStatus.ValueString()),
-				SecurityControlId: data.SecurityControlID.ValueStringPointer(),
-				StandardsArn:      data.StandardsARN.ValueStringPointer(),
-				UpdatedReason:     data.UpdatedReason.ValueStringPointer(),
-			},
-		},
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	var apiObject awstypes.StandardsControlAssociationUpdate
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &apiObject)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, input)
+	input := securityhub.BatchUpdateStandardsControlAssociationsInput{
+		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{apiObject},
+	}
+
+	output, err := conn.BatchUpdateStandardsControlAssociations(ctx, &input)
 
 	if err == nil {
 		err = unprocessedAssociationUpdatesError(output.UnprocessedAssociationUpdates)
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("updating Standards Control Association", err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("updating SecurityHub Standards Control Association (%s)", id), err.Error())
 		return
 	}
 
@@ -224,38 +222,30 @@ const (
 	standardsControlAssociationResourceIDPartCount = 2
 )
 
-func (m *standardsControlAssociationResourceModel) InitFromID(ctx context.Context) error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), standardsControlAssociationResourceIDPartCount, false)
-	if err != nil {
-		return err
-	}
-
-	m.SecurityControlID = types.StringValue(parts[0])
-	m.StandardsARN = fwtypes.ARNValue(parts[1])
-
-	return nil
-}
-
-func (m *standardsControlAssociationResourceModel) setID() {
-	id, _ := standardsControlAssociationCreateResourceID(m.SecurityControlID.ValueString(), m.StandardsARN.ValueString())
-	m.ID = types.StringValue(id)
-}
-
 func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
 	return flex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
 }
 
+func standardsControlAssociationParseResourceID(id string) (string, string, error) {
+	parts, err := flex.ExpandResourceId(id, standardsControlAssociationResourceIDPartCount, false)
+	if err != nil {
+		return "", "", err
+	}
+
+	return parts[0], parts[1], nil
+}
+
 func findStandardsControlAssociationByTwoPartKey(ctx context.Context, conn *securityhub.Client, securityControlID string, standardsARN string) (*awstypes.StandardsControlAssociationSummary, error) {
-	input := &securityhub.ListStandardsControlAssociationsInput{
+	input := securityhub.ListStandardsControlAssociationsInput{
 		SecurityControlId: aws.String(securityControlID),
 	}
 
-	return findStandardsControlAssociation(ctx, conn, input, func(v *awstypes.StandardsControlAssociationSummary) bool {
+	return findStandardsControlAssociation(ctx, conn, &input, func(v awstypes.StandardsControlAssociationSummary) bool {
 		return aws.ToString(v.StandardsArn) == standardsARN
 	})
 }
 
-func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[*awstypes.StandardsControlAssociationSummary]) (*awstypes.StandardsControlAssociationSummary, error) {
+func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[awstypes.StandardsControlAssociationSummary]) (*awstypes.StandardsControlAssociationSummary, error) {
 	output, err := findStandardsControlAssociations(ctx, conn, input, filter)
 
 	if err != nil {
@@ -265,7 +255,7 @@ func findStandardsControlAssociation(ctx context.Context, conn *securityhub.Clie
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[*awstypes.StandardsControlAssociationSummary]) ([]awstypes.StandardsControlAssociationSummary, error) {
+func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListStandardsControlAssociationsInput, filter tfslices.Predicate[awstypes.StandardsControlAssociationSummary]) ([]awstypes.StandardsControlAssociationSummary, error) {
 	var output []awstypes.StandardsControlAssociationSummary
 
 	pages := securityhub.NewListStandardsControlAssociationsPaginator(conn, input)
@@ -283,7 +273,7 @@ func findStandardsControlAssociations(ctx context.Context, conn *securityhub.Cli
 		}
 
 		for _, v := range page.StandardsControlAssociationSummaries {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
