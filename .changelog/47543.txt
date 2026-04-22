@@ -41,3 +41,7 @@ resource/aws_securityhub_standards_control_association: Add Resource Identity su
 ```release-note:enhancement
 resource/aws_securityhub_product_subscription: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_securityhub_organization_admin_account: Add Resource Identity support
+```

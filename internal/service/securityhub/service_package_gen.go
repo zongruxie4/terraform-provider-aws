@@ -149,6 +149,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_securityhub_organization_admin_account",
 			Name:     "Organization Admin Account",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity("admin_account_id", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceOrganizationConfiguration,

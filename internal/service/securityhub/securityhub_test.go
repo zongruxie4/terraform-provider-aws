@@ -85,6 +85,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
 			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 			"MultiRegion":        testAccOrganizationAdminAccount_MultiRegion,
+			"Identity":           testAccSecurityHubOrganizationAdminAccount_identitySerial,
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic:        testAccOrganizationConfiguration_basic,
