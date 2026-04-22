@@ -15,25 +15,37 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_securityhub_standards_control_association", name="Standards Control Association")
+// @IdentityAttribute("security_control_id")
+// @IdentityAttribute("standards_arn")
+// @ImportIDHandler("standardsControlAssociationImportID", setIDAttribute=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControlAssociationSummary")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(importStateIdFunc=testAccCheckStandardsControlAssociationImportStateIDFunc)
 func newStandardsControlAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &standardsControlAssociationResource{}
 
@@ -43,6 +55,7 @@ func newStandardsControlAssociationResource(_ context.Context) (resource.Resourc
 type standardsControlAssociationResource struct {
 	framework.ResourceWithModel[standardsControlAssociationResourceModel]
 	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
 func (r *standardsControlAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -223,11 +236,11 @@ const (
 )
 
 func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
-	return flex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
+	return intflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
 }
 
 func standardsControlAssociationParseResourceID(id string) (string, string, error) {
-	parts, err := flex.ExpandResourceId(id, standardsControlAssociationResourceIDPartCount, false)
+	parts, err := intflex.ExpandResourceId(id, standardsControlAssociationResourceIDPartCount, false)
 	if err != nil {
 		return "", "", err
 	}
@@ -303,4 +316,36 @@ func unprocessedAssociationUpdateError(apiObject *awstypes.UnprocessedStandardsC
 	}
 
 	return fmt.Errorf("%s: %s", apiObject.ErrorCode, aws.ToString(apiObject.ErrorReason))
+}
+
+var (
+	_ inttypes.ImportIDParser           = standardsControlAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = standardsControlAssociationImportID{}
+)
+
+type standardsControlAssociationImportID struct{}
+
+func (standardsControlAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	securityControlID, standardsARN, err := standardsControlAssociationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"security_control_id": securityControlID,
+		"standards_arn":       standardsARN,
+	}
+
+	return id, result, nil
+}
+
+func (standardsControlAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var diags diag.Diagnostics
+	var securityControlID types.String
+	diags.Append(state.GetAttribute(ctx, path.Root("security_control_id"), &securityControlID)...)
+	var standardsARN fwtypes.ARN
+	diags.Append(state.GetAttribute(ctx, path.Root("standards_arn"), &standardsARN)...)
+	id, _ := standardsControlAssociationCreateResourceID(fwflex.StringValueFromFramework(ctx, securityControlID), fwflex.StringValueFromFramework(ctx, standardsARN))
+
+	return id
 }

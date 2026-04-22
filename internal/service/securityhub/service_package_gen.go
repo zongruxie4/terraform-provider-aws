@@ -51,6 +51,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_securityhub_standards_control_association",
 			Name:     "Standards Control Association",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("security_control_id", true),
+				inttypes.StringIdentityAttribute("standards_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      standardsControlAssociationImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
 }

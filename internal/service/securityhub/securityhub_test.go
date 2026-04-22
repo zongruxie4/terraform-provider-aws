@@ -102,6 +102,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"StandardsControlAssociation": {
 			acctest.CtBasic: testAccStandardsControlAssociation_basic,
+			"Identity":      testAccSecurityHubStandardsControlAssociation_identitySerial,
 		},
 		"StandardsControlAssociationsDataSource": {
 			acctest.CtBasic: testAccStandardsControlAssociationsDataSource_basic,
