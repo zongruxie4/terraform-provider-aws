@@ -33,15 +33,13 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.41.0")
 // @Testing(generator=false)
+// Custom setup steps.
+// @Testing(identityTest=false)
 func resourceProductSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductSubscriptionCreate,
 		ReadWithoutTimeout:   resourceProductSubscriptionRead,
 		DeleteWithoutTimeout: resourceProductSubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
