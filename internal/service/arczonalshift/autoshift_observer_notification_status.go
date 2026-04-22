@@ -10,14 +10,13 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,11 +48,9 @@ func (r *autoshiftObserverNotificationStatusResource) Schema(ctx context.Context
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"status": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("ENABLED", "DISABLED"),
-				},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AutoshiftObserverNotificationStatus](),
+				Required:   true,
 			},
 		},
 	}
@@ -69,7 +66,7 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 	}
 
 	input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
-		Status: awstypes.AutoshiftObserverNotificationStatus(plan.Status.ValueString()),
+		Status: plan.Status.ValueEnum(),
 	}
 
 	out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
@@ -107,7 +104,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 		return
 	}
 
-	state.Status = types.StringValue(string(out.Status))
+	state.Status = fwtypes.StringEnumValue(out.Status)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -124,7 +121,7 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 
 	if !plan.Status.Equal(state.Status) {
 		input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
-			Status: awstypes.AutoshiftObserverNotificationStatus(plan.Status.ValueString()),
+			Status: plan.Status.ValueEnum(),
 		}
 
 		out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
@@ -180,6 +177,6 @@ func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonal
 
 type autoshiftObserverNotificationStatusResourceModel struct {
 	framework.WithRegionModel
-	ID     types.String `tfsdk:"id"`
-	Status types.String `tfsdk:"status"`
+	ID     types.String                                                     `tfsdk:"id"`
+	Status fwtypes.StringEnum[awstypes.AutoshiftObserverNotificationStatus] `tfsdk:"status"`
 }
