@@ -6,6 +6,7 @@ package arczonalshift_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
@@ -15,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfarczonalshift "github.com/hashicorp/terraform-provider-aws/internal/service/arczonalshift"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccARCZonalShiftAutoshiftObserverNotificationStatus_serial(t *testing.T) {
@@ -221,9 +221,9 @@ func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonal
 }
 
 func testAccAutoshiftObserverNotificationStatusConfig_basic(status string) string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_arczonalshift_autoshift_observer_notification_status" "test" {
-  status = "` + status + `"
+  status = %[1]q
 }
-`
+`, status)
 }
