@@ -6,7 +6,6 @@ package arczonalshift
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,10 +32,6 @@ import (
 func newAutoshiftObserverNotificationStatusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &autoshiftObserverNotificationStatusResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -48,7 +42,6 @@ const (
 type autoshiftObserverNotificationStatusResource struct {
 	framework.ResourceWithModel[autoshiftObserverNotificationStatusResourceModel]
 	framework.WithImportByIdentity
-	framework.WithTimeouts
 }
 
 func (r *autoshiftObserverNotificationStatusResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -77,10 +70,6 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 	input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
 		Status: awstypes.AutoshiftObserverNotificationStatus(plan.Status.ValueString()),
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AutoshiftObserverNotificationStatus")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
 	if err != nil {
@@ -89,11 +78,6 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 	}
 	if out == nil || out.Status == "" {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"))
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -111,7 +95,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 		return
 	}
 
-	out, err := findAutoshiftObserverNotificationStatus(ctx, conn, "")
+	out, err := findAutoshiftObserverNotificationStatus(ctx, conn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -122,12 +106,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	state.ID = types.StringValue(r.Meta().Region(ctx))
+	state.Status = types.StringValue(string(out.Status))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -142,19 +121,9 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
+	if !plan.Status.Equal(state.Status) {
 		input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
 			Status: awstypes.AutoshiftObserverNotificationStatus(plan.Status.ValueString()),
-		}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AutoshiftObserverNotificationStatus")))
-		if resp.Diagnostics.HasError() {
-			return
 		}
 
 		out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
@@ -164,11 +133,6 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 		}
 		if out == nil || out.Status == "" {
 			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"))
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -181,12 +145,6 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 func (r *autoshiftObserverNotificationStatusResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ARCZonalShiftClient(ctx)
 
-	var state autoshiftObserverNotificationStatusResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
 		Status: awstypes.AutoshiftObserverNotificationStatusDisabled,
 	}
@@ -198,7 +156,7 @@ func (r *autoshiftObserverNotificationStatusResource) Delete(ctx context.Context
 	}
 }
 
-func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonalshift.Client, id string) (*arczonalshift.GetAutoshiftObserverNotificationStatusOutput, error) {
+func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonalshift.Client) (*arczonalshift.GetAutoshiftObserverNotificationStatusOutput, error) {
 	input := arczonalshift.GetAutoshiftObserverNotificationStatusInput{}
 
 	out, err := conn.GetAutoshiftObserverNotificationStatus(ctx, &input)
