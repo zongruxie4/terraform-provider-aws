@@ -120,6 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Integration.
 * `id` - (**Deprecated**, use `arn` instead) ARN of the Integration.
+* `integration_identifier` - Identifier of the Integration. This value can be used when creating the target database to [receive results of zero-ETL integrations](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_DATABASE.html#r_CREATE_DATABASE-integration).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

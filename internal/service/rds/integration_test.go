@@ -546,5 +546,11 @@ resource "aws_rds_integration" "test" {
     aws_redshift_resource_policy.test,
   ]
 }
+
+resource "aws_redshiftdata_statement" "test" {
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = aws_redshiftserverless_namespace.test.db_name
+  sql            = "CREATE DATABASE mydb FROM INTEGRATION '${aws_rds_integration.test.integration_identifier}';"
+}
 `, integrationName, dataFilter))
 }

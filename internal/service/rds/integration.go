@@ -9,9 +9,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -85,6 +87,12 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
+			"integration_identifier": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"integration_name": schema.StringAttribute{
 				Required: true,
 			},
@@ -152,7 +160,8 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.IntegrationARN = fwflex.StringToFramework(ctx, output.IntegrationArn)
-	data.setID()
+	data.IntegrationIdentifier = integrationIDFromARN(data.IntegrationARN)
+	data.ID = data.IntegrationARN // Deprecated, for backward compatibility
 
 	integration, err := waitIntegrationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -177,11 +186,9 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
+	// To support import
+	data.IntegrationARN = data.ID
+	data.IntegrationIdentifier = integrationIDFromARN(data.IntegrationARN)
 
 	conn := r.Meta().RDSClient(ctx)
 
@@ -369,7 +376,7 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 
 func waitIntegrationUpdated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{integrationStatusModifying},
+		Pending: []string{integrationStatusModifying, integrationStatusSyncing},
 		Target:  []string{integrationStatusActive},
 		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
@@ -415,6 +422,7 @@ type integrationResourceModel struct {
 	DataFilter                  types.String        `tfsdk:"data_filter"`
 	ID                          types.String        `tfsdk:"id"`
 	IntegrationARN              types.String        `tfsdk:"arn"`
+	IntegrationIdentifier       types.String        `tfsdk:"integration_identifier"`
 	IntegrationName             types.String        `tfsdk:"integration_name"`
 	KMSKeyID                    types.String        `tfsdk:"kms_key_id"`
 	SourceARN                   fwtypes.ARN         `tfsdk:"source_arn"`
@@ -424,12 +432,28 @@ type integrationResourceModel struct {
 	Timeouts                    timeouts.Value      `tfsdk:"timeouts"`
 }
 
-func (model *integrationResourceModel) InitFromID() error {
-	model.IntegrationARN = model.ID
+// integrationIDFromARN extracts the integration identifier from
+// the integration ARN.
+// arn:${Partition}:rds:${Region}:${Account}:integration:${IntegrationIdentifier}
+//
+// A null value is returned if:
+// - The argument is null or unknown
+// - The argument value string is not a valid ARN
+// - The resource section of the ARN is in an unexpected format
+func integrationIDFromARN(integrationARN types.String) types.String {
+	if integrationARN.IsNull() || integrationARN.IsUnknown() {
+		return types.StringNull()
+	}
 
-	return nil
-}
+	parsed, err := arn.Parse(integrationARN.ValueString())
+	if err != nil {
+		return types.StringNull()
+	}
 
-func (model *integrationResourceModel) setID() {
-	model.ID = model.IntegrationARN
+	parts := strings.Split(parsed.Resource, ":")
+	if len(parts) != 2 {
+		return types.StringNull()
+	}
+
+	return types.StringValue(parts[1])
 }
