@@ -82,7 +82,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_product_subscription.example
   identity = {
-    product_arn = "arn:aws:securityhub:eu-west-1:123456789012:product/alertlogic/althreatmanagement"
+    product_arn = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement"
     arn         = "arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
   }
 }
@@ -109,12 +109,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_securityhub_product_subscription.example
-  id = "arn:aws:securityhub:eu-west-1:123456789012:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+  id = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
 }
 ```
 
 Using `terraform import`, import Security Hub product subscriptions using `product_arn` and `arn` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:123456789012:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
+% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
 ```

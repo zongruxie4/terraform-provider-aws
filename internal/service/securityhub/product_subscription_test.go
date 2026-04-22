@@ -155,12 +155,16 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context, t *testing.T) r
 }
 
 func testAccDeleteProductSubscriptionFunc(ctx context.Context, t *testing.T, name string) func() {
+	return testAccDeleteProductSubscriptionRegionFunc(ctx, t, name, acctest.Region())
+}
+
+func testAccDeleteProductSubscriptionRegionFunc(ctx context.Context, t *testing.T, name, region string) func() {
 	return func() {
 		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 		productSubscriptionARN := arn.ARN{
 			Partition: acctest.Partition(),
 			Service:   "securityhub",
-			Region:    acctest.Region(),
+			Region:    region,
 			AccountID: acctest.AccountID(ctx),
 			Resource:  name,
 		}.String()
@@ -168,7 +172,9 @@ func testAccDeleteProductSubscriptionFunc(ctx context.Context, t *testing.T, nam
 			ProductSubscriptionArn: aws.String(productSubscriptionARN),
 		}
 
-		_, err := conn.DisableImportFindingsForProduct(ctx, &input)
+		_, err := conn.DisableImportFindingsForProduct(ctx, &input, func(o *securityhub.Options) {
+			o.Region = region
+		})
 
 		if err != nil {
 			t.Fatalf("error disabling Security Hub Product Subscription for GuardDuty: %s", err)
@@ -179,6 +185,14 @@ func testAccDeleteProductSubscriptionFunc(ctx context.Context, t *testing.T, nam
 const testAccProductSubscriptionConfig_accountOnly = `
 resource "aws_securityhub_account" "test" {}
 `
+
+func testAccProductSubscriptionConfig_accountOnlyRegion(region string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {
+  region = %[1]q
+}
+`, region)
+}
 
 var testAccProductSubscriptionConfig_basic = acctest.ConfigCompose(testAccProductSubscriptionConfig_accountOnly, `
 data "aws_region" "current" {}
