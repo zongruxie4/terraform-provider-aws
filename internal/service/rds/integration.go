@@ -139,10 +139,10 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	conn := r.Meta().RDSClient(ctx)
-
 	name := data.IntegrationName.ValueString()
-	input := &rds.CreateIntegrationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+
+	var input rds.CreateIntegrationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -150,8 +150,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateIntegration(ctx, input)
-
+	output, err := conn.CreateIntegration(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating RDS Integration (%s)", name), err.Error())
 
@@ -186,7 +185,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	// To support import
+	// Import support.
 	data.IntegrationARN = data.ID
 	data.IntegrationIdentifier = integrationIDFromARN(data.IntegrationARN)
 
@@ -273,14 +272,14 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().RDSClient(ctx)
 
-	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
+	input := rds.DeleteIntegrationInput{
 		IntegrationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
 
+	_, err := conn.DeleteIntegration(ctx, &input)
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting RDS Integration (%s)", data.ID.ValueString()), err.Error())
 
