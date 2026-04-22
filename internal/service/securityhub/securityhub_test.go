@@ -44,6 +44,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtDisappears: testAccConfigurationPolicy_disappears,
 			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
+			"Identity":           testAccSecurityHubConfigurationPolicy_identitySerial,
 		},
 		"ConfigurationPolicyAssociation": {
 			acctest.CtBasic:      testAccConfigurationPolicyAssociation_basic,
