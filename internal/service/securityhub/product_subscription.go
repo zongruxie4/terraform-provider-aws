@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -179,7 +178,8 @@ const (
 )
 
 func productSubscriptionCreateResourceID(productARN, productSubscriptionARN string) string {
-	return errs.Must(flex.FlattenResourceId([]string{productARN, productSubscriptionARN}, productSubscriptionResourceIDPartCount, false))
+	id, _ := flex.FlattenResourceId([]string{productARN, productSubscriptionARN}, productSubscriptionResourceIDPartCount, false)
+	return id
 }
 
 func productSubscriptionParseResourceID(id string) (string, string, error) {
