@@ -50,7 +50,7 @@ func (v regionalHostnameOnDotAWSRegexp) buildHostnameString() string {
 	return fmt.Sprintf(`^%s\.%s\.%s\.%s$`, v.hostnameRegexp.String(), v.service, v.region, "on.aws")
 }
 
-func RegionalHostnameOnDotAWSRegexp(service string, hostname *regexp.Regexp) knownvalue.Check {
+func RegionalHostnameOnDotAWSRegexp(service string, hostname *regexp.Regexp) knownvalue.Check { // nosemgrep:ci.aws-in-func-name
 	return regionalHostnameOnDotAWSRegexp{
 		check:          "RegionalHostnameOnDotAWSRegexp",
 		region:         acctest.Region(),
