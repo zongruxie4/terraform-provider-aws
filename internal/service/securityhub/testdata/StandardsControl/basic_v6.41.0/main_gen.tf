@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource aws_securityhub_standards_control test {
+resource "aws_securityhub_standards_control" "test" {
   standards_control_arn = format("%s/1.10", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
 }

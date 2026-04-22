@@ -1,4 +1,4 @@
-resource aws_securityhub_standards_control test {
+resource "aws_securityhub_standards_control" "test" {
 {{- template "region" }}
   standards_control_arn = format("%s/1.10", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
