@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -34,10 +33,10 @@ import (
 
 // @FrameworkResource("aws_ec2_network_insights_access_scope", name="Network Insights Access Scope")
 // @Tags(identifierAttribute="id")
-// @Testing(generator=false)
-// @Testing(hasNoPreExistingResource=true)
 // @IdentityAttribute("id")
 // @ArnFormat("network-insights-access-scope/{id}", attribute="arn")
+// @Testing(generator=false)
+// @Testing(hasNoPreExistingResource=true)
 func newNetworkInsightsAccessScopeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &networkInsightsAccessScopeResource{}, nil
 }
@@ -48,150 +47,133 @@ type networkInsightsAccessScopeResource struct {
 }
 
 func (r *networkInsightsAccessScopeResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resourceStatementBlock := func() schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[resourceStatementModel](ctx),
-			Validators: []validator.List{
-				listvalidator.SizeAtMost(1),
+	resourceStatementBlock := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceStatementModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName(names.AttrResources),
+					path.MatchRelative().AtName("resource_types"),
+				),
 			},
-			NestedObject: schema.NestedBlockObject{
-				Validators: []validator.Object{
-					tfobjectvalidator.ExactlyOneOfChildren(
-						path.MatchRelative().AtName(names.AttrResources),
-						path.MatchRelative().AtName("resource_types"),
-					),
+			Attributes: map[string]schema.Attribute{
+				names.AttrResources: schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					Optional:    true,
+					ElementType: types.StringType,
 				},
-				Attributes: map[string]schema.Attribute{
-					names.AttrResources: schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						Optional:    true,
-						ElementType: types.StringType,
-					},
-					"resource_types": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						Optional:    true,
-						ElementType: types.StringType,
-					},
+				"resource_types": schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					Optional:    true,
+					ElementType: types.StringType,
 				},
 			},
-		}
+		},
 	}
 
-	pathStatementBlock := func() schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[pathStatementModel](ctx),
-			Validators: []validator.List{
-				listvalidator.SizeAtMost(1),
-			},
-			NestedObject: schema.NestedBlockObject{
-				Blocks: map[string]schema.Block{
-					"packet_header_statement": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[packetHeaderStatementModel](ctx),
-						Validators: []validator.List{
-							listvalidator.SizeAtMost(1),
-						},
-						NestedObject: schema.NestedBlockObject{
-							Attributes: map[string]schema.Attribute{
-								"source_addresses": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"destination_addresses": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"source_ports": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"destination_ports": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"source_prefix_lists": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"destination_prefix_lists": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"protocols": schema.ListAttribute{
-									CustomType:  fwtypes.ListOfStringType,
-									Optional:    true,
-									ElementType: types.StringType,
-								},
+	pathStatementBlock := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[pathStatementModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"packet_header_statement": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[packetHeaderStatementModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"source_addresses": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
 							},
-						},
-					},
-					"resource_statement": resourceStatementBlock(),
-				},
-			},
-		}
-	}
-
-	matchPathBlock := func() schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[matchPathModel](ctx),
-			Validators: []validator.List{
-				listvalidator.SizeAtLeast(1),
-			},
-			PlanModifiers: []planmodifier.List{
-				listplanmodifier.RequiresReplace(),
-			},
-			NestedObject: schema.NestedBlockObject{
-				Blocks: map[string]schema.Block{
-					names.AttrSource:      pathStatementBlock(),
-					names.AttrDestination: pathStatementBlock(),
-				},
-			},
-		}
-	}
-
-	excludePathBlock := func() schema.ListNestedBlock {
-		return schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[excludePathModel](ctx),
-			PlanModifiers: []planmodifier.List{
-				listplanmodifier.RequiresReplace(),
-			},
-			NestedObject: schema.NestedBlockObject{
-				Blocks: map[string]schema.Block{
-					names.AttrSource:      pathStatementBlock(),
-					names.AttrDestination: pathStatementBlock(),
-					"through_resources": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[throughResourcesStatementModel](ctx),
-						NestedObject: schema.NestedBlockObject{
-							Blocks: map[string]schema.Block{
-								"resource_statement": resourceStatementBlock(),
+							"destination_addresses": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"source_ports": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"destination_ports": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"source_prefix_lists": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"destination_prefix_lists": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"protocols": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								Optional:    true,
+								ElementType: types.StringType,
 							},
 						},
 					},
 				},
+				"resource_statement": resourceStatementBlock,
 			},
-		}
+		},
 	}
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"match_paths":   matchPathBlock(),
-			"exclude_paths": excludePathBlock(),
+			"match_paths": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[matchPathModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						names.AttrSource:      pathStatementBlock,
+						names.AttrDestination: pathStatementBlock,
+					},
+				},
+			},
+			"exclude_paths": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[excludePathModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						names.AttrSource:      pathStatementBlock,
+						names.AttrDestination: pathStatementBlock,
+						"through_resources": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[throughResourcesStatementModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"resource_statement": resourceStatementBlock,
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -254,25 +236,9 @@ func (r *networkInsightsAccessScopeResource) Read(ctx context.Context, request r
 		return
 	}
 
-	data.ARN = fwflex.StringToFramework(ctx, scope.NetworkInsightsAccessScopeArn)
-
-	setTagsOut(ctx, scope.Tags)
-
-	contentInput := ec2.GetNetworkInsightsAccessScopeContentInput{
-		NetworkInsightsAccessScopeId: aws.String(id),
-	}
-	contentOutput, err := conn.GetNetworkInsightsAccessScopeContent(ctx, &contentInput)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Network Insights Access Scope (%s) content", id), err.Error())
+	response.Diagnostics.Append(r.flatten(ctx, scope, &data)...)
+	if response.Diagnostics.HasError() {
 		return
-	}
-
-	if v := contentOutput.NetworkInsightsAccessScopeContent; v != nil {
-		response.Diagnostics.Append(fwflex.Flatten(ctx, v, &data)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -353,8 +319,6 @@ func findNetworkInsightsAccessScopeByID(ctx context.Context, conn *ec2.Client, i
 
 	return output, nil
 }
-
-// Models.
 
 type networkInsightsAccessScopeResourceModel struct {
 	framework.WithRegionModel
