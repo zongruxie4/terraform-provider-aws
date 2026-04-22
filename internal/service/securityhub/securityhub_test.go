@@ -92,8 +92,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
-			acctest.CtBasic: testAccProductSubscription_basic,
-			"Identity":      testAccSecurityHubProductSubscription_identitySerial,
+			acctest.CtBasic:      testAccProductSubscription_basic,
+			acctest.CtDisappears: testAccProductSubscription_disappears,
+			"Identity":           testAccSecurityHubProductSubscription_identitySerial,
 		},
 		"StandardsControl": {
 			acctest.CtBasic:                         testAccStandardsControl_basic,
