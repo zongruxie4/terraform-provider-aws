@@ -4,8 +4,4 @@
 resource "aws_arczonalshift_autoshift_observer_notification_status" "test" {
   status = "ENABLED"
 }
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
+
