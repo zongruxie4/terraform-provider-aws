@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -105,7 +105,7 @@ func (r *standardsControlAssociationResource) Create(ctx context.Context, reques
 	}
 
 	securityControlID, standardsARN := fwflex.StringValueFromFramework(ctx, data.SecurityControlID), fwflex.StringValueFromFramework(ctx, data.StandardsARN)
-	id, _ := standardsControlAssociationCreateResourceID(securityControlID, standardsARN)
+	id := standardsControlAssociationCreateResourceID(securityControlID, standardsARN)
 	input := securityhub.BatchUpdateStandardsControlAssociationsInput{
 		StandardsControlAssociationUpdates: []awstypes.StandardsControlAssociationUpdate{apiObject},
 	}
@@ -235,8 +235,8 @@ const (
 	standardsControlAssociationResourceIDPartCount = 2
 )
 
-func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) (string, error) {
-	return intflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false)
+func standardsControlAssociationCreateResourceID(securityControlID, standardsARN string) string {
+	return errs.Must(intflex.FlattenResourceId([]string{securityControlID, standardsARN}, standardsControlAssociationResourceIDPartCount, false))
 }
 
 func standardsControlAssociationParseResourceID(id string) (string, string, error) {
@@ -301,7 +301,7 @@ func unprocessedAssociationUpdatesError(apiObjects []awstypes.UnprocessedStandar
 	for _, apiObject := range apiObjects {
 		err := unprocessedAssociationUpdateError(&apiObject)
 		if v := apiObject.StandardsControlAssociationUpdate; v != nil {
-			id, _ := standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn))
+			id := standardsControlAssociationCreateResourceID(aws.ToString(v.SecurityControlId), aws.ToString(v.StandardsArn))
 			err = fmt.Errorf("%s: %w", id, err)
 		}
 		errs = append(errs, err)
@@ -340,12 +340,10 @@ func (standardsControlAssociationImportID) Parse(id string) (string, map[string]
 }
 
 func (standardsControlAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var diags diag.Diagnostics
 	var securityControlID types.String
-	diags.Append(state.GetAttribute(ctx, path.Root("security_control_id"), &securityControlID)...)
+	state.GetAttribute(ctx, path.Root("security_control_id"), &securityControlID)
 	var standardsARN fwtypes.ARN
-	diags.Append(state.GetAttribute(ctx, path.Root("standards_arn"), &standardsARN)...)
-	id, _ := standardsControlAssociationCreateResourceID(fwflex.StringValueFromFramework(ctx, securityControlID), fwflex.StringValueFromFramework(ctx, standardsARN))
+	state.GetAttribute(ctx, path.Root("standards_arn"), &standardsARN)
 
-	return id
+	return standardsControlAssociationCreateResourceID(fwflex.StringValueFromFramework(ctx, securityControlID), fwflex.StringValueFromFramework(ctx, standardsARN))
 }
