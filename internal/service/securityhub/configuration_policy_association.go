@@ -31,6 +31,8 @@ import (
 // @IdentityAttribute("target_id")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.41.0")
+// Alternate account not working
+// @Testing(identityTest=false)
 // @Testing(useAlternateAccount=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicyAssociation() *schema.Resource {
