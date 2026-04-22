@@ -1,4 +1,4 @@
-## 6.42.0 (Unreleased)
+## 6.42.0 (April 22, 2026)
 
 BREAKING CHANGES:
 
