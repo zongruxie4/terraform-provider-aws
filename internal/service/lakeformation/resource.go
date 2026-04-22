@@ -142,8 +142,12 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("last_modified", v.Format(time.RFC3339))
 	}
 	d.Set(names.AttrRoleARN, resource.RoleArn)
-	d.Set("with_federation", resource.WithFederation)
-	d.Set("with_privileged_access", resource.WithPrivilegedAccess)
+	if resource.WithFederation != nil {
+		d.Set("with_federation", resource.WithFederation)
+	}
+	if resource.WithPrivilegedAccess != nil {
+		d.Set("with_privileged_access", resource.WithPrivilegedAccess)
+	}
 
 	return diags
 }
