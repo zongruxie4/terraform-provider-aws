@@ -21,8 +21,8 @@ import (
 
 func testAccProductSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	accountResourceName := "aws_securityhub_account.example"
-	resourceName := "aws_securityhub_product_subscription.example"
+	accountResourceName := "aws_securityhub_account.test"
+	resourceName := "aws_securityhub_product_subscription.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -122,15 +122,15 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context, t *testing.T) r
 }
 
 const testAccProductSubscriptionConfig_accountOnly = `
-resource "aws_securityhub_account" "example" {}
+resource "aws_securityhub_account" "test" {}
 `
 
 var testAccProductSubscriptionConfig_basic = acctest.ConfigCompose(testAccProductSubscriptionConfig_accountOnly, `
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_securityhub_product_subscription" "example" {
-  depends_on  = [aws_securityhub_account.example]
+resource "aws_securityhub_product_subscription" "test" {
+  depends_on  = [aws_securityhub_account.test]
   product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}::product/aws/guardduty"
 }
 `)

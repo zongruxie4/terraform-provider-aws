@@ -161,6 +161,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_securityhub_product_subscription",
 			Name:     "Product Subscription",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("product_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrARN, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      productSubscriptionImportID{},
+			},
 		},
 		{
 			Factory:  resourceStandardsControl,
