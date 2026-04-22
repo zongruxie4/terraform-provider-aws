@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -52,10 +53,10 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_basic(t *testing.T)
 		CheckDestroy:             testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("ENABLED"),
+				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -87,17 +88,17 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_update(t *testing.T
 		CheckDestroy:             testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("ENABLED"),
+				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				),
 			},
 			{
-				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("DISABLED"),
+				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusDisabled)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -128,7 +129,7 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_disappears(t *testi
 		CheckDestroy:             testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("ENABLED"),
+				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarczonalshift.NewAutoshiftObserverNotificationStatusResource, resourceName),
@@ -148,14 +149,12 @@ func testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx context.Context,
 				continue
 			}
 
-			// This is a singleton resource, so it can't be truly destroyed.
-			// When deleted, it should be set to DISABLED.
 			out, err := findAutoshiftObserverNotificationStatus(ctx, conn)
 			if err != nil {
 				return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, err)
 			}
 
-			if out.Status != "DISABLED" {
+			if out.Status != awstypes.AutoshiftObserverNotificationStatusDisabled {
 				return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, errors.New("not disabled"))
 			}
 		}
