@@ -29,6 +29,7 @@ import (
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
+// @Testing(generator=false)
 func newAutoshiftObserverNotificationStatusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &autoshiftObserverNotificationStatusResource{}
 
