@@ -91,7 +91,7 @@ func (l *ebsVolumeAttachmentListResource) List(ctx context.Context, request list
 				// No-op, all readable attributes are already populated above.
 			}
 
-			result.DisplayName = fmt.Sprintf("%s:%s:%s", deviceName, volumeID, instanceID)
+			result.DisplayName = fmt.Sprintf("%s (%s - %s)", instanceID, deviceName, volumeID)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {

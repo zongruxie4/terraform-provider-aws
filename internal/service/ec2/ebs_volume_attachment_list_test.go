@@ -69,11 +69,11 @@ func TestAccEC2EBSVolumeAttachment_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_volume_attachment.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^/dev/sd[h-i]:vol-[a-f0-9]+:i-[a-f0-9]+$`))),
+					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^i-[a-f0-9]+ \(/dev/sd[h-l] - vol-[a-f0-9]+\)$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_volume_attachment.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^/dev/sd[h-i]:vol-[a-f0-9]+:i-[a-f0-9]+$`))),
+					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^i-[a-f0-9]+ \(/dev/sd[h-l] - vol-[a-f0-9]+\)$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -120,7 +120,7 @@ func TestAccEC2EBSVolumeAttachment_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_volume_attachment.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^/dev/sdh:vol-[a-f0-9]+:i-[a-f0-9]+$`))),
+					querycheck.ExpectResourceDisplayName("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^i-[a-f0-9]+ \(/dev/sd[h-l] - vol-[a-f0-9]+\)$`))),
 					querycheck.ExpectResourceKnownValues("aws_volume_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDeviceName), knownvalue.StringExact("/dev/sdh")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
