@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -56,8 +55,8 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_basic(t *testing.T)
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 			{
@@ -91,14 +90,14 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_update(t *testing.T
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic("DISABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
-					resource.TestCheckResourceAttr(resourceName, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -194,9 +193,9 @@ func testAccCheckAutoshiftObserverNotificationStatusExists(ctx context.Context, 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ARCZonalShiftClient(ctx)
 
-	input := &arczonalshift.GetAutoshiftObserverNotificationStatusInput{}
+	input := arczonalshift.GetAutoshiftObserverNotificationStatusInput{}
 
-	_, err := conn.GetAutoshiftObserverNotificationStatus(ctx, input)
+	_, err := conn.GetAutoshiftObserverNotificationStatus(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
