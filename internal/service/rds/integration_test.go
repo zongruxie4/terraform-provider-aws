@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +17,46 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestIntegrationIDFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		integrationARN types.String
+		want           types.String
+	}{
+		"null": {
+			types.StringNull(),
+			types.StringNull(),
+		},
+		"unknown": {
+			types.StringUnknown(),
+			types.StringNull(),
+		},
+		"invalid-arn": {
+			types.StringValue("not-an-arn"),
+			types.StringNull(),
+		},
+		"unexpected-format": {
+			types.StringValue("arn:aws:iam::012345678901:role/test-role"), // lintignore:AWSAT005
+			types.StringNull(),
+		},
+		"integration-arn": {
+			types.StringValue("arn:aws:rds:us-west-2:012345678901:integration:7c2b2747-4edc-4dac-92aa-b9d48f942cf5"), // lintignore:AWSAT003,AWSAT005
+			types.StringValue("7c2b2747-4edc-4dac-92aa-b9d48f942cf5"),
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			got := tfrds.IntegrationIDFromARN(tt.integrationARN)
+			if !got.Equal(tt.want) {
+				t.Errorf("IntegrationIDFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestAccRDSIntegration_basic(t *testing.T) {
 	if testing.Short() {
