@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -47,7 +48,7 @@ type autoshiftObserverNotificationStatusResource struct {
 func (r *autoshiftObserverNotificationStatusResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AutoshiftObserverNotificationStatus](),
 				Required:   true,
