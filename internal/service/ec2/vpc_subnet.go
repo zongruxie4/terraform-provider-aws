@@ -429,10 +429,9 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return diags
 	}
 
-	var guardDutyDiags diag.Diagnostics
-
 	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so tha tno new permissions,
 	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
 			"error": err,

@@ -398,8 +398,6 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		VpcId: aws.String(d.Id()),
 	}
 
-	var guardDutyWarnings []string
-
 	// First attempt at deletion.
 	_, err := conn.DeleteVpc(ctx, &input)
 
@@ -413,12 +411,9 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diags
 	}
 
-	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
-	// proactive. This keeps the change invisible to customers who have never
-	// enabled GuardDuty - no extra API calls on their VPC deletes. A proactive
-	// approach would add DescribeVpcEndpoints and DescribeSecurityGroups calls
-	// to every terraform destroy on every VPC, even when there is nothing to
-	// clean up.
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so tha tno new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
 			"error": err,
@@ -427,11 +422,11 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
 		if cleanupErr != nil {
 			if isUnauthorizedError(cleanupErr) {
-				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
 					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
 						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
 						"Error: %s", d.Id(), cleanupErr.Error(),
-				))
+				)
 			} else {
 				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), cleanupErr)
 			}
@@ -440,11 +435,11 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
 		if sgErr != nil {
 			if isUnauthorizedError(sgErr) {
-				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
 					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
 						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
 						"Error: %s", d.Id(), sgErr.Error(),
-				))
+				)
 			} else {
 				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC security groups for EC2 VPC %q: %s", d.Id(), sgErr)
 			}
@@ -456,10 +451,10 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		}, errCodeDependencyViolation)
 	}
 
-	// Emit GuardDuty IAM permission warnings as diag.Diagnostics so they are
-	// visible to the user even when logs are not enabled.
-	for _, w := range guardDutyWarnings {
-		diags = sdkdiag.AppendWarningf(diags, "%s", w)
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
