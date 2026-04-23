@@ -33,7 +33,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var memoryStrategy1, memoryStrategy2, memoryStrategy3, memoryStrategy4 awstypes.MemoryStrategy
+	var memoryStrategy1, memoryStrategy2, memoryStrategy3, memoryStrategy4, memoryStrategy5 awstypes.MemoryStrategy
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
@@ -47,15 +47,39 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
-			// Setup: Create memory
+			// Setup: Create memory with execution role (needed for EPISODIC steps)
 			{
-				Config: memoryConfig(rName),
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
 			},
-			// Step 1: Create semantic strategy
+			// Step 1: Create episodic strategy
 			{
-				Config: testAccMemoryStrategyConfig(rName, "SEMANTIC", names.AttrDescription, "default"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Episodic strategy"),
+					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+			},
+			// Step 2: Update episodic description (in-place)
+			{
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Updated episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy2),
+					testAccCheckMemoryStrategyNotRecreated(&memoryStrategy1, &memoryStrategy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated episodic strategy"),
+					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+				),
+			},
+			// Step 3: Change type episodic→semantic (replacement)
+			{
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", names.AttrDescription, "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy3),
+					testAccCheckMemoryStrategyRecreated(&memoryStrategy2, &memoryStrategy3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
@@ -64,37 +88,23 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 			},
-			// Step 2: Update description + namespace (in-place)
+			// Step 4: Update description + namespace (in-place)
 			{
-				Config: testAccMemoryStrategyConfig(rName, "SEMANTIC", "Updated description", "custom"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Updated description", "custom"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy2),
-					testAccCheckMemoryStrategyNotRecreated(&memoryStrategy1, &memoryStrategy2),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy4),
+					testAccCheckMemoryStrategyNotRecreated(&memoryStrategy3, &memoryStrategy4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "custom"),
 				),
 			},
-			// Step 3: Change type semantic→summary (replacement)
+			// Step 5: Change type semantic→user_preference (replacement)
 			{
-				Config: testAccMemoryStrategyConfig(rName, "SUMMARIZATION", "Summary strategy", "{sessionId}"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "USER_PREFERENCE", "User preference strategy", "preferences"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy3),
-					testAccCheckMemoryStrategyRecreated(&memoryStrategy2, &memoryStrategy3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SUMMARIZATION"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Summary strategy"),
-					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "{sessionId}"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
-				),
-			},
-			// Step 4: Change type summary→user_preference (replacement)
-			{
-				Config: testAccMemoryStrategyConfig(rName, "USER_PREFERENCE", "User preference strategy", "preferences"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy4),
-					testAccCheckMemoryStrategyRecreated(&memoryStrategy3, &memoryStrategy4),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy5),
+					testAccCheckMemoryStrategyRecreated(&memoryStrategy4, &memoryStrategy5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "USER_PREFERENCE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "User preference strategy"),
@@ -103,18 +113,19 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 			},
-			// Step 5: Try to create ANOTHER user_preference strategy → should ERROR
+			// Step 6: Try to create ANOTHER user_preference strategy → should ERROR
 			{
-				Config:      testAccMemoryStrategyConfig_duplicateType(rName),
+				Config:      testAccMemoryStrategyConfig_duplicateType(rName, "USER_PREFERENCE"),
 				ExpectError: regexache.MustCompile("Found multiple strategies of type"),
 			},
-			// Step 6: Import test - verify composite ID import works
+			// Step 7: Import test - verify composite ID import works
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 		},
 	})
@@ -376,18 +387,39 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName, strategyType, description, namespace))
 }
 
-func testAccMemoryStrategyConfig_duplicateType(rName string) string {
+func testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, description, namespace string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+  namespaces                = [%[4]q]
+}
+`, rName, strategyType, description, namespace))
+}
+
+func testAccMemoryStrategyConfig_duplicateType(rName string, strategyType string) string {
+	namespace := "default"
+	duplicateNamespace := "duplicate"
+	if strategyType == "EPISODIC" {
+		namespace = "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
+		duplicateNamespace = "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
+	}
 	return fmt.Sprintf(`
 %s
 
 resource "aws_bedrockagentcore_memory_strategy" "test2" {
-  name        = "%s_duplicate"
-  memory_id   = aws_bedrockagentcore_memory.test.id
-  type        = "USER_PREFERENCE"
-  description = "Duplicate user preference strategy"
-  namespaces  = ["preferences2"]
+  name                      = "%s_duplicate"
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %q
+  description               = "Duplicate strategy"
+  namespaces                = [%q]
 }
-`, testAccMemoryStrategyConfig(rName, "USER_PREFERENCE", "User preference strategy", "preferences"), rName)
+`, testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, "Strategy for duplicate test", namespace), rName, strategyType, duplicateNamespace)
 }
 
 func testAccMemoryStrategyConfig_custom(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {

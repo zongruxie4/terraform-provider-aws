@@ -311,6 +311,12 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("create memory strategy: API response missing strategy name %q", plan.Name.ValueString()), smerr.ID, plan.GetIdentifier())
 			return
 		}
+		// For non-CUSTOM types, clear Configuration from the API response before
+		// flattening. The API returns a StrategyConfiguration with Type values
+		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
+		if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
+			found.Configuration = nil
+		}
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		if response.Diagnostics.HasError() {
 			return
@@ -349,6 +355,13 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
 		return
+	}
+
+	// For non-CUSTOM types, clear Configuration from the API response before
+	// flattening. The API returns a StrategyConfiguration with Type values
+	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
+	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
+		out.Configuration = nil
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
@@ -413,6 +426,9 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			if found == nil {
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", plan.MemoryStrategyID.ValueString()))
 				return
+			}
+			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
+				found.Configuration = nil
 			}
 			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		})
@@ -667,6 +683,21 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 			return nil, diags
 		}
 		return &r, diags
+
+	case awstypes.MemoryStrategyTypeEpisodic:
+		var r awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy
+		r.Value.Name = m.Name.ValueStringPointer()
+		r.Value.Description = m.Description.ValueStringPointer()
+		smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &r.Value.Namespaces, false))
+		if diags.HasError() {
+			return nil, diags
+		}
+		// The API requires the reflection namespace to be the same as or a prefix
+		// of the episodic namespace. Set it to match the episodic namespaces.
+		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
+			Namespaces: r.Value.Namespaces,
+		}
+		return &r, diags
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -683,6 +714,12 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
 	if diags.HasError() {
 		return nil, diags
+	}
+	// For non-CUSTOM types, Configuration should not be sent.
+	// Auto-flex may produce an empty ModifyStrategyConfiguration from the
+	// null model Configuration field, which the API rejects.
+	if m.Configuration.IsNull() || m.Configuration.IsUnknown() {
+		r.Configuration = nil
 	}
 	return &r, diags
 }
@@ -786,6 +823,14 @@ func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 			return nil, diags
 		}
 		return &r, diags
+
+	case awstypes.OverrideTypeEpisodicOverride:
+		var r awstypes.CustomConfigurationInputMemberEpisodicOverride
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -878,6 +923,29 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 				Value: &extractionInput,
 			}
 		}
+
+	case awstypes.OverrideTypeEpisodicOverride:
+		if consolidation != nil {
+			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberEpisodicConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+			result.Consolidation = &awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{
+				Value: &consolidationInput,
+			}
+		}
+
+		if extraction != nil {
+			var extractionInput awstypes.CustomExtractionConfigurationInputMemberEpisodicExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+			result.Extraction = &awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{
+				Value: &extractionInput,
+			}
+		}
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -914,6 +982,8 @@ func (m *OverrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		return m.Flatten(ctx, t.Value)
 	case *awstypes.CustomConsolidationConfigurationMemberUserPreferenceConsolidationOverride:
 		return m.Flatten(ctx, t.Value)
+	case *awstypes.CustomConsolidationConfigurationMemberEpisodicConsolidationOverride:
+		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticConsolidationOverride:
 		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
@@ -930,6 +1000,11 @@ func (m *OverrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		m.ModelID = types.StringPointerValue(t.ModelId)
 		return diags
 
+	case awstypes.EpisodicConsolidationOverride:
+		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
+		m.ModelID = types.StringPointerValue(t.ModelId)
+		return diags
+
 	//	Extraction
 	case awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration:
 		return m.Flatten(ctx, t.Value)
@@ -938,6 +1013,8 @@ func (m *OverrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		return m.Flatten(ctx, t.Value)
 	case *awstypes.CustomExtractionConfigurationMemberUserPreferenceExtractionOverride:
 		return m.Flatten(ctx, t.Value)
+	case *awstypes.CustomExtractionConfigurationMemberEpisodicExtractionOverride:
+		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticExtractionOverride:
 		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
@@ -945,6 +1022,11 @@ func (m *OverrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		return diags
 
 	case awstypes.UserPreferenceExtractionOverride:
+		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
+		m.ModelID = types.StringPointerValue(t.ModelId)
+		return diags
+
+	case awstypes.EpisodicExtractionOverride:
 		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
 		m.ModelID = types.StringPointerValue(t.ModelId)
 		return diags
