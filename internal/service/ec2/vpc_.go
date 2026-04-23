@@ -868,7 +868,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 		if isUnauthorizedError(err) {
 			return err
 		}
-		return fmt.Errorf("describing GuardDuty VPC endpoints in VPC %s: %w", vpcID, err)
+		return fmt.Errorf("listing GuardDuty VPC endpoints for VPC %q: %w", vpcID, err)
 	}
 
 	if len(endpoints) == 0 {
@@ -876,7 +876,9 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 		return nil
 	}
 
-	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), deleting", map[string]any{"count": len(endpoints)})
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
+		"count": len(endpoints),
+	})
 
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
@@ -897,18 +899,18 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 				return err
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion, continuing", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
-			return fmt.Errorf("deleting GuardDuty VPC endpoint %s in VPC %s: %w", endpointID, vpcID, err)
+			return fmt.Errorf("deleting GuardDuty VPC endpoint %q in VPC %q: %w", endpointID, vpcID, err)
 		}
 
 		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state, continuing", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
-			return fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach deleted state in VPC %s: %w", endpointID, vpcID, err)
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach deleted state in VPC %q: %w", endpointID, vpcID, err)
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
