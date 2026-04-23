@@ -415,16 +415,6 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	tflog.Info(ctx, "Deleting EC2 Subnet")
 
-	subnet, err := findSubnetByID(ctx, conn, d.Id())
-	if err != nil {
-		if retry.NotFound(err) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
-	}
-
-	vpcID := aws.ToString(subnet.VpcId)
-
 	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
@@ -435,7 +425,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	input := ec2.DeleteSubnetInput{
 		SubnetId: aws.String(d.Id()),
 	}
-	_, err = conn.DeleteSubnet(ctx, &input)
+	_, err := conn.DeleteSubnet(ctx, &input)
 
 	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
 	// proactive. This keeps the change invisible to customers who have never
@@ -444,6 +434,8 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	// every subnet, even when there is nothing to clean up.
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources")
+
+		vpcID := d.Get(names.AttrVPCID).(string)
 		accountID := meta.(*conns.AWSClient).AccountID(ctx)
 		warningMsg, cleanupErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID, accountID)
 		if warningMsg != "" {
