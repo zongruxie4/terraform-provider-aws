@@ -918,17 +918,14 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
 
 		if !slices.Contains(endpoint.SubnetIds, subnetID) {
-			tflog.Debug(ctx, "Subnet is not associated with GuardDuty VPC endpoint, skipping", map[string]any{
-				"endpoint_id": endpointID,
-			})
+			tflog.Debug(ctx, "Subnet is not associated with GuardDuty VPC endpoint, skipping")
 			continue
 		}
 
-		tflog.Debug(ctx, "Dissociating subnet from GuardDuty VPC endpoint", map[string]any{
-			"endpoint_id": endpointID,
-		})
+		tflog.Debug(ctx, "Dissociating subnet from GuardDuty VPC endpoint")
 
 		modifyInput := ec2.ModifyVpcEndpointInput{
 			VpcEndpointId:   aws.String(endpointID),
@@ -940,7 +937,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 				return "", err
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation, continuing", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation, continuing")
 				continue
 			}
 			return "", fmt.Errorf("modifying GuardDuty VPC endpoint %s to remove subnet %s: %w", endpointID, subnetID, err)
@@ -948,15 +945,13 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 
 		if _, err := waitVPCEndpointAvailable(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state, continuing", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state, continuing")
 				continue
 			}
 			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach available state after dissociating subnet %s: %w", endpointID, subnetID, err)
 		}
 
-		tflog.Debug(ctx, "Successfully dissociated subnet from GuardDuty VPC endpoint", map[string]any{
-			"endpoint_id": endpointID,
-		})
+		tflog.Debug(ctx, "Successfully dissociated subnet from GuardDuty VPC endpoint")
 	}
 
 	return "", nil
