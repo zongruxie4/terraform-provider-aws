@@ -468,10 +468,12 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		}, errCodeDependencyViolation)
 	}
 
-	// Emit GuardDuty IAM permission warnings as diag.Diagnostics so they are
-	// visible to the user even when logs are not enabled.
-	for _, w := range guardDutyWarnings {
-		diags = sdkdiag.AppendWarningf(diags, "%s", w)
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		for _, w := range guardDutyWarnings {
+			diags = sdkdiag.AppendWarningf(diags, "%s", w)
+		}
 	}
 
 	if err != nil {
