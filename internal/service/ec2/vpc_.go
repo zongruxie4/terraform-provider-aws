@@ -820,7 +820,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		if isUnauthorizedError(err) {
 			return err
 		}
-		return formatGuardDutyError("describing", "security groups in VPC", vpcID, err)
+		return fmt.Errorf("listing GuardDuty security groups for VPC %q: %w", vpcID, err)
 	}
 
 	if len(sgs) == 0 {
@@ -848,10 +848,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 			if isUnauthorizedError(err) {
 				return err
 			}
-			if isDependencyViolationError(err) {
-				return formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
-			}
-			return formatGuardDutyError("deleting", "security group", groupID, err)
+			return fmt.Errorf("deleting GuardDuty security group %q: %w", groupID, err)
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
@@ -937,8 +934,4 @@ func isDependencyViolationError(err error) bool {
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "DependencyViolation") ||
 		strings.Contains(errMsg, "dependent object")
-}
-
-func formatGuardDutyError(operation, resourceType, resourceID string, err error) error {
-	return fmt.Errorf("%s GuardDuty %s %s: %w", operation, resourceType, resourceID, err)
 }
