@@ -490,8 +490,8 @@ func globalSingleParameterIdentitySpec(name string) inttypes.Identity {
 	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func globalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func globalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
