@@ -5,15 +5,14 @@ package glue
 
 import (
 	"context"
-	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -43,8 +42,9 @@ func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrCatalogID: schema.StringAttribute{
 				Computed: true,
 			},
-			"create_time": schema.StringAttribute{
-				Computed: true,
+			names.AttrCreateTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
@@ -60,7 +60,8 @@ func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"update_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -202,67 +203,12 @@ func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	data.ID = types.StringPointerValue(out.CatalogId)
-	data.CatalogID = types.StringPointerValue(out.CatalogId)
-	data.ARN = types.StringPointerValue(out.ResourceArn)
-	data.Name = types.StringPointerValue(out.Name)
-	data.Description = types.StringPointerValue(out.Description)
-	data.AllowFullTableExternalDataAccess = fwtypes.StringEnumValue(out.AllowFullTableExternalDataAccess)
-
-	if out.CreateTime != nil {
-		data.CreateTime = types.StringValue(out.CreateTime.Format(time.RFC3339))
-	}
-	if out.UpdateTime != nil {
-		data.UpdateTime = types.StringValue(out.UpdateTime.Format(time.RFC3339))
-	}
-
-	if len(out.Parameters) > 0 {
-		elems := make(map[string]attr.Value, len(out.Parameters))
-		for k, v := range out.Parameters {
-			elems[k] = types.StringValue(v)
-		}
-		params, diags := fwtypes.NewMapValueOf[basetypes.StringValue](ctx, elems)
-		resp.Diagnostics.Append(diags...)
-		data.Parameters = params
-	} else {
-		data.Parameters = fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx)
-	}
-
-	if out.CatalogProperties != nil {
-		data.CatalogProperties = flattenCatalogPropertiesOutput(ctx, out.CatalogProperties, &resp.Diagnostics)
-	}
-
-	if out.FederatedCatalog != nil {
-		fcModel := &federatedCatalogModel{
-			ConnectionName: types.StringPointerValue(out.FederatedCatalog.ConnectionName),
-			ConnectionType: types.StringPointerValue(out.FederatedCatalog.ConnectionType),
-			Identifier:     types.StringPointerValue(out.FederatedCatalog.Identifier),
-		}
-		val, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, fcModel)
-		resp.Diagnostics.Append(diags...)
-		data.FederatedCatalog = val
-	}
-
-	if out.TargetRedshiftCatalog != nil {
-		trcModel := &targetRedshiftCatalogModel{
-			CatalogArn: types.StringPointerValue(out.TargetRedshiftCatalog.CatalogArn),
-		}
-		val, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, trcModel)
-		resp.Diagnostics.Append(diags...)
-		data.TargetRedshiftCatalog = val
-	}
-
-	if len(out.CreateDatabaseDefaultPermissions) > 0 {
-		data.CreateDatabaseDefaultPermissions = flattenPrincipalPermissionsList(ctx, out.CreateDatabaseDefaultPermissions, &resp.Diagnostics)
-	}
-
-	if len(out.CreateTableDefaultPermissions) > 0 {
-		data.CreateTableDefaultPermissions = flattenPrincipalPermissionsList(ctx, out.CreateTableDefaultPermissions, &resp.Diagnostics)
-	}
-
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.ARN = types.StringPointerValue(out.ResourceArn)
+	data.ID = types.StringPointerValue(out.CatalogId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -270,18 +216,18 @@ func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest
 type catalogDataSourceModel struct {
 	framework.WithRegionModel
 	AllowFullTableExternalDataAccess fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum] `tfsdk:"allow_full_table_external_data_access"`
-	ARN                              types.String                                                      `tfsdk:"arn"`
+	ARN                              types.String                                                      `tfsdk:"arn" autoflex:"-"`
 	CatalogID                        types.String                                                      `tfsdk:"catalog_id"`
 	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]           `tfsdk:"catalog_properties"`
 	CreateDatabaseDefaultPermissions fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_database_default_permissions"`
 	CreateTableDefaultPermissions    fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_table_default_permissions"`
-	CreateTime                       types.String                                                      `tfsdk:"create_time"`
+	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
 	Description                      types.String                                                      `tfsdk:"description"`
 	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
-	ID                               types.String                                                      `tfsdk:"id"`
+	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
 	Name                             types.String                                                      `tfsdk:"name"`
 	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
 	Tags                             tftags.Map                                                        `tfsdk:"tags"`
 	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]       `tfsdk:"target_redshift_catalog"`
-	UpdateTime                       types.String                                                      `tfsdk:"update_time"`
+	UpdateTime                       timetypes.RFC3339                                                 `tfsdk:"update_time"`
 }

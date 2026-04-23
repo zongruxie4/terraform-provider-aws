@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,11 +25,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -95,8 +95,9 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"create_time": schema.StringAttribute{
-				Computed: true,
+			names.AttrCreateTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -117,7 +118,8 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType: types.StringType,
 			},
 			"update_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -314,14 +316,24 @@ func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	catalogInput := expandCatalogInput(ctx, &plan, &resp.Diagnostics)
+	catalogPropertiesWasNull := plan.CatalogProperties.IsNull()
+
+	var catalogInput awstypes.CatalogInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &catalogInput))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	// API contract requires explicit empty slices rather than nil for these.
+	if catalogInput.CreateDatabaseDefaultPermissions == nil {
+		catalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
+	}
+	if catalogInput.CreateTableDefaultPermissions == nil {
+		catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 	}
 
 	input := &glue.CreateCatalogInput{
 		Name:         plan.Name.ValueStringPointer(),
-		CatalogInput: catalogInput,
+		CatalogInput: &catalogInput,
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -339,7 +351,7 @@ func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	flattenCatalog(ctx, out, &plan, &resp.Diagnostics)
+	flattenCatalog(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -356,6 +368,8 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	catalogPropertiesWasNull := state.CatalogProperties.IsNull()
+
 	out, err := findCatalogByID(ctx, conn, state.ID.ValueString())
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -367,7 +381,7 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	flattenCatalog(ctx, out, &state, &resp.Diagnostics)
+	flattenCatalog(ctx, out, &state, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -413,6 +427,8 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	catalogPropertiesWasNull := plan.CatalogProperties.IsNull()
+
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Parameters.Equal(state.Parameters) ||
 		!plan.CatalogProperties.Equal(state.CatalogProperties) ||
@@ -421,15 +437,21 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		!plan.AllowFullTableExternalDataAccess.Equal(state.AllowFullTableExternalDataAccess) ||
 		!plan.CreateDatabaseDefaultPermissions.Equal(state.CreateDatabaseDefaultPermissions) ||
 		!plan.CreateTableDefaultPermissions.Equal(state.CreateTableDefaultPermissions) {
-
-		catalogInput := expandCatalogInput(ctx, &plan, &resp.Diagnostics)
+		var catalogInput awstypes.CatalogInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &catalogInput))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+		if catalogInput.CreateDatabaseDefaultPermissions == nil {
+			catalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
+		}
+		if catalogInput.CreateTableDefaultPermissions == nil {
+			catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 		}
 
 		input := &glue.UpdateCatalogInput{
 			CatalogId:    plan.ID.ValueStringPointer(),
-			CatalogInput: catalogInput,
+			CatalogInput: &catalogInput,
 		}
 
 		_, err := conn.UpdateCatalog(ctx, input)
@@ -445,7 +467,7 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	flattenCatalog(ctx, out, &plan, &resp.Diagnostics)
+	flattenCatalog(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -546,342 +568,22 @@ func waitCatalogReady(ctx context.Context, conn *glue.Client, id string, timeout
 	return catalog, err
 }
 
-// --- Expand helpers (model → AWS SDK types) ---
-
-func expandCatalogInput(ctx context.Context, model *catalogResourceModel, diags *diag.Diagnostics) *awstypes.CatalogInput {
-	input := &awstypes.CatalogInput{
-		Description:                      model.Description.ValueStringPointer(),
-		AllowFullTableExternalDataAccess: model.AllowFullTableExternalDataAccess.ValueEnum(),
+// flattenCatalog copies AWS fields onto the resource model. catalogPropertiesWasNull
+// preserves a null catalog_properties block when AWS auto-populates one (e.g.
+// custom_properties={"aws:PermissionsModel":"LAKEFORMATION"} on LF-managed
+// catalogs): otherwise a user who didn't declare the block would see a
+// permanent diff. ARN is set manually because flex does not rename
+// ResourceArn -> ARN, and ID mirrors CatalogId.
+func flattenCatalog(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, catalogPropertiesWasNull bool, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, catalog, model)...)
+	if diags.HasError() {
+		return
 	}
-
-	if !model.Parameters.IsNull() && !model.Parameters.IsUnknown() {
-		params := make(map[string]string)
-		diags.Append(model.Parameters.ElementsAs(ctx, &params, false)...)
-		if diags.HasError() {
-			return nil
-		}
-		input.Parameters = params
-	}
-
-	if !model.CatalogProperties.IsNull() && !model.CatalogProperties.IsUnknown() {
-		cpList, d := model.CatalogProperties.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		if len(cpList) > 0 {
-			input.CatalogProperties = expandCatalogProperties(ctx, cpList[0], diags)
-			if diags.HasError() {
-				return nil
-			}
-		}
-	}
-
-	if !model.FederatedCatalog.IsNull() && !model.FederatedCatalog.IsUnknown() {
-		fcList, d := model.FederatedCatalog.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		if len(fcList) > 0 {
-			input.FederatedCatalog = expandFederatedCatalog(fcList[0])
-		}
-	}
-
-	if !model.TargetRedshiftCatalog.IsNull() && !model.TargetRedshiftCatalog.IsUnknown() {
-		trcList, d := model.TargetRedshiftCatalog.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		if len(trcList) > 0 {
-			input.TargetRedshiftCatalog = expandTargetRedshiftCatalog(trcList[0])
-		}
-	}
-
-	if !model.CreateDatabaseDefaultPermissions.IsNull() && !model.CreateDatabaseDefaultPermissions.IsUnknown() {
-		ppList, d := model.CreateDatabaseDefaultPermissions.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		input.CreateDatabaseDefaultPermissions = expandPrincipalPermissionsList(ctx, ppList, diags)
-		if diags.HasError() {
-			return nil
-		}
-	} else {
-		input.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
-	}
-
-	if !model.CreateTableDefaultPermissions.IsNull() && !model.CreateTableDefaultPermissions.IsUnknown() {
-		ppList, d := model.CreateTableDefaultPermissions.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		input.CreateTableDefaultPermissions = expandPrincipalPermissionsList(ctx, ppList, diags)
-		if diags.HasError() {
-			return nil
-		}
-	} else {
-		input.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
-	}
-
-	return input
-}
-
-func expandCatalogProperties(ctx context.Context, model *catalogPropertiesModel, diags *diag.Diagnostics) *awstypes.CatalogProperties {
-	cp := &awstypes.CatalogProperties{}
-
-	if !model.CustomProperties.IsNull() && !model.CustomProperties.IsUnknown() {
-		props := make(map[string]string)
-		diags.Append(model.CustomProperties.ElementsAs(ctx, &props, false)...)
-		if diags.HasError() {
-			return nil
-		}
-		cp.CustomProperties = props
-	}
-
-	if !model.DataLakeAccessProperties.IsNull() && !model.DataLakeAccessProperties.IsUnknown() {
-		dlapList, d := model.DataLakeAccessProperties.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil
-		}
-		if len(dlapList) > 0 {
-			cp.DataLakeAccessProperties = expandDataLakeAccessProperties(dlapList[0])
-		}
-	}
-
-	return cp
-}
-
-func expandDataLakeAccessProperties(model *dataLakeAccessPropertiesModel) *awstypes.DataLakeAccessProperties {
-	dlap := &awstypes.DataLakeAccessProperties{}
-
-	if !model.CatalogType.IsNull() && !model.CatalogType.IsUnknown() {
-		dlap.CatalogType = model.CatalogType.ValueStringPointer()
-	}
-	if !model.DataLakeAccess.IsNull() && !model.DataLakeAccess.IsUnknown() {
-		dlap.DataLakeAccess = model.DataLakeAccess.ValueBool()
-	}
-	if !model.DataTransferRole.IsNull() && !model.DataTransferRole.IsUnknown() {
-		dlap.DataTransferRole = model.DataTransferRole.ValueStringPointer()
-	}
-	if !model.KmsKey.IsNull() && !model.KmsKey.IsUnknown() {
-		dlap.KmsKey = model.KmsKey.ValueStringPointer()
-	}
-
-	return dlap
-}
-
-func expandFederatedCatalog(model *federatedCatalogModel) *awstypes.FederatedCatalog {
-	fc := &awstypes.FederatedCatalog{}
-
-	if !model.ConnectionName.IsNull() && !model.ConnectionName.IsUnknown() {
-		fc.ConnectionName = model.ConnectionName.ValueStringPointer()
-	}
-	if !model.ConnectionType.IsNull() && !model.ConnectionType.IsUnknown() {
-		fc.ConnectionType = model.ConnectionType.ValueStringPointer()
-	}
-	if !model.Identifier.IsNull() && !model.Identifier.IsUnknown() {
-		fc.Identifier = model.Identifier.ValueStringPointer()
-	}
-
-	return fc
-}
-
-func expandTargetRedshiftCatalog(model *targetRedshiftCatalogModel) *awstypes.TargetRedshiftCatalog {
-	return &awstypes.TargetRedshiftCatalog{
-		CatalogArn: model.CatalogArn.ValueStringPointer(),
-	}
-}
-
-func expandPrincipalPermissionsList(ctx context.Context, models []*principalPermissionsModel, diags *diag.Diagnostics) []awstypes.PrincipalPermissions {
-	result := make([]awstypes.PrincipalPermissions, 0, len(models))
-
-	for _, model := range models {
-		pp := awstypes.PrincipalPermissions{}
-
-		if !model.Permissions.IsNull() && !model.Permissions.IsUnknown() {
-			var perms []string
-			diags.Append(model.Permissions.ElementsAs(ctx, &perms, false)...)
-			if diags.HasError() {
-				return nil
-			}
-			for _, p := range perms {
-				pp.Permissions = append(pp.Permissions, awstypes.Permission(p))
-			}
-		}
-
-		if !model.Principal.IsNull() && !model.Principal.IsUnknown() {
-			principalList, d := model.Principal.ToSlice(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil
-			}
-			if len(principalList) > 0 {
-				pp.Principal = &awstypes.DataLakePrincipal{
-					DataLakePrincipalIdentifier: principalList[0].DataLakePrincipalIdentifier.ValueStringPointer(),
-				}
-			}
-		}
-
-		result = append(result, pp)
-	}
-
-	return result
-}
-
-// --- Flatten helpers (AWS SDK types → model) ---
-
-func flattenCatalog(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, diags *diag.Diagnostics) {
-	model.Name = types.StringPointerValue(catalog.Name)
-	model.CatalogID = types.StringPointerValue(catalog.CatalogId)
-	model.ID = types.StringPointerValue(catalog.CatalogId)
 	model.ARN = types.StringPointerValue(catalog.ResourceArn)
-	model.Description = types.StringPointerValue(catalog.Description)
-	model.AllowFullTableExternalDataAccess = fwtypes.StringEnumValue(catalog.AllowFullTableExternalDataAccess)
-
-	if catalog.CreateTime != nil {
-		model.CreateTime = types.StringValue(catalog.CreateTime.Format(time.RFC3339))
-	} else {
-		model.CreateTime = types.StringNull()
+	model.ID = types.StringPointerValue(catalog.CatalogId)
+	if catalogPropertiesWasNull {
+		model.CatalogProperties = fwtypes.NewListNestedObjectValueOfNull[catalogPropertiesModel](ctx)
 	}
-	if catalog.UpdateTime != nil {
-		model.UpdateTime = types.StringValue(catalog.UpdateTime.Format(time.RFC3339))
-	} else {
-		model.UpdateTime = types.StringNull()
-	}
-
-	if len(catalog.Parameters) > 0 {
-		elems := make(map[string]attr.Value, len(catalog.Parameters))
-		for k, v := range catalog.Parameters {
-			elems[k] = types.StringValue(v)
-		}
-		params, d := fwtypes.NewMapValueOf[basetypes.StringValue](ctx, elems)
-		diags.Append(d...)
-		model.Parameters = params
-	} else if model.Parameters.IsNull() {
-		// Keep null if was null.
-	} else {
-		model.Parameters = fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx)
-	}
-
-	if catalog.CatalogProperties != nil && !model.CatalogProperties.IsNull() {
-		model.CatalogProperties = flattenCatalogPropertiesOutput(ctx, catalog.CatalogProperties, diags)
-	}
-
-	if catalog.FederatedCatalog != nil {
-		fcModel := &federatedCatalogModel{
-			ConnectionName: types.StringPointerValue(catalog.FederatedCatalog.ConnectionName),
-			ConnectionType: types.StringPointerValue(catalog.FederatedCatalog.ConnectionType),
-			Identifier:     types.StringPointerValue(catalog.FederatedCatalog.Identifier),
-		}
-		val, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, fcModel)
-		diags.Append(d...)
-		model.FederatedCatalog = val
-	} else {
-		model.FederatedCatalog = fwtypes.NewListNestedObjectValueOfNull[federatedCatalogModel](ctx)
-	}
-
-	if catalog.TargetRedshiftCatalog != nil {
-		trcModel := &targetRedshiftCatalogModel{
-			CatalogArn: types.StringPointerValue(catalog.TargetRedshiftCatalog.CatalogArn),
-		}
-		val, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, trcModel)
-		diags.Append(d...)
-		model.TargetRedshiftCatalog = val
-	} else {
-		model.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfNull[targetRedshiftCatalogModel](ctx)
-	}
-
-	if len(catalog.CreateDatabaseDefaultPermissions) > 0 {
-		model.CreateDatabaseDefaultPermissions = flattenPrincipalPermissionsList(ctx, catalog.CreateDatabaseDefaultPermissions, diags)
-	} else {
-		model.CreateDatabaseDefaultPermissions = fwtypes.NewListNestedObjectValueOfNull[principalPermissionsModel](ctx)
-	}
-
-	if len(catalog.CreateTableDefaultPermissions) > 0 {
-		model.CreateTableDefaultPermissions = flattenPrincipalPermissionsList(ctx, catalog.CreateTableDefaultPermissions, diags)
-	} else {
-		model.CreateTableDefaultPermissions = fwtypes.NewListNestedObjectValueOfNull[principalPermissionsModel](ctx)
-	}
-}
-
-func flattenCatalogPropertiesOutput(ctx context.Context, cp *awstypes.CatalogPropertiesOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[catalogPropertiesModel] {
-	cpModel := &catalogPropertiesModel{}
-
-	if len(cp.CustomProperties) > 0 {
-		elems := make(map[string]attr.Value, len(cp.CustomProperties))
-		for k, v := range cp.CustomProperties {
-			elems[k] = types.StringValue(v)
-		}
-		props, d := fwtypes.NewMapValueOf[basetypes.StringValue](ctx, elems)
-		diags.Append(d...)
-		cpModel.CustomProperties = props
-	} else {
-		cpModel.CustomProperties = fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx)
-	}
-
-	if cp.DataLakeAccessProperties != nil {
-		dlapModel := &dataLakeAccessPropertiesModel{
-			CatalogType:            types.StringPointerValue(cp.DataLakeAccessProperties.CatalogType),
-			DataLakeAccess:         types.BoolValue(cp.DataLakeAccessProperties.DataLakeAccess),
-			DataTransferRole:       types.StringPointerValue(cp.DataLakeAccessProperties.DataTransferRole),
-			KmsKey:                 types.StringPointerValue(cp.DataLakeAccessProperties.KmsKey),
-			ManagedWorkgroupName:   types.StringPointerValue(cp.DataLakeAccessProperties.ManagedWorkgroupName),
-			ManagedWorkgroupStatus: types.StringPointerValue(cp.DataLakeAccessProperties.ManagedWorkgroupStatus),
-			RedshiftDatabaseName:   types.StringPointerValue(cp.DataLakeAccessProperties.RedshiftDatabaseName),
-			StatusMessage:          types.StringPointerValue(cp.DataLakeAccessProperties.StatusMessage),
-		}
-		val, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, dlapModel)
-		diags.Append(d...)
-		cpModel.DataLakeAccessProperties = val
-	} else {
-		cpModel.DataLakeAccessProperties = fwtypes.NewListNestedObjectValueOfNull[dataLakeAccessPropertiesModel](ctx)
-	}
-
-	val, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, cpModel)
-	diags.Append(d...)
-	return val
-}
-
-func flattenPrincipalPermissionsList(ctx context.Context, perms []awstypes.PrincipalPermissions, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[principalPermissionsModel] {
-	models := make([]*principalPermissionsModel, 0, len(perms))
-
-	for _, pp := range perms {
-		model := &principalPermissionsModel{}
-
-		if len(pp.Permissions) > 0 {
-			elems := make([]attr.Value, len(pp.Permissions))
-			for i, p := range pp.Permissions {
-				elems[i] = types.StringValue(string(p))
-			}
-			val, d := fwtypes.NewListValueOf[basetypes.StringValue](ctx, elems)
-			diags.Append(d...)
-			model.Permissions = val
-		} else {
-			model.Permissions = fwtypes.NewListValueOfNull[basetypes.StringValue](ctx)
-		}
-
-		if pp.Principal != nil {
-			principalModel := &dataLakePrincipalModel{
-				DataLakePrincipalIdentifier: types.StringPointerValue(pp.Principal.DataLakePrincipalIdentifier),
-			}
-			val, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, principalModel)
-			diags.Append(d...)
-			model.Principal = val
-		} else {
-			model.Principal = fwtypes.NewListNestedObjectValueOfNull[dataLakePrincipalModel](ctx)
-		}
-
-		models = append(models, model)
-	}
-
-	val, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, models, nil)
-	diags.Append(d...)
-	return val
 }
 
 // --- Model structs ---
@@ -889,22 +591,22 @@ func flattenPrincipalPermissionsList(ctx context.Context, perms []awstypes.Princ
 type catalogResourceModel struct {
 	framework.WithRegionModel
 	AllowFullTableExternalDataAccess fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum] `tfsdk:"allow_full_table_external_data_access"`
-	ARN                              types.String                                                      `tfsdk:"arn"`
+	ARN                              types.String                                                      `tfsdk:"arn" autoflex:"-"`
 	CatalogID                        types.String                                                      `tfsdk:"catalog_id"`
 	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]           `tfsdk:"catalog_properties"`
 	CreateDatabaseDefaultPermissions fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_database_default_permissions"`
 	CreateTableDefaultPermissions    fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_table_default_permissions"`
-	CreateTime                       types.String                                                      `tfsdk:"create_time"`
+	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
 	Description                      types.String                                                      `tfsdk:"description"`
 	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
-	ID                               types.String                                                      `tfsdk:"id"`
+	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
 	Name                             types.String                                                      `tfsdk:"name"`
 	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
 	Tags                             tftags.Map                                                        `tfsdk:"tags"`
 	TagsAll                          tftags.Map                                                        `tfsdk:"tags_all"`
 	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]       `tfsdk:"target_redshift_catalog"`
 	Timeouts                         timeouts.Value                                                    `tfsdk:"timeouts"`
-	UpdateTime                       types.String                                                      `tfsdk:"update_time"`
+	UpdateTime                       timetypes.RFC3339                                                 `tfsdk:"update_time"`
 }
 
 type catalogPropertiesModel struct {
@@ -940,35 +642,4 @@ type principalPermissionsModel struct {
 
 type dataLakePrincipalModel struct {
 	DataLakePrincipalIdentifier types.String `tfsdk:"data_lake_principal_identifier"`
-}
-
-// --- Sweep ---
-
-func sweepCatalogs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.GlueClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	input := &glue.GetCatalogsInput{
-		Recursive: true,
-	}
-
-	for {
-		output, err := conn.GetCatalogs(ctx, input)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range output.CatalogList {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newCatalogResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.CatalogId))),
-			)
-		}
-
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweepResources, nil
 }
