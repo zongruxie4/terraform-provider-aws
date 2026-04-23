@@ -814,7 +814,7 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	setTagsOut(ctx, subnet.Tags)
 }
 
-func IsUnauthorizedError(err error) bool {
+func isUnauthorizedError(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -879,7 +879,7 @@ func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID
 func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) (string, error) {
 	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
 	if err != nil {
-		if IsUnauthorizedError(err) {
+		if isUnauthorizedError(err) {
 			return fmt.Sprintf(
 				"During deletion of subnet %s, Terraform attempted to check for and clean up "+
 					"GuardDuty-managed resources that may have been causing a DependencyViolation, "+
@@ -904,7 +904,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
-		if IsUnauthorizedError(err) {
+		if isUnauthorizedError(err) {
 			return fmt.Sprintf(
 				"During deletion of subnet %s, Terraform attempted to check for and clean up "+
 					"GuardDuty-managed resources that may have been causing a DependencyViolation, "+
@@ -945,7 +945,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 		}
 		_, err := conn.ModifyVpcEndpoint(ctx, &modifyInput)
 		if err != nil {
-			if IsUnauthorizedError(err) {
+			if isUnauthorizedError(err) {
 				return fmt.Sprintf(
 					"During deletion of subnet %s, Terraform attempted to check for and clean up "+
 						"GuardDuty-managed resources that may have been causing a DependencyViolation, "+

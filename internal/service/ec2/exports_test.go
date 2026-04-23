@@ -324,6 +324,11 @@ var (
 	GuardDutySecurityGroupPrefix                                = guardDutySecurityGroupPrefix
 )
 
+var (
+	IsDependencyViolationError = isDependencyViolationError
+	IsUnauthorizedError        = isUnauthorizedError
+)
+
 type (
 	GroupIdentifier = groupIdentifier
 	IPProtocol      = ipProtocol

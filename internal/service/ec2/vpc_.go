@@ -807,7 +807,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 
 	sgs, err := findGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 	if err != nil {
-		if IsUnauthorizedError(err) {
+		if isUnauthorizedError(err) {
 			tflog.Warn(ctx, "Insufficient IAM permissions to describe GuardDuty security groups")
 			return 0, fmt.Sprintf(
 				"During deletion of VPC %s, Terraform attempted to check for and delete "+
@@ -841,7 +841,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		}
 		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
 		if err != nil {
-			if IsUnauthorizedError(err) {
+			if isUnauthorizedError(err) {
 				tflog.Warn(ctx, "Insufficient IAM permissions to delete GuardDuty security group", map[string]any{"group_id": groupID})
 				warningMsg := fmt.Sprintf(
 					"During deletion of VPC %s, Terraform attempted to check for and delete "+
@@ -850,7 +850,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 						"in this VPC, these permissions may be required for automatic cleanup.", vpcID)
 				return deletedCount, warningMsg, nil
 			}
-			if IsDependencyViolationError(err) {
+			if isDependencyViolationError(err) {
 				return deletedCount, "", formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
 			}
 			return deletedCount, "", formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
@@ -868,7 +868,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
-		if IsUnauthorizedError(err) {
+		if isUnauthorizedError(err) {
 			return fmt.Sprintf(
 				"During deletion of VPC %s, Terraform attempted to check for and delete "+
 					"GuardDuty-managed VPC endpoints that may have been causing a DependencyViolation, "+
@@ -902,7 +902,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 		}
 		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
 		if err != nil {
-			if IsUnauthorizedError(err) {
+			if isUnauthorizedError(err) {
 				return fmt.Sprintf(
 					"During deletion of VPC %s, Terraform attempted to check for and delete "+
 						"GuardDuty-managed VPC endpoints that may have been causing a DependencyViolation, "+
@@ -932,7 +932,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	return "", nil
 }
 
-func IsDependencyViolationError(err error) bool {
+func isDependencyViolationError(err error) bool {
 	if err == nil {
 		return false
 	}
