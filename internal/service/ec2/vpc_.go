@@ -433,7 +433,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 						"Error: %s", d.Id(), cleanupErr.Error(),
 				))
 			} else {
-				tflog.Warn(ctx, "Error cleaning up GuardDuty VPC endpoints", map[string]any{"error": cleanupErr.Error()})
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), cleanupErr)
 			}
 		}
 
@@ -446,7 +446,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 						"Error: %s", d.Id(), sgErr.Error(),
 				))
 			} else {
-				tflog.Warn(ctx, "Error cleaning up GuardDuty security groups", map[string]any{"error": sgErr.Error()})
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC security groups for EC2 VPC %q: %s", d.Id(), sgErr)
 			}
 		}
 
