@@ -7,7 +7,6 @@ package arczonalshift
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
@@ -40,7 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceZonalAutoshiftConfiguration,
 			TypeName: "aws_arczonalshift_zonal_autoshift_configuration",
 			Name:     "Zonal Autoshift Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

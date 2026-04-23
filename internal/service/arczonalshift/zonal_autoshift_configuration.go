@@ -5,9 +5,7 @@ package arczonalshift
 
 import (
 	"context"
-	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
@@ -19,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -27,18 +24,12 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_arczonalshift_zonal_autoshift_configuration", name="Zonal Autoshift Configuration")
 func newResourceZonalAutoshiftConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceZonalAutoshiftConfiguration{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -49,14 +40,14 @@ const (
 
 type resourceZonalAutoshiftConfiguration struct {
 	framework.ResourceWithModel[resourceZonalAutoshiftConfigurationModel]
-	framework.WithTimeouts
 }
 
 func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -116,21 +107,10 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 		OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
 	}
 
-	if !plan.BlockingAlarmARNs.IsNull() {
-		input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
-	}
-
-	if !plan.BlockedDates.IsNull() {
-		input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
-	}
-
-	if !plan.BlockedWindows.IsNull() {
-		input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
-	}
-
-	if !plan.AllowedWindows.IsNull() {
-		input.AllowedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.AllowedWindows)
-	}
+	input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
+	input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
+	input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
+	input.AllowedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.AllowedWindows)
 
 	out, err := conn.CreatePracticeRunConfiguration(ctx, &input)
 	if err != nil {
@@ -154,6 +134,15 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 
 	out2, err := conn.UpdateZonalAutoshiftConfiguration(ctx, &statusInput)
 	if err != nil {
+		// cleanup practiceRunConfiguration created earlier
+		deletePracticeRunConfigurationInput := arczonalshift.DeletePracticeRunConfigurationInput{
+			ResourceIdentifier: plan.ResourceARN.ValueStringPointer(),
+		}
+		_, cleanupErr := conn.DeletePracticeRunConfiguration(ctx, &deletePracticeRunConfigurationInput)
+		if cleanupErr != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, cleanupErr, smerr.ID, plan.ResourceARN.String())
+			return
+		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
 		return
 	}
@@ -163,7 +152,7 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 		return
 	}
 
-	plan.ResourceARN = types.StringValue(aws.ToString(out2.ResourceIdentifier))
+	plan.ResourceARN = flex.StringToFrameworkARN(ctx, out2.ResourceIdentifier)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -227,14 +216,8 @@ func (r *resourceZonalAutoshiftConfiguration) Update(ctx context.Context, req re
 		input := arczonalshift.UpdatePracticeRunConfigurationInput{
 			ResourceIdentifier: aws.String(resourceIdentifier),
 			OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
-		}
-
-		if !plan.BlockingAlarmARNs.IsNull() {
-			input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
-		}
-
-		if !plan.BlockedDates.IsNull() {
-			input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
+			BlockingAlarms:     alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs)),
+			BlockedDates:       flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates),
 		}
 
 		if !plan.BlockedWindows.IsNull() {
@@ -368,35 +351,11 @@ func findManagedResourceByIdentifier(ctx context.Context, conn *arczonalshift.Cl
 
 type resourceZonalAutoshiftConfigurationModel struct {
 	framework.WithRegionModel
-	ResourceARN       types.String         `tfsdk:"resource_arn"`
+	ResourceARN       fwtypes.ARN          `tfsdk:"resource_arn"`
 	OutcomeAlarmARNs  fwtypes.ListOfString `tfsdk:"outcome_alarm_arns"`
 	BlockingAlarmARNs fwtypes.ListOfString `tfsdk:"blocking_alarm_arns"`
 	BlockedDates      fwtypes.ListOfString `tfsdk:"blocked_dates"`
 	BlockedWindows    fwtypes.ListOfString `tfsdk:"blocked_windows"`
 	AllowedWindows    fwtypes.ListOfString `tfsdk:"allowed_windows"`
 	AutoshiftEnabled  types.Bool           `tfsdk:"autoshift_enabled"`
-}
-
-func sweepZonalAutoshiftConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := arczonalshift.ListManagedResourcesInput{}
-	conn := client.ARCZonalShiftClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := arczonalshift.NewListManagedResourcesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.Items {
-			if v.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled || v.PracticeRunStatus != "" {
-				sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceZonalAutoshiftConfiguration, client,
-					sweepfw.NewAttribute(names.AttrResourceARN, aws.ToString(v.Arn))),
-				)
-			}
-		}
-	}
-
-	return sweepResources, nil
 }

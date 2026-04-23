@@ -93,7 +93,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_identifier`. For example:
 
 ```terraform
 import {
@@ -102,7 +102,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_arn`. For example:
+Using `terraform import`, import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_identifier`. For example:
 
 ```console
 % terraform import aws_arczonalshift_zonal_autoshift_configuration.example arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/example/50dc6c495c0c9188
