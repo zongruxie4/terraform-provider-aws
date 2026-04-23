@@ -269,7 +269,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
 }
 
 func testAccCrossAccountAttachmentConfig_resources(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 1), fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
@@ -280,14 +280,14 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   name = %[1]q
 
   resource {
-    endpoint_id = aws_lb.test.id
+    endpoint_id = aws_lb.test[0].id
   }
 }
 `, rName))
 }
 
 func testAccCrossAccountAttachmentConfig_resourcesUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 1), fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
