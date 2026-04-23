@@ -828,12 +828,15 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		return nil
 	}
 
-	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{"count": len(sgs)})
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{
+		"count": len(sgs),
+	})
 
 	for _, sg := range sgs {
 		groupID := aws.ToString(sg.GroupId)
+		ctx := tflog.SetField(ctx, "group_id", groupID)
 
-		tflog.Debug(ctx, "Deleting GuardDuty security group", map[string]any{"group_id": groupID})
+		tflog.Debug(ctx, "Deleting GuardDuty security group")
 
 		deleteInput := ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(groupID),
@@ -846,7 +849,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 			return fmt.Errorf("deleting GuardDuty security group %q: %w", groupID, err)
 		}
 
-		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
+		tflog.Debug(ctx, "Successfully deleted GuardDuty security group")
 	}
 
 	return nil
