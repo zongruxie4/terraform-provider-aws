@@ -53,7 +53,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_organization_admin_account.example
   identity = {
-    "admin_account_id" = "123456789012"
+    admin_account_id = "123456789012"
   }
 }
 

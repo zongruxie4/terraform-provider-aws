@@ -180,7 +180,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_configuration_policy.example
   identity = {
-    "id" = "00000000-1111-2222-3333-444444444444"
+    id = "00000000-1111-2222-3333-444444444444"
   }
 }
 

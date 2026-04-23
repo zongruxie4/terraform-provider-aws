@@ -46,7 +46,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_action_target.example
   identity = {
-    "arn" = "arn:aws:securityhub:eu-west-1:123456789012:action/custom/a"
+    arn = "arn:aws:securityhub:eu-west-1:123456789012:action/custom/a"
   }
 }
 

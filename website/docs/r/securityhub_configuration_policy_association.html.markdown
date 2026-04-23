@@ -92,7 +92,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_configuration_policy_association.example
   identity = {
-    "target_id" = "123456789012"
+    target_id = "123456789012"
   }
 }
 

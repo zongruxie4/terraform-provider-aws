@@ -48,7 +48,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_securityhub_member.example
   identity = {
-    "member_account_id" = "123456789012"
+    member_account_id = "123456789012"
   }
 }
 
