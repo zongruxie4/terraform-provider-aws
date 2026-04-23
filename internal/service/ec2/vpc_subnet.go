@@ -901,7 +901,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 		if isUnauthorizedError(err) {
 			return err
 		}
-		return nil
+		return fmt.Errorf("listing GuardDuty VPC endpoints for Subnet %q: %w", subnetID, err)
 	}
 
 	if len(endpoints) == 0 {
@@ -937,7 +937,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation")
 				continue
 			}
-			return fmt.Errorf("modifying GuardDuty VPC endpoint %s to remove subnet %s: %w", endpointID, subnetID, err)
+			return fmt.Errorf("modifying GuardDuty VPC endpoint %q to remove subnet %q: %w", endpointID, subnetID, err)
 		}
 
 		if _, err := waitVPCEndpointAvailable(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
@@ -945,7 +945,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state")
 				continue
 			}
-			return fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach available state after dissociating subnet %s: %w", endpointID, subnetID, err)
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach available state after dissociating subnet %q: %w", endpointID, subnetID, err)
 		}
 
 		tflog.Debug(ctx, "Successfully dissociated subnet from GuardDuty VPC endpoint")
