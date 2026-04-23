@@ -451,9 +451,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 						"If GuardDuty monitoring is enabled for the containing VPC %q, the missing permissions will prevent deletion of the Subnet\n\n"+
 						"Error: %s", d.Id(), vpcID, dissociateErr.Error()))
 			} else {
-				tflog.Warn(ctx, "Error dissociating GuardDuty VPC endpoints", map[string]any{
-					"error": dissociateErr.Error(),
-				})
+				return sdkdiag.AppendErrorf(diags, "dissociating GuardDuty VPC endpoints for EC2 Subnet %q: %s", d.Id(), dissociateErr)
 			}
 		}
 
