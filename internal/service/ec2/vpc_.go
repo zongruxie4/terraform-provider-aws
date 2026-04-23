@@ -833,11 +833,6 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 	for _, sg := range sgs {
 		groupID := aws.ToString(sg.GroupId)
 
-		if !hasGuardDutyManagedTag(sg.Tags) {
-			tflog.Debug(ctx, "Skipping security group: missing GuardDutyManaged=true tag", map[string]any{"group_id": groupID})
-			continue
-		}
-
 		tflog.Debug(ctx, "Deleting GuardDuty security group", map[string]any{"group_id": groupID})
 
 		deleteInput := ec2.DeleteSecurityGroupInput{

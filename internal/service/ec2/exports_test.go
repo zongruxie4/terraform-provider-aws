@@ -318,7 +318,6 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
-	HasGuardDutyManagedTag                                      = hasGuardDutyManagedTag
 	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
 	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
 	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC

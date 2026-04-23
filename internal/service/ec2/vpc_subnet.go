@@ -822,16 +822,6 @@ const (
 	vpcEndpointDeletionTimeout = 10 * time.Minute
 )
 
-func hasGuardDutyManagedTag(tags []awstypes.Tag) bool {
-	for _, tag := range tags {
-		if aws.ToString(tag.Key) == guardDutyManagedTagKey &&
-			aws.ToString(tag.Value) == guardDutyManagedTagValue {
-			return true
-		}
-	}
-	return false
-}
-
 func findGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.VpcEndpoint, error) {
 	return findVPCEndpoints(ctx, conn, &ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(map[string]string{
