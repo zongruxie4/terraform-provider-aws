@@ -820,7 +820,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		if isUnauthorizedError(err) {
 			return err
 		}
-		return formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
+		return formatGuardDutyError("describing", "security groups in VPC", vpcID, err)
 	}
 
 	if len(sgs) == 0 {
@@ -851,7 +851,7 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 			if isDependencyViolationError(err) {
 				return formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
 			}
-			return formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
+			return formatGuardDutyError("deleting", "security group", groupID, err)
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
@@ -937,24 +937,6 @@ func isDependencyViolationError(err error) bool {
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "DependencyViolation") ||
 		strings.Contains(errMsg, "dependent object")
-}
-
-func isThrottlingError(err error) bool {
-	if err == nil {
-		return false
-	}
-	errMsg := err.Error()
-	return strings.Contains(errMsg, "Throttling") ||
-		strings.Contains(errMsg, "RequestLimitExceeded") ||
-		strings.Contains(errMsg, "TooManyRequests") ||
-		strings.Contains(errMsg, "Rate exceeded")
-}
-
-func wrapThrottlingError(err error) error {
-	if isThrottlingError(err) {
-		return fmt.Errorf("%w (AWS API throttling detected - please retry the operation)", err)
-	}
-	return err
 }
 
 func formatGuardDutyError(operation, resourceType, resourceID string, err error) error {
