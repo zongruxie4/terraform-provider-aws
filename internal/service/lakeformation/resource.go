@@ -147,10 +147,10 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	// a nil *bool to d.Set coerces to false and causes a perpetual drift
 	// against a user's configured `true`. Guard the Set so we only overwrite
 	// state when AWS actually returned a value.
-	if resource.WithFederation != nil { //nolint:gocritic // helper-schema-ResourceData-Set-extraneous-nil-check: load-bearing, prevents false-drift replace loop
+	if resource.WithFederation != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("with_federation", resource.WithFederation)
 	}
-	if resource.WithPrivilegedAccess != nil { //nolint:gocritic // helper-schema-ResourceData-Set-extraneous-nil-check: load-bearing, prevents false-drift replace loop
+	if resource.WithPrivilegedAccess != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("with_privileged_access", resource.WithPrivilegedAccess)
 	}
 

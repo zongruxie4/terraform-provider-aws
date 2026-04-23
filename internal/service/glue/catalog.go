@@ -348,7 +348,7 @@ func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	flattenCatalog(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
+	readCatalogIntoModel(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -378,7 +378,7 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	flattenCatalog(ctx, out, &state, catalogPropertiesWasNull, &resp.Diagnostics)
+	readCatalogIntoModel(ctx, out, &state, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -464,7 +464,7 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	flattenCatalog(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
+	readCatalogIntoModel(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -565,13 +565,13 @@ func waitCatalogReady(ctx context.Context, conn *glue.Client, id string, timeout
 	return catalog, err
 }
 
-// flattenCatalog copies AWS fields onto the resource model. catalogPropertiesWasNull
+// readCatalogIntoModel copies AWS fields onto the resource model. catalogPropertiesWasNull
 // preserves a null catalog_properties block when AWS auto-populates one (e.g.
 // custom_properties={"aws:PermissionsModel":"LAKEFORMATION"} on LF-managed
 // catalogs): otherwise a user who didn't declare the block would see a
 // permanent diff. ARN is set manually because flex does not rename
 // ResourceArn -> ARN, and ID mirrors CatalogId.
-func flattenCatalog(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, catalogPropertiesWasNull bool, diags *diag.Diagnostics) {
+func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, catalogPropertiesWasNull bool, diags *diag.Diagnostics) {
 	diags.Append(fwflex.Flatten(ctx, catalog, model)...)
 	if diags.HasError() {
 		return
