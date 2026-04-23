@@ -893,7 +893,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 		return "", nil
 	}
 	if !ownedByAccount {
-		tflog.Debug(ctx, "VPC is shared (owned by a different account), skipping GuardDuty cleanup")
+		tflog.Debug(ctx, "VPC owned by a different account, skipping")
 		return "", nil
 	}
 
@@ -912,7 +912,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 		return "", nil
 	}
 
-	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), checking subnet association", map[string]any{
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
 		"count": len(endpoints),
 	})
 
@@ -937,7 +937,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 				return "", err
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation, continuing")
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during dissociation")
 				continue
 			}
 			return "", fmt.Errorf("modifying GuardDuty VPC endpoint %s to remove subnet %s: %w", endpointID, subnetID, err)
@@ -945,7 +945,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 
 		if _, err := waitVPCEndpointAvailable(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state, continuing")
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for available state")
 				continue
 			}
 			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach available state after dissociating subnet %s: %w", endpointID, subnetID, err)
