@@ -28,8 +28,8 @@ func regionalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
 	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterizedIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
