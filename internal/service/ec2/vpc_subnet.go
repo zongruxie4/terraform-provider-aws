@@ -869,6 +869,8 @@ func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID
 // ever changes.
 // See: https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-shared-vpc.html
 func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) (string, error) {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrVPCID), vpcID)
+
 	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
 	if err != nil {
 		if isUnauthorizedError(err) {
@@ -881,7 +883,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 			), nil
 		}
 		tflog.Warn(ctx, "Error checking VPC ownership for GuardDuty cleanup", map[string]any{
-			names.AttrVPCID: vpcID, "error": err.Error(),
+			"error": err,
 		})
 		return "", nil
 	}
@@ -890,9 +892,7 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 		return "", nil
 	}
 
-	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for subnet dissociation", map[string]any{
-		names.AttrVPCID: vpcID,
-	})
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for subnet dissociation")
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
@@ -909,12 +909,12 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 	}
 
 	if len(endpoints) == 0 {
-		tflog.Debug(ctx, "No GuardDuty VPC endpoints found", map[string]any{names.AttrVPCID: vpcID})
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
 		return "", nil
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), checking subnet association", map[string]any{
-		names.AttrVPCID: vpcID, "count": len(endpoints),
+		"count": len(endpoints),
 	})
 
 	for _, endpoint := range endpoints {
