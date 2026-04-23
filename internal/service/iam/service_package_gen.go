@@ -267,7 +267,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "InstanceProfile",
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -319,7 +319,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Role",
 			}),
 			Region: inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithV6_0SDKv2Fix(),
 			),
 			Import: inttypes.SDKv2Import{
@@ -423,7 +423,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "User",
 			}),
 			Region: inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithMutableIdentity(),
 			),
 			Import: inttypes.SDKv2Import{
@@ -503,7 +503,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
 			}),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
 			Factory:  newRolePolicyResourceAsListResource,
@@ -534,7 +534,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "User",
 			}),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithMutableIdentity(),
 			),
 		},
