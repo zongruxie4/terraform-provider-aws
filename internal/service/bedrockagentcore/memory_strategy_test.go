@@ -5,35 +5,24 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var memoryConfig = func(rName string) string {
-	return testAccMemoryConfig_basic(rName)
-}
-
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var memoryStrategy1, memoryStrategy2, memoryStrategy3, memoryStrategy4, memoryStrategy5 awstypes.MemoryStrategy
+	var m awstypes.MemoryStrategy
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
@@ -55,31 +44,39 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Episodic strategy"),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// Step 2: Update episodic description (in-place)
 			{
 				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Updated episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy2),
-					testAccCheckMemoryStrategyNotRecreated(&memoryStrategy1, &memoryStrategy2),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated episodic strategy"),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			// Step 3: Change type episodic→semantic (replacement)
 			{
 				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", names.AttrDescription, "default"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy3),
-					testAccCheckMemoryStrategyRecreated(&memoryStrategy2, &memoryStrategy3),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
@@ -87,24 +84,32 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			// Step 4: Update description + namespace (in-place)
 			{
 				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Updated description", "custom"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy4),
-					testAccCheckMemoryStrategyNotRecreated(&memoryStrategy3, &memoryStrategy4),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "custom"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			// Step 5: Change type semantic→user_preference (replacement)
 			{
 				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "USER_PREFERENCE", "User preference strategy", "preferences"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memoryStrategy5),
-					testAccCheckMemoryStrategyRecreated(&memoryStrategy4, &memoryStrategy5),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "USER_PREFERENCE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "User preference strategy"),
@@ -112,6 +117,11 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "preferences"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			// Step 6: Try to create ANOTHER user_preference strategy → should ERROR
 			{
@@ -122,7 +132,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
 				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
@@ -133,11 +143,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 
 func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var r1, r2, r5 awstypes.MemoryStrategy
+	var m awstypes.MemoryStrategy
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
@@ -164,7 +170,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "anthropic.claude-3-haiku-20240307-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &r1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -175,13 +181,17 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// Step 3: Add extraction block and update consolidation properties (same override type)
 			{
 				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract semantic meaning", "anthropic.claude-3-haiku-20240307-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &r2),
-					testAccCheckMemoryStrategyNotRecreated(&r1, &r2),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
@@ -192,6 +202,11 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract semantic meaning"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			// Step 4: Try to remove consolidation block → should ERROR
 			{
@@ -202,8 +217,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract user preferences", "anthropic.claude-3-haiku-20240307-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &r5),
-					testAccCheckMemoryStrategyRecreated(&r2, &r5),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -216,6 +230,11 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
@@ -226,7 +245,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "anthropic.claude-3-sonnet-20240229-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &r5),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -247,7 +266,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
 				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
@@ -302,81 +321,48 @@ func testAccCheckMemoryStrategyDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			memoryStrategyId := rs.Primary.Attributes["memory_strategy_id"]
-			_, err := tfbedrockagentcore.FindMemoryStrategyByID(ctx, conn, rs.Primary.Attributes["memory_id"], memoryStrategyId)
+			_, err := tfbedrockagentcore.FindMemoryStrategyByTwoPartKey(ctx, conn, rs.Primary.Attributes["memory_id"], rs.Primary.Attributes["memory_strategy_id"])
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameMemoryStrategy, memoryStrategyId, err)
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameMemoryStrategy, memoryStrategyId, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Memory Strategy %s,%s still exists", rs.Primary.Attributes["memory_id"], rs.Primary.Attributes["memory_strategy_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMemoryStrategyExists(ctx context.Context, t *testing.T, name string, memorystrategy *awstypes.MemoryStrategy) resource.TestCheckFunc {
+func testAccCheckMemoryStrategyExists(ctx context.Context, t *testing.T, n string, v *awstypes.MemoryStrategy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemoryStrategy, name, errors.New("not found"))
-		}
-
-		memoryStrategyId := rs.Primary.Attributes["memory_strategy_id"]
-		if memoryStrategyId == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemoryStrategy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindMemoryStrategyByID(ctx, conn, rs.Primary.Attributes["memory_id"], memoryStrategyId)
+		resp, err := tfbedrockagentcore.FindMemoryStrategyByTwoPartKey(ctx, conn, rs.Primary.Attributes["memory_id"], rs.Primary.Attributes["memory_strategy_id"])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemoryStrategy, memoryStrategyId, err)
+			return err
 		}
 
-		*memorystrategy = *resp
+		*v = *resp
 
 		return nil
 	}
 }
 
-func testAccCheckMemoryStrategyNotRecreated(before, after *awstypes.MemoryStrategy) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.ToString(before.StrategyId), aws.ToString(after.StrategyId); beforeID != afterID {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameMemoryStrategy, beforeID, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckMemoryStrategyRecreated(before, after *awstypes.MemoryStrategy) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.ToString(before.StrategyId), aws.ToString(after.StrategyId); beforeID == afterID {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingRecreated, tfbedrockagentcore.ResNameMemoryStrategy, beforeID, errors.New("not recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccMemoryStrategyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["memory_id"], rs.Primary.Attributes["memory_strategy_id"]), nil
-	}
+func testAccMemoryStrategyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "memory_id", "memory_strategy_id")
 }
 
 func testAccMemoryStrategyConfig(rName, strategyType, description, namespace string) string {
-	return acctest.ConfigCompose(memoryConfig(rName), fmt.Sprintf(`	
-
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`	
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name        = %[1]q
   memory_id   = aws_bedrockagentcore_memory.test.id

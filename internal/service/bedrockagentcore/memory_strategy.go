@@ -54,8 +54,6 @@ func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigur
 }
 
 const (
-	ResNameMemoryStrategy = "Memory Strategy"
-
 	// Retry message substrings for transitional/ignored states
 	msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
 	msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
@@ -107,7 +105,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrConfiguration: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomConfigurationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -123,12 +121,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					},
 					Blocks: map[string]schema.Block{
 						"consolidation": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[OverrideDetailsModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[overrideDetailsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
-								ErrorIfSingleBlockRemoved("consolidation"),
+								errorIfSingleBlockRemoved("consolidation"),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -142,10 +140,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							},
 						},
 						"extraction": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[OverrideDetailsModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[overrideDetailsModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							PlanModifiers: []planmodifier.List{
-								ErrorIfSingleBlockRemoved("extraction"),
+								errorIfSingleBlockRemoved("extraction"),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -170,23 +168,23 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
-type errorIfSingleBlockRemoved struct {
+type errorIfSingleBlockRemoved_ struct {
 	label string
 }
 
-func ErrorIfSingleBlockRemoved(label string) planmodifier.List {
-	return errorIfSingleBlockRemoved{label: label}
+func errorIfSingleBlockRemoved(label string) planmodifier.List {
+	return errorIfSingleBlockRemoved_{label: label}
 }
 
-func (m errorIfSingleBlockRemoved) Description(context.Context) string {
+func (m errorIfSingleBlockRemoved_) Description(context.Context) string {
 	return "Disallow removing previously configured " + m.label + " block"
 }
 
-func (m errorIfSingleBlockRemoved) MarkdownDescription(ctx context.Context) string {
+func (m errorIfSingleBlockRemoved_) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
 	// Skip create or destroy.
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
@@ -608,7 +606,7 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration          fwtypes.ListNestedObjectValueOf[CustomConfigurationModel] `tfsdk:"configuration"`
+	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
 	Description            types.String                                              `tfsdk:"description"`
 	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
 	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
@@ -724,25 +722,25 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	return &r, diags
 }
 
-type CustomConfigurationModel struct {
+type customConfigurationModel struct {
 	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
-	Consolidation fwtypes.ListNestedObjectValueOf[OverrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[OverrideDetailsModel] `tfsdk:"extraction"`
+	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
+	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
 }
 
 var (
-	_ fwflex.TypedExpander = CustomConfigurationModel{}
-	_ fwflex.Flattener     = &CustomConfigurationModel{}
+	_ fwflex.TypedExpander = customConfigurationModel{}
+	_ fwflex.Flattener     = &customConfigurationModel{}
 )
 
-func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	var d diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.StrategyConfiguration:
 		m.Type = fwtypes.StringEnumValue(t.Type)
 
 		if t.Consolidation != nil {
-			var consolidation OverrideDetailsModel
+			var consolidation overrideDetailsModel
 			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &consolidation))
 			if diags.HasError() {
 				return diags
@@ -757,7 +755,7 @@ func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 		}
 
 		if t.Extraction != nil {
-			var extraction OverrideDetailsModel
+			var extraction overrideDetailsModel
 			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &extraction))
 			if diags.HasError() {
 				return diags
@@ -778,7 +776,7 @@ func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 	}
 	return diags
 }
-func (m CustomConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+func (m customConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
 	switch targetType {
 	case reflect.TypeFor[awstypes.CustomConfigurationInput]():
 		return m.expandToCustomConfigurationInput(ctx)
@@ -794,8 +792,8 @@ func (m CustomConfigurationModel) ExpandTo(ctx context.Context, targetType refle
 	return nil, diags
 }
 
-func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.Context) (result awstypes.CustomConfigurationInput, diags diag.Diagnostics) {
-	type modelAlias CustomConfigurationModel
+func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.Context) (result awstypes.CustomConfigurationInput, diags diag.Diagnostics) {
+	type modelAlias customConfigurationModel
 	alias := modelAlias(m)
 
 	switch m.Type.ValueEnum() {
@@ -840,10 +838,10 @@ func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 	return nil, diags
 }
 
-func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx context.Context) (result *awstypes.ModifyStrategyConfiguration, diags diag.Diagnostics) {
+func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx context.Context) (result *awstypes.ModifyStrategyConfiguration, diags diag.Diagnostics) {
 	result = &awstypes.ModifyStrategyConfiguration{}
 
-	var consolidation, extraction *OverrideDetailsModel
+	var consolidation, extraction *overrideDetailsModel
 	var d diag.Diagnostics
 
 	if !m.Consolidation.IsNull() {
@@ -956,21 +954,16 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	return result, diags
 }
 
-type OverrideConfigurationModel struct {
-	Consolidation fwtypes.ListNestedObjectValueOf[OverrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[OverrideDetailsModel] `tfsdk:"extraction"`
-}
-
-type OverrideDetailsModel struct {
+type overrideDetailsModel struct {
 	AppendToPrompt types.String `tfsdk:"append_to_prompt"`
 	ModelID        types.String `tfsdk:"model_id"`
 }
 
 var (
-	_ fwflex.Flattener = &OverrideDetailsModel{}
+	_ fwflex.Flattener = &overrideDetailsModel{}
 )
 
-func (m *OverrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	// Consolidation
 	case awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration:
