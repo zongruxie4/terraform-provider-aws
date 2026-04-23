@@ -437,7 +437,9 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	// approach would add DescribeVpcEndpoints calls to every terraform destroy on
 	// every subnet, even when there is nothing to clean up.
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
-		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources")
+		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
 
 		vpcID := d.Get(names.AttrVPCID).(string)
 		accountID := meta.(*conns.AWSClient).AccountID(ctx)
