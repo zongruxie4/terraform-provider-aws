@@ -2346,58 +2346,6 @@ func TestGuardDutyServiceNamePattern(t *testing.T) {
 	}
 }
 
-func TestIsVPCEndpointNotFoundError(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name          string
-		err           error
-		shouldBeFound bool
-	}{
-		{
-			name:          "nil error",
-			err:           nil,
-			shouldBeFound: false,
-		},
-		{
-			name:          "InvalidVpcEndpointId.NotFound",
-			err:           fmt.Errorf("InvalidVpcEndpointId.NotFound: The vpc endpoint ID 'vpce-123' does not exist"),
-			shouldBeFound: true,
-		},
-		{
-			name:          "InvalidVpcEndpoint.NotFound",
-			err:           fmt.Errorf("InvalidVpcEndpoint.NotFound"),
-			shouldBeFound: true,
-		},
-		{
-			name:          "does not exist",
-			err:           fmt.Errorf("The specified endpoint does not exist"),
-			shouldBeFound: true,
-		},
-		{
-			name:          "other error",
-			err:           fmt.Errorf("InternalError: An internal error occurred"),
-			shouldBeFound: false,
-		},
-		{
-			name:          "unauthorized error",
-			err:           fmt.Errorf("UnauthorizedOperation: You are not authorized"),
-			shouldBeFound: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := tfec2.IsVPCEndpointNotFoundError(tc.err)
-			if result != tc.shouldBeFound {
-				t.Errorf("Expected %v, got %v for error: %v", tc.shouldBeFound, result, tc.err)
-			}
-		})
-	}
-}
-
 func TestIsUnauthorizedError(t *testing.T) {
 	t.Parallel()
 

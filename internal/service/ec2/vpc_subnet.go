@@ -824,16 +824,6 @@ func IsUnauthorizedError(err error) bool {
 		strings.Contains(errMsg, "not authorized")
 }
 
-func IsVPCEndpointNotFoundError(err error) bool {
-	if err == nil {
-		return false
-	}
-	errMsg := err.Error()
-	return strings.Contains(errMsg, "InvalidVpcEndpointId.NotFound") ||
-		strings.Contains(errMsg, "InvalidVpcEndpoint.NotFound") ||
-		strings.Contains(errMsg, "does not exist")
-}
-
 const (
 	vpcEndpointDeletionTimeout = 10 * time.Minute
 )
