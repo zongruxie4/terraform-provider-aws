@@ -443,16 +443,16 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 		vpcID := d.Get(names.AttrVPCID).(string)
 		accountID := meta.(*conns.AWSClient).AccountID(ctx)
-		cleanupErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID, accountID)
-		if cleanupErr != nil {
-			if isUnauthorizedError(err) {
+		dissociateErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID, accountID)
+		if dissociateErr != nil {
+			if isUnauthorizedError(dissociateErr) {
 				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
 					"While deleting EC2 Subnet %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
 						"If GuardDuty monitoring is enabled for the containing VPC %q, the missing permissions will prevent deletion of the Subnet\n\n"+
-						"Error: %s", d.Id(), vpcID, cleanupErr.Error()))
+						"Error: %s", d.Id(), vpcID, dissociateErr.Error()))
 			} else {
 				tflog.Warn(ctx, "Error dissociating GuardDuty VPC endpoints", map[string]any{
-					"error": cleanupErr.Error(),
+					"error": dissociateErr.Error(),
 				})
 			}
 		}
