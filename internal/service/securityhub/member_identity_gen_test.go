@@ -64,7 +64,7 @@ func testAccSecurityHubMember_Identity_basic(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"member_account_id": knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("member_account_id")),
+					statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New("member_account_id"), tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 
@@ -87,7 +87,7 @@ func testAccSecurityHubMember_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -102,7 +102,7 @@ func testAccSecurityHubMember_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -138,7 +138,7 @@ func testAccSecurityHubMember_Identity_regionOverride(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 						"member_account_id": knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("member_account_id")),
+					statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New("member_account_id"), tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 
@@ -167,7 +167,7 @@ func testAccSecurityHubMember_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -184,7 +184,7 @@ func testAccSecurityHubMember_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -239,7 +239,7 @@ func testAccSecurityHubMember_Identity_ExistingResource_basic(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"member_account_id": knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("member_account_id")),
+					statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New("member_account_id"), tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 		},
