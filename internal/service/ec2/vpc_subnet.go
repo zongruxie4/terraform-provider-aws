@@ -431,11 +431,8 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return diags
 	}
 
-	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
-	// proactive. This keeps the change invisible to customers who have never
-	// enabled GuardDuty - no extra API calls on their subnet deletes. A proactive
-	// approach would add DescribeVpcEndpoints calls to every terraform destroy on
-	// every subnet, even when there is nothing to clean up.
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so tha tno new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 		tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
 			"error": err,
