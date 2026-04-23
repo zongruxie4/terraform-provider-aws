@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -23,7 +22,7 @@ import (
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -144,7 +143,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -277,12 +276,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var memorystrategy awstypes.MemoryStrategy
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -296,13 +291,16 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemoryStrategyConfig(rName, "SEMANTIC", "Example Description", "default"),
+				Config: testAccMemoryStrategyConfig_basic(rName, "SEMANTIC", "Example Description", "default"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &memorystrategy),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceMemoryStrategy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -361,7 +359,7 @@ func testAccMemoryStrategyImportStateIDFunc(resourceName string) resource.Import
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "memory_id", "memory_strategy_id")
 }
 
-func testAccMemoryStrategyConfig(rName, strategyType, description, namespace string) string {
+func testAccMemoryStrategyConfig_basic(rName, strategyType, description, namespace string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`	
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name        = %[1]q
@@ -375,7 +373,6 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
 func testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, description, namespace string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
-
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
   memory_id                 = aws_bedrockagentcore_memory.test.id
@@ -394,18 +391,16 @@ func testAccMemoryStrategyConfig_duplicateType(rName string, strategyType string
 		namespace = "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
 		duplicateNamespace = "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
 	}
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, "Strategy for duplicate test", namespace), fmt.Sprintf(`	
 resource "aws_bedrockagentcore_memory_strategy" "test2" {
-  name                      = "%s_duplicate"
+  name                      = "%[1]s_duplicate"
   memory_id                 = aws_bedrockagentcore_memory.test.id
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = %q
+  type                      = %[2]q
   description               = "Duplicate strategy"
-  namespaces                = [%q]
+  namespaces                = [%[3]q]
 }
-`, testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, "Strategy for duplicate test", namespace), rName, strategyType, duplicateNamespace)
+`, rName, strategyType, duplicateNamespace))
 }
 
 func testAccMemoryStrategyConfig_custom(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
@@ -456,8 +451,6 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
 func testAccMemoryStrategyConfig_customExtractionOnly(rName, overrideType, extractionPrompt, extractionModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
-
-
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
   memory_id                 = aws_bedrockagentcore_memory.test.id

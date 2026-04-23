@@ -53,13 +53,6 @@ func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigur
 	return r, nil
 }
 
-const (
-	// Retry message substrings for transitional/ignored states
-	msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
-	msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
-	msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
-)
-
 type resourceMemoryStrategy struct {
 	framework.ResourceWithModel[memoryStrategyResourceModel]
 	framework.WithTimeouts
@@ -276,9 +269,10 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
+	memoryID := fwflex.StringValueFromFramework(ctx, plan.MemoryID)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
-		MemoryId:    plan.MemoryID.ValueStringPointer(),
+		MemoryId:    aws.String(memoryID),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			AddMemoryStrategies: []awstypes.MemoryStrategyInput{strategyInput},
 		},
@@ -288,7 +282,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
 	}
 
-	withMemoryLock(plan.MemoryID.ValueString(), func() {
+	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 		out, err := updateMemoryWithRetry(ctx, conn, createTimeout, &input, false)
 		if err != nil {
@@ -296,17 +290,18 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			return
 		}
 
+		name := fwflex.StringValueFromFramework(ctx, plan.Name)
 		var found *awstypes.MemoryStrategy
 		if out != nil && out.Memory != nil {
 			for i := range out.Memory.Strategies {
 				s := &out.Memory.Strategies[i]
-				if s.Name != nil && aws.ToString(s.Name) == plan.Name.ValueString() {
+				if s.Name != nil && aws.ToString(s.Name) == name {
 					found = s
 				}
 			}
 		}
 		if found == nil {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("create memory strategy: API response missing strategy name %q", plan.Name.ValueString()), smerr.ID, plan.GetIdentifier())
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("create memory strategy: API response missing strategy name %q", name), smerr.ID, plan.GetIdentifier())
 			return
 		}
 		// For non-CUSTOM types, clear Configuration from the API response before
@@ -320,9 +315,9 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			return
 		}
 
-		_, err = waitMemoryStrategyCreated(ctx, conn, plan.MemoryID.ValueString(), plan.MemoryStrategyID.ValueString(), createTimeout)
+		_, err = waitMemoryStrategyCreated(ctx, conn, memoryID, fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID), createTimeout)
 		if err != nil {
-			response.State.SetAttribute(ctx, path.Root("memory_id"), plan.MemoryID.ValueString())
+			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
 			return
 		}
@@ -343,7 +338,8 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
+	memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, state.MemoryID), fwflex.StringValueFromFramework(ctx, state.MemoryStrategyID)
+	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, memoryID, memoryStrategyID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -351,7 +347,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 		return
 	}
 
@@ -393,9 +389,10 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			return
 		}
 
+		memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
 		input := bedrockagentcorecontrol.UpdateMemoryInput{
 			ClientToken: aws.String(create.UniqueId(ctx)),
-			MemoryId:    plan.MemoryID.ValueStringPointer(),
+			MemoryId:    aws.String(memoryID),
 			MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 				ModifyMemoryStrategies: []awstypes.ModifyMemoryStrategyInput{strategyInput},
 			},
@@ -405,24 +402,24 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
 		}
 
-		withMemoryLock(plan.MemoryID.ValueString(), func() {
+		withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 			updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 			out, err := updateMemoryWithRetry(ctx, conn, updateTimeout, &input, false)
 			if err != nil {
-				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.MemoryStrategyID.String())
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
 			}
 			var found *awstypes.MemoryStrategy
 			if out != nil && out.Memory != nil {
 				for i := range out.Memory.Strategies {
 					s := &out.Memory.Strategies[i]
-					if s.StrategyId != nil && aws.ToString(s.StrategyId) == plan.MemoryStrategyID.ValueString() {
+					if s.StrategyId != nil && aws.ToString(s.StrategyId) == memoryStrategyID {
 						found = s
 					}
 				}
 			}
 			if found == nil {
-				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", plan.MemoryStrategyID.ValueString()))
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", memoryStrategyID))
 				return
 			}
 			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
@@ -447,29 +444,30 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 		return
 	}
 
+	memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, state.MemoryID), fwflex.StringValueFromFramework(ctx, state.MemoryStrategyID)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
-		MemoryId:    state.MemoryID.ValueStringPointer(),
+		MemoryId:    aws.String(memoryID),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			DeleteMemoryStrategies: []awstypes.DeleteMemoryStrategyInput{
 				{
-					MemoryStrategyId: state.MemoryStrategyID.ValueStringPointer(),
+					MemoryStrategyId: aws.String(memoryStrategyID),
 				},
 			},
 		},
 	}
 
-	withMemoryLock(state.MemoryID.ValueString(), func() {
+	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 		_, err := updateMemoryWithRetry(ctx, conn, deleteTimeout, &input, true)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 
-		_, err = waitMemoryStrategyDeleted(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString(), deleteTimeout)
+		_, err = waitMemoryStrategyDeleted(ctx, conn, memoryID, memoryStrategyID, deleteTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 	})
@@ -491,11 +489,11 @@ func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resour
 // strategy resources (add/modify/delete) do not race while the backend transitions strategy
 // state (e.g., Creating -> Active, Deleting -> removed) which could otherwise result in
 // ValidationExceptions or ConflictExceptions.
-func withMemoryLock(memoryID string, fn func()) {
+func withMemoryLock(ctx context.Context, memoryID string, fn func(ctx context.Context)) {
 	mutexKey := fmt.Sprintf("bedrockagentcore-memory-%s", memoryID)
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
-	fn()
+	fn(ctx)
 }
 
 func updateMemoryWithRetry(
@@ -520,6 +518,12 @@ func updateMemoryWithRetry(
 // (deleteOp=true) a ValidationException containing msgDeleteNonExistentStrategy
 // is considered terminal (no retry, treated as success by caller after RetryWhen).
 func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
+	const (
+		// Retry message substrings for transitional/ignored states
+		msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
+		msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
+		msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
+	)
 	return func(err error) (bool, error) {
 		if err == nil {
 			return false, nil
