@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -192,12 +193,10 @@ func (r *resourceZonalAutoshiftConfiguration) Read(ctx context.Context, req reso
 		return
 	}
 
-	state.AutoshiftEnabled = types.BoolValue(out.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled)
-	state.OutcomeAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.OutcomeAlarms))
-	state.BlockingAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.BlockingAlarms))
-	state.BlockedDates = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedDates)
-	state.BlockedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedWindows)
-	state.AllowedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.AllowedWindows)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -301,6 +300,17 @@ func (r *resourceZonalAutoshiftConfiguration) Delete(ctx context.Context, req re
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceIdentifier)
 		return
 	}
+}
+
+func (r *resourceZonalAutoshiftConfiguration) flatten(ctx context.Context, out *arczonalshift.GetManagedResourceOutput, data *resourceZonalAutoshiftConfigurationModel) diag.Diagnostics {
+	data.ResourceARN = flex.StringToFrameworkARN(ctx, out.Arn)
+	data.AutoshiftEnabled = types.BoolValue(out.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled)
+	data.OutcomeAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.OutcomeAlarms))
+	data.BlockingAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.BlockingAlarms))
+	data.BlockedDates = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedDates)
+	data.BlockedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedWindows)
+	data.AllowedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.AllowedWindows)
+	return nil
 }
 
 // controlConditionsToAlarmARNs extracts alarm ARNs from ControlCondition structs.
