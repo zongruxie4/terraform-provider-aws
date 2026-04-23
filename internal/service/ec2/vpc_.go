@@ -424,10 +424,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			"error": err,
 		})
 
-		warningMsg, cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
-		if warningMsg != "" {
-			guardDutyWarnings = append(guardDutyWarnings, warningMsg)
-		}
+		cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
 		if cleanupErr != nil {
 			if isUnauthorizedError(cleanupErr) {
 				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
@@ -440,10 +437,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			}
 		}
 
-		_, sgWarning, sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
-		if sgWarning != "" {
-			guardDutyWarnings = append(guardDutyWarnings, sgWarning)
-		}
+		_, sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
 		if sgErr != nil {
 			if isUnauthorizedError(sgErr) {
 				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
@@ -818,7 +812,7 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
 }
 
-func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, string, error) {
+func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, error) {
 	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
 
 	guardDutyGroupName := fmt.Sprintf("%s%s", guardDutySecurityGroupPrefix, vpcID)
@@ -826,14 +820,14 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 	sgs, err := findGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
 	if err != nil {
 		if isUnauthorizedError(err) {
-			return 0, "", err
+			return 0, err
 		}
-		return 0, "", formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
+		return 0, formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
 	}
 
 	if len(sgs) == 0 {
 		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
-		return 0, "", nil
+		return 0, nil
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{"count": len(sgs)})
@@ -855,35 +849,35 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
 		if err != nil {
 			if isUnauthorizedError(err) {
-				return deletedCount, "", err
+				return deletedCount, err
 			}
 			if isDependencyViolationError(err) {
-				return deletedCount, "", formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
+				return deletedCount, formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
 			}
-			return deletedCount, "", formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
+			return deletedCount, formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
 		deletedCount++
 	}
 
-	return deletedCount, "", nil
+	return deletedCount, nil
 }
 
-func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) (string, error) {
+func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) error {
 	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion")
 
 	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
 	if err != nil {
 		if isUnauthorizedError(err) {
-			return "", err
+			return err
 		}
-		return "", fmt.Errorf("describing GuardDuty VPC endpoints in VPC %s: %w", vpcID, err)
+		return fmt.Errorf("describing GuardDuty VPC endpoints in VPC %s: %w", vpcID, err)
 	}
 
 	if len(endpoints) == 0 {
 		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
-		return "", nil
+		return nil
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty VPC endpoint(s), deleting", map[string]any{"count": len(endpoints)})
@@ -904,13 +898,13 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
 		if err != nil {
 			if isUnauthorizedError(err) {
-				return "", err
+				return err
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
 				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion, continuing", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
-			return "", fmt.Errorf("deleting GuardDuty VPC endpoint %s in VPC %s: %w", endpointID, vpcID, err)
+			return fmt.Errorf("deleting GuardDuty VPC endpoint %s in VPC %s: %w", endpointID, vpcID, err)
 		}
 
 		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
@@ -918,13 +912,13 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state, continuing", map[string]any{"endpoint_id": endpointID})
 				continue
 			}
-			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach deleted state in VPC %s: %w", endpointID, vpcID, err)
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach deleted state in VPC %s: %w", endpointID, vpcID, err)
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
 	}
 
-	return "", nil
+	return nil
 }
 
 func isDependencyViolationError(err error) bool {
