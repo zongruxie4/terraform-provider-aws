@@ -882,8 +882,9 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
 
-		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint")
 
 		deleteInput := ec2.DeleteVpcEndpointsInput{
 			VpcEndpointIds: []string{endpointID},
@@ -894,7 +895,7 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 				return err
 			}
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion")
 				continue
 			}
 			return fmt.Errorf("deleting GuardDuty VPC endpoint %q in VPC %q: %w", endpointID, vpcID, err)
@@ -902,13 +903,13 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 
 		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state", map[string]any{"endpoint_id": endpointID})
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state")
 				continue
 			}
 			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach deleted state in VPC %q: %w", endpointID, vpcID, err)
 		}
 
-		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint")
 	}
 
 	return nil
