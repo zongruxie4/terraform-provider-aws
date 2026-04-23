@@ -33,7 +33,7 @@ import (
 // @ArnIdentity("standards_control_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControl")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
 func resourceStandardsControl() *schema.Resource {

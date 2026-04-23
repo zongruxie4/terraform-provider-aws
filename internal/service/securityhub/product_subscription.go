@@ -30,7 +30,7 @@ import (
 // @IdentityAttribute("arn")
 // @ImportIDHandler("productSubscriptionImportID")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 // Custom setup steps.
 // @Testing(identityTest=false)

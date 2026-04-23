@@ -29,7 +29,7 @@ import (
 // @SDKResource("aws_securityhub_insight", name="Insight")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 func resourceInsight() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInsightCreate,

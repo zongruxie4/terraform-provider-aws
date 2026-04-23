@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_securityhub_configuration_policy_association", name="Configuration Policy Association")
 // @IdentityAttribute("target_id")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // Alternate account not working
 // @Testing(identityTest=false)
 // @Testing(useAlternateAccount=true)

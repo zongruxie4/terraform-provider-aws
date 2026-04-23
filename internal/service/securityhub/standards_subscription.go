@@ -30,7 +30,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsSubscription")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 func resourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{

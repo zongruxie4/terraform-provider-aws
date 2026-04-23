@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_securityhub_organization_admin_account", name="Organization Admin Account")
 // @IdentityAttribute("admin_account_id", identityDuplicateAttributes="id")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationAdminAccount() *schema.Resource {

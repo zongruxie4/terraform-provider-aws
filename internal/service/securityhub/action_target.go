@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_securityhub_action_target", name="Action Target")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 func resourceActionTarget() *schema.Resource {
 	return &schema.Resource{

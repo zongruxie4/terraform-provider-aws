@@ -42,7 +42,7 @@ func linkingMode_Values() []string {
 // @SDKResource("aws_securityhub_finding_aggregator", name="Finding Aggregator")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
 func resourceFindingAggregator() *schema.Resource {
 	return &schema.Resource{
