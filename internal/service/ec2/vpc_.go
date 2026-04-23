@@ -921,6 +921,16 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	return nil
 }
 
+func findGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID, groupName string) ([]awstypes.SecurityGroup, error) {
+	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-id":                        vpcID,
+			"group-name":                    groupName,
+			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
+		}),
+	})
+}
+
 func isDependencyViolationError(err error) bool {
 	if err == nil {
 		return false

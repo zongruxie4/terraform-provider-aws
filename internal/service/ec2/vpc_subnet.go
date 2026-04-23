@@ -842,16 +842,6 @@ func findGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID stri
 	})
 }
 
-func findGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID, groupName string) ([]awstypes.SecurityGroup, error) {
-	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"vpc-id":                        vpcID,
-			"group-name":                    groupName,
-			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
-		}),
-	})
-}
-
 func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID string) (bool, error) {
 	vpc, err := findVPCByID(ctx, conn, vpcID)
 	if err != nil {
