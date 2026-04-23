@@ -427,6 +427,10 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	_, err := conn.DeleteSubnet(ctx, &input)
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+		return diags
+	}
+
 	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
 	// proactive. This keeps the change invisible to customers who have never
 	// enabled GuardDuty - no extra API calls on their subnet deletes. A proactive
@@ -453,10 +457,6 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 				SubnetId: aws.String(d.Id()),
 			})
 		}, errCodeDependencyViolation)
-	}
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-		return diags
 	}
 
 	// Emit GuardDuty IAM permission warnings as diag.Diagnostics so they are
