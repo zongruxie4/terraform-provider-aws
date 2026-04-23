@@ -420,7 +420,9 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	// to every terraform destroy on every VPC, even when there is nothing to
 	// clean up.
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
-		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources")
+		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
 
 		warningMsg, cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
 		if warningMsg != "" {
