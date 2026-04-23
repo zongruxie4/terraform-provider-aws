@@ -403,6 +403,16 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	// First attempt at deletion.
 	_, err := conn.DeleteVpc(ctx, &input)
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+		return diags
+	}
+
+	// RAM-shared VPC.
+	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
+	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
+		return diags
+	}
+
 	// GuardDuty cleanup is reactive (only on DependencyViolation) rather than
 	// proactive. This keeps the change invisible to customers who have never
 	// enabled GuardDuty - no extra API calls on their VPC deletes. A proactive
@@ -432,16 +442,6 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 			return conn.DeleteVpc(ctx, &input)
 		}, errCodeDependencyViolation)
-	}
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
-		return diags
-	}
-
-	// RAM-shared VPC.
-	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
-	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
-		return diags
 	}
 
 	// Emit GuardDuty IAM permission warnings as diag.Diagnostics so they are
