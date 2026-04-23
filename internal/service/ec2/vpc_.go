@@ -437,7 +437,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			}
 		}
 
-		_, sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
+		sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
 		if sgErr != nil {
 			if isUnauthorizedError(sgErr) {
 				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
@@ -812,25 +812,24 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
 }
 
-func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, error) {
+func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) error {
 	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
 
 	sgs, err := findGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
 	if err != nil {
 		if isUnauthorizedError(err) {
-			return 0, err
+			return err
 		}
-		return 0, formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
+		return formatGuardDutyError("describing", "security groups in VPC", vpcID, wrapThrottlingError(err))
 	}
 
 	if len(sgs) == 0 {
 		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
-		return 0, nil
+		return nil
 	}
 
 	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{"count": len(sgs)})
 
-	deletedCount := 0
 	for _, sg := range sgs {
 		groupID := aws.ToString(sg.GroupId)
 
@@ -847,19 +846,18 @@ func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Clien
 		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
 		if err != nil {
 			if isUnauthorizedError(err) {
-				return deletedCount, err
+				return err
 			}
 			if isDependencyViolationError(err) {
-				return deletedCount, formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
+				return formatGuardDutyError("deleting", "security group", groupID, fmt.Errorf("dependency violation (network interfaces may still be attached): %w", err))
 			}
-			return deletedCount, formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
+			return formatGuardDutyError("deleting", "security group", groupID, wrapThrottlingError(err))
 		}
 
 		tflog.Debug(ctx, "Successfully deleted GuardDuty security group", map[string]any{"group_id": groupID})
-		deletedCount++
 	}
 
-	return deletedCount, nil
+	return nil
 }
 
 func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) error {
