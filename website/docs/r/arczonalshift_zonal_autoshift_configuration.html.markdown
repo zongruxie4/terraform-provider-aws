@@ -83,15 +83,36 @@ The following arguments are optional:
 
 * `region` - (Optional) AWS region where the resource is deployed.
 * `blocking_alarm_arns` - (Optional) List of CloudWatch alarm ARNs that can block practice runs when in alarm state.
-* `blocked_dates` - (Optional) List of dates when practice runs should not be started, in the format `YYYY-MM-DD`. Cannot be used together with `allowed_windows`.
+* `blocked_dates` - (Optional) List of dates when practice runs should not be started, in the format `YYYY-MM-DD`.
 * `blocked_windows` - (Optional) List of time windows during which practice runs should not be started, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:00:00-Mon:08:00`). Cannot be used together with `allowed_windows`.
-* `allowed_windows` - (Optional) List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows` or `blocked_dates`.
+* `allowed_windows` - (Optional) List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_arczonalshift_zonal_autoshift_configuration.example
+  identity = {
+    "resource_arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/example/50dc6c495c0c9188"
+  }
+}
+
+resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `resource_arn` (String) ARN of the managed resource to configure zonal autoshift for.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_identifier`. For example:
 

@@ -28,6 +28,9 @@ import (
 )
 
 // @FrameworkResource("aws_arczonalshift_zonal_autoshift_configuration", name="Zonal Autoshift Configuration")
+// @ArnIdentity("resource_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arczonalshift;arczonalshift.GetManagedResourceOutput")
+// @Testing(hasNoPreExistingResource=true)
 func newResourceZonalAutoshiftConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceZonalAutoshiftConfiguration{}
 
@@ -40,14 +43,16 @@ const (
 
 type resourceZonalAutoshiftConfiguration struct {
 	framework.ResourceWithModel[resourceZonalAutoshiftConfigurationModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
+				Description: "The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -56,24 +61,25 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 				CustomType:  fwtypes.ListOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
+				Description: "List of CloudWatch alarm ARNs that are monitored during practice runs. These alarms help determine the health of your application during zonal shifts.",
 			},
 			"blocking_alarm_arns": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
+				Description: "List of CloudWatch alarm ARNs that can block practice runs when in alarm state.",
 			},
 			"blocked_dates": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
-				Validators: []validator.List{
-					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("allowed_windows")),
-				},
+				Description: "List of dates when practice runs should not be started, in the format `YYYY-MM-DD`.",
 			},
 			"blocked_windows": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
+				Description: "List of time windows during which practice runs should not be started, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:00:00-Mon:08:00`). Cannot be used together with `allowed_windows`.",
 				Validators: []validator.List{
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("allowed_windows")),
 				},
@@ -82,12 +88,14 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
+				Description: "List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows`.",
 				Validators: []validator.List{
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("blocked_windows")),
 				},
 			},
 			"autoshift_enabled": schema.BoolAttribute{
-				Required: true,
+				Required:    true,
+				Description: "Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.",
 			},
 		},
 	}
@@ -293,10 +301,6 @@ func (r *resourceZonalAutoshiftConfiguration) Delete(ctx context.Context, req re
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceIdentifier)
 		return
 	}
-}
-
-func (r *resourceZonalAutoshiftConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrResourceARN), req, resp)
 }
 
 // controlConditionsToAlarmARNs extracts alarm ARNs from ControlCondition structs.

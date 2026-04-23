@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfarczonalshift "github.com/hashicorp/terraform-provider-aws/internal/service/arczonalshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,12 +34,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttr(resourceName, "autoshift_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
@@ -73,12 +72,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarczonalshift.ResourceZonalAutoshiftConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,19 +107,19 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_autoshiftDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoshift_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoshift_enabled", acctest.CtTrue),
 				),
 			},
@@ -144,12 +143,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockingAlarms(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_blockingAlarms(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "blocking_alarm_arns.#", "1"),
 				),
@@ -174,12 +173,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockedWindows(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_blockedWindows(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "blocked_windows.#", "1"),
 				),
 			},
@@ -203,12 +202,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_allowedWindows(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_allowedWindows(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allowed_windows.#", "1"),
 				),
 			},
@@ -232,12 +231,12 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockedDates(t *testing.T) 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZonalAutoshiftConfigurationConfig_blockedDates(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckZonalAutoshiftConfigurationExists(ctx, resourceName, &v),
+					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "blocked_dates.#", "1"),
 				),
 			},
@@ -245,9 +244,9 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockedDates(t *testing.T) 
 	})
 }
 
-func testAccCheckZonalAutoshiftConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckZonalAutoshiftConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCZonalShiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ARCZonalShiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_arczonalshift_zonal_autoshift_configuration" {
@@ -273,14 +272,14 @@ func testAccCheckZonalAutoshiftConfigurationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckZonalAutoshiftConfigurationExists(ctx context.Context, name string, v *arczonalshift.GetManagedResourceOutput) resource.TestCheckFunc {
+func testAccCheckZonalAutoshiftConfigurationExists(ctx context.Context, t *testing.T, name string, v *arczonalshift.GetManagedResourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCZonalShiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ARCZonalShiftClient(ctx)
 
 		out, err := tfarczonalshift.FindManagedResourceByIdentifier(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 		if err != nil {
