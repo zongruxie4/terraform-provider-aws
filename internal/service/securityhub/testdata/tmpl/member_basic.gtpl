@@ -1,4 +1,3 @@
-
 resource "aws_securityhub_member" "test" {
 {{- template "region" }}
   depends_on = [aws_securityhub_account.test]
