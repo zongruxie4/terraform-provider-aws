@@ -883,11 +883,6 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	for _, endpoint := range endpoints {
 		endpointID := aws.ToString(endpoint.VpcEndpointId)
 
-		if !hasGuardDutyManagedTag(endpoint.Tags) {
-			tflog.Debug(ctx, "GuardDuty VPC endpoint lacks GuardDutyManaged=true tag, skipping", map[string]any{"endpoint_id": endpointID})
-			continue
-		}
-
 		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint", map[string]any{"endpoint_id": endpointID})
 
 		deleteInput := ec2.DeleteVpcEndpointsInput{
