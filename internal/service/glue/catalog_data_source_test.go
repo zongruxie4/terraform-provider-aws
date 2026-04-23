@@ -159,6 +159,7 @@ func testAccCatalogDataSource_federatedCatalog_s3Tables(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
 			testAccPreCheck(ctx, t)
+			testAccPreCheckS3TablesCatalogDoesNotExist(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

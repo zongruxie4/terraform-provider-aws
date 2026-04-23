@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +34,6 @@ func testAccCatalog_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var catalog awstypes.Catalog
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
@@ -47,7 +50,7 @@ func testAccCatalog_disappears(t *testing.T) {
 			{
 				Config: testAccCatalogConfig_federatedCatalog_mySQL(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					testAccCheckCatalogExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalog, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,7 +76,6 @@ func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var catalog awstypes.Catalog
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
@@ -95,7 +97,7 @@ func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 			{
 				Config: testAccCatalogConfig_catalogPropertiesDataLakeAccess(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allow_full_table_external_data_access"), knownvalue.StringExact("True")),
@@ -132,7 +134,6 @@ func testAccCatalog_federatedCatalog_mySQL(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var catalog awstypes.Catalog
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
@@ -149,7 +150,7 @@ func testAccCatalog_federatedCatalog_mySQL(t *testing.T) {
 			{
 				Config: testAccCatalogConfig_federatedCatalog_mySQL(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -185,7 +186,6 @@ func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var catalog awstypes.Catalog
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
@@ -207,7 +207,7 @@ func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
 			{
 				Config: testAccCatalogConfig_targetRedshiftCatalog(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -243,7 +243,6 @@ func testAccCatalog_federatedCatalog_s3Tables(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var catalog awstypes.Catalog
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
@@ -252,6 +251,7 @@ func testAccCatalog_federatedCatalog_s3Tables(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
 			testAccPreCheck(ctx, t)
+			testAccPreCheckS3TablesCatalogDoesNotExist(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -260,7 +260,7 @@ func testAccCatalog_federatedCatalog_s3Tables(t *testing.T) {
 			{
 				Config: testAccCatalogConfig_federatedCatalog_s3Tables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -312,7 +312,7 @@ func testAccCheckCatalogDestroy(ctx context.Context, t *testing.T) resource.Test
 	}
 }
 
-func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string, catalog *awstypes.Catalog) resource.TestCheckFunc {
+func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -325,12 +325,9 @@ func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string, c
 
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-		resp, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
+		if _, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID); err != nil {
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalog, rs.Primary.ID, err)
 		}
-
-		*catalog = *resp
 
 		return nil
 	}
@@ -348,6 +345,37 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+// testAccPreCheckS3TablesCatalogDoesNotExist ensures the reserved
+// "s3tablescatalog" name is free before a test that creates it. The catalog is
+// an account-level singleton, so a leftover from a prior failed run (or from
+// the resource test running just before the data source test) surfaces as
+// AlreadyExistsException on CreateCatalog. Deleting here keeps serial tests
+// self-healing.
+func testAccPreCheckS3TablesCatalogDoesNotExist(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
+
+	_, err := tfglue.FindCatalogByID(ctx, conn, "s3tablescatalog")
+	if retry.NotFound(err) {
+		return
+	}
+	if err != nil {
+		t.Fatalf("checking for pre-existing s3tablescatalog: %s", err)
+	}
+
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](
+		ctx,
+		5*time.Minute,
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteCatalog(ctx, &glue.DeleteCatalogInput{
+				CatalogId: aws.String("s3tablescatalog"),
+			})
+		},
+	)
+	if err != nil && !errs.IsA[*awstypes.EntityNotFoundException](err) {
+		t.Fatalf("deleting pre-existing s3tablescatalog: %s", err)
 	}
 }
 

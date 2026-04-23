@@ -39,6 +39,8 @@ import (
 
 // @FrameworkResource("aws_glue_catalog", name="Catalog")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(hasNoPreExistingResource=true)
 func newCatalogResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &catalogResource{}
 
