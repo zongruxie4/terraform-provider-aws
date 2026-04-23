@@ -193,7 +193,7 @@ func testAccSecurityHubMember_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.41.0
+// Resource Identity was added after v6.42.0
 func testAccSecurityHubMember_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -210,7 +210,7 @@ func testAccSecurityHubMember_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Member/basic_v6.41.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Member/basic_v6.42.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &v),
@@ -246,7 +246,7 @@ func testAccSecurityHubMember_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.41.0
+// Resource Identity was added after v6.42.0
 func testAccSecurityHubMember_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -268,7 +268,7 @@ func testAccSecurityHubMember_Identity_ExistingResource_noRefreshNoChange(t *tes
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Member/basic_v6.41.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Member/basic_v6.42.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, t, resourceName, &v),
