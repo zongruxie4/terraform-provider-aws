@@ -419,8 +419,6 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	var guardDutyWarnings []string
-
 	// First attempt at deletion.
 	input := ec2.DeleteSubnetInput{
 		SubnetId: aws.String(d.Id()),
@@ -430,6 +428,8 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return diags
 	}
+
+	var guardDutyDiags diag.Diagnostics
 
 	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so tha tno new permissions,
 	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
@@ -443,10 +443,11 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		dissociateErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID, accountID)
 		if dissociateErr != nil {
 			if isUnauthorizedError(dissociateErr) {
-				guardDutyWarnings = append(guardDutyWarnings, fmt.Sprintf(
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
 					"While deleting EC2 Subnet %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
 						"If GuardDuty monitoring is enabled for the containing VPC %q, the missing permissions will prevent deletion of the Subnet\n\n"+
-						"Error: %s", d.Id(), vpcID, dissociateErr.Error()))
+						"Error: %s", d.Id(), vpcID, dissociateErr.Error(),
+				)
 			} else {
 				return sdkdiag.AppendErrorf(diags, "dissociating GuardDuty VPC endpoints for EC2 Subnet %q: %s", d.Id(), dissociateErr)
 			}
@@ -463,9 +464,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
 	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
-		for _, w := range guardDutyWarnings {
-			diags = sdkdiag.AppendWarningf(diags, "%s", w)
-		}
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
