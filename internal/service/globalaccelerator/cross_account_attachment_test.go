@@ -229,7 +229,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_addAndDeleteResources(t *tes
 		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrossAccountAttachmentConfig_2albs(rName),
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 				),
@@ -248,7 +248,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_addAndDeleteResources(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrossAccountAttachmentConfig_3albs(rName),
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 				),
@@ -262,7 +262,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_addAndDeleteResources(t *tes
 				},
 			},
 			{
-				Config: testAccCrossAccountAttachmentConfig_1alb(rName),
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 				),
@@ -404,50 +404,17 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCrossAccountAttachmentConfig_1alb(rName string) string {
+func testAccCrossAccountAttachmentConfig_albs(rName string, n int) string {
 	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 3), fmt.Sprintf(`
 resource "aws_globalaccelerator_cross_account_attachment" "test" {
   name = %[1]q
 
-  resource {
-    endpoint_id = aws_lb.test[2].id
+  dynamic "resource" {
+    for_each = toset(slice(aws_lb.test[*].id, 0, %[2]d))
+    content {
+      endpoint_id = resource.value
+    }
   }
 }
-`, rName))
-}
-
-func testAccCrossAccountAttachmentConfig_2albs(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 3), fmt.Sprintf(`
-resource "aws_globalaccelerator_cross_account_attachment" "test" {
-  name = %[1]q
-
-  resource {
-    endpoint_id = aws_lb.test[2].id
-  }
-
-  resource {
-    endpoint_id = aws_lb.test[1].id
-  }
-}
-`, rName))
-}
-
-func testAccCrossAccountAttachmentConfig_3albs(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 3), fmt.Sprintf(`
-resource "aws_globalaccelerator_cross_account_attachment" "test" {
-  name = %[1]q
-
-  resource {
-    endpoint_id = aws_lb.test[2].id
-  }
-
-  resource {
-    endpoint_id = aws_lb.test[1].id
-  }
-
-  resource {
-    endpoint_id = aws_lb.test[0].id
-  }
-}
-`, rName))
+`, rName, n))
 }
