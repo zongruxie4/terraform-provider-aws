@@ -815,9 +815,7 @@ func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) st
 func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) (int, error) {
 	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
 
-	guardDutyGroupName := fmt.Sprintf("%s%s", guardDutySecurityGroupPrefix, vpcID)
-
-	sgs, err := findGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
+	sgs, err := findGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
 	if err != nil {
 		if isUnauthorizedError(err) {
 			return 0, err
@@ -921,7 +919,12 @@ func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client,
 	return nil
 }
 
-func findGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID, groupName string) ([]awstypes.SecurityGroup, error) {
+func guardDutySecurityGroupNameForVPC(vpcID string) string {
+	return guardDutySecurityGroupPrefix + vpcID
+}
+
+func findGuardDutySecurityGroupsForVPC(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.SecurityGroup, error) {
+	groupName := guardDutySecurityGroupNameForVPC(vpcID)
 	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"vpc-id":                        vpcID,

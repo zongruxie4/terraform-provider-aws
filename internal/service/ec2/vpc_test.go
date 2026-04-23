@@ -1989,8 +1989,7 @@ func testAccCheckVPCGuardDutySecurityGroupExists(ctx context.Context, t *testing
 		if id := aws.ToString(vpcID); id != "" {
 			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)
-			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, id, guardDutyGroupName)
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
 			if err != nil {
 				return fmt.Errorf("error describing security groups: %w", err)
 			}
@@ -2067,8 +2066,7 @@ func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, v
 				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
 			}
 
-			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, id)
-			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, id, guardDutyGroupName)
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
 			}

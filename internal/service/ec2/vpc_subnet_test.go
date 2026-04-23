@@ -1841,8 +1841,7 @@ func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, subn
 			return fmt.Errorf("expected GuardDuty VPC endpoint with GuardDutyManaged=true tag to exist, but none found")
 		}
 
-		guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)
-		sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
+		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
 		if err != nil {
 			return fmt.Errorf("error describing security groups: %w", err)
 		}
@@ -1867,8 +1866,7 @@ func testAccCheckNoGuardDutyResources(ctx context.Context, t *testing.T, subnet 
 			return fmt.Errorf("expected no GuardDuty VPC endpoints, but found %d", len(endpoints))
 		}
 
-		guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)
-		sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, vpcID, guardDutyGroupName)
+		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
 		if err != nil {
 			return fmt.Errorf("error describing security groups: %w", err)
 		}
@@ -1927,7 +1925,7 @@ func testAccCreateGuardDutyResources(ctx context.Context, t *testing.T, subnet *
 		vpcID := aws.ToString(subnet.VpcId)
 
 		// Create GuardDuty-tagged security group
-		sgName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, vpcID)
+		sgName := tfec2.GuardDutySecurityGroupNameForVPC(vpcID)
 		sgInput := ec2.CreateSecurityGroupInput{
 			GroupName:   aws.String(sgName),
 			Description: aws.String("GuardDuty managed security group for testing"),
@@ -2018,8 +2016,7 @@ func testAccCheckGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcI
 				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
 			}
 
-			guardDutyGroupName := fmt.Sprintf("%s%s", tfec2.GuardDutySecurityGroupPrefix, *vpcID)
-			sgs, err := tfec2.FindGuardDutySecurityGroups(ctx, conn, *vpcID, guardDutyGroupName)
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, aws.ToString(vpcID))
 			if err != nil {
 				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
 			}

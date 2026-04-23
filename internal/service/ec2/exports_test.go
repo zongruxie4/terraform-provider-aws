@@ -320,8 +320,8 @@ var (
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
 	HasGuardDutyManagedTag                                      = hasGuardDutyManagedTag
 	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
-	FindGuardDutySecurityGroups                                 = findGuardDutySecurityGroups
-	GuardDutySecurityGroupPrefix                                = guardDutySecurityGroupPrefix
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 var (
