@@ -1234,7 +1234,7 @@ func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					if err := testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet)(nil); err != nil {
+					if err := testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet)(nil); err != nil {
 						t.Fatal(err)
 					}
 				},
@@ -1280,7 +1280,7 @@ func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					if err := testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet)(nil); err != nil {
+					if err := testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet)(nil); err != nil {
 						t.Fatal(err)
 					}
 				},

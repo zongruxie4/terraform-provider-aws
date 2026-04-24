@@ -1792,7 +1792,7 @@ func TestAccVPCSubnet_guardDutyLastSubnetDeletion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, t, resourceName1, &subnet1),
 					testAccCaptureVPCID(&subnet1, &vpcID),
-					testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet1),
+					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet1),
 					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet1),
 				),
 			},
@@ -1807,10 +1807,10 @@ func TestAccVPCSubnet_guardDutyLastSubnetDeletion(t *testing.T) {
 	})
 }
 
-// testAccCreateGuardDutyResourcesFromSubnet is a convenience wrapper around
+// testAccCreateGuardDutyResourcesForSubnet is a convenience wrapper around
 // testAccCreateGuardDutyResources that extracts the subnet ID at execution time
 // from the populated subnet pointer.
-func testAccCreateGuardDutyResourcesFromSubnet(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
+func testAccCreateGuardDutyResourcesForSubnet(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		subnetID := aws.ToString(subnet.SubnetId)
 		return testAccCreateGuardDutyResources(ctx, t, subnet, []string{subnetID})(s)
@@ -2173,7 +2173,7 @@ func TestAccVPCSubnet_guardDutyCleanup_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, t, resourceName1, &subnet1),
 					testAccCaptureVPCID(&subnet1, &vpcID),
-					testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet1),
+					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet1),
 					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet1),
 				),
 			},
@@ -2334,7 +2334,7 @@ func TestAccVPCSubnet_guardDutyNotAssociated(t *testing.T) {
 					testAccCheckSubnetExists(ctx, t, resourceNameB, &subnetB),
 					testAccCaptureVPCID(&subnetB, &vpcID),
 					// Create endpoint associated with subnet-B ONLY
-					testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnetB),
+					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnetB),
 					testAccCheckGuardDutyResourcesExist(ctx, t, &subnetB),
 				),
 			},
