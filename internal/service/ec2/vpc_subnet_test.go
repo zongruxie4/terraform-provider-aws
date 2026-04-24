@@ -867,6 +867,49 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnet_GuardDutyDependencies_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet1, subnet2, subnet3 awstypes.Subnet
+	var vpcID string
+	resourceName1 := "aws_subnet.test.0"
+	resourceName2 := "aws_subnet.test.1"
+	resourceName3 := "aws_subnet.test.2"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardDutyCleanupDestroy(ctx, t, &vpcID),
+		Steps: []resource.TestStep{
+			// Step 1: Create Subnets and associate GuardDuty dependencies
+			{
+				Config: testAccVPCSubnetConfig_GuardDutyDependencies_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, t, resourceName1, &subnet1),
+					testAccCheckSubnetExists(ctx, t, resourceName2, &subnet2),
+					testAccCheckSubnetExists(ctx, t, resourceName3, &subnet3),
+					testAccSubnetCaptureVPCID(&subnet1, &vpcID),
+					testAccCreateGuardDutyResourcesForSubnets(ctx, t, &subnet1, &subnet2, &subnet3),
+					testAccCheckGuardDutyVPCEndpointAssociated(ctx, t, &subnet1),
+					testAccCheckGuardDutyVPCEndpointAssociated(ctx, t, &subnet2),
+					testAccCheckGuardDutyVPCEndpointAssociated(ctx, t, &subnet3),
+				),
+			},
+			// Step 2: Remove Subnets
+			{
+				Config: testAccVPCSubnetConfig_GuardDutyDependencies_multiple_removed(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
+					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet1),
+					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet2),
+					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet3),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSubnetIPv6CIDRBlockAssociationSet(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {

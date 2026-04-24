@@ -142,6 +142,7 @@ const (
 	errCodeNatGatewayNotFound                                      = "NatGatewayNotFound"
 	errCodeNetworkACLEntryAlreadyExists                            = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                                   = "OperationNotPermitted"
+	errCodeOperationInProgress                                     = "OperationInProgress"
 	errCodePrefixListVersionMismatch                               = "PrefixListVersionMismatch"
 	errCodeResourceNotReady                                        = "ResourceNotReady"
 	errCodeRouteAlreadyExists                                      = "RouteAlreadyExists"

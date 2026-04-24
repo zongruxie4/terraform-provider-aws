@@ -901,7 +901,16 @@ func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subn
 			VpcEndpointId:   aws.String(endpointID),
 			RemoveSubnetIds: []string{subnetID},
 		}
-		_, err := conn.ModifyVpcEndpoint(ctx, &modifyInput)
+		err := tfresource.Retry(ctx, vpcEndpointDeletionTimeout, func(ctx context.Context) *tfresource.RetryError {
+			if _, err := conn.ModifyVpcEndpoint(ctx, &modifyInput); err != nil {
+				if tfawserr.ErrCodeEquals(err, errCodeOperationInProgress) {
+					return tfresource.RetryableError(err)
+				}
+				return tfresource.NonRetryableError(err)
+			}
+			return nil
+		}, tfresource.WithPollInterval(10*time.Second))
+
 		if err != nil {
 			if isUnauthorizedError(err) {
 				return err
