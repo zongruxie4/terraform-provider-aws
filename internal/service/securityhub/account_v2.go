@@ -22,16 +22,20 @@ import (
 )
 
 // @FrameworkResource("aws_securityhub_account_v2", name="Account V2")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub;securityhub;securityhub.DescribeSecurityHubV2Output")
 // @Testing(serialize=true)
 // @Testing(tagsTest=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
 func newAccountV2Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountV2Resource{}, nil
 }
 
 type accountV2Resource struct {
 	framework.ResourceWithModel[accountV2ResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *accountV2Resource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -114,11 +118,6 @@ func (r *accountV2Resource) Delete(ctx context.Context, request resource.DeleteR
 	if err != nil {
 		response.Diagnostics.AddError("deleting Security Hub V2 Account", err.Error())
 	}
-}
-
-func (r *accountV2Resource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// Account is a singleton — Read uses DescribeSecurityHubV2 which needs no identifier.
-	// Read will populate the real hub ARN.
 }
 
 func findAccountV2(ctx context.Context, conn *securityhub.Client) (*securityhub.DescribeSecurityHubV2Output, error) {

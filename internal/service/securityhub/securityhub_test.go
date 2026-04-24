@@ -25,6 +25,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAccountV2_basic,
 			acctest.CtDisappears: testAccAccountV2_disappears,
 			"tags":               testAccAccountV2_tags,
+			"Identity":           testAccSecurityHubAccountV2_identitySerial,
 		},
 		"AutomationRule": {
 			acctest.CtBasic:      testAccAutomationRule_basic,

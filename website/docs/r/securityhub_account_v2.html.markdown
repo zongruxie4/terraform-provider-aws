@@ -48,17 +48,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub V2 enabled account. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_securityhub_account_v2.example
-  id = "import"
+  identity = {
+    arn = "arn:aws:securityhub:us-west-2:123456789012:hubv2/25054a12-7926-47bc-924f-368e03d43e94"
+  }
+}
+
+resource "aws_securityhub_account_v2" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import an existing Security Hub V2 enabled account. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Security Hub V2 resource.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub V2 accounts using `arn`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_account_v2.example
+  id = "arn:aws:securityhub:us-west-2:123456789012:hubv2/25054a12-7926-47bc-924f-368e03d43e94"
+}
+```
+
+Using `terraform import`, import Security Hub V2 accounts using `arn`. For example:
 
 ```console
-% terraform import aws_securityhub_account_v2.example import
+% terraform import aws_securityhub_account_v2.example arn:aws:securityhub:us-west-2:123456789012:hubv2/25054a12-7926-47bc-924f-368e03d43e94
 ```
