@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +26,7 @@ import (
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
-	controlFindingGeneratorDefaultValueFromAWS := "SECURITY_CONTROL"
+	controlFindingGeneratorDefaultValueFromAWS := awstypes.ControlFindingGeneratorSecurityControl
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		controlFindingGeneratorDefaultValueFromAWS = ""
 	}
@@ -39,10 +41,18 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorDefaultValueFromAWS),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("securityhub", "hub/default")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable_controls"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_finding_generator"), tfknownvalue.StringExact(controlFindingGeneratorDefaultValueFromAWS)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_default_standards"), knownvalue.Bool(true)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -71,6 +81,14 @@ func testAccAccount_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -90,8 +108,15 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 				Config: testAccAccountConfig_enableDefaultStandardsFalse,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_default_standards"), knownvalue.Bool(false)),
+				},
 			},
 		},
 	})
@@ -109,20 +134,34 @@ func testAccAccount_full(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_full(false, "STANDARD_CONTROL"),
+				Config: testAccAccountConfig_full(false, awstypes.ControlFindingGeneratorStandardControl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable_controls"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_finding_generator"), tfknownvalue.StringExact(awstypes.ControlFindingGeneratorStandardControl)),
+				},
 			},
 			{
-				Config: testAccAccountConfig_full(true, "SECURITY_CONTROL"),
+				Config: testAccAccountConfig_full(true, awstypes.ControlFindingGeneratorSecurityControl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable_controls"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_finding_generator"), tfknownvalue.StringExact(awstypes.ControlFindingGeneratorSecurityControl)),
+				},
 			},
 		},
 	})
@@ -218,16 +257,14 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 
 func testAccCheckAccountExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		awsClient := acctest.ProviderMeta(ctx, t)
-		conn := awsClient.SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
-		arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
-		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
+		_, err := tfsecurityhub.FindHubByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		return err
 	}
@@ -235,16 +272,14 @@ func testAccCheckAccountExists(ctx context.Context, t *testing.T, n string) reso
 
 func testAccCheckAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		awsClient := acctest.ProviderMeta(ctx, t)
-		conn := awsClient.SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {
 				continue
 			}
 
-			arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
-			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
+			_, err := tfsecurityhub.FindHubByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if retry.NotFound(err) {
 				continue
@@ -271,7 +306,7 @@ resource "aws_securityhub_account" "test" {
 }
 `
 
-func testAccAccountConfig_full(autoEnableControls bool, controlFindingGenerator string) string {
+func testAccAccountConfig_full(autoEnableControls bool, controlFindingGenerator awstypes.ControlFindingGenerator) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {
   control_finding_generator = %[2]q

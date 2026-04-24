@@ -3,7 +3,7 @@ subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_account_v2"
 description: |-
-  Enables Security Hub V2 for an AWS account.
+  Enables Security Hub V2 for this AWS account.
 ---
 
 # Resource: aws_securityhub_account_v2

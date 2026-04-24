@@ -94,7 +94,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	_, err := conn.EnableSecurityHub(ctx, inputC)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub CSPM Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
@@ -107,7 +107,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	_, err = conn.UpdateSecurityHubConfiguration(ctx, inputU)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub CSPM Account (%s): %s", d.Id(), err)
 	}
 
 	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
@@ -125,7 +125,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Account (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub CSPM Account (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
@@ -139,13 +139,13 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	output, err := findHubByARN(ctx, conn, arn)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub CSPM Account %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub CSPM Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.HubArn)
@@ -172,7 +172,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	_, err := conn.UpdateSecurityHubConfiguration(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub CSPM Account (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
@@ -182,7 +182,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Security Hub CSPM Account: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func(ctx context.Context) (any, error) {
 		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
 	}, errCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
@@ -192,7 +192,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub CSPM Account (%s): %s", d.Id(), err)
 	}
 
 	return diags
