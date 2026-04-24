@@ -842,7 +842,7 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardDutyCleanupDestroy(ctx, t, &vpcID),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create a Subnet and associate GuardDuty dependencies
 			{
@@ -880,7 +880,7 @@ func TestAccVPCSubnet_GuardDutyDependencies_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardDutyCleanupDestroy(ctx, t, &vpcID),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create Subnets and associate GuardDuty dependencies
 			{
@@ -1949,52 +1949,6 @@ func testAccCreateGuardDutyResources(ctx context.Context, t *testing.T, vpcID st
 		// Wait for endpoint to reach available state
 		if _, err := tfec2.WaitVPCEndpointAvailable(ctx, conn, endpointID, tfec2.VPCEndpointCreationTimeout); err != nil {
 			return fmt.Errorf("waiting for GuardDuty VPC endpoint %s to become available: %w", endpointID, err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_subnet" {
-				continue
-			}
-
-			input := ec2.DescribeSubnetsInput{
-				SubnetIds: []string{rs.Primary.ID},
-			}
-			_, err := conn.DescribeSubnets(ctx, &input)
-			if err == nil {
-				return fmt.Errorf("subnet %s still exists", rs.Primary.ID)
-			}
-		}
-
-		if vpcID != nil && *vpcID != "" {
-			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, *vpcID)
-			if err != nil {
-				return fmt.Errorf("error describing GuardDuty VPC endpoints: %w", err)
-			}
-			activeEndpoints := 0
-			for _, ep := range endpoints {
-				if string(ep.State) != "deleted" {
-					activeEndpoints++
-				}
-			}
-			if activeEndpoints > 0 {
-				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
-			}
-
-			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, aws.ToString(vpcID))
-			if err != nil {
-				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
-			}
-			if len(sgs) > 0 {
-				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgs))
-			}
 		}
 
 		return nil
