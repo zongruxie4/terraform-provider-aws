@@ -1,5 +1,22 @@
 ## 6.43.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_memory_strategy: Support `EPISODIC` as a valid value for `type` ([#47589](https://github.com/hashicorp/terraform-provider-aws/issues/47589))
+* resource/aws_securityhub_action_target: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_configuration_policy: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_configuration_policy_association: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_finding_aggregator: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_finding_aggregator: Add `arn` attribute ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_insight: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_member: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_organization_admin_account: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_product_subscription: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_standards_control: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_standards_control_association: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_standards_subscription: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_standards_subscription: Add `arn` attribute ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+
 ## 6.42.0 (April 22, 2026)
 
 BREAKING CHANGES:
