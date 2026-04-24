@@ -419,16 +419,16 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			"error": err,
 		})
 
-		cleanupErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
-		if cleanupErr != nil {
-			if isUnauthorizedError(cleanupErr) {
+		endpointsErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
+		if endpointsErr != nil {
+			if isUnauthorizedError(endpointsErr) {
 				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
 					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
 						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
-						"Error: %s", d.Id(), cleanupErr.Error(),
+						"Error: %s", d.Id(), endpointsErr.Error(),
 				)
 			} else {
-				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), cleanupErr)
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), endpointsErr)
 			}
 		}
 
