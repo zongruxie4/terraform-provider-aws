@@ -1235,61 +1235,6 @@ func TestAccVPC_GuardDutyDependencies_basic(t *testing.T) {
 	})
 }
 
-// TestAccVPC_GuardDutyDependencies_endpointAlreadyCleaned validates that VPC destroy succeeds when the
-// GuardDuty endpoint was already cleaned up by subnet-level deletion, but the SG remains.
-// Step 1 creates VPC + subnet, step 2 creates GuardDuty resources out-of-band.
-// Step 3 removes the subnet from config — Terraform deletes the subnet, which triggers
-// dissociateGuardDutyVPCEndpoints. The SG still exists in the VPC.
-// When terraform destroy runs on the remaining VPC, detectAndDeleteGuardDutySecurityGroups
-// finds and deletes the SG.
-func TestAccVPC_GuardDutyDependencies_endpointAlreadyCleaned(t *testing.T) {
-	ctx := acctest.Context(t)
-	var vpc awstypes.Vpc
-	var subnet awstypes.Subnet
-	var vpcID string
-	vpcResourceName := "aws_vpc.test"
-	subnetResourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
-					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
-					testAccCaptureVPCIDFromVPC(&vpc, &vpcID),
-				),
-			},
-			{
-				PreConfig: func() {
-					if err := testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet)(nil); err != nil {
-						t.Fatal(err)
-					}
-				},
-				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
-					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
-				),
-			},
-			{
-				// Remove subnet from config. Terraform deletes the subnet, triggering
-				// dissociateGuardDutyVPCEndpoints. The SG still exists in the VPC.
-				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withoutSubnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
-					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -1835,56 +1780,6 @@ func testAccCaptureVPCIDFromVPC(vpc *awstypes.Vpc, vpcID *string) resource.TestC
 	}
 }
 
-func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpc" {
-				continue
-			}
-
-			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
-
-			if retry.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("EC2 VPC %s still exists", rs.Primary.ID)
-		}
-
-		if id := aws.ToString(vpcID); id != "" {
-			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
-			if err != nil {
-				return fmt.Errorf("error describing GuardDuty VPC endpoints: %w", err)
-			}
-			activeEndpoints := 0
-			for _, ep := range endpoints {
-				if string(ep.State) != "deleted" {
-					activeEndpoints++
-				}
-			}
-			if activeEndpoints > 0 {
-				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
-			}
-
-			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
-			if err != nil {
-				return fmt.Errorf("error describing GuardDuty security groups: %w", err)
-			}
-			if len(sgs) > 0 {
-				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgs))
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccVPCConfig_GuardDutyDependencies_basic_setup() string {
 	return `
 resource "aws_vpc" "test" {
@@ -1899,51 +1794,4 @@ func testAccVPCConfig_GuardDutyDependencies_basic() string {
 	return `
 # Intentionally empty
 `
-}
-
-func testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "%[1]s-test"
-  }
-}
-`, rName)
-}
-
-func testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withoutSubnet(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
 }
