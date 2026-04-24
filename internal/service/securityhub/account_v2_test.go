@@ -38,7 +38,6 @@ func testAccAccountV2_basic(t *testing.T) {
 				Config: testAccAccountV2Config_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
-					resource.TestCheckResourceAttrSet(resourceName, "hub_arn"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -50,9 +49,10 @@ func testAccAccountV2_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -117,9 +117,10 @@ func testAccAccountV2_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccAccountV2Config_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
