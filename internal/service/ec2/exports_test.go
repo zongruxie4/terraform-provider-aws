@@ -324,8 +324,7 @@ var (
 )
 
 var (
-	IsDependencyViolationError = isDependencyViolationError
-	IsUnauthorizedError        = isUnauthorizedError
+	IsUnauthorizedError = isUnauthorizedError
 )
 
 type (

@@ -28,63 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestIsDependencyViolationError(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name                        string
-		err                         error
-		shouldBeDependencyViolation bool
-	}{
-		{
-			name:                        "nil error",
-			err:                         nil,
-			shouldBeDependencyViolation: false,
-		},
-		{
-			name:                        "DependencyViolation error",
-			err:                         fmt.Errorf("DependencyViolation: resource sg-123 has a dependent object"),
-			shouldBeDependencyViolation: true,
-		},
-		{
-			name:                        "dependent object error",
-			err:                         fmt.Errorf("Cannot delete security group: resource has a dependent object"),
-			shouldBeDependencyViolation: true,
-		},
-		{
-			name:                        "DependencyViolation with network interface",
-			err:                         fmt.Errorf("DependencyViolation: resource sg-456 has a dependent object (network interface eni-789)"),
-			shouldBeDependencyViolation: true,
-		},
-		{
-			name:                        "other error",
-			err:                         fmt.Errorf("InternalError: An internal error occurred"),
-			shouldBeDependencyViolation: false,
-		},
-		{
-			name:                        "unauthorized error",
-			err:                         fmt.Errorf("UnauthorizedOperation: You are not authorized"),
-			shouldBeDependencyViolation: false,
-		},
-		{
-			name:                        "not found error",
-			err:                         fmt.Errorf("InvalidGroup.NotFound: The security group does not exist"),
-			shouldBeDependencyViolation: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := tfec2.IsDependencyViolationError(tc.err)
-			if result != tc.shouldBeDependencyViolation {
-				t.Errorf("Expected %v, got %v for error: %v", tc.shouldBeDependencyViolation, result, tc.err)
-			}
-		})
-	}
-}
-
 func TestDetectAndDeleteGuardDutyVPCEndpoints_warningMessageFormat(t *testing.T) {
 	t.Parallel()
 

@@ -919,12 +919,3 @@ func findGuardDutySecurityGroupsForVPC(ctx context.Context, conn *ec2.Client, vp
 		}),
 	})
 }
-
-func isDependencyViolationError(err error) bool {
-	if err == nil {
-		return false
-	}
-	errMsg := err.Error()
-	return strings.Contains(errMsg, "DependencyViolation") ||
-		strings.Contains(errMsg, "dependent object")
-}
