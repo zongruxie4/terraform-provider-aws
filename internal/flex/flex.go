@@ -492,7 +492,7 @@ func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 // deleted and re-created
 func DiffSlicesWithModify[E any](old []E, new []E, eq func(E, E) bool, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove, modify, and what is unchanged.
 	remove := make([]E, 0)
