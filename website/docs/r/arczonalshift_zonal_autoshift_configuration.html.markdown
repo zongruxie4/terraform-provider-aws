@@ -1,5 +1,5 @@
 ---
-subcategory: "Application Recovery Controller Zonal Shift"
+subcategory: "ARC (Application Recovery Controller) Zonal Shift"
 layout: "aws"
 page_title: "AWS: aws_arczonalshift_zonal_autoshift_configuration"
 description: |-
