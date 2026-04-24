@@ -3273,12 +3273,13 @@ func waitVPCEndpointConnectionAccepted(ctx context.Context, conn *ec2.Client, se
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
-		Target:     []string{},
-		Refresh:    statusVPCEndpoint(conn, vpcEndpointID),
-		Timeout:    timeout,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Pending:                   enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
+		Target:                    []string{},
+		Refresh:                   statusVPCEndpoint(conn, vpcEndpointID),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
