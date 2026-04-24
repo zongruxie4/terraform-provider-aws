@@ -29,6 +29,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(importStateIdAttribute="arn")
 func newAccountV2Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountV2Resource{}, nil
 }

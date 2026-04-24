@@ -49,6 +49,7 @@ func testAccAccountV2_basic(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -117,6 +118,7 @@ func testAccAccountV2_tags(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
