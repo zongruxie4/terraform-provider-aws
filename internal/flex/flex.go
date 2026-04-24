@@ -467,7 +467,7 @@ func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[
 
 func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove and what is unchanged.
 	remove := make([]E, 0)
