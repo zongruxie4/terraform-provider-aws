@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	flex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,31 +58,32 @@ func (l *zonalAutoshiftConfigurationListResource) List(ctx context.Context, requ
 			arn := aws.ToString(item.Arn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrResourceARN), arn)
 
-			out, err := findManagedResourceByIdentifier(ctx, conn, arn)
-			if err != nil {
-				tflog.Error(ctx, "Reading ARC Zonal Shift Managed Resource", map[string]any{
-					"error": err.Error(),
-				})
-				continue
-			}
-
-			if out == nil || out.PracticeRunConfiguration == nil {
-				continue
-			}
-
 			result := request.NewListResult(ctx)
 			var data resourceZonalAutoshiftConfigurationModel
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
-				data.ResourceARN = flex.StringToFrameworkARN(ctx, out.Arn)
-				if request.IncludeResource {
-					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, out, &data))
-					if result.Diagnostics.HasError() {
-						return
-					}
+			if request.IncludeResource {
+				out, err := findManagedResourceByIdentifier(ctx, conn, arn)
+				if err != nil {
+					tflog.Error(ctx, "Reading ARC Zonal Shift Managed Resource", map[string]any{
+						"error": err.Error(),
+					})
+					continue
 				}
-				result.DisplayName = aws.ToString(out.Name)
-			})
+
+				if out == nil || out.PracticeRunConfiguration == nil {
+					continue
+				}
+
+				l.SetResult(ctx, awsClient, true, &data, &result, func() {
+					l.flatten(ctx, out, &data)
+					result.DisplayName = aws.ToString(item.Name)
+				})
+			} else {
+				l.SetResult(ctx, awsClient, false, &data, &result, func() {
+					data.ResourceARN = flex.StringToFrameworkARN(ctx, item.Arn)
+					result.DisplayName = aws.ToString(item.Name)
+				})
+			}
 
 			if result.Diagnostics.HasError() {
 				yield(result)
