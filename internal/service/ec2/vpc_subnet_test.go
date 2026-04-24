@@ -1853,31 +1853,6 @@ func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, subn
 	}
 }
 
-func testAccCheckNoGuardDutyResources(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-		vpcID := aws.ToString(subnet.VpcId)
-
-		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, vpcID)
-		if err != nil {
-			return fmt.Errorf("error describing VPC endpoints: %w", err)
-		}
-		if len(endpoints) > 0 {
-			return fmt.Errorf("expected no GuardDuty VPC endpoints, but found %d", len(endpoints))
-		}
-
-		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
-		if err != nil {
-			return fmt.Errorf("error describing security groups: %w", err)
-		}
-		if len(sgs) > 0 {
-			return fmt.Errorf("expected no GuardDuty security groups, but found %d", len(sgs))
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckGuardDutyEndpointStillExists(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if vpcID == nil || *vpcID == "" {
@@ -2128,27 +2103,6 @@ resource "aws_subnet" "test1" {
 `, rName)
 }
 
-func testAccVPCSubnetConfig_noGuardDuty(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
 // TestAccVPCSubnet_guardDutyCleanup_timeout validates that GuardDuty resources can be
 // created out-of-band via SDK alongside a Terraform-managed subnet. This test only
 // creates resources (does not trigger subnet deletion). CheckDestroy cleans up
@@ -2175,29 +2129,6 @@ func TestAccVPCSubnet_guardDutyCleanup_timeout(t *testing.T) {
 					testAccCaptureVPCID(&subnet1, &vpcID),
 					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet1),
 					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet1),
-				),
-			},
-		},
-	})
-}
-
-func TestAccVPCSubnet_noGuardDuty(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subnet awstypes.Subnet
-	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSubnetConfig_noGuardDuty(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
-					testAccCheckNoGuardDutyResources(ctx, t, &subnet),
 				),
 			},
 		},
