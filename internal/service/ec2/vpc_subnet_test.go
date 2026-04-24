@@ -851,7 +851,8 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					testAccSubnetCaptureVPCID(&subnet, &vpcID),
 					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet),
-					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
 					testAccCheckGuardDutyVPCEndpointAssociated(ctx, t, &subnet),
 				),
 			},
@@ -859,7 +860,8 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_GuardDutyDependencies_basic_removed(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
 					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet),
 				),
 			},
@@ -900,7 +902,8 @@ func TestAccVPCSubnet_GuardDutyDependencies_multiple(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_GuardDutyDependencies_multiple_removed(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
 					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet1),
 					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet2),
 					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet3),
@@ -1804,30 +1807,6 @@ func testAccCreateGuardDutyResourcesForSubnets(ctx context.Context, t *testing.T
 			subnetIDs = append(subnetIDs, aws.ToString(subnet.SubnetId))
 		}
 		return testAccCreateGuardDutyResources(ctx, t, aws.ToString(subnets[0].VpcId), subnetIDs)(s)
-	}
-}
-
-func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-
-		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, aws.ToString(vpcID))
-		if err != nil {
-			return fmt.Errorf("error describing VPC endpoints: %w", err)
-		}
-		if len(endpoints) == 0 {
-			return fmt.Errorf("expected GuardDuty VPC endpoint to exist, but none found")
-		}
-
-		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, aws.ToString(vpcID))
-		if err != nil {
-			return fmt.Errorf("error describing security groups: %w", err)
-		}
-		if len(sgs) == 0 {
-			return fmt.Errorf("expected GuardDuty security group to exist, but none found")
-		}
-
-		return nil
 	}
 }
 
