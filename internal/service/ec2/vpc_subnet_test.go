@@ -1787,7 +1787,6 @@ resource "aws_subnet" "test" {
 // testAccCreateGuardDutyResourcesForSubnet is a convenience wrapper around
 // testAccCreateGuardDutyResources that extracts the subnet ID at execution time
 // from the populated subnet pointer.
-// TODO: just pass IDs
 func testAccCreateGuardDutyResourcesForSubnet(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		subnetID := aws.ToString(subnet.SubnetId)
@@ -1798,7 +1797,6 @@ func testAccCreateGuardDutyResourcesForSubnet(ctx context.Context, t *testing.T,
 // testAccCreateGuardDutyResourcesForSubnets is a convenience wrapper around
 // testAccCreateGuardDutyResources that extracts both subnet IDs at execution time
 // from two populated subnet pointers.
-// TODO: just pass IDs
 func testAccCreateGuardDutyResourcesForSubnets(ctx context.Context, t *testing.T, subnets ...*awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var subnetIDs []string

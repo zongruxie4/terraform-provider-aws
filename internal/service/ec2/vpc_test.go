@@ -1202,44 +1202,33 @@ func TestAccVPC_ramSharedImport(t *testing.T) {
 	})
 }
 
-// TestAccVPC_GuardDutyDependencies_securityGroupCleanup validates that VPC destroy succeeds when
-// GuardDuty-managed resources exist.
-// It creates a VPC + Subnet using Terraform, then uses the AWS SDK to create a GuardDuty endpoint
-// and security group directly. GuardDuty-managed resources are identified using a well-known
-// tag value.
-func TestAccVPC_GuardDutyDependencies_securityGroupCleanup(t *testing.T) {
+func TestAccVPC_GuardDutyDependencies_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
-	var subnet awstypes.Subnet
 	var vpcID string
 	vpcResourceName := "aws_vpc.test"
-	subnetResourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_basic_setup(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
-					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
 					testAccCaptureVPCIDFromVPC(&vpc, &vpcID),
+					testAccCreateGuardDutyResourcesForVPC(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
 				),
 			},
 			{
-				PreConfig: func() {
-					if err := testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet)(nil); err != nil {
-						t.Fatal(err)
-					}
-				},
-				Config: testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
-					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutySecurityGroupDoesNotExist(ctx, t, &vpcID),
+					testAccCheckVPCGuardDutyEndpointDoesNotExist(ctx, t, &vpcID),
 				),
 			},
 		},
@@ -1357,6 +1346,12 @@ func testAccVPCRegionImportStateIDFunc(n, region string) resource.ImportStateIdF
 		}
 
 		return fmt.Sprintf("%s@%s", rs.Primary.Attributes[names.AttrID], region), nil
+	}
+}
+
+func testAccCreateGuardDutyResourcesForVPC(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCreateGuardDutyResources(ctx, t, aws.ToString(vpcID), []string{})(s)
 	}
 }
 
@@ -1767,7 +1762,26 @@ func testAccCheckVPCGuardDutySecurityGroupExists(ctx context.Context, t *testing
 				return fmt.Errorf("error describing security groups: %w", err)
 			}
 			if len(sgs) == 0 {
-				return fmt.Errorf("expected GuardDuty security group with GuardDutyManaged=true tag to exist, but none found")
+				return fmt.Errorf("expected GuardDuty security group to exist, but none found")
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCheckVPCGuardDutySecurityGroupDoesNotExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing security groups: %w", err)
+			}
+			if len(sgs) != 0 {
+				return fmt.Errorf("expected GuardDuty security group to not exist, but found %d", len(sgs))
 			}
 
 			return nil
@@ -1786,7 +1800,26 @@ func testAccCheckVPCGuardDutyEndpointExists(ctx context.Context, t *testing.T, v
 				return fmt.Errorf("error describing VPC endpoints: %w", err)
 			}
 			if len(endpoints) == 0 {
-				return fmt.Errorf("expected GuardDuty VPC endpoint with GuardDutyManaged=true tag to exist, but none found")
+				return fmt.Errorf("expected GuardDuty VPC endpoint to exist, but none found")
+			}
+
+			return nil
+		}
+		return fmt.Errorf("VPC ID not captured")
+	}
+}
+
+func testAccCheckVPCGuardDutyEndpointDoesNotExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if id := aws.ToString(vpcID); id != "" {
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+			endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, id)
+			if err != nil {
+				return fmt.Errorf("error describing VPC endpoints: %w", err)
+			}
+			if len(endpoints) != 0 {
+				return fmt.Errorf("expected GuardDuty VPC endpoint to not exist, but found %d", len(endpoints))
 			}
 
 			return nil
@@ -1852,37 +1885,20 @@ func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, v
 	}
 }
 
-func testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccVPCConfig_GuardDutyDependencies_basic_setup() string {
+	return `
 resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
+}
+`
 }
 
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "%[1]s-test"
-  }
-}
-`, rName)
+func testAccVPCConfig_GuardDutyDependencies_basic() string {
+	return `
+# Intentionally empty
+`
 }
 
 func testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName string) string {
