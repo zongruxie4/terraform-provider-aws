@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_basic(t *testing.T) {
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,7 +62,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_disappears(t *testing.T) {
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,7 +97,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_update(t *testing.T) {
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -134,7 +133,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockingAlarms(t *testing.T
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -164,7 +163,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockedWindows(t *testing.T
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -193,7 +192,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_allowedWindows(t *testing.T
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -222,7 +221,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockedDates(t *testing.T) 
 	}
 
 	var v arczonalshift.GetManagedResourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
