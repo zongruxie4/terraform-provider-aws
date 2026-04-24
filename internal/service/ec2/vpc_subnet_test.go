@@ -1705,16 +1705,12 @@ resource "aws_subnet" "test" {
 `, rName, netmaskLength))
 }
 
-// TestAccVPCSubnet_guardDutyCleanup validates the multi-subnet dissociation path.
+// TestAccVPCSubnet_GuardDutyDependencies_cleanup validates the multi-subnet dissociation path.
 // It creates a VPC with two subnets, then creates GuardDuty resources (endpoint + SG)
 // out-of-band via SDK associated with both subnets. When one subnet is removed from
 // the Terraform config, dissociateGuardDutyVPCEndpoints runs to dissociate it from
 // the endpoint, and the endpoint should remain available with the remaining subnet.
-//
-// **Validates: Requirements 3.1, 3.2**
-//
-// EXPECTED: Test PASSES (multi-subnet dissociation works).
-func TestAccVPCSubnet_guardDutyCleanup(t *testing.T) {
+func TestAccVPCSubnet_GuardDutyDependencies_cleanup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet1, subnet2 awstypes.Subnet
 	var vpcID string
@@ -1732,12 +1728,12 @@ func TestAccVPCSubnet_guardDutyCleanup(t *testing.T) {
 				// Step 1: Create VPC with two subnets. After Terraform creates
 				// the infrastructure, create GuardDuty resources out-of-band
 				// via SDK with both subnet IDs.
-				Config: testAccVPCSubnetConfig_guardDutyCleanupBothSubnets(rName),
+				Config: testAccVPCSubnetConfig_GuardDutyDependencies_cleanupBothSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, t, resourceName1, &subnet1),
 					testAccCheckSubnetExists(ctx, t, resourceName2, &subnet2),
 					testAccCaptureVPCID(&subnet1, &vpcID),
-					testAccCreateGuardDutyResourcesFromSubnets(ctx, t, &subnet1, &subnet2),
+					testAccCreateGuardDutyResourcesForSubnets(ctx, t, &subnet1, &subnet2),
 					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet1),
 				),
 			},
@@ -1745,7 +1741,7 @@ func TestAccVPCSubnet_guardDutyCleanup(t *testing.T) {
 				// Step 2: Remove subnet1 from config. Terraform deletes it,
 				// dissociateGuardDutyVPCEndpoints dissociates it from the endpoint.
 				// Endpoint should remain available with subnet2.
-				Config: testAccVPCSubnetConfig_guardDutyCleanupSingleSubnet(rName),
+				Config: testAccVPCSubnetConfig_GuardDutyDependencies_cleanupSingleSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, t, resourceName2, &subnet2),
 					testAccCheckGuardDutyEndpointStillExists(ctx, t, &vpcID),
@@ -1755,23 +1751,19 @@ func TestAccVPCSubnet_guardDutyCleanup(t *testing.T) {
 	})
 }
 
-// TestAccVPCSubnet_guardDutyLastSubnetDeletion is a bug condition exploration test.
+// TestAccVPCSubnet_GuardDutyDependencies_lastSubnetDeletion is a bug condition exploration test.
 // It creates a GuardDuty VPC endpoint with exactly ONE subnet, then removes the subnet
 // from the Terraform config while keeping the endpoint (with ignore_changes on subnet_ids).
 // This triggers dissociateGuardDutyVPCEndpoints on the last subnet, which hits the bug:
 // ModifyVpcEndpoint with RemoveSubnetIds fails because an Interface VPC Endpoint requires
 // at least one subnet.
 //
-// **Validates: Requirements 2.1, 3.1**
-//
-// TestAccVPCSubnet_guardDutyLastSubnetDeletion validates the single-subnet dissociation path.
+// TestAccVPCSubnet_GuardDutyDependencies_lastSubnetDeletion validates the single-subnet dissociation path.
 // It creates a VPC with one subnet, then creates GuardDuty resources (endpoint + SG) out-of-band
 // via SDK. When the subnet is removed from the Terraform config, Terraform tries to delete it,
 // gets a DependencyViolation because the out-of-band endpoint is still there, and
 // dissociateGuardDutyVPCEndpoints runs to clean it up.
-//
-// EXPECTED: Test PASSES (AWS accepts last-subnet dissociation via ModifyVpcEndpoint).
-func TestAccVPCSubnet_guardDutyLastSubnetDeletion(t *testing.T) {
+func TestAccVPCSubnet_GuardDutyDependencies_lastSubnetDeletion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet1 awstypes.Subnet
 	var vpcID string
@@ -1817,10 +1809,10 @@ func testAccCreateGuardDutyResourcesForSubnet(ctx context.Context, t *testing.T,
 	}
 }
 
-// testAccCreateGuardDutyResourcesFromSubnets is a convenience wrapper around
+// testAccCreateGuardDutyResourcesForSubnets is a convenience wrapper around
 // testAccCreateGuardDutyResources that extracts both subnet IDs at execution time
 // from two populated subnet pointers.
-func testAccCreateGuardDutyResourcesFromSubnets(ctx context.Context, t *testing.T, subnet1, subnet2 *awstypes.Subnet) resource.TestCheckFunc {
+func testAccCreateGuardDutyResourcesForSubnets(ctx context.Context, t *testing.T, subnet1, subnet2 *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		subnetID1 := aws.ToString(subnet1.SubnetId)
 		subnetID2 := aws.ToString(subnet2.SubnetId)
@@ -2004,7 +1996,7 @@ func testAccCheckGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcI
 	}
 }
 
-func testAccVPCSubnetConfig_guardDutyCleanupBothSubnets(rName string) string {
+func testAccVPCSubnetConfig_GuardDutyDependencies_cleanupBothSubnets(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2047,7 +2039,7 @@ resource "aws_subnet" "test2" {
 `, rName)
 }
 
-func testAccVPCSubnetConfig_guardDutyCleanupSingleSubnet(rName string) string {
+func testAccVPCSubnetConfig_GuardDutyDependencies_cleanupSingleSubnet(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2179,14 +2171,14 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-// TestAccVPCSubnet_guardDutyNotAssociated validates UC-S3: deleting a subnet that is NOT
+// TestAccVPCSubnet_GuardDutyDependencies_notAssociated validates UC-S3: deleting a subnet that is NOT
 // associated with a GuardDuty endpoint. The endpoint is associated with subnet-B only.
 // When subnet-A is removed from the Terraform config, dissociateGuardDutyVPCEndpoints
 // should find the endpoint but skip it because subnet-A is not in the endpoint's SubnetIds.
 // The endpoint should remain untouched in available state with subnet-B.
 //
 // EXPECTED: Test PASSES. Endpoint is untouched because subnet-A was never associated with it.
-func TestAccVPCSubnet_guardDutyNotAssociated(t *testing.T) {
+func TestAccVPCSubnet_GuardDutyDependencies_notAssociated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnetA, subnetB awstypes.Subnet
 	var vpcID string

@@ -1202,14 +1202,12 @@ func TestAccVPC_ramSharedImport(t *testing.T) {
 	})
 }
 
-// TestAccVPC_guardDutySecurityGroupCleanup validates that VPC destroy succeeds when
-// out-of-band GuardDuty resources exist. It creates a VPC + subnet via Terraform, then
-// uses the AWS SDK to create a GuardDuty endpoint and security group out-of-band (not in
-// Terraform state). When terraform destroy runs, it deletes the subnet first (triggering
-// subnet-level cleanup), then tries to delete the VPC. Since the endpoint and SG are
-// out-of-band, Terraform may hit DependencyViolation, and detectAndDeleteGuardDutyVPCEndpoints
-// + detectAndDeleteGuardDutySecurityGroups run to clean them up.
-func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
+// TestAccVPC_GuardDutyDependencies_securityGroupCleanup validates that VPC destroy succeeds when
+// GuardDuty-managed resources exist.
+// It creates a VPC + Subnet using Terraform, then uses the AWS SDK to create a GuardDuty endpoint
+// and security group directly. GuardDuty-managed resources are identified using a well-known
+// tag value.
+func TestAccVPC_GuardDutyDependencies_securityGroupCleanup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	var subnet awstypes.Subnet
@@ -1225,7 +1223,7 @@ func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCConfig_guardDutySecurityGroupCleanup(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
@@ -1238,7 +1236,7 @@ func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccVPCConfig_guardDutySecurityGroupCleanup(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
 					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
@@ -1248,14 +1246,14 @@ func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
 	})
 }
 
-// TestAccVPC_guardDutyEndpointAlreadyCleaned validates that VPC destroy succeeds when the
+// TestAccVPC_GuardDutyDependencies_endpointAlreadyCleaned validates that VPC destroy succeeds when the
 // GuardDuty endpoint was already cleaned up by subnet-level deletion, but the SG remains.
 // Step 1 creates VPC + subnet, step 2 creates GuardDuty resources out-of-band.
 // Step 3 removes the subnet from config — Terraform deletes the subnet, which triggers
 // dissociateGuardDutyVPCEndpoints. The SG still exists in the VPC.
 // When terraform destroy runs on the remaining VPC, detectAndDeleteGuardDutySecurityGroups
 // finds and deletes the SG.
-func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
+func TestAccVPC_GuardDutyDependencies_endpointAlreadyCleaned(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	var subnet awstypes.Subnet
@@ -1271,7 +1269,7 @@ func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withSubnet(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
@@ -1284,7 +1282,7 @@ func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withSubnet(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
 					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpcID),
@@ -1293,7 +1291,7 @@ func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
 			{
 				// Remove subnet from config. Terraform deletes the subnet, triggering
 				// dissociateGuardDutyVPCEndpoints. The SG still exists in the VPC.
-				Config: testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withoutSubnet(rName),
+				Config: testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withoutSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpcID),
@@ -1854,7 +1852,7 @@ func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, v
 	}
 }
 
-func testAccVPCConfig_guardDutySecurityGroupCleanup(rName string) string {
+func testAccVPCConfig_GuardDutyDependencies_securityGroupCleanup(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1887,7 +1885,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withSubnet(rName string) string {
+func testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withSubnet(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1920,7 +1918,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withoutSubnet(rName string) string {
+func testAccVPCConfig_GuardDutyDependencies_endpointAlreadyCleaned_withoutSubnet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
