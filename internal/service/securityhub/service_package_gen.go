@@ -34,11 +34,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newV2AccountResource,
+			Factory:  newAccountV2Resource,
 			TypeName: "aws_securityhub_account_v2",
 			Name:     "Account V2",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "hub_arn",
+				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},

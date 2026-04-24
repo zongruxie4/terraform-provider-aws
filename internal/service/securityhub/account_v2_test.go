@@ -8,16 +8,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccV2Account_basic(t *testing.T) {
+func testAccAccountV2_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
 	resourceName := "aws_securityhub_account_v2.test"
@@ -26,14 +32,22 @@ func testAccV2Account_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckV2AccountDestroy(ctx, t),
+		CheckDestroy:             testAccCheckAccountV2Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccV2AccountConfig_basic,
+				Config: testAccAccountV2Config_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckV2AccountExists(ctx, t, resourceName, &hub),
+					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
 					resource.TestCheckResourceAttrSet(resourceName, "hub_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("securityhub", regexache.MustCompile(`hubv2/.+`))),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -44,7 +58,7 @@ func testAccV2Account_basic(t *testing.T) {
 	})
 }
 
-func testAccV2Account_disappears(t *testing.T) {
+func testAccAccountV2_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
 	resourceName := "aws_securityhub_account_v2.test"
@@ -53,21 +67,29 @@ func testAccV2Account_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckV2AccountDestroy(ctx, t),
+		CheckDestroy:             testAccCheckAccountV2Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccV2AccountConfig_basic,
+				Config: testAccAccountV2Config_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckV2AccountExists(ctx, t, resourceName, &hub),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecurityhub.ResourceV2Account, resourceName),
+					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecurityhub.ResourceAccountV2, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccV2Account_tags(t *testing.T) {
+func testAccAccountV2_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var hub securityhub.DescribeSecurityHubV2Output
 	resourceName := "aws_securityhub_account_v2.test"
@@ -76,15 +98,23 @@ func testAccV2Account_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckV2AccountDestroy(ctx, t),
+		CheckDestroy:             testAccCheckAccountV2Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccV2AccountConfig_tags1("key1", "value1"),
+				Config: testAccAccountV2Config_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckV2AccountExists(ctx, t, resourceName, &hub),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -92,37 +122,52 @@ func testAccV2Account_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccV2AccountConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccAccountV2Config_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckV2AccountExists(ctx, t, resourceName, &hub),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
-				Config: testAccV2AccountConfig_tags1("key2", "value2"),
+				Config: testAccAccountV2Config_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckV2AccountExists(ctx, t, resourceName, &hub),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckAccountV2Exists(ctx, t, resourceName, &hub),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckV2AccountExists(ctx context.Context, t *testing.T, n string, v *securityhub.DescribeSecurityHubV2Output) resource.TestCheckFunc {
+func testAccCheckAccountV2Exists(ctx context.Context, t *testing.T, n string, v *securityhub.DescribeSecurityHubV2Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		awsClient := acctest.ProviderMeta(ctx, t)
-		conn := awsClient.SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
-		output, err := tfsecurityhub.FindV2Account(ctx, conn)
+		output, err := tfsecurityhub.FindAccountV2(ctx, conn)
 
 		if err != nil {
 			return err
@@ -134,7 +179,7 @@ func testAccCheckV2AccountExists(ctx context.Context, t *testing.T, n string, v 
 	}
 }
 
-func testAccCheckV2AccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckAccountV2Destroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		awsClient := acctest.ProviderMeta(ctx, t)
 		conn := awsClient.SecurityHubClient(ctx)
@@ -144,7 +189,7 @@ func testAccCheckV2AccountDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			_, err := tfsecurityhub.FindV2Account(ctx, conn)
+			_, err := tfsecurityhub.FindAccountV2(ctx, conn)
 
 			if retry.NotFound(err) {
 				continue
@@ -154,18 +199,18 @@ func testAccCheckV2AccountDestroy(ctx context.Context, t *testing.T) resource.Te
 				return err
 			}
 
-			return fmt.Errorf("Security Hub V2 Account %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Security Hub V2 Account %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-const testAccV2AccountConfig_basic = `
+const testAccAccountV2Config_basic = `
 resource "aws_securityhub_account_v2" "test" {}
 `
 
-func testAccV2AccountConfig_tags1(tagKey1, tagValue1 string) string {
+func testAccAccountV2Config_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account_v2" "test" {
   tags = {
@@ -175,7 +220,7 @@ resource "aws_securityhub_account_v2" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccV2AccountConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAccountV2Config_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account_v2" "test" {
   tags = {
