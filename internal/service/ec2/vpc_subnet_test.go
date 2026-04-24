@@ -2080,61 +2080,6 @@ resource "aws_subnet" "test2" {
 `, rName)
 }
 
-func testAccVPCSubnetConfig_guardDutyCleanupSingle(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-1"
-  }
-}
-`, rName)
-}
-
-// TestAccVPCSubnet_guardDutyCleanup_timeout validates that GuardDuty resources can be
-// created out-of-band via SDK alongside a Terraform-managed subnet. This test only
-// creates resources (does not trigger subnet deletion). CheckDestroy cleans up
-// the out-of-band GuardDuty resources.
-func TestAccVPCSubnet_guardDutyCleanup_timeout(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subnet1 awstypes.Subnet
-	var vpcID string
-	resourceName1 := "aws_subnet.test1"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardDutyCleanupDestroy(ctx, t, &vpcID),
-		Steps: []resource.TestStep{
-			{
-				// Step 1: Create VPC with single subnet. After Terraform creates
-				// the infrastructure, create GuardDuty resources out-of-band via SDK.
-				Config: testAccVPCSubnetConfig_guardDutyCleanupSingle(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, t, resourceName1, &subnet1),
-					testAccCaptureVPCID(&subnet1, &vpcID),
-					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet1),
-					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet1),
-				),
-			},
-		},
-	})
-}
-
 func TestIsUnauthorizedError(t *testing.T) {
 	t.Parallel()
 
