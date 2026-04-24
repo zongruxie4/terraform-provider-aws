@@ -851,7 +851,7 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					testAccSubnetCaptureVPCID(&subnet, &vpcID),
 					testAccCreateGuardDutyResourcesForSubnet(ctx, t, &subnet),
-					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet),
+					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
 					testAccCheckGuardDutyVPCEndpointAssociated(ctx, t, &subnet),
 				),
 			},
@@ -859,7 +859,7 @@ func TestAccVPCSubnet_GuardDutyDependencies_basic(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_GuardDutyDependencies_basic_removed(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardDutyResourcesExist(ctx, t, &subnet),
+					testAccCheckGuardDutyResourcesExist(ctx, t, &vpcID),
 					testAccCheckGuardDutyVPCEndpointNotAssociated(ctx, t, &subnet),
 				),
 			},
@@ -1748,7 +1748,7 @@ resource "aws_subnet" "test" {
 func testAccCreateGuardDutyResourcesForSubnet(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		subnetID := aws.ToString(subnet.SubnetId)
-		return testAccCreateGuardDutyResources(ctx, t, subnet, []string{subnetID})(s)
+		return testAccCreateGuardDutyResources(ctx, t, aws.ToString(subnet.VpcId), []string{subnetID})(s)
 	}
 }
 
@@ -1762,17 +1762,15 @@ func testAccCreateGuardDutyResourcesForSubnets(ctx context.Context, t *testing.T
 		for _, subnet := range subnets {
 			subnetIDs = append(subnetIDs, aws.ToString(subnet.SubnetId))
 		}
-		return testAccCreateGuardDutyResources(ctx, t, subnets[0], subnetIDs)(s)
+		return testAccCreateGuardDutyResources(ctx, t, aws.ToString(subnets[0].VpcId), subnetIDs)(s)
 	}
 }
 
-// TODO: VPC ID
-func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, subnet *awstypes.Subnet) resource.TestCheckFunc {
+func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
-		vpcID := aws.ToString(subnet.VpcId)
 
-		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, vpcID)
+		endpoints, err := tfec2.FindGuardDutyVPCEndpoints(ctx, conn, aws.ToString(vpcID))
 		if err != nil {
 			return fmt.Errorf("error describing VPC endpoints: %w", err)
 		}
@@ -1780,7 +1778,7 @@ func testAccCheckGuardDutyResourcesExist(ctx context.Context, t *testing.T, subn
 			return fmt.Errorf("expected GuardDuty VPC endpoint to exist, but none found")
 		}
 
-		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
+		sgs, err := tfec2.FindGuardDutySecurityGroupsForVPC(ctx, conn, aws.ToString(vpcID))
 		if err != nil {
 			return fmt.Errorf("error describing security groups: %w", err)
 		}
@@ -1849,16 +1847,11 @@ func testAccSubnetCaptureVPCID(subnet *awstypes.Subnet, vpcID *string) resource.
 	}
 }
 
-// testAccCreateGuardDutyResources creates GuardDuty-tagged resources (VPC endpoint and security group)
-// out-of-band using the AWS SDK directly. This is critical because when GuardDuty resources are
-// Terraform-managed, Terraform handles dependency ordering and destroys the endpoint before the subnet,
-// so dissociateGuardDutyVPCEndpoints is never exercised. In production, GuardDuty creates these
-// resources out-of-band.
-func testAccCreateGuardDutyResources(ctx context.Context, t *testing.T, subnet *awstypes.Subnet, subnetIDs []string) resource.TestCheckFunc {
+// testAccCreateGuardDutyResources creates GuardDuty-tagged VPC endpoint and security group out-of-band
+func testAccCreateGuardDutyResources(ctx context.Context, t *testing.T, vpcID string, subnetIDs []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 		region := acctest.ProviderMeta(ctx, t).Region(ctx)
-		vpcID := aws.ToString(subnet.VpcId)
 
 		// Create GuardDuty-tagged security group
 		sgName := tfec2.GuardDutySecurityGroupNameForVPC(vpcID)
