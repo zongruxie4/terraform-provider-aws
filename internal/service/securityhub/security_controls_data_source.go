@@ -19,18 +19,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_securityhub_standards_control_definitions", name="Standards Control Definitions")
-func newStandardsControlDefinitionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &standardsControlDefinitionsDataSource{}
+// @FrameworkDataSource("aws_securityhub_security_controls", name="Security Controls")
+func newSecurityControlsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &securityControlsDataSource{}
 
 	return d, nil
 }
 
-type standardsControlDefinitionsDataSource struct {
-	framework.DataSourceWithModel[standardsControlDefinitionsDataSourceModel]
+type securityControlsDataSource struct {
+	framework.DataSourceWithModel[securityControlsDataSourceModel]
 }
 
-func (d *standardsControlDefinitionsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *securityControlsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"current_region_availability": schema.StringAttribute{
@@ -48,8 +48,8 @@ func (d *standardsControlDefinitionsDataSource) Schema(ctx context.Context, requ
 	}
 }
 
-func (d *standardsControlDefinitionsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data standardsControlDefinitionsDataSourceModel
+func (d *securityControlsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data securityControlsDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -79,10 +79,10 @@ func (d *standardsControlDefinitionsDataSource) Read(ctx context.Context, reques
 		return true
 	}
 
-	out, err := findSecurityControlDefinitions(ctx, conn, input, filter)
+	out, err := findSecurityControls(ctx, conn, input, filter)
 
 	if err != nil {
-		response.Diagnostics.AddError("reading SecurityHub Standards Control Definitions", err.Error())
+		response.Diagnostics.AddError("reading Security Hub Security Controls", err.Error())
 		return
 	}
 
@@ -91,7 +91,7 @@ func (d *standardsControlDefinitionsDataSource) Read(ctx context.Context, reques
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type standardsControlDefinitionsDataSourceModel struct {
+type securityControlsDataSourceModel struct {
 	framework.WithRegionModel
 	ID                        types.String                                                    `tfsdk:"id"`
 	CurrentRegionAvailability types.String                                                    `tfsdk:"current_region_availability"`
@@ -134,7 +134,7 @@ type enumOptionsModel struct {
 	MinItems      types.Int64          `tfsdk:"min_items"`
 }
 
-func findSecurityControlDefinitions(ctx context.Context, conn *securityhub.Client, input *securityhub.ListSecurityControlDefinitionsInput, filter tfslices.Predicate[*awstypes.SecurityControlDefinition]) ([]awstypes.SecurityControlDefinition, error) {
+func findSecurityControls(ctx context.Context, conn *securityhub.Client, input *securityhub.ListSecurityControlDefinitionsInput, filter tfslices.Predicate[*awstypes.SecurityControlDefinition]) ([]awstypes.SecurityControlDefinition, error) {
 	var output []awstypes.SecurityControlDefinition
 
 	pages := securityhub.NewListSecurityControlDefinitionsPaginator(conn, input)

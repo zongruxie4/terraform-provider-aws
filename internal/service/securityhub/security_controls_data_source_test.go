@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubStandardsControlDefinitionsDataSource_basic(t *testing.T) {
+func TestAccSecurityHubSecurityControlsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_standards_control_definitions.test"
+	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -24,7 +24,7 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_basic(t *testing.T)
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStandardsControlDefinitionsDataSourceConfig_basic(),
+				Config: testAccSecurityControlsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
 				),
@@ -33,9 +33,9 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_basic(t *testing.T)
 	})
 }
 
-func TestAccSecurityHubStandardsControlDefinitionsDataSource_standardsArn(t *testing.T) {
+func TestAccSecurityHubSecurityControlsDataSource_standardsARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_standards_control_definitions.test"
+	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,7 +46,7 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_standardsArn(t *tes
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStandardsControlDefinitionsDataSourceConfig_standardsArn(),
+				Config: testAccSecurityControlsDataSourceConfig_standardsARN(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "standards_arn"),
@@ -56,9 +56,9 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_standardsArn(t *tes
 	})
 }
 
-func TestAccSecurityHubStandardsControlDefinitionsDataSource_currentRegionAvailability(t *testing.T) {
+func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_standards_control_definitions.test"
+	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -69,7 +69,7 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_currentRegionAvaila
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStandardsControlDefinitionsDataSourceConfig_currentRegionAvailability(),
+				Config: testAccSecurityControlsDataSourceConfig_currentRegionAvailability(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
 					resource.TestCheckResourceAttr(dataSourceName, "current_region_availability", "AVAILABLE"),
@@ -79,9 +79,9 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_currentRegionAvaila
 	})
 }
 
-func TestAccSecurityHubStandardsControlDefinitionsDataSource_severityRating(t *testing.T) {
+func TestAccSecurityHubSecurityControlsDataSource_severityRating(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_standards_control_definitions.test"
+	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -92,7 +92,7 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_severityRating(t *t
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStandardsControlDefinitionsDataSourceConfig_severityRating(),
+				Config: testAccSecurityControlsDataSourceConfig_severityRating(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
 					resource.TestCheckResourceAttr(dataSourceName, "severity_rating", "CRITICAL"),
@@ -102,33 +102,33 @@ func TestAccSecurityHubStandardsControlDefinitionsDataSource_severityRating(t *t
 	})
 }
 
-func testAccStandardsControlDefinitionsDataSourceConfig_basic() string {
+func testAccSecurityControlsDataSourceConfig_basic() string {
 	return `
-data "aws_securityhub_standards_control_definitions" "test" {}
+data "aws_securityhub_security_controls" "test" {}
 `
 }
 
-func testAccStandardsControlDefinitionsDataSourceConfig_standardsArn() string {
+func testAccSecurityControlsDataSourceConfig_standardsARN() string {
 	return `
 data "aws_securityhub_standards_subscriptions" "example" {}
 
-data "aws_securityhub_standards_control_definitions" "test" {
+data "aws_securityhub_security_controls" "test" {
   standards_arn = data.aws_securityhub_standards_subscriptions.example.standards_subscriptions[0].standards_arn
 }
 `
 }
 
-func testAccStandardsControlDefinitionsDataSourceConfig_currentRegionAvailability() string {
+func testAccSecurityControlsDataSourceConfig_currentRegionAvailability() string {
 	return `
-data "aws_securityhub_standards_control_definitions" "test" {
+data "aws_securityhub_security_controls" "test" {
   current_region_availability = "AVAILABLE"
 }
 `
 }
 
-func testAccStandardsControlDefinitionsDataSourceConfig_severityRating() string {
+func testAccSecurityControlsDataSourceConfig_severityRating() string {
 	return `
-data "aws_securityhub_standards_control_definitions" "test" {
+data "aws_securityhub_security_controls" "test" {
   severity_rating = "CRITICAL"
 }
 `

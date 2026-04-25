@@ -23,15 +23,15 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newStandardsControlAssociationsDataSource,
-			TypeName: "aws_securityhub_standards_control_associations",
-			Name:     "Standards Control Associations",
+			Factory:  newSecurityControlsDataSource,
+			TypeName: "aws_securityhub_security_controls",
+			Name:     "Security Controls",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newStandardsControlDefinitionsDataSource,
-			TypeName: "aws_securityhub_standards_control_definitions",
-			Name:     "Standards Control Definitions",
+			Factory:  newStandardsControlAssociationsDataSource,
+			TypeName: "aws_securityhub_standards_control_associations",
+			Name:     "Standards Control Associations",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
