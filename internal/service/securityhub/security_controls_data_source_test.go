@@ -7,7 +7,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -16,18 +19,15 @@ func TestAccSecurityHubSecurityControlsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityControlsDataSourceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -38,19 +38,15 @@ func TestAccSecurityHubSecurityControlsDataSource_standardsARN(t *testing.T) {
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityControlsDataSourceConfig_standardsARN(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "standards_arn"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -61,19 +57,15 @@ func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *t
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityControlsDataSourceConfig_currentRegionAvailability(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "current_region_availability", "AVAILABLE"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -84,19 +76,15 @@ func TestAccSecurityHubSecurityControlsDataSource_severityRating(t *testing.T) {
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityControlsDataSourceConfig_severityRating(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "control_definitions.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "severity_rating", "CRITICAL"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})

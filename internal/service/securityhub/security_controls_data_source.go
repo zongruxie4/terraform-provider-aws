@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -18,7 +19,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_securityhub_security_controls", name="Security Controls")
@@ -36,16 +36,22 @@ func (d *securityControlsDataSource) Schema(ctx context.Context, request datasou
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"current_region_availability": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.StringEnumType[awstypes.RegionAvailabilityStatus](),
+				Optional:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"security_control_ids": schema.ListAttribute{
+				ElementType: types.StringType,
+				CustomType:  fwtypes.ListOfStringType,
+				Optional:    true,
+			},
 			"severity_rating": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.StringEnumType[awstypes.SeverityRating](),
+				Optional:   true,
 			},
 			"standards_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
-			"control_definitions": framework.DataSourceComputedListOfObjectAttribute[securityControlDefinitionModel](ctx),
 		},
 	}
 }
@@ -59,21 +65,19 @@ func (d *securityControlsDataSource) Read(ctx context.Context, request datasourc
 
 	conn := d.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.ListSecurityControlDefinitionsInput{}
-
-	if !data.StandardsARN.IsNull() {
-		input.StandardsArn = data.StandardsARN.ValueStringPointer()
+	input := securityhub.ListSecurityControlDefinitionsInput{
+		StandardsArn: fwflex.StringFromFramework(ctx, data.StandardsARN),
 	}
 
-	filter := func(v *awstypes.SecurityControlDefinition) bool {
+	filter := func(v awstypes.SecurityControlDefinition) bool {
 		if !data.CurrentRegionAvailability.IsNull() {
-			if string(v.CurrentRegionAvailability) != data.CurrentRegionAvailability.ValueString() {
+			if v.CurrentRegionAvailability != data.CurrentRegionAvailability.ValueEnum() {
 				return false
 			}
 		}
 
 		if !data.SeverityRating.IsNull() {
-			if string(v.SeverityRating) != data.SeverityRating.ValueString() {
+			if v.SeverityRating != data.SeverityRating.ValueEnum() {
 				return false
 			}
 		}
@@ -81,27 +85,27 @@ func (d *securityControlsDataSource) Read(ctx context.Context, request datasourc
 		return true
 	}
 
-	out, err := findSecurityControls(ctx, conn, input, filter)
+	out, err := findSecurityControls(ctx, conn, &input, filter)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Hub Security Controls", err.Error())
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data.ControlDefinitions)...)
+	data.SecurityControlIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(out, func(v awstypes.SecurityControlDefinition) string { return aws.ToString(v.SecurityControlId) }))
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type securityControlsDataSourceModel struct {
 	framework.WithRegionModel
-	ID                        types.String                                                    `tfsdk:"id"`
-	CurrentRegionAvailability types.String                                                    `tfsdk:"current_region_availability"`
-	SeverityRating            types.String                                                    `tfsdk:"severity_rating"`
-	StandardsARN              types.String                                                    `tfsdk:"standards_arn"`
-	ControlDefinitions        fwtypes.ListNestedObjectValueOf[securityControlDefinitionModel] `tfsdk:"control_definitions"`
+	CurrentRegionAvailability fwtypes.StringEnum[awstypes.RegionAvailabilityStatus] `tfsdk:"current_region_availability"`
+	SecurityControlIDs        fwtypes.ListOfString                                  `tfsdk:"security_control_ids"`
+	SeverityRating            fwtypes.StringEnum[awstypes.SeverityRating]           `tfsdk:"severity_rating"`
+	StandardsARN              fwtypes.ARN                                           `tfsdk:"standards_arn"`
 }
 
+/*
 type securityControlDefinitionModel struct {
 	ControlID                 types.String                                                        `tfsdk:"control_id"`
 	CurrentRegionAvailability fwtypes.StringEnum[awstypes.RegionAvailabilityStatus]               `tfsdk:"current_region_availability"`
@@ -135,8 +139,9 @@ type enumOptionsModel struct {
 	MaxItems      types.Int64          `tfsdk:"max_items"`
 	MinItems      types.Int64          `tfsdk:"min_items"`
 }
+*/
 
-func findSecurityControls(ctx context.Context, conn *securityhub.Client, input *securityhub.ListSecurityControlDefinitionsInput, filter tfslices.Predicate[*awstypes.SecurityControlDefinition]) ([]awstypes.SecurityControlDefinition, error) {
+func findSecurityControls(ctx context.Context, conn *securityhub.Client, input *securityhub.ListSecurityControlDefinitionsInput, filter tfslices.Predicate[awstypes.SecurityControlDefinition]) ([]awstypes.SecurityControlDefinition, error) {
 	var output []awstypes.SecurityControlDefinition
 
 	pages := securityhub.NewListSecurityControlDefinitionsPaginator(conn, input)
@@ -148,7 +153,7 @@ func findSecurityControls(ctx context.Context, conn *securityhub.Client, input *
 		}
 
 		for _, v := range page.SecurityControlDefinitions {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
