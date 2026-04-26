@@ -98,10 +98,10 @@ data "aws_securityhub_security_controls" "test" {}
 
 func testAccSecurityControlsDataSourceConfig_standardsARN() string {
 	return `
-data "aws_securityhub_standards_subscriptions" "example" {}
+data "aws_partition" "current" {}
 
 data "aws_securityhub_security_controls" "test" {
-  standards_arn = data.aws_securityhub_standards_subscriptions.example.standards_subscriptions[0].standards_arn
+  standards_arn = "arn:${data.aws_partition.current.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 }
 `
 }
