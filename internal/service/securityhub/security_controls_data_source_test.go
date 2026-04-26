@@ -15,7 +15,7 @@ func TestAccSecurityHubSecurityControlsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
@@ -37,7 +37,7 @@ func TestAccSecurityHubSecurityControlsDataSource_standardsARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
@@ -60,7 +60,7 @@ func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *t
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
@@ -83,7 +83,7 @@ func TestAccSecurityHubSecurityControlsDataSource_severityRating(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_securityhub_security_controls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityHubServiceID)
