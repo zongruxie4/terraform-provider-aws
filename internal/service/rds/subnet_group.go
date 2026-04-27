@@ -7,6 +7,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -127,17 +128,29 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Subnet Group (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceSubnetGroupFlatten(v, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceSubnetGroupFlatten(v *types.DBSubnetGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, v.DBSubnetGroupArn)
 	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
 	d.Set(names.AttrName, v.DBSubnetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+	if err := d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
-	}))
-	d.Set("supported_network_types", v.SupportedNetworkTypes)
+	})); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSubnetIDs, err)
+	}
+	if err := d.Set("supported_network_types", v.SupportedNetworkTypes); err != nil {
+		return fmt.Errorf("setting supported_network_types: %w", err)
+	}
 	d.Set(names.AttrVPCID, v.VpcId)
 
-	return diags
+	return nil
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
