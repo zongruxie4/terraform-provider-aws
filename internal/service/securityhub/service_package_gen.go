@@ -34,6 +34,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountV2Resource,
+			TypeName: "aws_securityhub_account_v2",
+			Name:     "Account V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newAutomationRuleResource,
 			TypeName: "aws_securityhub_automation_rule",
 			Name:     "Automation Rule",
