@@ -269,11 +269,11 @@ func resourceClientVPNEndpoint() *schema.Resource {
 								"transit_gateway_configuration.0.availability_zones",
 							},
 						},
-						"transit_gateway_attachment_id": {
+						names.AttrTransitGatewayAttachmentID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -394,10 +394,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	if input.TransitGatewayConfiguration != nil {
 		ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 		if err != nil {
-			return diag.Errorf("error finding EC2 Client VPN Endpoint: %s", err)
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint: %s", err)
 		}
 		if ep.TransitGatewayConfiguration == nil {
-			return diag.Errorf("error finding EC2 Client VPN Endpoint TransitGatewayConfiguration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint TransitGatewayConfiguration: %s", err)
 		}
 		if _, err := waitTransitGatewayAttachmentAccepted(ctx, conn, aws.ToString(ep.TransitGatewayConfiguration.TransitGatewayAttachmentId), d.Timeout(schema.TimeoutDefault)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for transit gateway configuration to be available for EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
@@ -474,7 +474,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
-		return diag.Errorf("error setting transit_gateway_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "error setting transit_gateway_configuration: %s", err)
 	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
@@ -884,7 +884,7 @@ func expandTransitGatewayConfiguration(tfMap map[string]any) *awstypes.TransitGa
 
 	apiObject := &awstypes.TransitGatewayConfigurationInputStructure{}
 
-	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
 		apiObject.TransitGatewayId = aws.String(v)
 	}
 
@@ -904,17 +904,17 @@ func flattenTransitGatewayConfiguration(apiObject *awstypes.TransitGatewayConfig
 		return nil
 	}
 	tfMap := map[string]any{}
-	if v := apiObject.AvailabilityZones; v != nil && len(v) > 0 {
-		tfMap["availability_zones"] = flex.FlattenStringValueSet(v)
+	if v := apiObject.AvailabilityZones; len(v) > 0 {
+		tfMap[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(v)
 	}
-	if v := apiObject.AvailabilityZoneIds; v != nil && len(v) > 0 {
+	if v := apiObject.AvailabilityZoneIds; len(v) > 0 {
 		tfMap["availability_zone_ids"] = flex.FlattenStringValueSet(v)
 	}
 	if v := apiObject.TransitGatewayAttachmentId; v != nil {
-		tfMap["transit_gateway_attachment_id"] = aws.ToString(v)
+		tfMap[names.AttrTransitGatewayAttachmentID] = aws.ToString(v)
 	}
 	if v := apiObject.TransitGatewayId; v != nil {
-		tfMap["transit_gateway_id"] = aws.ToString(v)
+		tfMap[names.AttrTransitGatewayID] = aws.ToString(v)
 	}
 	return tfMap
 }

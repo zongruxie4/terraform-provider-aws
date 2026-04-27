@@ -201,11 +201,11 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"transit_gateway_attachment_id": {
+						names.AttrTransitGatewayAttachmentID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -307,7 +307,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
-		return diag.Errorf("error setting transit_gateway_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
 	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
