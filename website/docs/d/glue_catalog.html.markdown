@@ -49,6 +49,8 @@ This data source exports the following attributes in addition to the arguments a
 * `federated_catalog` - Configuration block for federated catalog parameters:
     * `identifier` - Unique identifier for the federated catalog.
     * `connection_name` - Name of the connection for the federated catalog.
+* `target_redshift_catalog` - Configuration block for target Redshift catalog for resource linking:
+    * `catalog_arn` - ARN of the target catalog resource.
 * `catalog_properties` - Configuration block for catalog properties:
     * `data_lake_access_properties` - Configuration block for data lake access properties:
         * `catalog_type` - Type of catalog (e.g., "aws:redshift").

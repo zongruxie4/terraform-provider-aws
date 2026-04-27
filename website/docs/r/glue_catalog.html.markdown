@@ -139,7 +139,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the federated catalog.
 
-**Note:** At least one of `federated_catalog` or `catalog_properties` must be specified.
+**Note:** At least one of `federated_catalog`, `catalog_properties`, or `target_redshift_catalog` must be specified.
 
 The following arguments are optional:
 
@@ -148,12 +148,17 @@ The following arguments are optional:
 * `description` - (Optional) Description of the federated catalog.
 * `federated_catalog` - (Optional) Configuration block for federated catalog parameters. See [federated_catalog](#federated_catalog) below.
 * `catalog_properties` - (Optional) Configuration block for catalog properties. See [catalog_properties](#catalog_properties) below.
+* `target_redshift_catalog` - (Optional) Configuration block for target Redshift catalog for resource linking. See [target_redshift_catalog](#target_redshift_catalog) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### federated_catalog
 
 * `identifier` - (Optional) Unique identifier for the federated catalog.
 * `connection_name` - (Optional) Name of the connection for the federated catalog.
+
+### target_redshift_catalog
+
+* `catalog_arn` - (Required) ARN of the target catalog resource for linking.
 
 ### catalog_properties
 
