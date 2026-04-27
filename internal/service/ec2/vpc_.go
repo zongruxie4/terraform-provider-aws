@@ -411,7 +411,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diags
 	}
 
-	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so tha tno new permissions,
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so that no new permissions,
 	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
 	var guardDutyDiags diag.Diagnostics
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
