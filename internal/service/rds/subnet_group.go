@@ -29,17 +29,18 @@ import (
 
 // @SDKResource("aws_db_subnet_group", name="DB Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBSubnetGroup")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(name="Subnet Group")
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
 		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
 		DeleteWithoutTimeout: resourceSubnetGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
