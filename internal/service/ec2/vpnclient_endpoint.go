@@ -474,7 +474,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting transit_gateway_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
 	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
