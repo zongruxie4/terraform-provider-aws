@@ -91,7 +91,7 @@ One of the following arguments must be supplied:
 * `cloudwatch_log_stream` - (Optional) The name of the CloudWatch Logs log stream to which the connection data is published.
 * `enabled` - (Required) Indicates whether connection logging is enabled.
 
-### `transit_gateway_configuration` Block reference
+### `transit_gateway_configuration` Block Reference
 
 ~> **NOTE:** When using this configuration block, a Transit Gateway attachment is created and associated with the Client VPN endpoint. Although the attachment is automatically deleted when the Client VPN endpoint is deleted, the deletion is not immediate and can take a significant amount of time (sometimes several hours). The Terraform AWS Provider does not wait for the attachment to be deleted. This delay may prevent the Transit Gateway itself from being deleted.
 
