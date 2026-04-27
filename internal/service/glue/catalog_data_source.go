@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -34,6 +35,9 @@ type dataSourceCatalog struct {
 func (d *dataSourceCatalog) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"allow_full_table_external_data_access": schema.BoolAttribute{
+				Computed: true,
+			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCatalogID: schema.StringAttribute{
 				Optional: true,
@@ -114,6 +118,14 @@ func (d *dataSourceCatalog) Read(ctx context.Context, req datasource.ReadRequest
 	if out.Description != nil {
 		data.Description = types.StringValue(aws.ToString(out.Description))
 	}
+
+	switch out.AllowFullTableExternalDataAccess {
+	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
+		data.AllowFullTableExternalDataAccess = types.BoolValue(true)
+	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
+		data.AllowFullTableExternalDataAccess = types.BoolValue(false)
+	}
+
 	if out.FederatedCatalog != nil {
 		fedCatalogModel := federatedCatalogModel{
 			ConnectionName: types.StringValue(aws.ToString(out.FederatedCatalog.ConnectionName)),
@@ -133,12 +145,13 @@ func (d *dataSourceCatalog) Read(ctx context.Context, req datasource.ReadRequest
 
 type dataSourceCatalogModel struct {
 	framework.WithRegionModel
-	ARN              types.String                                           `tfsdk:"arn"`
-	CatalogId        types.String                                           `tfsdk:"catalog_id"`
-	Description      types.String                                           `tfsdk:"description"`
-	FederatedCatalog fwtypes.ListNestedObjectValueOf[federatedCatalogModel] `tfsdk:"federated_catalog"`
-	ID               types.String                                           `tfsdk:"id"`
-	Name             types.String                                           `tfsdk:"name"`
+	AllowFullTableExternalDataAccess types.Bool                                             `tfsdk:"allow_full_table_external_data_access"`
+	ARN                              types.String                                           `tfsdk:"arn"`
+	CatalogId                        types.String                                           `tfsdk:"catalog_id"`
+	Description                      types.String                                           `tfsdk:"description"`
+	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel] `tfsdk:"federated_catalog"`
+	ID                               types.String                                           `tfsdk:"id"`
+	Name                             types.String                                           `tfsdk:"name"`
 }
 
 // federatedCatalogModel is defined in federated_catalog.go to avoid duplication

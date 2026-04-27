@@ -43,6 +43,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `allow_full_table_external_data_access` - Whether third-party engines can access data in Amazon S3 locations registered with Lake Formation.
 * `arn` - ARN of the Catalog.
 * `description` - Description of the catalog.
 * `federated_catalog` - Configuration block for federated catalog parameters:

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -59,6 +61,12 @@ type resourceCatalog struct {
 func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"allow_full_table_external_data_access": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCatalogID: schema.StringAttribute{
 				Optional: true,
@@ -101,12 +109,32 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
+			"target_redshift_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"catalog_arn": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			"catalog_properties": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[catalogPropertiesModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"custom_properties": schema.MapAttribute{
+							CustomType:  fwtypes.MapOfStringType,
+							Optional:    true,
+							ElementType: types.StringType,
+						},
+					},
 					Blocks: map[string]schema.Block{
 						"data_lake_access_properties": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeAccessPropertiesModel](ctx),
@@ -125,6 +153,34 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 										Optional: true,
 									},
 									names.AttrKMSKey: schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"iceberg_optimization_properties": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[icebergOptimizationPropertiesModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"compaction": schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+									},
+									"orphan_file_deletion": schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+									},
+									"retention": schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+									},
+									names.AttrRoleARN: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -150,92 +206,40 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var input glue.CreateCatalogInput
-
-	input.Name = plan.Name.ValueStringPointer()
+	if plan.FederatedCatalog.IsNull() && plan.CatalogProperties.IsNull() && plan.TargetRedshiftCatalog.IsNull() {
+		resp.Diagnostics.AddError(
+			"Missing Required Configuration",
+			"At least one of 'federated_catalog', 'catalog_properties', or 'target_redshift_catalog' must be specified.",
+		)
+		return
+	}
 
 	if plan.CatalogId.IsNull() || plan.CatalogId.ValueString() == "" {
 		plan.CatalogId = types.StringValue(r.Meta().AccountID(ctx))
 	}
 
-	input.CatalogInput = &awstypes.CatalogInput{}
-
-	if !plan.Description.IsNull() {
-		input.CatalogInput.Description = plan.Description.ValueStringPointer()
-	}
-
-	if plan.FederatedCatalog.IsNull() && plan.CatalogProperties.IsNull() {
-		resp.Diagnostics.AddError(
-			"Missing Required Configuration",
-			"At least one of 'federated_catalog' or 'catalog_properties' must be specified for a federated catalog.",
-		)
+	var input glue.CreateCatalogInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.FederatedCatalog.IsNull() {
-		var fedCatalog []federatedCatalogModel
-		resp.Diagnostics.Append(plan.FederatedCatalog.ElementsAs(ctx, &fedCatalog, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(fedCatalog) > 0 {
-			fc := &awstypes.FederatedCatalog{}
-
-			if !fedCatalog[0].ConnectionName.IsNull() {
-				fc.ConnectionName = fedCatalog[0].ConnectionName.ValueStringPointer()
-			}
-			if !fedCatalog[0].Identifier.IsNull() {
-				fc.Identifier = fedCatalog[0].Identifier.ValueStringPointer()
-			}
-
-			input.CatalogInput.FederatedCatalog = fc
-		}
-	}
-
-	if !plan.CatalogProperties.IsNull() {
-		var catalogProps []catalogPropertiesModel
-		resp.Diagnostics.Append(plan.CatalogProperties.ElementsAs(ctx, &catalogProps, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(catalogProps) > 0 {
-			cp := &awstypes.CatalogProperties{}
-
-			if !catalogProps[0].DataLakeAccessProperties.IsNull() {
-				var dataLakeProps []dataLakeAccessPropertiesModel
-				resp.Diagnostics.Append(catalogProps[0].DataLakeAccessProperties.ElementsAs(ctx, &dataLakeProps, false)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
-				if len(dataLakeProps) > 0 {
-					dlap := &awstypes.DataLakeAccessProperties{}
-
-					if !dataLakeProps[0].CatalogType.IsNull() {
-						dlap.CatalogType = dataLakeProps[0].CatalogType.ValueStringPointer()
-					}
-					if !dataLakeProps[0].DataLakeAccess.IsNull() {
-						dlap.DataLakeAccess = dataLakeProps[0].DataLakeAccess.ValueBool()
-					}
-					if !dataLakeProps[0].DataTransferRole.IsNull() {
-						dlap.DataTransferRole = dataLakeProps[0].DataTransferRole.ValueStringPointer()
-					}
-					if !dataLakeProps[0].KmsKey.IsNull() {
-						dlap.KmsKey = dataLakeProps[0].KmsKey.ValueStringPointer()
-					}
-
-					cp.DataLakeAccessProperties = dlap
-				}
-			}
-
-			input.CatalogInput.CatalogProperties = cp
-		}
-	}
-
+	input.CatalogInput = &awstypes.CatalogInput{}
 	input.CatalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
 	input.CatalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input.CatalogInput)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Handle enum conversion for AllowFullTableExternalDataAccess
+	if !plan.AllowFullTableExternalDataAccess.IsNull() {
+		if plan.AllowFullTableExternalDataAccess.ValueBool() {
+			input.CatalogInput.AllowFullTableExternalDataAccess = awstypes.AllowFullTableExternalDataAccessEnumTrue
+		} else {
+			input.CatalogInput.AllowFullTableExternalDataAccess = awstypes.AllowFullTableExternalDataAccessEnumFalse
+		}
+	}
 
 	input.Tags = getTagsIn(ctx)
 
@@ -259,13 +263,15 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// Set computed values
+	plan.CatalogId = fwflex.StringToFramework(ctx, catalog.CatalogId)
+
 	if catalog.ResourceArn != nil {
 		plan.ARN = types.StringValue(aws.ToString(catalog.ResourceArn))
 	} else {
 		partition := r.Meta().Partition(ctx)
 		region := r.Meta().Region(ctx)
 		accountID := r.Meta().AccountID(ctx)
-		catalogName := plan.Name.ValueString()
 		if catalogName == s3TablesCatalogName {
 			plan.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog/%s", partition, region, accountID, catalogName))
 		} else {
@@ -273,50 +279,33 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
-	if catalog.CatalogId != nil {
-		plan.CatalogId = types.StringValue(aws.ToString(catalog.CatalogId))
+	switch catalog.AllowFullTableExternalDataAccess {
+	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
+		plan.AllowFullTableExternalDataAccess = types.BoolValue(true)
+	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
+		plan.AllowFullTableExternalDataAccess = types.BoolValue(false)
 	}
-	if catalog.FederatedCatalog != nil {
-		fedCatalogModel := federatedCatalogModel{
-			ConnectionName: types.StringPointerValue(catalog.FederatedCatalog.ConnectionName),
-			Identifier:     types.StringPointerValue(catalog.FederatedCatalog.Identifier),
-		}
 
-		fedCatalogList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &fedCatalogModel)
-		resp.Diagnostics.Append(diags...)
+	if catalog.FederatedCatalog != nil {
+		plan.FederatedCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &federatedCatalogModel{
+			ConnectionName: fwflex.StringToFramework(ctx, catalog.FederatedCatalog.ConnectionName),
+			Identifier:     fwflex.StringToFramework(ctx, catalog.FederatedCatalog.Identifier),
+		})
+	}
+
+	if catalog.TargetRedshiftCatalog != nil {
+		plan.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
+			CatalogArn: fwflex.StringToFramework(ctx, catalog.TargetRedshiftCatalog.CatalogArn),
+		})
+	}
+
+	if !plan.CatalogProperties.IsNull() && catalog.CatalogProperties != nil {
+		catalogPropsModel := catalogPropertiesModel{}
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, catalog.CatalogProperties, &catalogPropsModel)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.FederatedCatalog = fedCatalogList
-	}
-
-	if catalog.CatalogProperties != nil && catalog.CatalogProperties.DataLakeAccessProperties != nil {
-		dlap := catalog.CatalogProperties.DataLakeAccessProperties
-		if !plan.CatalogProperties.IsNull() || dlap.CatalogType != nil || dlap.DataTransferRole != nil || dlap.KmsKey != nil {
-			dataLakePropsModel := dataLakeAccessPropertiesModel{
-				CatalogType:      types.StringPointerValue(catalog.CatalogProperties.DataLakeAccessProperties.CatalogType),
-				DataLakeAccess:   types.BoolValue(catalog.CatalogProperties.DataLakeAccessProperties.DataLakeAccess),
-				DataTransferRole: types.StringPointerValue(catalog.CatalogProperties.DataLakeAccessProperties.DataTransferRole),
-				KmsKey:           types.StringPointerValue(catalog.CatalogProperties.DataLakeAccessProperties.KmsKey),
-			}
-
-			dataLakeList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataLakePropsModel)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			catalogPropsModel := catalogPropertiesModel{
-				DataLakeAccessProperties: dataLakeList,
-			}
-
-			catalogPropsList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &catalogPropsModel)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			plan.CatalogProperties = catalogPropsList
-		}
+		plan.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -341,6 +330,12 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	// Flatten basic fields
+	state.CatalogId = fwflex.StringToFramework(ctx, out.CatalogId)
+	state.Name = fwflex.StringToFramework(ctx, out.Name)
+	state.Description = fwflex.StringToFramework(ctx, out.Description)
+
+	// Handle ARN
 	if out.ResourceArn != nil {
 		state.ARN = types.StringValue(aws.ToString(out.ResourceArn))
 	} else {
@@ -355,58 +350,37 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 	}
 
-	if out.CatalogId != nil {
-		state.CatalogId = types.StringValue(aws.ToString(out.CatalogId))
+	// Handle enum conversion for AllowFullTableExternalDataAccess
+	switch out.AllowFullTableExternalDataAccess {
+	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
+		state.AllowFullTableExternalDataAccess = types.BoolValue(true)
+	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
+		state.AllowFullTableExternalDataAccess = types.BoolValue(false)
 	}
 
-	if out.Name != nil {
-		state.Name = types.StringValue(aws.ToString(out.Name))
-	}
-
-	if out.Description != nil {
-		state.Description = types.StringValue(aws.ToString(out.Description))
-	}
+	// Flatten FederatedCatalog
 	if out.FederatedCatalog != nil {
-		fedCatalogModel := federatedCatalogModel{
-			ConnectionName: types.StringPointerValue(out.FederatedCatalog.ConnectionName),
-			Identifier:     types.StringPointerValue(out.FederatedCatalog.Identifier),
-		}
+		state.FederatedCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &federatedCatalogModel{
+			ConnectionName: fwflex.StringToFramework(ctx, out.FederatedCatalog.ConnectionName),
+			Identifier:     fwflex.StringToFramework(ctx, out.FederatedCatalog.Identifier),
+		})
+	}
 
-		fedCatalogList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &fedCatalogModel)
-		resp.Diagnostics.Append(diags...)
+	// Flatten TargetRedshiftCatalog
+	if out.TargetRedshiftCatalog != nil {
+		state.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
+			CatalogArn: fwflex.StringToFramework(ctx, out.TargetRedshiftCatalog.CatalogArn),
+		})
+	}
+
+	// Flatten CatalogProperties only if it was in the original config
+	if !state.CatalogProperties.IsNull() && out.CatalogProperties != nil {
+		catalogPropsModel := catalogPropertiesModel{}
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.CatalogProperties, &catalogPropsModel)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		state.FederatedCatalog = fedCatalogList
-	}
-
-	if out.CatalogProperties != nil && out.CatalogProperties.DataLakeAccessProperties != nil {
-		dlap := out.CatalogProperties.DataLakeAccessProperties
-		if !state.CatalogProperties.IsNull() || dlap.CatalogType != nil || dlap.DataTransferRole != nil || dlap.KmsKey != nil {
-			dataLakePropsModel := dataLakeAccessPropertiesModel{
-				CatalogType:      types.StringPointerValue(out.CatalogProperties.DataLakeAccessProperties.CatalogType),
-				DataLakeAccess:   types.BoolValue(out.CatalogProperties.DataLakeAccessProperties.DataLakeAccess),
-				DataTransferRole: types.StringPointerValue(out.CatalogProperties.DataLakeAccessProperties.DataTransferRole),
-				KmsKey:           types.StringPointerValue(out.CatalogProperties.DataLakeAccessProperties.KmsKey),
-			}
-
-			dataLakeList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataLakePropsModel)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			catalogPropsModel := catalogPropertiesModel{
-				DataLakeAccessProperties: dataLakeList,
-			}
-
-			catalogPropsList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &catalogPropsModel)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			state.CatalogProperties = catalogPropsList
-		}
+		state.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
 	}
 
 	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
@@ -435,6 +409,7 @@ func (r *resourceCatalog) Update(ctx context.Context, req resource.UpdateRequest
 		!plan.Description.Equal(state.Description) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.FederatedCatalog.Equal(state.FederatedCatalog) ||
+		!plan.TargetRedshiftCatalog.Equal(state.TargetRedshiftCatalog) ||
 		!plan.CatalogProperties.Equal(state.CatalogProperties) {
 		resp.Diagnostics.AddError(
 			"Update Not Supported",
@@ -603,16 +578,18 @@ func resolveCatalogID(catalogId, name string) string {
 
 type resourceCatalogModel struct {
 	framework.WithRegionModel
-	ARN               types.String                                            `tfsdk:"arn"`
-	CatalogId         types.String                                            `tfsdk:"catalog_id"`
-	CatalogProperties fwtypes.ListNestedObjectValueOf[catalogPropertiesModel] `tfsdk:"catalog_properties"`
-	Description       types.String                                            `tfsdk:"description"`
-	FederatedCatalog  fwtypes.ListNestedObjectValueOf[federatedCatalogModel]  `tfsdk:"federated_catalog"`
-	ID                types.String                                            `tfsdk:"id"`
-	Name              types.String                                            `tfsdk:"name"`
-	Tags              tftags.Map                                              `tfsdk:"tags"`
-	TagsAll           tftags.Map                                              `tfsdk:"tags_all"`
-	Timeouts          timeouts.Value                                          `tfsdk:"timeouts"`
+	AllowFullTableExternalDataAccess types.Bool                                                  `tfsdk:"allow_full_table_external_data_access"`
+	ARN                              types.String                                                `tfsdk:"arn"`
+	CatalogId                        types.String                                                `tfsdk:"catalog_id"`
+	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]     `tfsdk:"catalog_properties"`
+	Description                      types.String                                                `tfsdk:"description"`
+	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]      `tfsdk:"federated_catalog"`
+	ID                               types.String                                                `tfsdk:"id"`
+	Name                             types.String                                                `tfsdk:"name"`
+	Tags                             tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                          tftags.Map                                                  `tfsdk:"tags_all"`
+	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel] `tfsdk:"target_redshift_catalog"`
+	Timeouts                         timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type federatedCatalogModel struct {
@@ -620,13 +597,26 @@ type federatedCatalogModel struct {
 	Identifier     types.String `tfsdk:"identifier"`
 }
 
+type targetRedshiftCatalogModel struct {
+	CatalogArn types.String `tfsdk:"catalog_arn"`
+}
+
 type catalogPropertiesModel struct {
-	DataLakeAccessProperties fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel] `tfsdk:"data_lake_access_properties"`
+	CustomProperties              fwtypes.MapValueOf[types.String]                                    `tfsdk:"custom_properties" autoflex:",omitempty"`
+	DataLakeAccessProperties      fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel]      `tfsdk:"data_lake_access_properties" autoflex:",omitempty"`
+	IcebergOptimizationProperties fwtypes.ListNestedObjectValueOf[icebergOptimizationPropertiesModel] `tfsdk:"iceberg_optimization_properties" autoflex:",omitempty"`
 }
 
 type dataLakeAccessPropertiesModel struct {
-	CatalogType      types.String `tfsdk:"catalog_type"`
+	CatalogType      types.String `tfsdk:"catalog_type" autoflex:",omitempty"`
 	DataLakeAccess   types.Bool   `tfsdk:"data_lake_access"`
-	DataTransferRole types.String `tfsdk:"data_transfer_role"`
-	KmsKey           types.String `tfsdk:"kms_key"`
+	DataTransferRole types.String `tfsdk:"data_transfer_role" autoflex:",omitempty"`
+	KmsKey           types.String `tfsdk:"kms_key" autoflex:",omitempty"`
+}
+
+type icebergOptimizationPropertiesModel struct {
+	Compaction         fwtypes.MapValueOf[types.String] `tfsdk:"compaction" autoflex:",omitempty"`
+	OrphanFileDeletion fwtypes.MapValueOf[types.String] `tfsdk:"orphan_file_deletion" autoflex:",omitempty"`
+	Retention          fwtypes.MapValueOf[types.String] `tfsdk:"retention" autoflex:",omitempty"`
+	RoleArn            types.String                     `tfsdk:"role_arn" autoflex:",omitempty"`
 }

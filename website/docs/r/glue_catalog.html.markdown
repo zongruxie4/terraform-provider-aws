@@ -143,6 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `allow_full_table_external_data_access` - (Optional) Allows third-party engines to access data in Amazon S3 locations registered with Lake Formation. Used for Lake Formation external data access control.
 * `catalog_id` - (Optional) ID of the catalog. If omitted, this defaults to the AWS Account ID.
 * `description` - (Optional) Description of the federated catalog.
 * `federated_catalog` - (Optional) Configuration block for federated catalog parameters. See [federated_catalog](#federated_catalog) below.
@@ -156,7 +157,9 @@ The following arguments are optional:
 
 ### catalog_properties
 
+* `custom_properties` - (Optional) Map of custom key-value properties for the catalog, such as column statistics optimizations.
 * `data_lake_access_properties` - (Optional) Configuration block for data lake access properties. See [data_lake_access_properties](#data_lake_access_properties) below.
+* `iceberg_optimization_properties` - (Optional) Configuration block for Iceberg table optimization properties. See [iceberg_optimization_properties](#iceberg_optimization_properties) below.
 
 ### data_lake_access_properties
 
@@ -164,6 +167,13 @@ The following arguments are optional:
 * `data_lake_access` - (Optional) Whether to enable data lake access for the catalog.
 * `data_transfer_role` - (Optional) ARN of the IAM role for data transfer operations.
 * `kms_key` - (Optional) KMS key for encryption.
+
+### iceberg_optimization_properties
+
+* `compaction` - (Optional) Map of configuration parameters for Iceberg table compaction operations.
+* `orphan_file_deletion` - (Optional) Map of configuration parameters for Iceberg orphan file deletion operations.
+* `retention` - (Optional) Map of configuration parameters for Iceberg table retention operations.
+* `role_arn` - (Optional) ARN of the IAM role for performing Iceberg table optimization operations.
 
 ## Attribute Reference
 
