@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * resource/aws_securityhub_action_target: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_configuration_policy: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_configuration_policy_association: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_securityhub_configuration_policy_association: Add support for `SELF_MANAGED_SECURITY_HUB` as a `policy_id` value ([#47078](https://github.com/hashicorp/terraform-provider-aws/issues/47078))
 * resource/aws_securityhub_finding_aggregator: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_finding_aggregator: Add `arn` attribute ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_insight: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
