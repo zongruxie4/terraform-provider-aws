@@ -134,8 +134,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute.
-For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -161,8 +160,7 @@ resource "aws_ec2_network_insights_access_scope" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Insights Access Scopes using the `id`.
-For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Insights Access Scopes using the `id`. For example:
 
 ```terraform
 import {
@@ -171,8 +169,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Network Insights Access Scopes using the `id`.
-For example:
+Using `terraform import`, import Network Insights Access Scopes using the `id`. For example:
 
 ```console
 % terraform import aws_ec2_network_insights_access_scope.example nis-0a1b2c3d4e5f6g7h8
