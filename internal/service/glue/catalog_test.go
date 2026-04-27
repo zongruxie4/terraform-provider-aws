@@ -190,6 +190,45 @@ func testAccCatalog_catalogProperties(t *testing.T) {
 	})
 }
 
+func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var catalog glue.GetCatalogOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogConfig_targetRedshiftCatalog(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogExists(ctx, t, resourceName, &catalog),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, "target_redshift_catalog.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_redshift_catalog.0.catalog_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCatalog_configurationError(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -477,4 +516,31 @@ resource "aws_glue_catalog" "test" {
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2),
 	)
+}
+
+func testAccCatalogConfig_targetRedshiftCatalog(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog" "target" {
+  name = "%[1]s-target"
+
+  catalog_properties {
+    data_lake_access_properties {
+      catalog_type     = "aws:redshift"
+      data_lake_access = true
+    }
+  }
+}
+
+resource "aws_glue_catalog" "test" {
+  name = %[1]q
+
+  target_redshift_catalog {
+    catalog_arn = aws_glue_catalog.target.arn
+  }
+}
+`, rName)
 }

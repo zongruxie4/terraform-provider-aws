@@ -20,6 +20,7 @@ func TestAccGlue_serial(t *testing.T) {
 			"configurationError":           testAccCatalog_configurationError,
 			"Disappears_catalogProperties": testAccCatalog_Disappears_catalogProperties,
 			"tags":                         testAccCatalog_tags,
+			"targetRedshiftCatalog":        testAccCatalog_targetRedshiftCatalog,
 		},
 		"CatalogDataSource": {
 			acctest.CtBasic: testAccCatalogDataSource_basic,
