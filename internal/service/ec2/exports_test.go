@@ -319,6 +319,9 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 type (
