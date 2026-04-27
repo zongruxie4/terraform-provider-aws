@@ -36,11 +36,6 @@ resource "aws_route53_record" "test" {
   zone_id = data.aws_route53_zone.test.zone_id
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "domainName" {
   type     = string

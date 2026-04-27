@@ -27,7 +27,6 @@ func TestAccACMCertificateValidation_Identity_basic(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -42,9 +41,8 @@ func TestAccACMCertificateValidation_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, t, resourceName),
@@ -67,7 +65,6 @@ func TestAccACMCertificateValidation_Identity_regionOverride(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -82,10 +79,9 @@ func TestAccACMCertificateValidation_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
+					"region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -105,7 +101,6 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_basic(t *testing.
 	resourceName := "aws_acm_certificate_validation.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -119,9 +114,8 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_basic(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/basic_v6.42.0/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, t, resourceName),
@@ -135,9 +129,8 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_basic(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateValidation/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, t, resourceName),
@@ -167,7 +160,6 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_noRefreshNoChange
 	resourceName := "aws_acm_certificate_validation.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -181,9 +173,8 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_noRefreshNoChange
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/basic_v6.42.0/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, t, resourceName),
@@ -197,9 +188,8 @@ func TestAccACMCertificateValidation_Identity_ExistingResource_noRefreshNoChange
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateValidation/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domainName":    config.StringVariable(domainName),
-					"rootDomain":    config.StringVariable(rootDomain),
+					"domainName": config.StringVariable(domainName),
+					"rootDomain": config.StringVariable(rootDomain),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
