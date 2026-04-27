@@ -1948,58 +1948,6 @@ resource "aws_vpc" "test" {
 `
 }
 
-func TestIsUnauthorizedError(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			name:     "UnauthorizedOperation error",
-			err:      fmt.Errorf("UnauthorizedOperation: You are not authorized to perform this operation"),
-			expected: true,
-		},
-		{
-			name:     "AccessDenied error",
-			err:      fmt.Errorf("AccessDenied: Access denied"),
-			expected: true,
-		},
-		{
-			name:     "not authorized error",
-			err:      fmt.Errorf("User is not authorized to perform action"),
-			expected: true,
-		},
-		{
-			name:     "nil error",
-			err:      nil,
-			expected: false,
-		},
-		{
-			name:     "other error",
-			err:      fmt.Errorf("InternalError: An internal error occurred"),
-			expected: false,
-		},
-		{
-			name:     "RequestLimitExceeded error",
-			err:      fmt.Errorf("RequestLimitExceeded: Request limit exceeded"),
-			expected: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := tfec2.IsUnauthorizedError(tc.err)
-			if result != tc.expected {
-				t.Errorf("IsUnauthorizedError(%v) = %v, want %v", tc.err, result, tc.expected)
-			}
-		})
-	}
-}
-
 func testAccVPCSubnetConfig_GuardDutyDependencies_basic() string {
 	return acctest.ConfigCompose(
 		testAccVPCSubnetConfig_GuardDutyDependencies_basic_removed(),

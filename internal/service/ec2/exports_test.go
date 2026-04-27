@@ -323,10 +323,6 @@ var (
 	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
-var (
-	IsUnauthorizedError = isUnauthorizedError
-)
-
 type (
 	GroupIdentifier = groupIdentifier
 	IPProtocol      = ipProtocol
