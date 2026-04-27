@@ -38,6 +38,7 @@ func TestAccACMCertificateValidation_Identity_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/basic/"),
 				ConfigVariables: config.Variables{
@@ -77,6 +78,7 @@ func TestAccACMCertificateValidation_Identity_regionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup in alternate region
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateValidation/region_override/"),
 				ConfigVariables: config.Variables{
