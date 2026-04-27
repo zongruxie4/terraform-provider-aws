@@ -40,7 +40,6 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_basic(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var status arczonalshift.GetAutoshiftObserverNotificationStatusOutput
 	resourceName := "aws_arczonalshift_autoshift_observer_notification_status.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -55,7 +54,7 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_basic(t *testing.T)
 			{
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
+					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
@@ -75,7 +74,6 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_update(t *testing.T
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var status arczonalshift.GetAutoshiftObserverNotificationStatusOutput
 	resourceName := "aws_arczonalshift_autoshift_observer_notification_status.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -90,14 +88,14 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_update(t *testing.T
 			{
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
+					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				),
 			},
 			{
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
+					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.AutoshiftObserverNotificationStatusDisabled)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -116,7 +114,6 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_disappears(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var status arczonalshift.GetAutoshiftObserverNotificationStatusOutput
 	resourceName := "aws_arczonalshift_autoshift_observer_notification_status.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -131,7 +128,7 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_disappears(t *testi
 			{
 				Config: testAccAutoshiftObserverNotificationStatusConfig_basic(string(awstypes.AutoshiftObserverNotificationStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName, &status),
+					testAccCheckAutoshiftObserverNotificationStatusExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarczonalshift.NewAutoshiftObserverNotificationStatusResource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -163,7 +160,7 @@ func testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx context.Context,
 	}
 }
 
-func testAccCheckAutoshiftObserverNotificationStatusExists(ctx context.Context, t *testing.T, name string, status ...*arczonalshift.GetAutoshiftObserverNotificationStatusOutput) resource.TestCheckFunc {
+func testAccCheckAutoshiftObserverNotificationStatusExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -176,13 +173,9 @@ func testAccCheckAutoshiftObserverNotificationStatusExists(ctx context.Context, 
 
 		conn := acctest.ProviderMeta(ctx, t).ARCZonalShiftClient(ctx)
 
-		resp, err := findAutoshiftObserverNotificationStatus(ctx, conn)
+		_, err := findAutoshiftObserverNotificationStatus(ctx, conn)
 		if err != nil {
 			return create.Error(names.ARCZonalShift, create.ErrActionCheckingExistence, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, err)
-		}
-
-		if len(status) > 0 && status[0] != nil {
-			*status[0] = *resp
 		}
 
 		return nil
