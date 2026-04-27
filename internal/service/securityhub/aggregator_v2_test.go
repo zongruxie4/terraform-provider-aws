@@ -6,6 +6,7 @@ package securityhub_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -274,12 +275,9 @@ resource "aws_securityhub_aggregator_v2" "test" {
 }
 
 func testAccAggregatorV2Config_specifiedRegions(regions []string) string {
-	quotedRegions := ""
+	quoted := make([]string, len(regions))
 	for i, r := range regions {
-		if i > 0 {
-			quotedRegions += ", "
-		}
-		quotedRegions += fmt.Sprintf("%q", r)
+		quoted[i] = fmt.Sprintf("%q", r)
 	}
 	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), fmt.Sprintf(`
 resource "aws_securityhub_aggregator_v2" "test" {
@@ -288,7 +286,7 @@ resource "aws_securityhub_aggregator_v2" "test" {
 
   depends_on = [aws_securityhub_account_v2.test]
 }
-`, quotedRegions))
+`, strings.Join(quoted, ", ")))
 }
 
 func testAccAggregatorV2Config_tags1(tagKey1, tagValue1 string) string {
