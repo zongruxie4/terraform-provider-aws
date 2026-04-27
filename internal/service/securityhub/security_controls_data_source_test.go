@@ -26,7 +26,7 @@ func TestAccSecurityHubSecurityControlsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSecurityControlsDataSourceConfig_basic(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_definitions"), tfknownvalue.ListNotEmpty()),
 				},
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccSecurityHubSecurityControlsDataSource_standardsARN(t *testing.T) {
 			{
 				Config: testAccSecurityControlsDataSourceConfig_standardsARN(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_definitions"), tfknownvalue.ListNotEmpty()),
 				},
 			},
 		},
@@ -54,7 +54,6 @@ func TestAccSecurityHubSecurityControlsDataSource_standardsARN(t *testing.T) {
 
 func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -64,7 +63,7 @@ func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *t
 			{
 				Config: testAccSecurityControlsDataSourceConfig_currentRegionAvailability(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownOutputValue("security_control_definitions", tfknownvalue.ListNotEmpty()),
 				},
 			},
 		},
@@ -73,7 +72,6 @@ func TestAccSecurityHubSecurityControlsDataSource_currentRegionAvailability(t *t
 
 func TestAccSecurityHubSecurityControlsDataSource_severityRating(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_securityhub_security_controls.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -83,7 +81,7 @@ func TestAccSecurityHubSecurityControlsDataSource_severityRating(t *testing.T) {
 			{
 				Config: testAccSecurityControlsDataSourceConfig_severityRating(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("security_control_ids"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownOutputValue("security_control_definitions", tfknownvalue.ListNotEmpty()),
 				},
 			},
 		},
@@ -108,16 +106,20 @@ data "aws_securityhub_security_controls" "test" {
 
 func testAccSecurityControlsDataSourceConfig_currentRegionAvailability() string {
 	return `
-data "aws_securityhub_security_controls" "test" {
-  current_region_availability = "AVAILABLE"
+data "aws_securityhub_security_controls" "test" {}
+
+output "security_control_definitions" {
+  value = [for d in data.aws_securityhub_security_controls.test.security_control_definitions : d if d.current_region_availability == "AVAILABLE"]
 }
 `
 }
 
 func testAccSecurityControlsDataSourceConfig_severityRating() string {
 	return `
-data "aws_securityhub_security_controls" "test" {
-  severity_rating = "CRITICAL"
+data "aws_securityhub_security_controls" "test" {}
+
+output "security_control_definitions" {
+  value = [for d in data.aws_securityhub_security_controls.test.security_control_definitions : d if contains(["HIGH", "CRITICAL"], d.severity_rating)]
 }
 `
 }
