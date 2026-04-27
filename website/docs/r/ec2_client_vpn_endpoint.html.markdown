@@ -69,17 +69,17 @@ One of the following arguments must be supplied:
 * `self_service_saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
 * `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
 
-### `client_connect_options` Block reference
+### `client_connect_options` Block Reference
 
 * `enabled` - (Optional) Indicates whether client connect options are enabled. The default is `false` (not enabled).
 * `lambda_function_arn` - (Optional) The Amazon Resource Name (ARN) of the Lambda function used for connection authorization.
 
-### `client_login_banner_options` Block reference
+### `client_login_banner_options` Block Reference
 
 * `banner_text` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
 * `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
 
-### `client_route_enforcement_options` Block reference
+### `client_route_enforcement_options` Block Reference
 
 * `enforced` - (Optional) Enable or disable Client Route Enforcement. The default is `false` (not enabled).
 
