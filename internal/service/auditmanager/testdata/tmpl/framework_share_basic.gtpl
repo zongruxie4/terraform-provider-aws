@@ -1,7 +1,14 @@
+resource "aws_auditmanager_framework_share" "test" {
+{{- template "region" }}
+  destination_account = data.aws_caller_identity.current.account_id
+  destination_region  = var.secondary_region
+  framework_id        = aws_auditmanager_framework.test.id
+}
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_auditmanager_control" "test" {
-{{ template "region" }}
+{{- template "region" }}
   name = var.rName
 
   control_mapping_sources {
@@ -12,7 +19,7 @@ resource "aws_auditmanager_control" "test" {
 }
 
 resource "aws_auditmanager_framework" "test" {
-{{ template "region" }}
+{{- template "region" }}
   name = var.rName
 
   control_sets {
@@ -22,11 +29,4 @@ resource "aws_auditmanager_framework" "test" {
       id = aws_auditmanager_control.test.id
     }
   }
-}
-
-resource "aws_auditmanager_framework_share" "test" {
-{{ template "region" }}
-  destination_account = data.aws_caller_identity.current.account_id
-  destination_region  = var.secondary_region
-  framework_id        = aws_auditmanager_framework.test.id
 }

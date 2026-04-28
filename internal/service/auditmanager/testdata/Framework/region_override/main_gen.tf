@@ -1,19 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_auditmanager_control" "test" {
-
-  region = var.region
-
-  name = var.rName
-
-  control_mapping_sources {
-    source_name          = var.rName
-    source_set_up_option = "Procedural_Controls_Mapping"
-    source_type          = "MANUAL"
-  }
-}
-
 resource "aws_auditmanager_framework" "test" {
 
   region = var.region
@@ -29,6 +16,18 @@ resource "aws_auditmanager_framework" "test" {
   }
 
 
+}
+
+resource "aws_auditmanager_control" "test" {
+  region = var.region
+
+  name = var.rName
+
+  control_mapping_sources {
+    source_name          = var.rName
+    source_set_up_option = "Procedural_Controls_Mapping"
+    source_type          = "MANUAL"
+  }
 }
 
 variable "rName" {

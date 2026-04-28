@@ -1,11 +1,31 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_caller_identity" "current" {
+resource "aws_auditmanager_assessment" "test" {
+  name = var.rName
+
+  assessment_reports_destination {
+    destination      = "s3://${aws_s3_bucket.test.bucket}"
+    destination_type = "S3"
+  }
+
+  framework_id = aws_auditmanager_framework.test.id
+
+  roles {
+    role_arn  = aws_iam_role.test.arn
+    role_type = "PROCESS_OWNER"
+  }
+
+  scope {
+    aws_accounts {
+      id = data.aws_caller_identity.current.account_id
+    }
+  }
+
+
 }
 
 resource "aws_s3_bucket" "test" {
-
   bucket        = var.rName
   force_destroy = true
 }
@@ -29,7 +49,6 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_auditmanager_control" "test" {
-
   name = var.rName
 
   control_mapping_sources {
@@ -40,7 +59,6 @@ resource "aws_auditmanager_control" "test" {
 }
 
 resource "aws_auditmanager_framework" "test" {
-
   name = var.rName
 
   control_sets {
@@ -52,30 +70,7 @@ resource "aws_auditmanager_framework" "test" {
   }
 }
 
-resource "aws_auditmanager_assessment" "test" {
-
-  name = var.rName
-
-  assessment_reports_destination {
-    destination      = "s3://${aws_s3_bucket.test.id}"
-    destination_type = "S3"
-  }
-
-  framework_id = aws_auditmanager_framework.test.id
-
-  roles {
-    role_arn  = aws_iam_role.test.arn
-    role_type = "PROCESS_OWNER"
-  }
-
-  scope {
-    aws_accounts {
-      id = data.aws_caller_identity.current.account_id
-    }
-  }
-
-
-}
+data "aws_caller_identity" "current" {}
 
 variable "rName" {
   description = "Name for resource"

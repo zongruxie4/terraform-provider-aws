@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_auditmanager_control" "test" {
-
   name = var.rName
 
   control_mapping_sources {

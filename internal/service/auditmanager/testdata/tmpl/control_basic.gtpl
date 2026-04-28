@@ -1,5 +1,5 @@
 resource "aws_auditmanager_control" "test" {
-{{ template "region" }}
+{{- template "region" }}
   name = var.rName
 
   control_mapping_sources {

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_auditmanager_control" "test" {
-
   region = var.region
 
   name = var.rName
