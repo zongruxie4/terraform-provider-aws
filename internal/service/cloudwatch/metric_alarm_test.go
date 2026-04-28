@@ -680,6 +680,27 @@ func TestAccCloudWatchMetricAlarm_metricNameUnknown(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricAlarm_missingAttributesTraditional(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricAlarmConfig_missingComparisonOperator(rName),
+				ExpectError: regexache.MustCompile("comparison_operator is required for traditional metric alarms"),
+			},
+			{
+				Config:      testAccMetricAlarmConfig_missingEvaluationPeriods(rName),
+				ExpectError: regexache.MustCompile("evaluation_periods is required for traditional metric alarms"),
+			},
+		},
+	})
+}
+
 func testAccCheckMetricAlarmExists(ctx context.Context, t *testing.T, n string, v *types.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1261,6 +1282,46 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   # "exactly one of" validator rejects it as if metric_name were unset.
   metric_name = aws_cloudwatch_log_metric_filter.test.metric_transformation[0].name
   namespace   = aws_cloudwatch_log_metric_filter.test.metric_transformation[0].namespace
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_missingComparisonOperator(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  evaluation_periods        = 2
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 120
+  statistic                 = "Average"
+  threshold                 = 80
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_missingEvaluationPeriods(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 120
+  statistic                 = "Average"
+  threshold                 = 80
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
 }
 `, rName)
 }
