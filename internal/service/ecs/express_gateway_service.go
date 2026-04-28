@@ -79,9 +79,6 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			},
 			"current_deployment": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
