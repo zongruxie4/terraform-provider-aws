@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -103,7 +104,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckAggregatorV2Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAggregatorV2Config_specifiedRegions([]string{"us-east-1", "eu-west-1"}),
+				Config: testAccAggregatorV2Config_specifiedRegions([]string{endpoints.UsEast1RegionID, endpoints.EuWest1RegionID}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregatorV2Exists(ctx, t, resourceName, &aggregator),
 				),
@@ -123,7 +124,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAggregatorV2Config_specifiedRegions([]string{"us-east-1", "eu-west-1", "ap-southeast-1"}),
+				Config: testAccAggregatorV2Config_specifiedRegions([]string{endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregatorV2Exists(ctx, t, resourceName, &aggregator),
 				),
@@ -264,14 +265,14 @@ resource "aws_securityhub_account_v2" "test" {}
 }
 
 func testAccAggregatorV2Config_basic() string {
-	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), `
+	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), fmt.Sprintf(`
 resource "aws_securityhub_aggregator_v2" "test" {
   region_linking_mode = "SPECIFIED_REGIONS"
-  linked_regions      = ["us-east-1"]
+  linked_regions      = [%[1]q]
 
   depends_on = [aws_securityhub_account_v2.test]
 }
-`)
+`, endpoints.UsEast1RegionID))
 }
 
 func testAccAggregatorV2Config_specifiedRegions(regions []string) string {
@@ -293,7 +294,7 @@ func testAccAggregatorV2Config_tags1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), fmt.Sprintf(`
 resource "aws_securityhub_aggregator_v2" "test" {
   region_linking_mode = "SPECIFIED_REGIONS"
-  linked_regions      = ["us-east-1"]
+  linked_regions      = [%[3]q]
 
   tags = {
     %[1]q = %[2]q
@@ -301,14 +302,14 @@ resource "aws_securityhub_aggregator_v2" "test" {
 
   depends_on = [aws_securityhub_account_v2.test]
 }
-`, tagKey1, tagValue1))
+`, tagKey1, tagValue1, endpoints.UsEast1RegionID))
 }
 
 func testAccAggregatorV2Config_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), fmt.Sprintf(`
 resource "aws_securityhub_aggregator_v2" "test" {
   region_linking_mode = "SPECIFIED_REGIONS"
-  linked_regions      = ["us-east-1"]
+  linked_regions      = [%[5]q]
 
   tags = {
     %[1]q = %[2]q
@@ -317,5 +318,5 @@ resource "aws_securityhub_aggregator_v2" "test" {
 
   depends_on = [aws_securityhub_account_v2.test]
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, tagKey1, tagValue1, tagKey2, tagValue2, endpoints.UsEast1RegionID))
 }
