@@ -5,7 +5,7 @@ package securityhub
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -80,7 +80,7 @@ func (r *aggregatorV2Resource) Create(ctx context.Context, request resource.Crea
 	conn := r.Meta().SecurityHubClient(ctx)
 
 	input := securityhub.CreateAggregatorV2Input{
-		RegionLinkingMode: aws.String(data.RegionLinkingMode.ValueString()),
+		RegionLinkingMode: data.RegionLinkingMode.ValueStringPointer(),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -142,7 +142,7 @@ func (r *aggregatorV2Resource) Read(ctx context.Context, request resource.ReadRe
 	if output.LinkedRegions != nil {
 		sorted := make([]string, len(output.LinkedRegions))
 		copy(sorted, output.LinkedRegions)
-		sort.Strings(sorted)
+		slices.Sort(sorted)
 		regionsList, diags := types.ListValueFrom(ctx, types.StringType, sorted)
 		response.Diagnostics.Append(diags...)
 		data.LinkedRegions = fwtypes.ListValueOf[types.String]{ListValue: regionsList}
@@ -166,8 +166,8 @@ func (r *aggregatorV2Resource) Update(ctx context.Context, request resource.Upda
 
 	if !new.RegionLinkingMode.Equal(old.RegionLinkingMode) || !new.LinkedRegions.Equal(old.LinkedRegions) {
 		input := securityhub.UpdateAggregatorV2Input{
-			AggregatorV2Arn:   aws.String(old.ARN.ValueString()),
-			RegionLinkingMode: aws.String(new.RegionLinkingMode.ValueString()),
+			AggregatorV2Arn:   old.ARN.ValueStringPointer(),
+			RegionLinkingMode: new.RegionLinkingMode.ValueStringPointer(),
 		}
 
 		if !new.LinkedRegions.IsNull() && !new.LinkedRegions.IsUnknown() {
@@ -207,7 +207,7 @@ func (r *aggregatorV2Resource) Delete(ctx context.Context, request resource.Dele
 	conn := r.Meta().SecurityHubClient(ctx)
 
 	input := securityhub.DeleteAggregatorV2Input{
-		AggregatorV2Arn: aws.String(data.ARN.ValueString()),
+		AggregatorV2Arn: data.ARN.ValueStringPointer(),
 	}
 	_, err := conn.DeleteAggregatorV2(ctx, &input)
 
