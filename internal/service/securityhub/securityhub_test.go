@@ -49,6 +49,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:      testAccConfigurationPolicyAssociation_basic,
 			acctest.CtDisappears: testAccConfigurationPolicyAssociation_disappears,
 		},
+		"EnabledStandards": {
+			acctest.CtBasic: testAccEnabledStandardsDataSource_basic,
+		},
 		"FindingAggregator": {
 			acctest.CtBasic:      testAccFindingAggregator_basic,
 			acctest.CtDisappears: testAccFindingAggregator_disappears,
