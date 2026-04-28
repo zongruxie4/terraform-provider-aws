@@ -459,7 +459,7 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 func resourceMetricAlarmCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v any) error {
 	var plan metricAlarmResourceModel
 	if err := tfcty.ToFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
-		return fmt.Errorf("RawPlan to framework model: %w", err)
+		return smarterr.NewError(fmt.Errorf("RawPlan to framework model: %w", err))
 	}
 
 	// Traditional metric alarm validation.
