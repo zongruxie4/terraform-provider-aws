@@ -53,17 +53,18 @@ var kafkaOrARNPattern = `$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("uuid")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetEventSourceMappingOutput")
+// @Testing(importIgnore="last_modified")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.42.0")
 func resourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,
 		ReadWithoutTimeout:   resourceEventSourceMappingRead,
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
