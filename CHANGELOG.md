@@ -2,11 +2,14 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_db_subnet_group` ([#47637](https://github.com/hashicorp/terraform-provider-aws/issues/47637))
 * **New List Resource:** `aws_securityhub_insight` ([#47622](https://github.com/hashicorp/terraform-provider-aws/issues/47622))
+* **New Resource:** `aws_arczonalshift_autoshift_observer_notification_status` ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
 * **New Resource:** `aws_securityhub_account_v2` ([#47356](https://github.com/hashicorp/terraform-provider-aws/issues/47356))
 
 ENHANCEMENTS:
 
+* resource/aws_arczonalshift_autoshift_observer_notification_status: Add resource identity support ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
 * resource/aws_bedrockagentcore_memory_strategy: Support `EPISODIC` as a valid value for `type` ([#47589](https://github.com/hashicorp/terraform-provider-aws/issues/47589))
 * resource/aws_securityhub_action_target: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_configuration_policy: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
@@ -22,9 +25,14 @@ ENHANCEMENTS:
 * resource/aws_securityhub_standards_control_association: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_standards_subscription: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_standards_subscription: Add `arn` attribute ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
+* resource/aws_subnet: Automatically detect and dissociate GuardDuty-managed VPC endpoints during `terraform destroy` when they block subnet deletion ([#46953](https://github.com/hashicorp/terraform-provider-aws/issues/46953))
+* resource/aws_vpc: Automatically detect and remove GuardDuty-managed VPC endpoints and security groups during `terraform destroy` when they block VPC deletion ([#46953](https://github.com/hashicorp/terraform-provider-aws/issues/46953))
 
 BUG FIXES:
 
+* resource/aws_ecs_express_gateway_service: Handles more transient API errors during creation and deletion. ([#47568](https://github.com/hashicorp/terraform-provider-aws/issues/47568))
+* resource/aws_ecs_express_gateway_service: Marks resource for re-creation if it fails while waiting for creation. ([#47568](https://github.com/hashicorp/terraform-provider-aws/issues/47568))
+* resource/aws_ecs_express_gateway_service: Waits until the service is `INACTIVE` instead of `DRAINING`. ([#47568](https://github.com/hashicorp/terraform-provider-aws/issues/47568))
 * resource/aws_globalaccelerator_cross_account_attachment: Fix `runtime error: invalid memory address or nil pointer dereference` panics when removing `resource` blocks ([#47625](https://github.com/hashicorp/terraform-provider-aws/issues/47625))
 * resource/aws_pinpoint_app: Lower minimum of `limits.messages_per_second` from 50 to 1 to match the AWS API. ([#47636](https://github.com/hashicorp/terraform-provider-aws/issues/47636))
 
