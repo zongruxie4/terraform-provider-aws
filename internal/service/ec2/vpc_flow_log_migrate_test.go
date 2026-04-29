@@ -44,6 +44,7 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 				names.AttrSubnetID:     "sn-12345678",
 			},
 			expected: map[string]any{
+				//lintignore:AWSAT003,AWSAT005
 				"log_destination":  "arn:aws:logs:us-east-1:123456789012:log-group:log-group-name",
 				names.AttrSubnetID: "sn-12345678",
 			},
@@ -55,7 +56,7 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 			t.Parallel()
 
 			client := mockClient{
-				region:    "us-east-1",
+				region:    "us-east-1", //lintignore:AWSAT003
 				accountID: acctest.Ct12Digit,
 			}
 
@@ -102,7 +103,7 @@ func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
 	}
 
 	client := mockClient{
-		region:    "us-east-1",
+		region:    "us-east-1", //lintignore:AWSAT003
 		accountID: acctest.Ct12Digit,
 	}
 
