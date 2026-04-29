@@ -1608,9 +1608,9 @@ data "aws_partition" "current" {}
 func testAccVPCFlowLogConfig_upgradeFromV5LogGroupName_current(rName string) string {
 	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
 
   log_destination      = aws_cloudwatch_log_group.test.arn
   log_destination_type = "cloud-watch-logs"
