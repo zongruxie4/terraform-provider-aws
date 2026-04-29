@@ -680,6 +680,12 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceEventSourceMappingFlatten(d, output)...)
+}
+
+func resourceEventSourceMappingFlatten(d *schema.ResourceData, output *lambda.GetEventSourceMappingOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if output.AmazonManagedKafkaEventSourceConfig != nil {
 		if err := d.Set("amazon_managed_kafka_event_source_config", []any{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting amazon_managed_kafka_event_source_config: %s", err)
