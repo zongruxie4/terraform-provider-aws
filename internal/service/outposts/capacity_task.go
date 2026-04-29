@@ -54,6 +54,7 @@ import (
 // @Testing(importIgnore="instances_to_exclude")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="acctest.PreCheckOutpostsOutposts")
+// @Testing(generator=false)
 func newCapacityTaskResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capacityTaskResource{}
 

@@ -17,8 +17,3 @@ resource "aws_outposts_capacity_task" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
