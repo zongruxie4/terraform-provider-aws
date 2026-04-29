@@ -406,6 +406,10 @@ func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) strin
 	return c.RegionalARN(ctx, names.EC2, "vpc-flow-log/"+flowLogID)
 }
 
-func cloudwatchLogGroupARNFromName(ctx context.Context, c *conns.AWSClient, logGroupName string) string {
+func cloudwatchLogGroupARNFromName(ctx context.Context, c regionalARNMaker, logGroupName string) string {
 	return c.RegionalARN(ctx, names.Logs, "log-group:"+logGroupName)
+}
+
+type regionalARNMaker interface {
+	RegionalARN(ctx context.Context, service, resource string) string
 }

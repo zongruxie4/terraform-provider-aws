@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -125,7 +124,7 @@ func flowLogStateUpgradeV0(ctx context.Context, rawState map[string]any, meta an
 
 	name, ok := rawState[names.AttrLogGroupName]
 	if ok && name != "" {
-		c := meta.(*conns.AWSClient)
+		c := meta.(regionalARNMaker)
 
 		rawState["log_destination"] = cloudwatchLogGroupARNFromName(ctx, c, name.(string))
 	}
