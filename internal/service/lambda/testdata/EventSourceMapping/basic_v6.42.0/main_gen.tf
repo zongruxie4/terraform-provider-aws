@@ -54,6 +54,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   runtime       = "nodejs20.x"
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
