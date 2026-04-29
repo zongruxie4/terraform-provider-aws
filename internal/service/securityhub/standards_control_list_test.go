@@ -80,7 +80,7 @@ func testAccStandardsControl_List_includeResource(t *testing.T) {
 	resourceName1 := "aws_securityhub_standards_control.test[0]"
 	identity1 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -135,7 +135,7 @@ func testAccStandardsControl_List_regionOverride(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -159,7 +159,7 @@ func testAccStandardsControl_List_regionOverride(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("standards_control_arn"), tfknownvalue.RegionalARNAlternateRegionRegexp("securityhub", regexache.MustCompile(`.+/1.10`))),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("standards_control_arn"), tfknownvalue.RegionalARNAlternateRegionRegexp("securityhub", regexache.MustCompile(`.+/1.10`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("standards_control_arn"), tfknownvalue.RegionalARNAlternateRegionRegexp("securityhub", regexache.MustCompile(`.+/1.11`))),
 				},
 			},
 
