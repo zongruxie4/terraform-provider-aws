@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_db_subnet_group` ([#47637](https://github.com/hashicorp/terraform-provider-aws/issues/47637))
 * **New List Resource:** `aws_iam_group_policy_attachment` ([#47667](https://github.com/hashicorp/terraform-provider-aws/issues/47667))
+* **New List Resource:** `aws_lambda_event_source_mapping` ([#47686](https://github.com/hashicorp/terraform-provider-aws/issues/47686))
 * **New List Resource:** `aws_securityhub_insight` ([#47622](https://github.com/hashicorp/terraform-provider-aws/issues/47622))
 * **New Resource:** `aws_arczonalshift_autoshift_observer_notification_status` ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
 * **New Resource:** `aws_securityhub_account_v2` ([#47356](https://github.com/hashicorp/terraform-provider-aws/issues/47356))
@@ -13,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_arczonalshift_autoshift_observer_notification_status: Add resource identity support ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
 * resource/aws_bedrockagentcore_memory_strategy: Support `EPISODIC` as a valid value for `type` ([#47589](https://github.com/hashicorp/terraform-provider-aws/issues/47589))
 * resource/aws_iam_group_policy_attachment: Add resource identity support ([#47667](https://github.com/hashicorp/terraform-provider-aws/issues/47667))
+* resource/aws_lambda_event_source_mapping: Add resource identity support ([#47686](https://github.com/hashicorp/terraform-provider-aws/issues/47686))
 * resource/aws_securityhub_action_target: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_configuration_policy: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
 * resource/aws_securityhub_configuration_policy_association: Add Resource Identity support ([#47543](https://github.com/hashicorp/terraform-provider-aws/issues/47543))
@@ -38,6 +40,7 @@ BUG FIXES:
 * resource/aws_ecs_express_gateway_service: Waits until the service is `INACTIVE` instead of `DRAINING`. ([#47568](https://github.com/hashicorp/terraform-provider-aws/issues/47568))
 * resource/aws_globalaccelerator_cross_account_attachment: Fix `runtime error: invalid memory address or nil pointer dereference` panics when removing `resource` blocks ([#47625](https://github.com/hashicorp/terraform-provider-aws/issues/47625))
 * resource/aws_pinpoint_app: Lower minimum of `limits.messages_per_second` from 50 to 1 to match the AWS API. ([#47636](https://github.com/hashicorp/terraform-provider-aws/issues/47636))
+* resource/aws_s3_bucket: Fix bucket creation on third-party S3-compatible APIs (e.g. OVH, Ceph RGW) by handling `MalformedXML` errors during tag-on-create and `CreateBucketConfiguration` operations ([#47530](https://github.com/hashicorp/terraform-provider-aws/issues/47530))
 
 ## 6.42.0 (April 22, 2026)
 
