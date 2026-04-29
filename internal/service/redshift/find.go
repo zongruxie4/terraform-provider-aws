@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	redshiftserverlesstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -955,4 +957,56 @@ func findRedshiftIDCApplicationByARN(ctx context.Context, conn *redshift.Client,
 	}
 
 	return findRedshiftIDCApplication(ctx, conn, &input)
+}
+
+func findNamespaceRegistrationByID(ctx context.Context, redshiftConn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string) (string, error) {
+	if namespaceType == "serverless" {
+		return findServerlessNamespaceRegistrationStatus(ctx, serverlessConn, serverlessNamespaceIdentifier)
+	}
+	return findProvisionedClusterRegistrationStatus(ctx, redshiftConn, provisionedClusterIdentifier)
+}
+
+func findServerlessNamespaceRegistrationStatus(ctx context.Context, conn *redshiftserverless.Client, namespaceIdentifier string) (string, error) {
+	output, err := conn.GetNamespace(ctx, &redshiftserverless.GetNamespaceInput{
+		NamespaceName: aws.String(namespaceIdentifier),
+	})
+	if err != nil {
+		if errs.IsA[*redshiftserverlesstypes.ResourceNotFoundException](err) {
+			return "", &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+		return "", err
+	}
+
+	if output == nil || output.Namespace == nil {
+		return "", &retry.NotFoundError{
+			Message: "empty response",
+		}
+	}
+
+	status := aws.ToString(output.Namespace.LakehouseRegistrationStatus)
+	if status == "" {
+		return "", &retry.NotFoundError{
+			Message: "namespace not registered to Glue Data Catalog",
+		}
+	}
+
+	return status, nil
+}
+
+func findProvisionedClusterRegistrationStatus(ctx context.Context, conn *redshift.Client, clusterIdentifier string) (string, error) {
+	cluster, err := findClusterByID(ctx, conn, clusterIdentifier)
+	if err != nil {
+		return "", err
+	}
+
+	status := aws.ToString(cluster.LakehouseRegistrationStatus)
+	if status == "" {
+		return "", &retry.NotFoundError{
+			Message: "cluster not registered to Glue Data Catalog",
+		}
+	}
+
+	return status, nil
 }

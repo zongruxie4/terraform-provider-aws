@@ -80,6 +80,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newNamespaceRegistrationResource,
+			TypeName: "aws_redshift_namespace_registration",
+			Name:     "Namespace Registration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSnapshotCopyResource,
 			TypeName: "aws_redshift_snapshot_copy",
 			Name:     "Snapshot Copy",
