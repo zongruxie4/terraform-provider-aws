@@ -44,7 +44,7 @@ func TestAccOutpostsCapacityTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "capacity_task_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "outpost_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "instance_pool.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_pool.0.count", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_pool.0.instance_type"),

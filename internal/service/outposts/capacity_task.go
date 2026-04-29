@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/outposts/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -94,7 +94,7 @@ func (r *capacityTaskResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"creation_date": schema.StringAttribute{
+			names.AttrCreationDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -257,10 +257,15 @@ func (r *capacityTaskResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenCapacityTaskToModel(ctx, finalOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, finalOut, &plan, fwflex.WithFieldNamePrefix("CapacityTask")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Manual overrides for fields AutoFlex cannot map:
+	//   - RequestedInstancePools (output) → InstancePool (model) — name mismatch.
+	//   - Failed (*CapacityTaskFailure) → FailureReason (flat string per Q6 = A).
+	plan.InstancePool = flattenInstancePools(ctx, finalOut.RequestedInstancePools)
+	plan.FailureReason = flattenCapacityTaskFailureReason(finalOut.Failed)
 	// Preserve the user-facing outpost_identifier form (ARN or ID).
 	plan.OutpostIdentifier = types.StringValue(userOutpostIdentifier)
 
@@ -291,10 +296,13 @@ func (r *capacityTaskResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenCapacityTaskToModel(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("CapacityTask")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Manual overrides for fields AutoFlex cannot map (see Create for the full rationale):
+	state.InstancePool = flattenInstancePools(ctx, out.RequestedInstancePools)
+	state.FailureReason = flattenCapacityTaskFailureReason(out.Failed)
 	// Preserve the user-facing outpost_identifier form; also preserve instances_to_exclude
 	// (write-only / may be absent on GetCapacityTask) via passive AutoFlex behaviour
 	// (BR-Read-Drift-WriteOnly).
@@ -505,32 +513,10 @@ func findCapacityTaskByTwoPartKey(ctx context.Context, conn *outposts.Client, ou
 	return out, nil
 }
 
-// flattenCapacityTaskToModel is a small wrapper around AutoFlex Flatten that applies the
-// naming prefix "CapacityTask" (so CapacityTaskId ↔ CapacityTaskID, CapacityTaskStatus ↔ Status)
-// and then applies the two manual field mappings AutoFlex cannot handle:
-//   - RequestedInstancePools (output) → InstancePool (model)
-//   - Failed (output)                → FailureReason (model, flat string per Q6=A)
-func flattenCapacityTaskToModel(ctx context.Context, out *outposts.GetCapacityTaskOutput, data *capacityTaskResourceModel) (diags diag.Diagnostics) {
-	// Let AutoFlex do the bulk of the work using the prefix "CapacityTask".
-	diags.Append(fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("CapacityTask"))...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Manual mapping: RequestedInstancePools (output) → InstancePool (model).
-	// StartCapacityTaskInput uses `InstancePools` (which AutoFlex DOES match singular/plural),
-	// but GetCapacityTaskOutput names the round-trip field `RequestedInstancePools`.
-	data.InstancePool = flattenInstancePools(ctx, out.RequestedInstancePools)
-
-	// Manual mapping: Failed (*CapacityTaskFailure) → FailureReason (flat string).
-	// Per Q6 = A we surface only the reason string, not the whole failure object.
-	data.FailureReason = flattenCapacityTaskFailureReason(out.Failed)
-
-	return diags
-}
-
 // flattenInstancePools converts a slice of SDK v2 InstanceTypeCapacity values into the
-// Terraform-side instance_pool list. It cannot fail — the function is total over the input.
+// Terraform-side instance_pool list. Manual flattener because AutoFlex does not have a way
+// to map the output-side `RequestedInstancePools` field onto the model's `InstancePool` field.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenInstancePools(ctx context.Context, apiObjects []awstypes.InstanceTypeCapacity) fwtypes.ListNestedObjectValueOf[instancePoolModel] {
 	if len(apiObjects) == 0 {
 		return fwtypes.NewListNestedObjectValueOfNull[instancePoolModel](ctx)
@@ -548,6 +534,7 @@ func flattenInstancePools(ctx context.Context, apiObjects []awstypes.InstanceTyp
 
 // flattenCapacityTaskFailureReason extracts the flat `failure_reason` from a CapacityTaskFailure.
 // Per Q6 = A, a single string is surfaced (not a structured block). Returns null when no failure.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenCapacityTaskFailureReason(failed *awstypes.CapacityTaskFailure) types.String {
 	if failed == nil || failed.Reason == nil {
 		return types.StringNull()
@@ -572,7 +559,7 @@ func newCapacityTaskFailureError(failed *awstypes.CapacityTaskFailure) error {
 // (BR-ID-Canonicalization).
 func outpostIDFromIdentifier(identifier string) string {
 	// Outpost ARN format: arn:<partition>:outposts:<region>:<account>:outpost/<outpost-id>
-	if strings.HasPrefix(identifier, "arn:") {
+	if arn.IsARN(identifier) {
 		if idx := strings.LastIndex(identifier, "/"); idx >= 0 && idx < len(identifier)-1 {
 			return identifier[idx+1:]
 		}
@@ -599,9 +586,9 @@ func (capacityTaskImportID) Parse(id string) (string, map[string]any, error) {
 
 // capacityTaskResourceModel is the Terraform-side representation of the resource.
 // Field-name alignment with SDK types uses AutoFlex with WithFieldNamePrefix("CapacityTask")
-// during flatten (applied inside flattenCapacityTaskToModel). During Expand, AutoFlex matches
+// during Flatten (called inline from Create and Read). During Expand, AutoFlex matches
 // StartCapacityTaskInput fields directly (no prefix needed). Manual overrides (applied in CRUD
-// handlers / flatten wrapper) cover:
+// handlers alongside the AutoFlex Flatten call) cover:
 //   - OutpostIdentifier  ↔ (preserved from user input; output has OutpostId which doesn't match)
 //   - InstancePool       ↔ RequestedInstancePools (output-only; flattened manually)
 //   - FailureReason      ↔ Failed.Reason (flat-string projection per Q6 = A)
