@@ -3,12 +3,12 @@ subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_security_controls"
 description: |-
-  Lists all of the security controls that apply to a specified standard.
+  Lists security controls.
 ---
 
 # Data Source: aws_securityhub_security_controls
 
-Lists all of the security controls that apply to a specified standard.
+Lists security controls.
 
 ## Example Usage
 
@@ -33,13 +33,13 @@ output "security_control_definitions" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `standards_arn` - (Optional) ARN of the standard that you want to list controls for.
+* `standards_arn` - (Optional) ARN of the standard that you want to list controls for. If omitted, all controls are returned.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `security_control_definitions` - List of controls that apply to the specified standard. See below for details.
+* `security_control_definitions` - List of controls. See below for details.
 
 ### `security_control_definitions`
 
