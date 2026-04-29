@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -117,11 +118,17 @@ func flowLogSchemaV0() *schema.Resource {
 	}
 }
 
-func flowLogStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+func flowLogStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		rawState = map[string]any{}
 	}
 
+	name, ok := rawState[names.AttrLogGroupName]
+	if ok && name != "" {
+		c := meta.(*conns.AWSClient)
+
+		rawState["log_destination"] = cloudwatchLogGroupARNFromName(ctx, c, name.(string))
+	}
 	delete(rawState, names.AttrLogGroupName)
 
 	return rawState, nil
