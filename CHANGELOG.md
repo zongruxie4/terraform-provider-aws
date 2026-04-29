@@ -5,15 +5,21 @@ FEATURES:
 * **New Data Source:** `aws_securityhub_enabled_standards` ([#43947](https://github.com/hashicorp/terraform-provider-aws/issues/43947))
 * **New Data Source:** `aws_securityhub_security_controls` ([#43947](https://github.com/hashicorp/terraform-provider-aws/issues/43947))
 * **New List Resource:** `aws_db_subnet_group` ([#47637](https://github.com/hashicorp/terraform-provider-aws/issues/47637))
+* **New List Resource:** `aws_ec2_network_insights_access_scope` ([#47582](https://github.com/hashicorp/terraform-provider-aws/issues/47582))
 * **New List Resource:** `aws_iam_group_policy_attachment` ([#47667](https://github.com/hashicorp/terraform-provider-aws/issues/47667))
 * **New List Resource:** `aws_lambda_event_source_mapping` ([#47686](https://github.com/hashicorp/terraform-provider-aws/issues/47686))
 * **New List Resource:** `aws_securityhub_insight` ([#47622](https://github.com/hashicorp/terraform-provider-aws/issues/47622))
 * **New Resource:** `aws_arczonalshift_autoshift_observer_notification_status` ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
+* **New Resource:** `aws_ec2_network_insights_access_scope` ([#47582](https://github.com/hashicorp/terraform-provider-aws/issues/47582))
 * **New Resource:** `aws_securityhub_account_v2` ([#47356](https://github.com/hashicorp/terraform-provider-aws/issues/47356))
 
 ENHANCEMENTS:
 
 * resource/aws_arczonalshift_autoshift_observer_notification_status: Add resource identity support ([#46343](https://github.com/hashicorp/terraform-provider-aws/issues/46343))
+* resource/aws_auditmanager_assessment: Add resource identity support ([#47674](https://github.com/hashicorp/terraform-provider-aws/issues/47674))
+* resource/aws_auditmanager_control: Add resource identity support ([#47674](https://github.com/hashicorp/terraform-provider-aws/issues/47674))
+* resource/aws_auditmanager_framework: Add resource identity support ([#47674](https://github.com/hashicorp/terraform-provider-aws/issues/47674))
+* resource/aws_auditmanager_framework_share: Add resource identity support ([#47674](https://github.com/hashicorp/terraform-provider-aws/issues/47674))
 * resource/aws_bedrockagentcore_memory_strategy: Support `EPISODIC` as a valid value for `type` ([#47589](https://github.com/hashicorp/terraform-provider-aws/issues/47589))
 * resource/aws_iam_group_policy_attachment: Add resource identity support ([#47667](https://github.com/hashicorp/terraform-provider-aws/issues/47667))
 * resource/aws_lambda_event_source_mapping: Add resource identity support ([#47686](https://github.com/hashicorp/terraform-provider-aws/issues/47686))
