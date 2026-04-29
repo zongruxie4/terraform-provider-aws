@@ -5,6 +5,7 @@ package arczonalshift
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
@@ -49,25 +50,18 @@ type resourceZonalAutoshiftConfiguration struct {
 func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrResourceARN: schema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
-				Required:    true,
-				Description: "The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"outcome_alarm_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Required:    true,
-				ElementType: types.StringType,
-				Description: "List of CloudWatch alarm ARNs that are monitored during practice runs. These alarms help determine the health of your application during zonal shifts.",
-			},
-			"blocking_alarm_arns": schema.ListAttribute{
+			"allowed_windows": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
-				Description: "List of CloudWatch alarm ARNs that can block practice runs when in alarm state.",
+				Description: "List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows`.",
+				Validators: []validator.List{
+					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("blocked_windows")),
+				},
+			},
+			"autoshift_enabled": schema.BoolAttribute{
+				Required:    true,
+				Description: "Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.",
 			},
 			"blocked_dates": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -84,18 +78,25 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("allowed_windows")),
 				},
 			},
-			"allowed_windows": schema.ListAttribute{
+			"blocking_alarm_arns": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
-				Description: "List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows`.",
-				Validators: []validator.List{
-					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("blocked_windows")),
-				},
+				Description: "List of CloudWatch alarm ARNs that can block practice runs when in alarm state.",
 			},
-			"autoshift_enabled": schema.BoolAttribute{
+			"outcome_alarm_arns": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Required:    true,
-				Description: "Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.",
+				ElementType: types.StringType,
+				Description: "List of CloudWatch alarm ARNs that are monitored during practice runs. These alarms help determine the health of your application during zonal shifts.",
+			},
+			names.AttrResourceARN: schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
+				Description: "The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
@@ -127,7 +128,7 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 	}
 
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output from createPracticeRunConfiguration"), smerr.ID, plan.ResourceARN.String())
 		return
 	}
 
@@ -156,7 +157,7 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 	}
 
 	if out2 == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output from updateZonalAutoshiftConfiguration"), smerr.ID, plan.ResourceARN.String())
 		return
 	}
 
@@ -359,11 +360,11 @@ func findManagedResourceByIdentifier(ctx context.Context, conn *arczonalshift.Cl
 
 type resourceZonalAutoshiftConfigurationModel struct {
 	framework.WithRegionModel
-	ResourceARN       fwtypes.ARN          `tfsdk:"resource_arn"`
-	OutcomeAlarmARNs  fwtypes.ListOfString `tfsdk:"outcome_alarm_arns"`
-	BlockingAlarmARNs fwtypes.ListOfString `tfsdk:"blocking_alarm_arns"`
-	BlockedDates      fwtypes.ListOfString `tfsdk:"blocked_dates"`
-	BlockedWindows    fwtypes.ListOfString `tfsdk:"blocked_windows"`
 	AllowedWindows    fwtypes.ListOfString `tfsdk:"allowed_windows"`
 	AutoshiftEnabled  types.Bool           `tfsdk:"autoshift_enabled"`
+	BlockedDates      fwtypes.ListOfString `tfsdk:"blocked_dates"`
+	BlockedWindows    fwtypes.ListOfString `tfsdk:"blocked_windows"`
+	BlockingAlarmARNs fwtypes.ListOfString `tfsdk:"blocking_alarm_arns"`
+	OutcomeAlarmARNs  fwtypes.ListOfString `tfsdk:"outcome_alarm_arns"`
+	ResourceARN       fwtypes.ARN          `tfsdk:"resource_arn"`
 }
