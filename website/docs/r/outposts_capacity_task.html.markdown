@@ -104,7 +104,7 @@ If a create operation produces a `FAILED` task, the resource is not written to T
 
 ## Import
 
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -141,10 +141,8 @@ import {
 }
 ```
 
-Using `terraform import`, import a Capacity Task using the same composite ID:
+Using `terraform import`, import a Capacity Task using the same composite ID. For example:
 
 ```console
 % terraform import aws_outposts_capacity_task.example op-1234567890abcdef/cap-1a2b3c4d5e6f7g8h9
 ```
-
-**Note:** `instances_to_exclude` is write-only and is not returned by the AWS API. After importing a capacity task, add the `instances_to_exclude` block back to your configuration manually if it was set at creation time — otherwise Terraform will show a drift the first time you plan.
