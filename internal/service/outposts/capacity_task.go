@@ -155,7 +155,7 @@ func (r *capacityTaskResource) Schema(ctx context.Context, req resource.SchemaRe
 								int64validator.AtLeast(1),
 							},
 						},
-						"instance_type": schema.StringAttribute{
+						names.AttrInstanceType: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -350,10 +350,11 @@ func (r *capacityTaskResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 
 	case deleteActionCancelTolerant:
-		if _, err := conn.CancelCapacityTask(ctx, &outposts.CancelCapacityTaskInput{
+		input := outposts.CancelCapacityTaskInput{
 			CapacityTaskId:    aws.String(taskID),
 			OutpostIdentifier: aws.String(outpostID),
-		}); err != nil {
+		}
+		if _, err := conn.CancelCapacityTask(ctx, &input); err != nil {
 			// BR-CancelOn-Failed-Tolerance: tolerate "already in a terminal state" races.
 			if tfawserr.ErrMessageContains(err, "ValidationException", "already in a terminal state") {
 				tflog.Debug(ctx, "tolerated terminal-state CancelCapacityTask race", logFields)
@@ -373,10 +374,11 @@ func (r *capacityTaskResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 
 	case deleteActionCancelAndWait:
-		if _, err := conn.CancelCapacityTask(ctx, &outposts.CancelCapacityTaskInput{
+		input := outposts.CancelCapacityTaskInput{
 			CapacityTaskId:    aws.String(taskID),
 			OutpostIdentifier: aws.String(outpostID),
-		}); err != nil {
+		}
+		if _, err := conn.CancelCapacityTask(ctx, &input); err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "already in a terminal state") {
 				tflog.Debug(ctx, "tolerated terminal-state CancelCapacityTask race during cancel-and-wait", logFields)
 				return
