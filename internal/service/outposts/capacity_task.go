@@ -53,6 +53,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/outposts;outposts.GetCapacityTaskOutput")
 // @Testing(importIgnore="instances_to_exclude")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="acctest.PreCheckOutpostsOutposts")
 func newCapacityTaskResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capacityTaskResource{}
 
