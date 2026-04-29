@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_securityhub_enabled_standards` ([#43947](https://github.com/hashicorp/terraform-provider-aws/issues/43947))
+* **New Data Source:** `aws_securityhub_security_controls` ([#43947](https://github.com/hashicorp/terraform-provider-aws/issues/43947))
 * **New List Resource:** `aws_db_subnet_group` ([#47637](https://github.com/hashicorp/terraform-provider-aws/issues/47637))
 * **New List Resource:** `aws_iam_group_policy_attachment` ([#47667](https://github.com/hashicorp/terraform-provider-aws/issues/47667))
 * **New List Resource:** `aws_lambda_event_source_mapping` ([#47686](https://github.com/hashicorp/terraform-provider-aws/issues/47686))
