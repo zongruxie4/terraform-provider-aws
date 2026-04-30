@@ -126,7 +126,8 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 										Optional: true,
 									},
 									"data_transfer_role": schema.StringAttribute{
-										Optional: true,
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
 									},
 									names.AttrKMSKey: schema.StringAttribute{
 										Optional: true,
@@ -158,7 +159,8 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 										ElementType: types.StringType,
 									},
 									names.AttrRoleARN: schema.StringAttribute{
-										Optional: true,
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
 									},
 								},
 							},
@@ -190,7 +192,8 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"catalog_arn": schema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.ARNType,
+							Required:   true,
 						},
 					},
 				},
@@ -301,7 +304,7 @@ func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest
 
 	if catalog.TargetRedshiftCatalog != nil {
 		plan.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
-			CatalogArn: fwflex.StringToFramework(ctx, catalog.TargetRedshiftCatalog.CatalogArn),
+			CatalogArn: fwtypes.ARNValue(aws.ToString(catalog.TargetRedshiftCatalog.CatalogArn)),
 		})
 	}
 
@@ -375,7 +378,7 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 	// Flatten TargetRedshiftCatalog
 	if out.TargetRedshiftCatalog != nil {
 		state.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
-			CatalogArn: fwflex.StringToFramework(ctx, out.TargetRedshiftCatalog.CatalogArn),
+			CatalogArn: fwtypes.ARNValue(aws.ToString(out.TargetRedshiftCatalog.CatalogArn)),
 		})
 	}
 
@@ -617,7 +620,7 @@ type federatedCatalogModel struct {
 }
 
 type targetRedshiftCatalogModel struct {
-	CatalogArn types.String `tfsdk:"catalog_arn"`
+	CatalogArn fwtypes.ARN `tfsdk:"catalog_arn"`
 }
 
 type catalogPropertiesModel struct {
@@ -629,7 +632,7 @@ type catalogPropertiesModel struct {
 type dataLakeAccessPropertiesModel struct {
 	CatalogType      types.String `tfsdk:"catalog_type" autoflex:",omitempty"`
 	DataLakeAccess   types.Bool   `tfsdk:"data_lake_access"`
-	DataTransferRole types.String `tfsdk:"data_transfer_role" autoflex:",omitempty"`
+	DataTransferRole fwtypes.ARN  `tfsdk:"data_transfer_role" autoflex:",omitempty"`
 	KmsKey           types.String `tfsdk:"kms_key" autoflex:",omitempty"`
 }
 
@@ -637,5 +640,5 @@ type icebergOptimizationPropertiesModel struct {
 	Compaction         fwtypes.MapValueOf[types.String] `tfsdk:"compaction" autoflex:",omitempty"`
 	OrphanFileDeletion fwtypes.MapValueOf[types.String] `tfsdk:"orphan_file_deletion" autoflex:",omitempty"`
 	Retention          fwtypes.MapValueOf[types.String] `tfsdk:"retention" autoflex:",omitempty"`
-	RoleArn            types.String                     `tfsdk:"role_arn" autoflex:",omitempty"`
+	RoleArn            fwtypes.ARN                      `tfsdk:"role_arn" autoflex:",omitempty"`
 }
