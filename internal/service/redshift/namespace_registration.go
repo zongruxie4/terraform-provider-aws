@@ -14,6 +14,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	redshiftserverlesstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,8 +27,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-
-	"github.com/hashicorp/terraform-plugin-framework/path"
 )
 
 const (
@@ -148,7 +147,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 			namespaceID = aws.ToString(namespace.Namespace.NamespaceId)
 		}
 
-		_, err = waitInternalDataShareCreated(ctx, conn,
+		err = waitInternalDataShareCreated(ctx, conn,
 			namespaceID,
 			r.Meta().AccountID(ctx),
 			r.Meta().Region(ctx),
@@ -176,7 +175,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 		}
 		namespaceID := parts[6]
 
-		_, err = waitInternalDataShareCreated(ctx, conn,
+		err = waitInternalDataShareCreated(ctx, conn,
 			namespaceID,
 			r.Meta().AccountID(ctx),
 			r.Meta().Region(ctx),
