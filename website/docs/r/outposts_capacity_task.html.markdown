@@ -32,9 +32,14 @@ resource "aws_outposts_capacity_task" "example" {
 ### Multiple instance pools, excluded instances, and a specified blocking-instance action
 
 ```terraform
+data "aws_outposts_assets" "example" {
+  arn = "arn:aws:outposts:us-west-2:123456789012:outpost/op-1234567890abcdef"
+}
+
 resource "aws_outposts_capacity_task" "example" {
   outpost_identifier                = "op-1234567890abcdef"
   task_action_on_blocking_instances = "WAIT_FOR_EVACUATION"
+  asset_id                          = data.aws_outposts_assets.example.asset_ids[0]
 
   instance_pool {
     instance_type = "m5.large"
@@ -65,9 +70,10 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `outpost_identifier` - (Required) ID or ARN of the Outpost on which to run the capacity task. Both forms are accepted; the provider normalizes the value internally. Changing this value forces a new resource.
 * `instance_pool` - (Required) One or more `instance_pool` blocks defining the desired instance-type layout for the Outpost. See [below](#instance_pool). At least one block is required. Changing any value forces a new resource.
+* `asset_id` - (Optional) ID of a specific Outposts asset (hardware server) to target for the capacity task. If omitted, AWS selects an appropriate asset automatically. Discover valid asset IDs with the [`aws_outposts_assets`](../d/outposts_assets.html.markdown) data source. Changing this value forces a new resource.
+* `instances_to_exclude` - (Optional) Single `instances_to_exclude` block specifying user-owned running instances that must not be stopped to free up capacity. See [below](#instances_to_exclude). Note: AWS does not return this value via the Get/Describe API; after import, you must add the block back to your configuration manually — see [Import](#import).
 * `order_id` - (Optional) ID of the Amazon Web Services Outposts order associated with the capacity task. Changing this value forces a new resource.
 * `task_action_on_blocking_instances` - (Optional) Action to take if running instances block the capacity task. Valid values are `WAIT_FOR_EVACUATION` and `FAIL_TASK`. Changing this value forces a new resource.
-* `instances_to_exclude` - (Optional) Single `instances_to_exclude` block specifying user-owned running instances that must not be stopped to free up capacity. See [below](#instances_to_exclude). Note: AWS does not return this value via the Get/Describe API; after import, you must add the block back to your configuration manually — see [Import](#import).
 * `timeouts` - (Optional) Configuration block with timeouts. See [below](#timeouts).
 
 ### instance_pool

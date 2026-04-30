@@ -205,6 +205,45 @@ func TestAccOutpostsCapacityTask_multipleInstancePools(t *testing.T) {
 	})
 }
 
+func TestAccOutpostsCapacityTask_assetId(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var capacityTask outposts.GetCapacityTaskOutput
+	resourceName := "aws_outposts_capacity_task.test"
+	assetsDataSourceName := "data.aws_outposts_assets.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOutpostsOutposts(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityTaskDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityTaskConfig_assetId(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityTaskExists(ctx, t, resourceName, &capacityTask),
+					resource.TestCheckResourceAttrSet(resourceName, "asset_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "asset_id", assetsDataSourceName, "asset_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_pool.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instances_to_exclude"},
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityTaskDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OutpostsClient(ctx)
@@ -336,6 +375,24 @@ resource "aws_outposts_capacity_task" "test" {
 
   instance_pool {
     instance_type = tolist(data.aws_outposts_outpost_instance_types.test.instance_types)[1]
+    count         = 1
+  }
+}
+`)
+}
+
+func testAccCapacityTaskConfig_assetId() string {
+	return acctest.ConfigCompose(testAccCapacityTaskConfig_base(), `
+data "aws_outposts_assets" "test" {
+  arn = tolist(data.aws_outposts_outposts.test.arns)[0]
+}
+
+resource "aws_outposts_capacity_task" "test" {
+  outpost_identifier = tolist(data.aws_outposts_outposts.test.arns)[0]
+  asset_id           = data.aws_outposts_assets.test.asset_ids[0]
+
+  instance_pool {
+    instance_type = tolist(data.aws_outposts_outpost_instance_types.test.instance_types)[0]
     count         = 1
   }
 }

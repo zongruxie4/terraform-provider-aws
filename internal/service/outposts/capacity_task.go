@@ -81,6 +81,17 @@ type capacityTaskResource struct {
 func (r *capacityTaskResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"asset_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+			},
 			"capacity_task_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -596,6 +607,7 @@ func (capacityTaskImportID) Parse(id string) (string, map[string]any, error) {
 //   - FailureReason      ↔ Failed.Reason (flat-string projection per Q6 = A)
 type capacityTaskResourceModel struct {
 	framework.WithRegionModel
+	AssetID                       types.String                                               `tfsdk:"asset_id"`
 	CapacityTaskID                types.String                                               `tfsdk:"capacity_task_id"`
 	CompletionDate                timetypes.RFC3339                                          `tfsdk:"completion_date"`
 	CreationDate                  timetypes.RFC3339                                          `tfsdk:"creation_date"`
