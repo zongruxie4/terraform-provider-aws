@@ -89,39 +89,14 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			// missing "overwrite_child_resource_permissions_with_default"
+			// missing "parameters"
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"federated_catalog": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[federatedCatalogModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"connection_name": schema.StringAttribute{
-							Optional: true,
-						},
-						names.AttrIdentifier: schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"target_redshift_catalog": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"catalog_arn": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
+			// missing "create_database_default_permissions"
+			// missing "create_table_default_permissions"
 			"catalog_properties": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[catalogPropertiesModel](ctx),
 				Validators: []validator.List{
@@ -132,6 +107,7 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 						"custom_properties": schema.MapAttribute{
 							CustomType:  fwtypes.MapOfStringType,
 							Optional:    true,
+							Computed:    true,
 							ElementType: types.StringType,
 						},
 					},
@@ -154,6 +130,7 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 									},
 									names.AttrKMSKey: schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -185,6 +162,35 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"federated_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[federatedCatalogModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"connection_name": schema.StringAttribute{
+							Optional: true,
+						},
+						names.AttrIdentifier: schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+			"target_redshift_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"catalog_arn": schema.StringAttribute{
+							Required: true,
 						},
 					},
 				},
@@ -373,14 +379,22 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 		})
 	}
 
-	// Flatten CatalogProperties only if it was in the original config
-	if !state.CatalogProperties.IsNull() && out.CatalogProperties != nil {
+	// Flatten CatalogProperties
+	if out.CatalogProperties != nil {
 		catalogPropsModel := catalogPropertiesModel{}
 		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.CatalogProperties, &catalogPropsModel)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		state.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
+
+		// Only set catalog_properties if it has actual content
+		hasContent := !catalogPropsModel.CustomProperties.IsNull() ||
+			!catalogPropsModel.DataLakeAccessProperties.IsNull() ||
+			!catalogPropsModel.IcebergOptimizationProperties.IsNull()
+
+		if hasContent {
+			state.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
+		}
 	}
 
 	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
@@ -440,17 +454,21 @@ func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	catalogId, name, err := readCatalogResourceID(state.ID.ValueString())
+	_, name, err := readCatalogResourceID(state.ID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
 	input := glue.DeleteCatalogInput{
-		CatalogId: aws.String(resolveCatalogID(catalogId, name)),
+		CatalogId: aws.String(name),
 	}
 
-	_, err = conn.DeleteCatalog(ctx, &input)
+	const deleteTimeout = 5 * time.Minute
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, deleteTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteCatalog(ctx, &input)
+		})
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return
@@ -468,13 +486,14 @@ func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
-	catalogId, name, err := readCatalogResourceID(id)
+	_, name, err := readCatalogResourceID(id)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
+	// For GetCatalog API, CatalogId should be the catalog name
 	input := glue.GetCatalogInput{
-		CatalogId: aws.String(catalogId),
+		CatalogId: aws.String(name),
 	}
 
 	out, err := conn.GetCatalog(ctx, &input)
