@@ -6,7 +6,6 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -321,7 +320,7 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 	})
 }
 
-func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
+func TestAccSecretsManagerSecretVersion_StringWriteOnly_changeWOVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -365,6 +364,47 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_StringWriteOnly_sameWOVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret2", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
