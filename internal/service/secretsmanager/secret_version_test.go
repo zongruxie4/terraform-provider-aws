@@ -488,6 +488,11 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesMultiple(rName, "test-secret", 1),
@@ -499,6 +504,11 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
