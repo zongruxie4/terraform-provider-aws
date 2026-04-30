@@ -133,6 +133,137 @@ resource "aws_glue_catalog" "redshift_example" {
 }
 ```
 
+### Redshift Serverless Federated Catalog
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "redshift_serverless" {
+  name = "glue-redshift-serverless-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "lakeformation.amazonaws.com",
+            "glue.amazonaws.com",
+            "redshift.amazonaws.com"
+          ]
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:SetSourceIdentity",
+          "sts:SetContext"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "redshift_serverless" {
+  name = "redshift-serverless-policy"
+  role = aws_iam_role.redshift_serverless.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "redshift-serverless:GetCredentials",
+          "redshift-serverless:GetWorkgroup"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_redshiftserverless_namespace" "example" {
+  namespace_name = "example-namespace"
+  db_name        = "example"
+}
+
+resource "aws_redshiftserverless_workgroup" "example" {
+  namespace_name = aws_redshiftserverless_namespace.example.namespace_name
+  workgroup_name = "example-workgroup"
+}
+
+# Register the namespace to create an internal data share
+resource "aws_redshift_namespace_registration" "example" {
+  consumer_identifier             = "DataCatalog/${data.aws_caller_identity.current.account_id}"
+  namespace_type                  = "serverless"
+  serverless_namespace_identifier = aws_redshiftserverless_namespace.example.namespace_id
+  serverless_workgroup_identifier = aws_redshiftserverless_workgroup.example.workgroup_name
+}
+
+locals {
+  data_share_arn = "arn:${data.aws_partition.current.partition}:redshift:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:datashare:${aws_redshiftserverless_namespace.example.namespace_id}/ds_internal_namespace"
+}
+
+# Associate the data share with the Glue catalog
+resource "aws_redshift_data_share_consumer_association" "example" {
+  data_share_arn = local.data_share_arn
+  consumer_arn   = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+
+  depends_on = [aws_redshift_namespace_registration.example]
+}
+
+# Register the data share with Lake Formation
+resource "aws_lakeformation_resource" "example" {
+  arn                     = local.data_share_arn
+  use_service_linked_role = false
+
+  depends_on = [aws_redshift_data_share_consumer_association.example]
+}
+
+# Create the federated catalog pointing to the data share
+resource "aws_glue_catalog" "federated" {
+  name = "redshift-federated-catalog"
+
+  catalog_properties {
+    data_lake_access_properties {
+      data_lake_access   = true
+      data_transfer_role = aws_iam_role.redshift_serverless.arn
+    }
+  }
+
+  federated_catalog {
+    identifier      = local.data_share_arn
+    connection_name = "aws:redshift"
+  }
+
+  depends_on = [
+    aws_redshift_namespace_registration.example,
+    aws_lakeformation_resource.example,
+    aws_iam_role_policy.redshift_serverless
+  ]
+}
+
+# Create a target catalog that links to the federated catalog
+resource "aws_glue_catalog" "target" {
+  name = "redshift-target-catalog"
+
+  target_redshift_catalog {
+    catalog_arn = "${aws_glue_catalog.federated.arn}/${aws_redshiftserverless_namespace.example.db_name}"
+  }
+
+  catalog_properties {
+    data_lake_access_properties {
+      data_lake_access   = true
+      data_transfer_role = aws_iam_role.redshift_serverless.arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.redshift_serverless]
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
