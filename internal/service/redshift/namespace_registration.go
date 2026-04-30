@@ -150,6 +150,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 			namespaceID,
 			r.Meta().AccountID(ctx),
 			r.Meta().Region(ctx),
+			r.Meta().Partition(ctx),
 			namespaceRegistrationInvalidClusterStateFaultTimeout)
 		if err != nil {
 			response.Diagnostics.AddError("waiting for Redshift internal data share creation", err.Error())
@@ -177,6 +178,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 			namespaceID,
 			r.Meta().AccountID(ctx),
 			r.Meta().Region(ctx),
+			r.Meta().Partition(ctx),
 			namespaceRegistrationInvalidClusterStateFaultTimeout)
 		if err != nil {
 			response.Diagnostics.AddError("waiting for Redshift internal data share creation", err.Error())
@@ -253,7 +255,7 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 	}
 
 	// Verify registration by checking for the internal data share
-	_, err = findInternalDataShareByNamespaceID(ctx, conn, namespaceID, r.Meta().AccountID(ctx), r.Meta().Region(ctx))
+	_, err = findInternalDataShareByNamespaceID(ctx, conn, namespaceID, r.Meta().AccountID(ctx), r.Meta().Region(ctx), r.Meta().Partition(ctx))
 	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return

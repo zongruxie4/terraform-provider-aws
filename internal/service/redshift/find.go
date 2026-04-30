@@ -996,9 +996,14 @@ func findProvisionedCluster(ctx context.Context, conn *redshift.Client, clusterI
 	return err
 }
 
-func findInternalDataShareByNamespaceID(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region string) (*awstypes.DataShare, error) {
-	dataShareARN := fmt.Sprintf("arn:aws:redshift:%s:%s:datashare:%s/ds_internal_namespace",
-		region, accountID, namespaceID)
+func findInternalDataShareByNamespaceID(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region, partition string) (*awstypes.DataShare, error) {
+	dataShareARN := arn.ARN{
+		Partition: partition,
+		Service:   "redshift",
+		Region:    region,
+		AccountID: accountID,
+		Resource:  fmt.Sprintf("datashare:%s/ds_internal_namespace", namespaceID),
+	}.String()
 
 	input := &redshift.DescribeDataSharesInput{
 		DataShareArn: aws.String(dataShareARN),
