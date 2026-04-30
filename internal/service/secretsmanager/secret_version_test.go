@@ -36,7 +36,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_string(rName),
+				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -204,7 +204,7 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_string(rName),
+				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName),
@@ -230,7 +230,7 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_string(rName),
+				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
@@ -346,7 +346,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 				),
 			},
 			{
-				Config: testAccSecretVersionConfig_string(rName),
+				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -535,7 +535,7 @@ func testAccCheckSecretVersionWriteOnlyStagesEqual(t *testing.T, param *secretsm
 	}
 }
 
-func testAccSecretVersionConfig_string(rName string) string {
+func testAccSecretVersionConfig_string(rName, secret string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -543,9 +543,9 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = "test-string"
+  secret_string = %[2]q
 }
-`, rName)
+`, rName, secret)
 }
 
 func testAccSecretVersionConfig_stringWriteOnly(rName, secret string, version int) string {
