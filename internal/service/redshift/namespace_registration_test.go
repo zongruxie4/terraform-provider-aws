@@ -31,7 +31,6 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 				Config: testAccNamespaceRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 		},
@@ -53,7 +52,6 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 				Config: testAccNamespaceRegistrationConfig_cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 		},

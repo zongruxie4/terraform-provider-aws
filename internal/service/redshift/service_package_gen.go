@@ -84,9 +84,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_redshift_namespace_registration",
 			Name:     "Namespace Registration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("consumer_identifier", true),
+				inttypes.StringIdentityAttribute("namespace_type", true),
+				inttypes.StringIdentityAttribute("serverless_namespace_identifier", false),
+				inttypes.StringIdentityAttribute("serverless_workgroup_identifier", false),
+				inttypes.StringIdentityAttribute("provisioned_cluster_identifier", false),
+			}),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
+				ImportID:      namespaceRegistrationImportID{},
+				SetIDAttr:     true,
 			},
 		},
 		{

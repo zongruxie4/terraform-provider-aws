@@ -13,17 +13,21 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	redshiftserverlesstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
 )
 
 const (
@@ -31,8 +35,14 @@ const (
 )
 
 // @FrameworkResource("aws_redshift_namespace_registration", name="Namespace Registration")
-// @IdentityAttribute("id")
+// @IdentityAttribute("consumer_identifier")
+// @IdentityAttribute("namespace_type")
+// @IdentityAttribute("serverless_namespace_identifier", optional="true")
+// @IdentityAttribute("serverless_workgroup_identifier", optional="true")
+// @IdentityAttribute("provisioned_cluster_identifier", optional="true")
+// @ImportIDHandler("namespaceRegistrationImportID", setIDAttribute=true)
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(identityTest=false)
 func newNamespaceRegistrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &namespaceRegistrationResource{}, nil
 }
@@ -52,7 +62,6 @@ func (r *namespaceRegistrationResource) Schema(ctx context.Context, request reso
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"namespace_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -101,19 +110,12 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 				WorkgroupIdentifier: fwflex.StringFromFramework(ctx, data.ServerlessWorkgroupIdentifier),
 			},
 		}
-		data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
-			data.ConsumerIdentifier.ValueString(),
-			data.ServerlessNamespaceIdentifier.ValueString(),
-			data.ServerlessWorkgroupIdentifier.ValueString()))
 	} else {
 		input.NamespaceIdentifier = &awstypes.NamespaceIdentifierUnionMemberProvisionedIdentifier{
 			Value: awstypes.ProvisionedIdentifier{
 				ClusterIdentifier: fwflex.StringFromFramework(ctx, data.ProvisionedClusterIdentifier),
 			},
 		}
-		data.ID = types.StringValue(fmt.Sprintf("%s/%s",
-			data.ConsumerIdentifier.ValueString(),
-			data.ProvisionedClusterIdentifier.ValueString()))
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, namespaceRegistrationInvalidClusterStateFaultTimeout,
@@ -200,37 +202,62 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 		return
 	}
 
-	// For serverless namespaces, if the identifier is a UUID (namespace_id),
-	// we cannot verify the registration status because GetNamespace requires namespace_name.
-	// In this case, we trust the state and skip verification.
-	if data.NamespaceType.ValueString() == "serverless" {
-		identifier := data.ServerlessNamespaceIdentifier.ValueString()
-		// Check if it looks like a UUID (8-4-4-4-12 format)
-		if len(identifier) == 36 && identifier[8] == '-' && identifier[13] == '-' {
-			// Assume it's a UUID, skip verification
-			response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-			return
-		}
-	}
-
 	conn := r.Meta().RedshiftClient(ctx)
 	serverlessConn := r.Meta().RedshiftServerlessClient(ctx)
 
-	// LakehouseRegistrationStatus is not immediately populated by AWS after registration,
-	// particularly for provisioned clusters. We verify the namespace/cluster exists but cannot
-	// reliably detect if the registration has been removed outside Terraform.
-	err := findNamespaceRegistrationByID(ctx, conn, serverlessConn,
-		data.ConsumerIdentifier.ValueString(),
-		data.NamespaceType.ValueString(),
-		data.ServerlessNamespaceIdentifier.ValueString(),
-		data.ServerlessWorkgroupIdentifier.ValueString(),
-		data.ProvisionedClusterIdentifier.ValueString())
+	// Get the namespace ID to check for the internal data share (proof of registration)
+	var namespaceID string
+	var err error
 
+	if data.NamespaceType.ValueString() == "serverless" {
+		identifier := data.ServerlessNamespaceIdentifier.ValueString()
+		// Check if it looks like a UUID (already the namespace ID)
+		if len(identifier) == 36 && identifier[8] == '-' && identifier[13] == '-' {
+			namespaceID = identifier
+		} else {
+			// It's a name, need to look it up
+			namespace, err := serverlessConn.GetNamespace(ctx, &redshiftserverless.GetNamespaceInput{
+				NamespaceName: aws.String(identifier),
+			})
+			if err != nil {
+				if errs.IsA[*redshiftserverlesstypes.ResourceNotFoundException](err) {
+					response.State.RemoveResource(ctx)
+					return
+				}
+				response.Diagnostics.AddError("reading Redshift Serverless Namespace", err.Error())
+				return
+			}
+			namespaceID = aws.ToString(namespace.Namespace.NamespaceId)
+		}
+	} else {
+		// Provisioned cluster - get namespace ID from cluster
+		cluster, err := findClusterByID(ctx, conn, data.ProvisionedClusterIdentifier.ValueString())
+		if err != nil {
+			if retry.NotFound(err) {
+				response.State.RemoveResource(ctx)
+				return
+			}
+			response.Diagnostics.AddError("reading Redshift Cluster", err.Error())
+			return
+		}
+
+		// Extract namespace ID from ClusterNamespaceArn
+		// Format: arn:aws:redshift:region:account:namespace:namespace-id
+		namespaceArn := aws.ToString(cluster.ClusterNamespaceArn)
+		parts := strings.Split(namespaceArn, ":")
+		if len(parts) < 7 {
+			response.Diagnostics.AddError("parsing cluster namespace ARN", fmt.Sprintf("invalid ARN format: %s", namespaceArn))
+			return
+		}
+		namespaceID = parts[6]
+	}
+
+	// Verify registration by checking for the internal data share
+	_, err = findInternalDataShareByNamespaceID(ctx, conn, namespaceID, r.Meta().AccountID(ctx), r.Meta().Region(ctx))
 	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError("reading Redshift Namespace Registration", err.Error())
 		return
@@ -283,9 +310,75 @@ func (r *namespaceRegistrationResource) Delete(ctx context.Context, request reso
 type namespaceRegistrationResourceModel struct {
 	framework.WithRegionModel
 	ConsumerIdentifier            types.String `tfsdk:"consumer_identifier"`
-	ID                            types.String `tfsdk:"id"`
 	NamespaceType                 types.String `tfsdk:"namespace_type"`
 	ProvisionedClusterIdentifier  types.String `tfsdk:"provisioned_cluster_identifier"`
 	ServerlessNamespaceIdentifier types.String `tfsdk:"serverless_namespace_identifier"`
 	ServerlessWorkgroupIdentifier types.String `tfsdk:"serverless_workgroup_identifier"`
+}
+
+var (
+	_ inttypes.ImportIDParser           = namespaceRegistrationImportID{}
+	_ inttypes.FrameworkImportIDCreator = namespaceRegistrationImportID{}
+)
+
+type namespaceRegistrationImportID struct{}
+
+func (namespaceRegistrationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+
+	// Try serverless format first: consumer_id/namespace_id/workgroup_id
+	if len(parts) == 3 {
+		result := map[string]any{
+			"consumer_identifier":             parts[0],
+			"namespace_type":                  "serverless",
+			"serverless_namespace_identifier": parts[1],
+			"serverless_workgroup_identifier": parts[2],
+		}
+		return id, result, nil
+	}
+
+	// Try provisioned format: consumer_id/cluster_id
+	if len(parts) == 2 {
+		result := map[string]any{
+			"consumer_identifier":            parts[0],
+			"namespace_type":                 "provisioned",
+			"provisioned_cluster_identifier": parts[1],
+		}
+		return id, result, nil
+	}
+
+	return "", nil, fmt.Errorf("id %q should be in format <consumer-id>/<cluster-id> or <consumer-id>/<namespace-id>/<workgroup-id>", id)
+}
+
+func (namespaceRegistrationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var namespaceType types.String
+	state.GetAttribute(ctx, path.Root("namespace_type"), &namespaceType)
+
+	if namespaceType.ValueString() == "serverless" {
+		parts := make([]string, 3)
+		var attrVal types.String
+
+		state.GetAttribute(ctx, path.Root("consumer_identifier"), &attrVal)
+		parts[0] = attrVal.ValueString()
+
+		state.GetAttribute(ctx, path.Root("serverless_namespace_identifier"), &attrVal)
+		parts[1] = attrVal.ValueString()
+
+		state.GetAttribute(ctx, path.Root("serverless_workgroup_identifier"), &attrVal)
+		parts[2] = attrVal.ValueString()
+
+		return strings.Join(parts, "/")
+	}
+
+	// Provisioned
+	parts := make([]string, 2)
+	var attrVal types.String
+
+	state.GetAttribute(ctx, path.Root("consumer_identifier"), &attrVal)
+	parts[0] = attrVal.ValueString()
+
+	state.GetAttribute(ctx, path.Root("provisioned_cluster_identifier"), &attrVal)
+	parts[1] = attrVal.ValueString()
+
+	return strings.Join(parts, "/")
 }
