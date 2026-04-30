@@ -960,44 +960,40 @@ func findRedshiftIDCApplicationByARN(ctx context.Context, conn *redshift.Client,
 	return findRedshiftIDCApplication(ctx, conn, &input)
 }
 
-func findNamespaceRegistrationByID(ctx context.Context, redshiftConn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string) (string, error) {
+// findNamespaceRegistrationByID verifies that a namespace or cluster exists.
+// It does not rely on LakehouseRegistrationStatus which is unreliable (often empty for provisioned clusters).
+func findNamespaceRegistrationByID(ctx context.Context, redshiftConn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string) error {
 	if namespaceType == "serverless" {
-		return findServerlessNamespaceRegistrationStatus(ctx, serverlessConn, serverlessNamespaceIdentifier)
+		return findServerlessNamespace(ctx, serverlessConn, serverlessNamespaceIdentifier)
 	}
-	return findProvisionedClusterRegistrationStatus(ctx, redshiftConn, provisionedClusterIdentifier)
+	return findProvisionedCluster(ctx, redshiftConn, provisionedClusterIdentifier)
 }
 
-func findServerlessNamespaceRegistrationStatus(ctx context.Context, conn *redshiftserverless.Client, namespaceIdentifier string) (string, error) {
+func findServerlessNamespace(ctx context.Context, conn *redshiftserverless.Client, namespaceIdentifier string) error {
 	output, err := conn.GetNamespace(ctx, &redshiftserverless.GetNamespaceInput{
 		NamespaceName: aws.String(namespaceIdentifier),
 	})
 	if err != nil {
 		if errs.IsA[*redshiftserverlesstypes.ResourceNotFoundException](err) {
-			return "", &retry.NotFoundError{
+			return &retry.NotFoundError{
 				LastError: err,
 			}
 		}
-		return "", err
+		return err
 	}
 
 	if output == nil || output.Namespace == nil {
-		return "", &retry.NotFoundError{
+		return &retry.NotFoundError{
 			Message: "empty response",
 		}
 	}
 
-	status := aws.ToString(output.Namespace.LakehouseRegistrationStatus)
-	return status, nil
+	return nil
 }
 
-func findProvisionedClusterRegistrationStatus(ctx context.Context, conn *redshift.Client, clusterIdentifier string) (string, error) {
-	cluster, err := findClusterByID(ctx, conn, clusterIdentifier)
-	if err != nil {
-		return "", err
-	}
-
-	status := aws.ToString(cluster.LakehouseRegistrationStatus)
-	return status, nil
+func findProvisionedCluster(ctx context.Context, conn *redshift.Client, clusterIdentifier string) error {
+	_, err := findClusterByID(ctx, conn, clusterIdentifier)
+	return err
 }
 
 func findInternalDataShareByNamespaceID(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region string) (*awstypes.DataShare, error) {

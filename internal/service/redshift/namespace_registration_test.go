@@ -76,7 +76,7 @@ func testAccCheckNamespaceRegistrationDestroy(ctx context.Context, t *testing.T)
 			serverlessWorkgroupIdentifier := rs.Primary.Attributes["serverless_workgroup_identifier"]
 			provisionedClusterIdentifier := rs.Primary.Attributes["provisioned_cluster_identifier"]
 
-			_, err := tfredshift.FindNamespaceRegistrationByID(ctx, conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
+			err := tfredshift.FindNamespaceRegistrationByID(ctx, conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
 
 			if retry.NotFound(err) {
 				continue
@@ -110,9 +110,7 @@ func testAccCheckNamespaceRegistrationExists(ctx context.Context, t *testing.T, 
 		serverlessWorkgroupIdentifier := rs.Primary.Attributes["serverless_workgroup_identifier"]
 		provisionedClusterIdentifier := rs.Primary.Attributes["provisioned_cluster_identifier"]
 
-		_, err := tfredshift.FindNamespaceRegistrationByID(ctx, conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
-
-		return err
+		return tfredshift.FindNamespaceRegistrationByID(ctx, conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
 	}
 }
 

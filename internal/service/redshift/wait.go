@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -304,40 +303,6 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 	}
 
 	return nil, err
-}
-
-func waitNamespaceRegistrationCreated(ctx context.Context, conn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string, timeout time.Duration) (string, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"NOT_REGISTERED", "Registering"},
-		Target:     []string{"Registered"},
-		Refresh:    statusNamespaceRegistration(conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier),
-		Timeout:    timeout,
-		MinTimeout: 5 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(string); ok {
-		return output, err
-	}
-
-	return "", err
-}
-
-func waitNamespaceRegistrationDeleted(ctx context.Context, conn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string, timeout time.Duration) (string, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"Deregistering", "Registered"},
-		Target:     []string{},
-		Refresh:    statusNamespaceRegistration(conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(string); ok {
-		return output, err
-	}
-
-	return "", err
 }
 
 func waitInternalDataShareCreated(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region string, timeout time.Duration) (*awstypes.DataShare, error) {

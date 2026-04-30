@@ -3,7 +3,7 @@
 
 package redshift
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"strings"
@@ -217,9 +217,9 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 	serverlessConn := r.Meta().RedshiftServerlessClient(ctx)
 
 	// LakehouseRegistrationStatus is not immediately populated by AWS after registration,
-	// particularly for provisioned clusters. We verify the resource exists but don't
-	// treat empty status as "not registered".
-	_, err := findNamespaceRegistrationByID(ctx, conn, serverlessConn,
+	// particularly for provisioned clusters. We verify the namespace/cluster exists but cannot
+	// reliably detect if the registration has been removed outside Terraform.
+	err := findNamespaceRegistrationByID(ctx, conn, serverlessConn,
 		data.ConsumerIdentifier.ValueString(),
 		data.NamespaceType.ValueString(),
 		data.ServerlessNamespaceIdentifier.ValueString(),

@@ -3,12 +3,11 @@
 
 package redshift
 
-import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
-	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -157,22 +156,6 @@ func statusSnapshotScheduleAssociation(conn *redshift.Client, clusterIdentifier,
 		}
 
 		return output, string(output.ScheduleAssociationState), nil
-	}
-}
-
-func statusNamespaceRegistration(redshiftConn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		status, err := findNamespaceRegistrationByID(ctx, redshiftConn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return status, status, nil
 	}
 }
 
