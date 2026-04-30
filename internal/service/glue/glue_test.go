@@ -14,18 +14,20 @@ func TestAccGlue_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Catalog": {
-			acctest.CtBasic:                    testAccCatalog_basic,
 			acctest.CtDisappears:               testAccCatalog_disappears,
-			"catalogProperties":                testAccCatalog_catalogProperties,
+			"catalogPropertiesDataLakeAccess":  testAccCatalog_catalogPropertiesDataLakeAccess,
 			"configurationError":               testAccCatalog_configurationError,
-			"Disappears_catalogProperties":     testAccCatalog_Disappears_catalogProperties,
+			"federatedCatalog_mySQL":           testAccCatalog_federatedCatalog_mySQL,
+			"federatedCatalog_s3Tables":        testAccCatalog_federatedCatalog_s3Tables,
 			"tags":                             testAccCatalog_tags,
 			"targetRedshiftCatalog":            testAccCatalog_targetRedshiftCatalog,
 			"targetRedshiftCatalogProvisioned": testAccCatalog_targetRedshiftCatalogProvisioned,
 		},
 		"CatalogDataSource": {
-			acctest.CtBasic: testAccCatalogDataSource_basic,
-			"s3Tables":      testAccCatalogDataSource_s3Tables,
+			"catalogPropertiesDataLakeAccess":  testAccCatalogDataSource_catalogPropertiesDataLakeAccess,
+			"federatedCatalog_mySQL":           testAccCatalogDataSource_federatedCatalog_mySQL,
+			"federatedCatalog_s3Tables":        testAccCatalogDataSource_federatedCatalog_s3Tables,
+			"targetRedshiftCatalog":            testAccCatalogDataSource_targetRedshiftCatalog,
 		},
 		"CatalogTableOptimizer": {
 			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,

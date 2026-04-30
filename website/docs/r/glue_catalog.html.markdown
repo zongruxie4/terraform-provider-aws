@@ -8,337 +8,208 @@ description: |-
 
 # Resource: aws_glue_catalog
 
-Manages an AWS Glue Catalog. Catalogs allow you to connect external data sources like Amazon S3 Tables to AWS Glue.
-
-More information about AWS Glue and federated catalogs can be found in the [AWS Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/federated-catalogs.html).
+Manages an AWS Glue Catalog.
 
 ## Example Usage
 
-### S3 Tables Federated Catalog
+### Basic Usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-# IAM role for Lake Formation data access
-resource "aws_iam_role" "example" {
-  name = "glue-s3tables-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lakeformation.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:SetSourceIdentity",
-          "sts:SetContext"
-        ]
-      }
-    ]
-  })
-}
-
-# IAM policy for S3 Tables permissions
-resource "aws_iam_role_policy" "example" {
-  name = "glue-s3tables-policy"
-  role = aws_iam_role.example.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3tables:ListTableBuckets",
-          "s3tables:CreateTableBucket",
-          "s3tables:GetTableBucket",
-          "s3tables:CreateNamespace",
-          "s3tables:GetNamespace",
-          "s3tables:ListNamespaces",
-          "s3tables:DeleteNamespace",
-          "s3tables:CreateTable",
-          "s3tables:DeleteTable",
-          "s3tables:GetTable",
-          "s3tables:ListTables",
-          "s3tables:GetTableData",
-          "s3tables:PutTableData"
-        ]
-        Resource = [
-          "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Register the S3 Tables location with Lake Formation
-resource "aws_lakeformation_resource" "example" {
-  arn      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
-  role_arn = aws_iam_role.example.arn
-}
-
 resource "aws_glue_catalog" "example" {
-  name        = "s3tablescatalog"
-  description = "S3 Tables federated catalog for analytics"
-
-  federated_catalog {
-    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
-    connection_name = "aws:s3tables"
-  }
-
-  depends_on = [aws_lakeformation_resource.example]
+  name        = "example"
+  description = "Example Glue Catalog"
 }
 ```
 
-### Redshift Data Lake Catalog
+### With Parameters
 
 ```terraform
-resource "aws_iam_role" "redshift_example" {
-  name = "glue-redshift-catalog-role"
+resource "aws_glue_catalog" "example" {
+  name        = "example"
+  description = "Example Glue Catalog"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lakeformation.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:SetSourceIdentity",
-          "sts:SetContext"
-        ]
-      }
-    ]
-  })
+  parameters = {
+    "key1" = "value1"
+    "key2" = "value2"
+  }
 }
+```
 
-resource "aws_glue_catalog" "redshift_example" {
-  name        = "redshift-catalog"
-  description = "Redshift federated catalog for data lake access"
+### With Catalog Properties
+
+```terraform
+resource "aws_glue_catalog" "example" {
+  name        = "example"
+  description = "Example Glue Catalog with data lake access"
 
   catalog_properties {
+    custom_properties = {
+      "property1" = "value1"
+    }
+
     data_lake_access_properties {
-      catalog_type       = "aws:redshift"
-      data_lake_access   = true
-      data_transfer_role = aws_iam_role.redshift_example.arn
+      data_lake_access = true
+      catalog_type     = "aws:glue:datacatalog"
     }
   }
 }
 ```
 
-### Redshift Serverless Federated Catalog
+### With Federated Catalog
 
 ```terraform
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "redshift_serverless" {
-  name = "glue-redshift-serverless-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = [
-            "lakeformation.amazonaws.com",
-            "glue.amazonaws.com",
-            "redshift.amazonaws.com"
-          ]
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:SetSourceIdentity",
-          "sts:SetContext"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "redshift_serverless" {
-  name = "redshift-serverless-policy"
-  role = aws_iam_role.redshift_serverless.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "redshift-serverless:GetCredentials",
-          "redshift-serverless:GetWorkgroup"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_redshiftserverless_namespace" "example" {
-  namespace_name = "example-namespace"
-  db_name        = "example"
-}
-
-resource "aws_redshiftserverless_workgroup" "example" {
-  namespace_name = aws_redshiftserverless_namespace.example.namespace_name
-  workgroup_name = "example-workgroup"
-}
-
-# Register the namespace to create an internal data share
-resource "aws_redshift_namespace_registration" "example" {
-  consumer_identifier             = "DataCatalog/${data.aws_caller_identity.current.account_id}"
-  namespace_type                  = "serverless"
-  serverless_namespace_identifier = aws_redshiftserverless_namespace.example.namespace_id
-  serverless_workgroup_identifier = aws_redshiftserverless_workgroup.example.workgroup_name
-}
-
-locals {
-  data_share_arn = "arn:${data.aws_partition.current.partition}:redshift:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:datashare:${aws_redshiftserverless_namespace.example.namespace_id}/ds_internal_namespace"
-}
-
-# Associate the data share with the Glue catalog
-resource "aws_redshift_data_share_consumer_association" "example" {
-  data_share_arn = local.data_share_arn
-  consumer_arn   = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
-
-  depends_on = [aws_redshift_namespace_registration.example]
-}
-
-# Register the data share with Lake Formation
-resource "aws_lakeformation_resource" "example" {
-  arn                     = local.data_share_arn
-  use_service_linked_role = false
-
-  depends_on = [aws_redshift_data_share_consumer_association.example]
-}
-
-# Create the federated catalog pointing to the data share
-resource "aws_glue_catalog" "federated" {
-  name = "redshift-federated-catalog"
-
-  catalog_properties {
-    data_lake_access_properties {
-      data_lake_access   = true
-      data_transfer_role = aws_iam_role.redshift_serverless.arn
-    }
-  }
+resource "aws_glue_catalog" "example" {
+  name = "example"
 
   federated_catalog {
-    identifier      = local.data_share_arn
-    connection_name = "aws:redshift"
+    connection_name = aws_glue_connection.example.name
+    identifier      = "arn:aws:glue:us-east-1:123456789012:catalog"
   }
-
-  depends_on = [
-    aws_redshift_namespace_registration.example,
-    aws_lakeformation_resource.example,
-    aws_iam_role_policy.redshift_serverless
-  ]
 }
+```
 
-# Create a target catalog that links to the federated catalog
-resource "aws_glue_catalog" "target" {
-  name = "redshift-target-catalog"
+### With Default Permissions
 
-  target_redshift_catalog {
-    catalog_arn = "${aws_glue_catalog.federated.arn}/${aws_redshiftserverless_namespace.example.db_name}"
-  }
+```terraform
+resource "aws_glue_catalog" "example" {
+  name        = "example"
+  description = "Example Glue Catalog"
 
-  catalog_properties {
-    data_lake_access_properties {
-      data_lake_access   = true
-      data_transfer_role = aws_iam_role.redshift_serverless.arn
+  create_database_default_permissions {
+    permissions = ["ALL"]
+
+    principal {
+      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
     }
   }
 
-  depends_on = [aws_iam_role_policy.redshift_serverless]
+  create_table_default_permissions {
+    permissions = ["ALL"]
+
+    principal {
+      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+    }
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `name` - (Required) Name of the federated catalog.
-
-**Note:** At least one of `federated_catalog`, `catalog_properties`, or `target_redshift_catalog` must be specified.
-
-The following arguments are optional:
-
-* `allow_full_table_external_data_access` - (Optional) Allows third-party engines to access data in Amazon S3 locations registered with Lake Formation. Used for Lake Formation external data access control.
-* `catalog_id` - (Optional) ID of the catalog. If omitted, this defaults to the AWS Account ID.
-* `description` - (Optional) Description of the federated catalog.
-* `federated_catalog` - (Optional) Configuration block for federated catalog parameters. See [federated_catalog](#federated_catalog) below.
-* `catalog_properties` - (Optional) Configuration block for catalog properties. See [catalog_properties](#catalog_properties) below.
-* `target_redshift_catalog` - (Optional) Configuration block for target Redshift catalog for resource linking. See [target_redshift_catalog](#target_redshift_catalog) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-
-### federated_catalog
-
-* `identifier` - (Optional) Unique identifier for the federated catalog.
-* `connection_name` - (Optional) Name of the connection for the federated catalog.
-
-### target_redshift_catalog
-
-* `catalog_arn` - (Required) ARN of the target catalog resource for linking.
+* `name` - (Required, Forces new resource) Name of the catalog.
+* `allow_full_table_external_data_access` - (Optional) Whether third-party engines can access data in Amazon S3 locations that are registered with Lake Formation. Valid values are `True` and `False`.
+* `description` - (Optional) Description of the catalog.
+* `parameters` - (Optional) Map of key-value pairs that define parameters and properties of the catalog.
+* `catalog_properties` - (Optional) A configuration block of properties for the catalog. See [`catalog_properties`](#catalog_properties) below.
+* `create_database_default_permissions` - (Optional) A list of default permissions on databases for principals. See [`create_database_default_permissions`](#create_database_default_permissions) below.
+* `create_table_default_permissions` - (Optional) A list of default permissions on tables for principals. See [`create_table_default_permissions`](#create_table_default_permissions) below.
+* `federated_catalog` - (Optional) A configuration block for a federated catalog. See [`federated_catalog`](#federated_catalog) below.
+* `target_redshift_catalog` - (Optional) A configuration block for a target Redshift catalog. See [`target_redshift_catalog`](#target_redshift_catalog) below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### catalog_properties
 
-* `custom_properties` - (Optional) Map of custom key-value properties for the catalog, such as column statistics optimizations.
-* `data_lake_access_properties` - (Optional) Configuration block for data lake access properties. See [data_lake_access_properties](#data_lake_access_properties) below.
-* `iceberg_optimization_properties` - (Optional) Configuration block for Iceberg table optimization properties. See [iceberg_optimization_properties](#iceberg_optimization_properties) below.
+* `custom_properties` - (Optional) Map of custom key-value pairs for the catalog properties.
+* `data_lake_access_properties` - (Optional) A configuration block for data lake access properties. See [`data_lake_access_properties`](#data_lake_access_properties) below.
 
-### data_lake_access_properties
+#### data_lake_access_properties
 
-* `catalog_type` - (Optional) Type of catalog. Currently only `aws:redshift` is supported.
-* `data_lake_access` - (Optional) Whether to enable data lake access for the catalog.
-* `data_transfer_role` - (Optional) ARN of the IAM role for data transfer operations.
-* `kms_key` - (Optional) KMS key for encryption.
+* `catalog_type` - (Optional) The type of the catalog.
+* `data_lake_access` - (Optional) Whether data lake access is enabled.
+* `data_transfer_role` - (Optional) The ARN of the IAM role used for data transfer.
+* `kms_key` - (Optional) The ARN of the KMS key used for encryption.
 
-### iceberg_optimization_properties
+### federated_catalog
 
-* `compaction` - (Optional) Map of configuration parameters for Iceberg table compaction operations.
-* `orphan_file_deletion` - (Optional) Map of configuration parameters for Iceberg orphan file deletion operations.
-* `retention` - (Optional) Map of configuration parameters for Iceberg table retention operations.
-* `role_arn` - (Optional) ARN of the IAM role for performing Iceberg table optimization operations.
+* `connection_name` - (Optional) The name of the connection to the external metastore.
+* `connection_type` - (Optional) The type of connection used to access the federated catalog.
+* `identifier` - (Optional) A unique identifier for the federated catalog.
+
+### target_redshift_catalog
+
+* `catalog_arn` - (Required) The ARN of the target Redshift catalog.
+
+### create_database_default_permissions
+
+* `permissions` - (Optional) The permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`.
+* `principal` - (Optional) The principal who is granted permissions. See [`principal`](#principal) below.
+
+### create_table_default_permissions
+
+* `permissions` - (Optional) The permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`.
+* `principal` - (Optional) The principal who is granted permissions. See [`principal`](#principal) below.
+
+#### principal
+
+* `data_lake_principal_identifier` - (Optional) An identifier for the Lake Formation principal.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Catalog.
-* `id` - Catalog identifier.
+* `arn` - ARN of the Glue Catalog.
+* `catalog_id` - The ID of the Glue Catalog.
+* `create_time` - The time at which the catalog was created.
+* `id` - The ID of the Glue Catalog (same as `catalog_id`).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `update_time` - The time at which the catalog was last updated.
+
+The `data_lake_access_properties` block also exports:
+
+* `managed_workgroup_name` - The managed workgroup name.
+* `managed_workgroup_status` - The managed workgroup status.
+* `redshift_database_name` - The Redshift database name.
+* `status_message` - A status message.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog using the `catalog_id:name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_glue_catalog.example
-  id = "123456789012:s3tablescatalog"
+  identity = {
+    id = "catalog-id-12345678"
+  }
+}
+
+resource "aws_glue_catalog" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Glue Catalog using the `catalog_id:name`. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) The ID of the Glue Catalog.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog using the catalog ID. For example:
+
+```terraform
+import {
+  to = aws_glue_catalog.example
+  id = "catalog-id-12345678"
+}
+```
+
+Using `terraform import`, import Glue Catalog using the catalog ID. For example:
 
 ```console
-% terraform import aws_glue_catalog.example 123456789012:s3tablescatalog
+% terraform import aws_glue_catalog.example catalog-id-12345678
 ```

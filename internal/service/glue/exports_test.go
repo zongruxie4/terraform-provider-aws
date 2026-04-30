@@ -5,6 +5,7 @@ package glue
 
 // Exports for use in tests only.
 var (
+	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
@@ -14,7 +15,6 @@ var (
 	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
 	ResourceDataQualityRuleset            = resourceDataQualityRuleset
 	ResourceDevEndpoint                   = resourceDevEndpoint
-	ResourceCatalog                       = newResourceCatalog
 	ResourceJob                           = resourceJob
 	ResourceMLTransform                   = resourceMLTransform
 	ResourcePartition                     = resourcePartition
@@ -27,6 +27,7 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
+	FindCatalogByID                 = findCatalogByID
 	FindCatalogTableOptimizer       = findCatalogTableOptimizer
 	FindClassifierByName            = findClassifierByName
 	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
@@ -34,7 +35,6 @@ var (
 	FindDatabaseByTwoPartKey        = findDatabaseByTwoPartKey
 	FindDataQualityRulesetByName    = findDataQualityRulesetByName
 	FindDevEndpointByName           = findDevEndpointByName
-	FindCatalogByID                 = findCatalogByID
 	FindJobByName                   = findJobByName
 	FindPartitionByValues           = findPartitionByValues
 	FindPartitionIndexByFourPartKey = findPartitionIndexByFourPartKey

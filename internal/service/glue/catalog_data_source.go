@@ -5,43 +5,46 @@ package glue
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_glue_catalog", name="Catalog")
-func newDataSourceCatalog(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCatalog{}, nil
+// @Tags(identifierAttribute="arn")
+func newCatalogDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &catalogDataSource{}, nil
 }
 
-const (
-	DSNameCatalog = "Catalog Data Source"
-)
-
-type dataSourceCatalog struct {
-	framework.DataSourceWithModel[dataSourceCatalogModel]
+type catalogDataSource struct {
+	framework.DataSourceWithModel[catalogDataSourceModel]
 }
 
-func (d *dataSourceCatalog) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"allow_full_table_external_data_access": schema.BoolAttribute{
+			"allow_full_table_external_data_access": schema.StringAttribute{
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.AllowFullTableExternalDataAccessEnum](),
+			},
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCatalogID: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
+			},
+			names.AttrCreateTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
@@ -50,13 +53,71 @@ func (d *dataSourceCatalog) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
+			names.AttrParameters: schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"update_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
+			"catalog_properties": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[catalogPropertiesModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"custom_properties": schema.MapAttribute{
+							CustomType:  fwtypes.MapOfStringType,
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"data_lake_access_properties": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeAccessPropertiesModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"catalog_type": schema.StringAttribute{
+										Computed: true,
+									},
+									"data_lake_access": schema.BoolAttribute{
+										Computed: true,
+									},
+									"data_transfer_role": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrKMSKey: schema.StringAttribute{
+										Computed: true,
+									},
+									"managed_workgroup_name": schema.StringAttribute{
+										Computed: true,
+									},
+									"managed_workgroup_status": schema.StringAttribute{
+										Computed: true,
+									},
+									"redshift_database_name": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrStatusMessage: schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"federated_catalog": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[federatedCatalogModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_name": schema.StringAttribute{
+							Computed: true,
+						},
+						"connection_type": schema.StringAttribute{
 							Computed: true,
 						},
 						names.AttrIdentifier: schema.StringAttribute{
@@ -65,93 +126,108 @@ func (d *dataSourceCatalog) Schema(ctx context.Context, req datasource.SchemaReq
 					},
 				},
 			},
+			"target_redshift_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"catalog_arn": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
+			"create_database_default_permissions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[principalPermissionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPermissions: schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrPrincipal: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipalModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data_lake_principal_identifier": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"create_table_default_permissions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[principalPermissionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPermissions: schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrPrincipal: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipalModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data_lake_principal_identifier": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func (d *dataSourceCatalog) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().GlueClient(ctx)
-	var data dataSourceCatalogModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	var data catalogDataSourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	catalogId := data.CatalogId.ValueString()
-	catalogName := data.Name.ValueString()
-
-	if catalogId == "" {
-		catalogId = d.Meta().AccountID(ctx)
-
-		if catalogName == s3TablesCatalogName {
-			catalogId = catalogName
-		}
-	}
-
-	id := fmt.Sprintf("%s,%s", catalogId, catalogName)
-	out, err := findCatalogByID(ctx, conn, id)
+	out, err := findCatalogByID(ctx, conn, data.Name.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
-	data.ID = types.StringValue(id)
-	data.CatalogId = types.StringValue(catalogId)
-
-	if out.ResourceArn != nil {
-		data.ARN = types.StringValue(aws.ToString(out.ResourceArn))
-	} else {
-		partition := d.Meta().Partition(ctx)
-		region := d.Meta().Region(ctx)
-		accountID := d.Meta().AccountID(ctx)
-		if catalogName == s3TablesCatalogName {
-			data.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog/%s", partition, region, accountID, catalogName))
-		} else {
-			data.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog", partition, region, accountID))
-		}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	data.ARN = types.StringPointerValue(out.ResourceArn)
+	data.ID = types.StringPointerValue(out.CatalogId)
 
-	if out.Name != nil {
-		data.Name = types.StringValue(aws.ToString(out.Name))
-	}
-
-	if out.Description != nil {
-		data.Description = types.StringValue(aws.ToString(out.Description))
-	}
-
-	switch out.AllowFullTableExternalDataAccess {
-	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
-		data.AllowFullTableExternalDataAccess = types.BoolValue(true)
-	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
-		data.AllowFullTableExternalDataAccess = types.BoolValue(false)
-	}
-
-	if out.FederatedCatalog != nil {
-		fedCatalogModel := federatedCatalogModel{
-			ConnectionName: types.StringValue(aws.ToString(out.FederatedCatalog.ConnectionName)),
-			Identifier:     types.StringValue(aws.ToString(out.FederatedCatalog.Identifier)),
-		}
-
-		fedCatalogList, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &fedCatalogModel)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.FederatedCatalog = fedCatalogList
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-type dataSourceCatalogModel struct {
+type catalogDataSourceModel struct {
 	framework.WithRegionModel
-	AllowFullTableExternalDataAccess types.Bool                                             `tfsdk:"allow_full_table_external_data_access"`
-	ARN                              types.String                                           `tfsdk:"arn"`
-	CatalogId                        types.String                                           `tfsdk:"catalog_id"`
-	Description                      types.String                                           `tfsdk:"description"`
-	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel] `tfsdk:"federated_catalog"`
-	ID                               types.String                                           `tfsdk:"id"`
-	Name                             types.String                                           `tfsdk:"name"`
+	AllowFullTableExternalDataAccess fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum] `tfsdk:"allow_full_table_external_data_access"`
+	ARN                              types.String                                                      `tfsdk:"arn" autoflex:"-"`
+	CatalogID                        types.String                                                      `tfsdk:"catalog_id"`
+	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]           `tfsdk:"catalog_properties"`
+	CreateDatabaseDefaultPermissions fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_database_default_permissions"`
+	CreateTableDefaultPermissions    fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_table_default_permissions"`
+	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
+	Description                      types.String                                                      `tfsdk:"description"`
+	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
+	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
+	Name                             types.String                                                      `tfsdk:"name"`
+	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
+	Tags                             tftags.Map                                                        `tfsdk:"tags"`
+	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]       `tfsdk:"target_redshift_catalog"`
+	UpdateTime                       timetypes.RFC3339                                                 `tfsdk:"update_time"`
 }
-
-// federatedCatalogModel is defined in federated_catalog.go to avoid duplication

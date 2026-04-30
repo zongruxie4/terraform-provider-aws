@@ -5,8 +5,6 @@ package glue
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -14,10 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -34,11 +37,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_glue_catalog", name="Catalog")
 // @Tags(identifierAttribute="arn")
-func newResourceCatalog(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCatalog{}
+// @IdentityAttribute("id")
+// @Testing(hasNoPreExistingResource=true)
+func newCatalogResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &catalogResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -47,40 +51,54 @@ func newResourceCatalog(_ context.Context) (resource.ResourceWithConfigure, erro
 	return r, nil
 }
 
-const (
-	ResNameCatalog      = "Catalog"
-	s3TablesCatalogName = "s3tablescatalog"
-)
-
-type resourceCatalog struct {
-	framework.ResourceWithModel[resourceCatalogModel]
+type catalogResource struct {
+	framework.ResourceWithModel[catalogResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
-func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *catalogResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("catalog_properties").AtListIndex(0).AtName("data_lake_access_properties"),
+			path.MatchRoot("federated_catalog"),
+			path.MatchRoot("target_redshift_catalog"),
+		),
+	}
+}
+
+func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"allow_full_table_external_data_access": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+			"allow_full_table_external_data_access": schema.StringAttribute{
+				Optional:   true,
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.AllowFullTableExternalDataAccessEnum](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCatalogID: schema.StringAttribute{
-				Optional: true,
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrCatalogID: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrCreateTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
@@ -89,14 +107,19 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// missing "overwrite_child_resource_permissions_with_default"
-			// missing "parameters"
+			names.AttrParameters: schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"update_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			// missing "create_database_default_permissions"
-			// missing "create_table_default_permissions"
 			"catalog_properties": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[catalogPropertiesModel](ctx),
 				Validators: []validator.List{
@@ -109,6 +132,9 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 							Optional:    true,
 							Computed:    true,
 							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Map{
+								mapplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -121,17 +147,56 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 								Attributes: map[string]schema.Attribute{
 									"catalog_type": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 									"data_lake_access": schema.BoolAttribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
 									},
 									"data_transfer_role": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrKMSKey: schema.StringAttribute{
 										Optional: true,
 										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"managed_workgroup_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"managed_workgroup_status": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"redshift_database_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									names.AttrStatusMessage: schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 							},
@@ -178,6 +243,13 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 						"connection_name": schema.StringAttribute{
 							Optional: true,
 						},
+						"connection_type": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
 						names.AttrIdentifier: schema.StringAttribute{
 							Optional: true,
 						},
@@ -198,6 +270,60 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
+			"create_database_default_permissions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[principalPermissionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPermissions: schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							Optional:    true,
+							ElementType: types.StringType,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrPrincipal: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipalModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data_lake_principal_identifier": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"create_table_default_permissions": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[principalPermissionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPermissions: schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							Optional:    true,
+							ElementType: types.StringType,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrPrincipal: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipalModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data_lake_principal_identifier": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -207,130 +333,72 @@ func (r *resourceCatalog) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceCatalog) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var plan resourceCatalogModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	var plan catalogResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if plan.FederatedCatalog.IsNull() && plan.CatalogProperties.IsNull() && plan.TargetRedshiftCatalog.IsNull() {
-		resp.Diagnostics.AddError(
-			"Missing Required Configuration",
-			"At least one of 'federated_catalog', 'catalog_properties', or 'target_redshift_catalog' must be specified.",
-		)
-		return
-	}
+	catalogPropertiesWasNull := plan.CatalogProperties.IsNull()
 
-	if plan.CatalogId.IsNull() || plan.CatalogId.ValueString() == "" {
-		plan.CatalogId = types.StringValue(r.Meta().AccountID(ctx))
-	}
-
-	var input glue.CreateCatalogInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	var catalogInput awstypes.CatalogInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &catalogInput))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	input.CatalogInput = &awstypes.CatalogInput{}
-	input.CatalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
-	input.CatalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input.CatalogInput)...)
-	if resp.Diagnostics.HasError() {
-		return
+	// API contract requires explicit empty slices rather than nil for these.
+	if catalogInput.CreateDatabaseDefaultPermissions == nil {
+		catalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
+	}
+	if catalogInput.CreateTableDefaultPermissions == nil {
+		catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 	}
 
-	// Handle enum conversion for AllowFullTableExternalDataAccess
-	if !plan.AllowFullTableExternalDataAccess.IsNull() {
-		if plan.AllowFullTableExternalDataAccess.ValueBool() {
-			input.CatalogInput.AllowFullTableExternalDataAccess = awstypes.AllowFullTableExternalDataAccessEnumTrue
-		} else {
-			input.CatalogInput.AllowFullTableExternalDataAccess = awstypes.AllowFullTableExternalDataAccessEnumFalse
-		}
+	input := &glue.CreateCatalogInput{
+		Name:         plan.Name.ValueStringPointer(),
+		CatalogInput: &catalogInput,
+		Tags:         getTagsIn(ctx),
 	}
 
-	input.Tags = getTagsIn(ctx)
-
-	_, err := conn.CreateCatalog(ctx, &input)
+	_, err := conn.CreateCatalog(ctx, input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	catalogId := plan.CatalogId.ValueString()
-	catalogName := plan.Name.ValueString()
-	if catalogName == s3TablesCatalogName {
-		catalogId = fmt.Sprintf("%s:%s", catalogId, catalogName)
-	}
-	id := fmt.Sprintf("%s,%s", catalogId, catalogName)
-	plan.ID = types.StringValue(id)
+	plan.ID = plan.Name
 
-	catalog, err := waitCatalogCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
+	out, err := waitCatalogReady(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
-	// Set computed values
-	plan.CatalogId = fwflex.StringToFramework(ctx, catalog.CatalogId)
-
-	if catalog.ResourceArn != nil {
-		plan.ARN = types.StringValue(aws.ToString(catalog.ResourceArn))
-	} else {
-		partition := r.Meta().Partition(ctx)
-		region := r.Meta().Region(ctx)
-		accountID := r.Meta().AccountID(ctx)
-		if catalogName == s3TablesCatalogName {
-			plan.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog/%s", partition, region, accountID, catalogName))
-		} else {
-			plan.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog", partition, region, accountID))
-		}
-	}
-
-	switch catalog.AllowFullTableExternalDataAccess {
-	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
-		plan.AllowFullTableExternalDataAccess = types.BoolValue(true)
-	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
-		plan.AllowFullTableExternalDataAccess = types.BoolValue(false)
-	}
-
-	if catalog.FederatedCatalog != nil {
-		plan.FederatedCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &federatedCatalogModel{
-			ConnectionName: fwflex.StringToFramework(ctx, catalog.FederatedCatalog.ConnectionName),
-			Identifier:     fwflex.StringToFramework(ctx, catalog.FederatedCatalog.Identifier),
-		})
-	}
-
-	if catalog.TargetRedshiftCatalog != nil {
-		plan.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
-			CatalogArn: fwtypes.ARNValue(aws.ToString(catalog.TargetRedshiftCatalog.CatalogArn)),
-		})
-	}
-
-	if !plan.CatalogProperties.IsNull() && catalog.CatalogProperties != nil {
-		catalogPropsModel := catalogPropertiesModel{}
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, catalog.CatalogProperties, &catalogPropsModel)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		plan.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().GlueClient(ctx)
-	var state resourceCatalogModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	readCatalogIntoModel(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+}
+
+func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().GlueClient(ctx)
+
+	var state catalogResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	catalogPropertiesWasNull := state.CatalogProperties.IsNull()
+
 	out, err := findCatalogByID(ctx, conn, state.ID.ValueString())
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -339,181 +407,143 @@ func (r *resourceCatalog) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	// Flatten basic fields
-	state.CatalogId = fwflex.StringToFramework(ctx, out.CatalogId)
-	state.Name = fwflex.StringToFramework(ctx, out.Name)
-	state.Description = fwflex.StringToFramework(ctx, out.Description)
-
-	// Handle ARN
-	if out.ResourceArn != nil {
-		state.ARN = types.StringValue(aws.ToString(out.ResourceArn))
-	} else {
-		partition := r.Meta().Partition(ctx)
-		region := r.Meta().Region(ctx)
-		accountID := r.Meta().AccountID(ctx)
-		catalogName := state.Name.ValueString()
-		if catalogName == s3TablesCatalogName {
-			state.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog/%s", partition, region, accountID, catalogName))
-		} else {
-			state.ARN = types.StringValue(fmt.Sprintf("arn:%s:glue:%s:%s:catalog", partition, region, accountID))
-		}
-	}
-
-	// Handle enum conversion for AllowFullTableExternalDataAccess
-	switch out.AllowFullTableExternalDataAccess {
-	case awstypes.AllowFullTableExternalDataAccessEnumTrue:
-		state.AllowFullTableExternalDataAccess = types.BoolValue(true)
-	case awstypes.AllowFullTableExternalDataAccessEnumFalse:
-		state.AllowFullTableExternalDataAccess = types.BoolValue(false)
-	}
-
-	// Flatten FederatedCatalog
-	if out.FederatedCatalog != nil {
-		state.FederatedCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &federatedCatalogModel{
-			ConnectionName: fwflex.StringToFramework(ctx, out.FederatedCatalog.ConnectionName),
-			Identifier:     fwflex.StringToFramework(ctx, out.FederatedCatalog.Identifier),
-		})
-	}
-
-	// Flatten TargetRedshiftCatalog
-	if out.TargetRedshiftCatalog != nil {
-		state.TargetRedshiftCatalog = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &targetRedshiftCatalogModel{
-			CatalogArn: fwtypes.ARNValue(aws.ToString(out.TargetRedshiftCatalog.CatalogArn)),
-		})
-	}
-
-	// Flatten CatalogProperties
-	if out.CatalogProperties != nil {
-		catalogPropsModel := catalogPropertiesModel{}
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.CatalogProperties, &catalogPropsModel)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Only set catalog_properties if it has actual content
-		hasContent := !catalogPropsModel.CustomProperties.IsNull() ||
-			!catalogPropsModel.DataLakeAccessProperties.IsNull() ||
-			!catalogPropsModel.IcebergOptimizationProperties.IsNull()
-
-		if hasContent {
-			state.CatalogProperties = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &catalogPropsModel)
-		}
-	}
-
-	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("listing tags for Glue Catalog (%s)", state.ID.ValueString()),
-			err.Error(),
-		)
+	readCatalogIntoModel(ctx, out, &state, catalogPropertiesWasNull, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	setTagsOut(ctx, tags.Map())
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceCatalog) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceCatalogModel
+func (r *catalogResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Not applicable on create or destroy.
+	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() {
+		return
+	}
+
+	var plan, state catalogResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Check if non-tag attributes changed
-	if !plan.CatalogId.Equal(state.CatalogId) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.FederatedCatalog.Equal(state.FederatedCatalog) ||
-		!plan.TargetRedshiftCatalog.Equal(state.TargetRedshiftCatalog) ||
-		!plan.CatalogProperties.Equal(state.CatalogProperties) {
-		resp.Diagnostics.AddError(
-			"Update Not Supported",
-			"AWS Glue catalogs do not support updates. All attributes except tags require replacement.",
-		)
-		return
-	}
-
-	// Handle tags update
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := updateTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("updating tags for Glue Catalog (%s)", plan.ID.ValueString()),
-				err.Error(),
-			)
-			return
+	// Federated catalogs do not support UpdateCatalog — force replacement
+	// when any catalog attribute changes.
+	if !plan.FederatedCatalog.IsNull() || !state.FederatedCatalog.IsNull() {
+		if !plan.Description.Equal(state.Description) ||
+			!plan.Parameters.Equal(state.Parameters) ||
+			!plan.CatalogProperties.Equal(state.CatalogProperties) ||
+			!plan.FederatedCatalog.Equal(state.FederatedCatalog) ||
+			!plan.AllowFullTableExternalDataAccess.Equal(state.AllowFullTableExternalDataAccess) ||
+			!plan.CreateDatabaseDefaultPermissions.Equal(state.CreateDatabaseDefaultPermissions) ||
+			!plan.CreateTableDefaultPermissions.Equal(state.CreateTableDefaultPermissions) {
+			resp.RequiresReplace = append(resp.RequiresReplace, path.Root("federated_catalog"))
 		}
 	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var state resourceCatalogModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	var plan, state catalogResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name, err := readCatalogResourceID(state.ID.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
-		return
-	}
+	catalogPropertiesWasNull := plan.CatalogProperties.IsNull()
 
-	input := glue.DeleteCatalogInput{
-		CatalogId: aws.String(name),
-	}
-
-	const deleteTimeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, deleteTimeout,
-		func(ctx context.Context) (any, error) {
-			return conn.DeleteCatalog(ctx, &input)
-		})
-	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+	if !plan.Description.Equal(state.Description) ||
+		!plan.Parameters.Equal(state.Parameters) ||
+		!plan.CatalogProperties.Equal(state.CatalogProperties) ||
+		!plan.FederatedCatalog.Equal(state.FederatedCatalog) ||
+		!plan.TargetRedshiftCatalog.Equal(state.TargetRedshiftCatalog) ||
+		!plan.AllowFullTableExternalDataAccess.Equal(state.AllowFullTableExternalDataAccess) ||
+		!plan.CreateDatabaseDefaultPermissions.Equal(state.CreateDatabaseDefaultPermissions) ||
+		!plan.CreateTableDefaultPermissions.Equal(state.CreateTableDefaultPermissions) {
+		var catalogInput awstypes.CatalogInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &catalogInput))
+		if resp.Diagnostics.HasError() {
 			return
 		}
+		if catalogInput.CreateDatabaseDefaultPermissions == nil {
+			catalogInput.CreateDatabaseDefaultPermissions = []awstypes.PrincipalPermissions{}
+		}
+		if catalogInput.CreateTableDefaultPermissions == nil {
+			catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
+		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		input := &glue.UpdateCatalogInput{
+			CatalogId:    plan.ID.ValueStringPointer(),
+			CatalogInput: &catalogInput,
+		}
+
+		_, err := conn.UpdateCatalog(ctx, input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+			return
+		}
+	}
+
+	out, err := findCatalogByID(ctx, conn, plan.ID.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
-	_, err = waitCatalogDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
+	readCatalogIntoModel(ctx, out, &plan, catalogPropertiesWasNull, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *catalogResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().GlueClient(ctx)
+
+	var state catalogResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Retry on ConcurrentModificationException: Redshift-managed catalogs
+	// (catalog_type = "aws:redshift") delegate to the Redshift workgroup,
+	// which rejects deletes while another operation is still running.
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](
+		ctx,
+		r.DeleteTimeout(ctx, state.Timeouts),
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteCatalog(ctx, &glue.DeleteCatalogInput{
+				CatalogId: state.ID.ValueStringPointer(),
+			})
+		},
+	)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
-		return
 	}
 }
 
 func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
-	name, err := readCatalogResourceID(id)
-	if err != nil {
-		return nil, smarterr.NewError(err)
+	input := &glue.GetCatalogInput{
+		CatalogId: aws.String(id),
 	}
 
-	// For GetCatalog API, CatalogId should be the catalog name
-	input := glue.GetCatalogInput{
-		CatalogId: aws.String(name),
-	}
-
-	out, err := conn.GetCatalog(ctx, &input)
+	out, err := conn.GetCatalog(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
 		}
-		// Lake Formation returns AccessDeniedException when catalog doesn't exist
-		// and caller lacks Lake Formation permissions
-		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Lake Formation permission") {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
 	}
 
@@ -521,112 +551,105 @@ func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstyp
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	actualName := aws.ToString(out.Catalog.Name)
-	if actualName != name {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			Message: fmt.Sprintf("catalog name mismatch: expected %s, got %s", name, actualName),
-		})
-	}
-
 	return out.Catalog, nil
 }
 
+// Managed workgroup status observed for catalogs created with
+// DataLakeAccessProperties (RMS / "aws:redshift"). Redshift provisions the
+// backing workgroup asynchronously and the status transitions through
+// undocumented values (observed: CREATING, MODIFYING) before reaching
+// AVAILABLE. Empty string means no managed workgroup (catalogs without
+// data_lake_access_properties), which is also terminal.
 const (
-	statusAvailable = "available"
+	managedWorkgroupStatusAvailable = "AVAILABLE"
 )
 
-func waitCatalogCreated(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusAvailable},
-		Refresh:                   statusCatalog(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*awstypes.Catalog); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitCatalogDeleted(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusAvailable},
-		Target:  []string{},
-		Refresh: statusCatalog(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*awstypes.Catalog); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusCatalog(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
-		output, err := findCatalogByID(ctx, conn, id)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
+// waitCatalogReady polls GetCatalog until the catalog's managed workgroup is
+// AVAILABLE. For catalogs without data_lake_access_properties, no managed
+// workgroup exists and the first read returns immediately. Any non-AVAILABLE
+// non-empty status is treated as pending — AWS does not publish the enum, so
+// we can't enumerate all transitional states and must accept anything that
+// isn't the terminal value.
+func waitCatalogReady(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
+	var catalog *awstypes.Catalog
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
+		c, err := findCatalogByID(ctx, conn, id)
 		if err != nil {
-			return nil, "", err
+			return tfresource.NonRetryableError(err)
 		}
+		catalog = c
 
-		return output, statusAvailable, nil
+		if c.CatalogProperties == nil || c.CatalogProperties.DataLakeAccessProperties == nil {
+			return nil
+		}
+		status := aws.ToString(c.CatalogProperties.DataLakeAccessProperties.ManagedWorkgroupStatus)
+		if status == "" || status == managedWorkgroupStatusAvailable {
+			return nil
+		}
+		return tfresource.RetryableError(smarterr.NewError(&retry.NotFoundError{
+			Message: "managed workgroup status " + status,
+		}))
+	}, tfresource.WithPollInterval(10*time.Second))
+
+	return catalog, err
+}
+
+// readCatalogIntoModel copies AWS fields onto the resource model. catalogPropertiesWasNull
+// preserves a null catalog_properties block when AWS auto-populates one (e.g.
+// custom_properties={"aws:PermissionsModel":"LAKEFORMATION"} on LF-managed
+// catalogs): otherwise a user who didn't declare the block would see a
+// permanent diff. ARN is set manually because flex does not rename
+// ResourceArn -> ARN, and ID mirrors CatalogId.
+func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, catalogPropertiesWasNull bool, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, catalog, model)...)
+	if diags.HasError() {
+		return
+	}
+	model.ARN = types.StringPointerValue(catalog.ResourceArn)
+	model.ID = types.StringPointerValue(catalog.CatalogId)
+	if catalogPropertiesWasNull {
+		model.CatalogProperties = fwtypes.NewListNestedObjectValueOfNull[catalogPropertiesModel](ctx)
 	}
 }
 
-func readCatalogResourceID(id string) (name string, err error) {
-	parts := strings.SplitN(id, ",", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog_id,name", id)
-	}
-	return parts[1], nil
-}
+// --- Model structs ---
 
-type resourceCatalogModel struct {
+type catalogResourceModel struct {
 	framework.WithRegionModel
-	AllowFullTableExternalDataAccess types.Bool                                                  `tfsdk:"allow_full_table_external_data_access"`
-	ARN                              types.String                                                `tfsdk:"arn"`
-	CatalogId                        types.String                                                `tfsdk:"catalog_id"`
-	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]     `tfsdk:"catalog_properties"`
-	Description                      types.String                                                `tfsdk:"description"`
-	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]      `tfsdk:"federated_catalog"`
-	ID                               types.String                                                `tfsdk:"id"`
-	Name                             types.String                                                `tfsdk:"name"`
-	Tags                             tftags.Map                                                  `tfsdk:"tags"`
-	TagsAll                          tftags.Map                                                  `tfsdk:"tags_all"`
-	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel] `tfsdk:"target_redshift_catalog"`
-	Timeouts                         timeouts.Value                                              `tfsdk:"timeouts"`
-}
-
-type federatedCatalogModel struct {
-	ConnectionName types.String `tfsdk:"connection_name"`
-	Identifier     types.String `tfsdk:"identifier"`
-}
-
-type targetRedshiftCatalogModel struct {
-	CatalogArn fwtypes.ARN `tfsdk:"catalog_arn"`
+	AllowFullTableExternalDataAccess fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum] `tfsdk:"allow_full_table_external_data_access"`
+	ARN                              types.String                                                      `tfsdk:"arn" autoflex:"-"`
+	CatalogID                        types.String                                                      `tfsdk:"catalog_id"`
+	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]           `tfsdk:"catalog_properties"`
+	CreateDatabaseDefaultPermissions fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_database_default_permissions"`
+	CreateTableDefaultPermissions    fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_table_default_permissions"`
+	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
+	Description                      types.String                                                      `tfsdk:"description"`
+	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
+	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
+	Name                             types.String                                                      `tfsdk:"name"`
+	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
+	Tags                             tftags.Map                                                        `tfsdk:"tags"`
+	TagsAll                          tftags.Map                                                        `tfsdk:"tags_all"`
+	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]       `tfsdk:"target_redshift_catalog"`
+	Timeouts                         timeouts.Value                                                    `tfsdk:"timeouts"`
+	UpdateTime                       timetypes.RFC3339                                                 `tfsdk:"update_time"`
 }
 
 type catalogPropertiesModel struct {
-	CustomProperties              fwtypes.MapValueOf[types.String]                                    `tfsdk:"custom_properties" autoflex:",omitempty"`
-	DataLakeAccessProperties      fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel]      `tfsdk:"data_lake_access_properties" autoflex:",omitempty"`
-	IcebergOptimizationProperties fwtypes.ListNestedObjectValueOf[icebergOptimizationPropertiesModel] `tfsdk:"iceberg_optimization_properties" autoflex:",omitempty"`
+	CustomProperties                fwtypes.MapOfString                                                       `tfsdk:"custom_properties"`
+	DataLakeAccessProperties        fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel]            `tfsdk:"data_lake_access_properties"`
+	IcebergOptimizationProperties   fwtypes.ListNestedObjectValueOf[icebergOptimizationPropertiesModel]       `tfsdk:"iceberg_optimization_properties"`
 }
 
 type dataLakeAccessPropertiesModel struct {
-	CatalogType      types.String `tfsdk:"catalog_type" autoflex:",omitempty"`
-	DataLakeAccess   types.Bool   `tfsdk:"data_lake_access"`
-	DataTransferRole fwtypes.ARN  `tfsdk:"data_transfer_role" autoflex:",omitempty"`
-	KmsKey           types.String `tfsdk:"kms_key" autoflex:",omitempty"`
+	CatalogType            types.String  `tfsdk:"catalog_type"`
+	DataLakeAccess         types.Bool    `tfsdk:"data_lake_access"`
+	DataTransferRole       fwtypes.ARN   `tfsdk:"data_transfer_role"`
+	KmsKey                 types.String  `tfsdk:"kms_key"`
+	ManagedWorkgroupName   types.String  `tfsdk:"managed_workgroup_name"`
+	ManagedWorkgroupStatus types.String  `tfsdk:"managed_workgroup_status"`
+	RedshiftDatabaseName   types.String  `tfsdk:"redshift_database_name"`
+	StatusMessage          types.String  `tfsdk:"status_message"`
 }
 
 type icebergOptimizationPropertiesModel struct {
@@ -634,4 +657,23 @@ type icebergOptimizationPropertiesModel struct {
 	OrphanFileDeletion fwtypes.MapValueOf[types.String] `tfsdk:"orphan_file_deletion" autoflex:",omitempty"`
 	Retention          fwtypes.MapValueOf[types.String] `tfsdk:"retention" autoflex:",omitempty"`
 	RoleArn            fwtypes.ARN                      `tfsdk:"role_arn" autoflex:",omitempty"`
+}
+
+type federatedCatalogModel struct {
+	ConnectionName types.String `tfsdk:"connection_name"`
+	ConnectionType types.String `tfsdk:"connection_type"`
+	Identifier     types.String `tfsdk:"identifier"`
+}
+
+type targetRedshiftCatalogModel struct {
+	CatalogArn fwtypes.ARN `tfsdk:"catalog_arn"`
+}
+
+type principalPermissionsModel struct {
+	Permissions fwtypes.ListOfString                                    `tfsdk:"permissions"`
+	Principal   fwtypes.ListNestedObjectValueOf[dataLakePrincipalModel] `tfsdk:"principal"`
+}
+
+type dataLakePrincipalModel struct {
+	DataLakePrincipalIdentifier types.String `tfsdk:"data_lake_principal_identifier"`
 }
