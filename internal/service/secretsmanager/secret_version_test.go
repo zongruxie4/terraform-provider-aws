@@ -324,7 +324,6 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
-	var versionWriteOnly secretsmanager.GetSecretValueOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	secretResourceName := "aws_secretsmanager_secret.test"
@@ -343,11 +342,9 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
-					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
-					resource.TestCheckNoResourceAttr(resourceName, "has_secret_string_wo"),
+					resource.TestCheckResourceAttr(resourceName, "has_secret_string_wo", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "secret_id", secretResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "secret_binary", ""),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
@@ -362,9 +359,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret2", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret2"),
-					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -421,7 +416,6 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
-	var versionWriteOnly secretsmanager.GetSecretValueOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	secretResourceName := "aws_secretsmanager_secret.test"
@@ -439,40 +433,31 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingle(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
-					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
-					testAccCheckSecretVersionWriteOnlyStagesEqual(t, &versionWriteOnly, []string{"one", "AWSCURRENT"}),
 				),
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingleUpdated(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
-					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
-					testAccCheckSecretVersionWriteOnlyStagesEqual(t, &versionWriteOnly, []string{"AWSCURRENT", "two"}),
 				),
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesMultiple(rName, "test-secret", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
-					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
-					testAccCheckSecretVersionWriteOnlyStagesEqual(t, &versionWriteOnly, []string{"one", "AWSCURRENT", "two"}),
 				),
 			},
 		},
@@ -545,52 +530,6 @@ func testAccCheckSecretVersionWriteOnlyValueEqual(t *testing.T, param *secretsma
 	return func(s *terraform.State) error {
 		if aws.ToString(param.SecretString) != writeOnlyValue {
 			t.Fatalf("Expected SecretsManger SecretString to be %v, but got %v", writeOnlyValue, aws.ToString(param.SecretString))
-		}
-		return nil
-	}
-}
-
-func testAccCheckSecretVersionExistsWriteOnly(ctx context.Context, t *testing.T, n string, v *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
-
-		arn, versionEntry, err := tfsecretsmanager.FindSecretVersionEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"])
-
-		if err != nil {
-			return err
-		}
-
-		// Construct a GetSecretValueOutput-like structure from ListSecretVersionIds result
-		result := &secretsmanager.GetSecretValueOutput{
-			ARN:           arn,
-			VersionId:     versionEntry.VersionId,
-			VersionStages: versionEntry.VersionStages,
-		}
-
-		*v = *result
-
-		return nil
-	}
-}
-
-func testAccCheckSecretVersionWriteOnlyValueEmpty(t *testing.T, param *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(param.SecretString) != "" {
-			t.Fatalf("Expected SecretsManger SecretString to be an empty string, but got %v", aws.ToString(param.SecretString))
-		}
-		return nil
-	}
-}
-
-func testAccCheckSecretVersionWriteOnlyStagesEqual(t *testing.T, param *secretsmanager.GetSecretValueOutput, stages []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !reflect.DeepEqual(param.VersionStages, stages) {
-			t.Fatalf("Expected SecretsManger VersionStages to be %v, but got %v", stages, param.VersionStages)
 		}
 		return nil
 	}
