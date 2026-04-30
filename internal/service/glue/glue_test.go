@@ -24,10 +24,10 @@ func TestAccGlue_serial(t *testing.T) {
 			"targetRedshiftCatalogProvisioned": testAccCatalog_targetRedshiftCatalogProvisioned,
 		},
 		"CatalogDataSource": {
-			"catalogPropertiesDataLakeAccess":  testAccCatalogDataSource_catalogPropertiesDataLakeAccess,
-			"federatedCatalog_mySQL":           testAccCatalogDataSource_federatedCatalog_mySQL,
-			"federatedCatalog_s3Tables":        testAccCatalogDataSource_federatedCatalog_s3Tables,
-			"targetRedshiftCatalog":            testAccCatalogDataSource_targetRedshiftCatalog,
+			"catalogPropertiesDataLakeAccess": testAccCatalogDataSource_catalogPropertiesDataLakeAccess,
+			"federatedCatalog_mySQL":          testAccCatalogDataSource_federatedCatalog_mySQL,
+			"federatedCatalog_s3Tables":       testAccCatalogDataSource_federatedCatalog_s3Tables,
+			"targetRedshiftCatalog":           testAccCatalogDataSource_targetRedshiftCatalog,
 		},
 		"CatalogTableOptimizer": {
 			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,

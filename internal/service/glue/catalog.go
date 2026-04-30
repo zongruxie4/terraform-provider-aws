@@ -636,20 +636,20 @@ type catalogResourceModel struct {
 }
 
 type catalogPropertiesModel struct {
-	CustomProperties                fwtypes.MapOfString                                                       `tfsdk:"custom_properties"`
-	DataLakeAccessProperties        fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel]            `tfsdk:"data_lake_access_properties"`
-	IcebergOptimizationProperties   fwtypes.ListNestedObjectValueOf[icebergOptimizationPropertiesModel]       `tfsdk:"iceberg_optimization_properties"`
+	CustomProperties              fwtypes.MapOfString                                                 `tfsdk:"custom_properties"`
+	DataLakeAccessProperties      fwtypes.ListNestedObjectValueOf[dataLakeAccessPropertiesModel]      `tfsdk:"data_lake_access_properties"`
+	IcebergOptimizationProperties fwtypes.ListNestedObjectValueOf[icebergOptimizationPropertiesModel] `tfsdk:"iceberg_optimization_properties"`
 }
 
 type dataLakeAccessPropertiesModel struct {
-	CatalogType            types.String  `tfsdk:"catalog_type"`
-	DataLakeAccess         types.Bool    `tfsdk:"data_lake_access"`
-	DataTransferRole       fwtypes.ARN   `tfsdk:"data_transfer_role"`
-	KmsKey                 types.String  `tfsdk:"kms_key"`
-	ManagedWorkgroupName   types.String  `tfsdk:"managed_workgroup_name"`
-	ManagedWorkgroupStatus types.String  `tfsdk:"managed_workgroup_status"`
-	RedshiftDatabaseName   types.String  `tfsdk:"redshift_database_name"`
-	StatusMessage          types.String  `tfsdk:"status_message"`
+	CatalogType            types.String `tfsdk:"catalog_type"`
+	DataLakeAccess         types.Bool   `tfsdk:"data_lake_access"`
+	DataTransferRole       fwtypes.ARN  `tfsdk:"data_transfer_role"`
+	KmsKey                 types.String `tfsdk:"kms_key"`
+	ManagedWorkgroupName   types.String `tfsdk:"managed_workgroup_name"`
+	ManagedWorkgroupStatus types.String `tfsdk:"managed_workgroup_status"`
+	RedshiftDatabaseName   types.String `tfsdk:"redshift_database_name"`
+	StatusMessage          types.String `tfsdk:"status_message"`
 }
 
 type icebergOptimizationPropertiesModel struct {

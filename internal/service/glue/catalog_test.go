@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
@@ -26,7 +27,6 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/YakDriver/regexache"
 )
 
 func testAccCatalog_disappears(t *testing.T) {
