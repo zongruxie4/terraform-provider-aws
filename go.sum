@@ -263,8 +263,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.37.22 h1:2LO81Hj8dYOxioN/ztt5iiSzrYg
 github.com/aws/aws-sdk-go-v2/service/fis v1.37.22/go.mod h1:NW+8sdgF3jxYlnmmmzSnPnfGdgoJP1rUlbn+9m8O1+8=
 github.com/aws/aws-sdk-go-v2/service/fms v1.44.24 h1:9HVojSt6nLVX/Ao55d7PGVg3zzg6XbNzT6RIiLnKEmM=
 github.com/aws/aws-sdk-go-v2/service/fms v1.44.24/go.mod h1:cIz6sTAJzcJceQM5chsHkKq5agNHWtLCm5r20teGur8=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8 h1:Izf3qx0tdfoT27cj6VLbb9XfBiQ3HtLIzKhLfmyB+F0=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8/go.mod h1:3BfxCKiQTGhvLHWCgCCXvV4sCbHX87K/AjCuewlD92M=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.65.9 h1:xzMWyMv3g8dBFxsjZEEp3BkbBj8HMyRV6McX6uW6Nf8=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.65.9/go.mod h1:ZhrGF6EmakQJR9N5lGxh7LdkVG+v+Iaa1+PKU9eehWQ=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.53.0 h1:RKUgMnd4lD9Lb2R9RqDWDyVkEEBoyb0ZW5iBzWULRF8=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.53.0/go.mod h1:GQbXeQUBpz8fSrJFp8SwhFMBhXCrt1lsRvgWUvryzYQ=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.7 h1:nHho+BHxliywn+a7ojNuL+wdd2vS0wv8TB3O2+hWR4M=
