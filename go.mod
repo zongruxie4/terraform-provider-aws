@@ -271,7 +271,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.13
-	github.com/aws/aws-sdk-go-v2/service/waf v1.30.21
+	github.com/aws/aws-sdk-go-v2/service/waf v1.30.22
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.22
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.22
