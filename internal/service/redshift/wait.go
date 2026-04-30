@@ -308,11 +308,11 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 
 func waitNamespaceRegistrationCreated(ctx context.Context, conn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string, timeout time.Duration) (string, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"Registering"},
+		Pending:    []string{"NOT_REGISTERED", "Registering"},
 		Target:     []string{"Registered"},
 		Refresh:    statusNamespaceRegistration(conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier),
 		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -338,4 +338,21 @@ func waitNamespaceRegistrationDeleted(ctx context.Context, conn *redshift.Client
 	}
 
 	return "", err
+}
+
+func waitInternalDataShareCreated(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region string, timeout time.Duration) (*awstypes.DataShare, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"AVAILABLE"},
+		Refresh:    statusInternalDataShare(conn, namespaceID, accountID, region),
+		Timeout:    timeout,
+		MinTimeout: 2 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.DataShare); ok {
+		return output, err
+	}
+
+	return nil, err
 }

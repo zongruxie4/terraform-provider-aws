@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,10 +18,10 @@ import (
 
 func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_namespace_registration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -33,7 +31,29 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 				Config: testAccNamespaceRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_redshift_namespace_registration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceRegistrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceRegistrationConfig_cluster(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
 		},
@@ -42,8 +62,8 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 
 func testAccCheckNamespaceRegistrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		serverlessConn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
+		serverlessConn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_namespace_registration" {
@@ -80,8 +100,8 @@ func testAccCheckNamespaceRegistrationExists(ctx context.Context, t *testing.T, 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		serverlessConn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
+		serverlessConn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		// Extract parameters from state
 		consumerIdentifier := rs.Primary.Attributes["consumer_identifier"]
@@ -115,6 +135,28 @@ resource "aws_redshift_namespace_registration" "test" {
   namespace_type                  = "serverless"
   serverless_namespace_identifier = aws_redshiftserverless_namespace.test.namespace_name
   serverless_workgroup_identifier = aws_redshiftserverless_workgroup.test.workgroup_name
+}
+`, rName)
+}
+
+func testAccNamespaceRegistrationConfig_cluster(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "testuser"
+  master_password     = "Testpass123"
+  node_type           = "ra3.large"
+  cluster_type        = "single-node"
+  skip_final_snapshot = true
+}
+
+resource "aws_redshift_namespace_registration" "test" {
+  consumer_identifier            = format("DataCatalog/%%s", data.aws_caller_identity.current.account_id)
+  namespace_type                 = "provisioned"
+  provisioned_cluster_identifier = aws_redshift_cluster.test.cluster_identifier
 }
 `, rName)
 }

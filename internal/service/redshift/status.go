@@ -3,7 +3,7 @@
 
 package redshift
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -173,5 +173,21 @@ func statusNamespaceRegistration(redshiftConn *redshift.Client, serverlessConn *
 		}
 
 		return status, status, nil
+	}
+}
+
+func statusInternalDataShare(conn *redshift.Client, namespaceID, accountID, region string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findInternalDataShareByNamespaceID(ctx, conn, namespaceID, accountID, region)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, "AVAILABLE", nil
 	}
 }

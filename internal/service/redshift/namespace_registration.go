@@ -6,11 +6,13 @@ package redshift
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,14 +38,9 @@ func newNamespaceRegistrationResource(context.Context) (resource.ResourceWithCon
 }
 
 type namespaceRegistrationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[namespaceRegistrationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByIdentity
-	framework.ResourceWithModel[namespaceRegistrationResourceModel]
-}
-
-func (r *namespaceRegistrationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_redshift_namespace_registration"
 }
 
 func (r *namespaceRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -127,7 +125,72 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 		return
 	}
 
+	// Wait for the internal data share to be created
+	if data.NamespaceType.ValueString() == "serverless" {
+		// Get the namespace ID (UUID) for building the data share ARN
+		// serverless_namespace_identifier can be either name or ID
+		serverlessConn := r.Meta().RedshiftServerlessClient(ctx)
+		namespaceIdentifier := data.ServerlessNamespaceIdentifier.ValueString()
+
+		namespace, err := serverlessConn.GetNamespace(ctx, &redshiftserverless.GetNamespaceInput{
+			NamespaceName: aws.String(namespaceIdentifier),
+		})
+
+		var namespaceID string
+		if err != nil {
+			// If GetNamespace fails, assume the identifier is already the namespace ID
+			namespaceID = namespaceIdentifier
+		} else {
+			namespaceID = aws.ToString(namespace.Namespace.NamespaceId)
+		}
+
+		_, err = waitInternalDataShareCreated(ctx, conn,
+			namespaceID,
+			r.Meta().AccountID(ctx),
+			r.Meta().Region(ctx),
+			namespaceRegistrationInvalidClusterStateFaultTimeout)
+		if err != nil {
+			response.Diagnostics.AddError("waiting for Redshift internal data share creation", err.Error())
+			return
+		}
+	} else if data.NamespaceType.ValueString() == "provisioned" {
+		// Get the namespace ID from the cluster
+		cluster, err := findClusterByID(ctx, conn, data.ProvisionedClusterIdentifier.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError("reading Redshift Cluster for namespace ID", err.Error())
+			return
+		}
+
+		// Extract namespace ID from ClusterNamespaceArn
+		// Format: arn:aws:redshift:region:account:namespace:namespace-id
+		namespaceArn := aws.ToString(cluster.ClusterNamespaceArn)
+		parts := strings.Split(namespaceArn, ":")
+		if len(parts) < 7 {
+			response.Diagnostics.AddError("parsing cluster namespace ARN", fmt.Sprintf("invalid ARN format: %s", namespaceArn))
+			return
+		}
+		namespaceID := parts[6]
+
+		_, err = waitInternalDataShareCreated(ctx, conn,
+			namespaceID,
+			r.Meta().AccountID(ctx),
+			r.Meta().Region(ctx),
+			namespaceRegistrationInvalidClusterStateFaultTimeout)
+		if err != nil {
+			response.Diagnostics.AddError("waiting for Redshift internal data share creation", err.Error())
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	readResp := resource.ReadResponse{State: response.State}
+	r.Read(ctx, resource.ReadRequest{State: response.State}, &readResp)
+	response.Diagnostics.Append(readResp.Diagnostics...)
+	response.State = readResp.State
 }
 
 func (r *namespaceRegistrationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -137,9 +200,25 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 		return
 	}
 
+	// For serverless namespaces, if the identifier is a UUID (namespace_id),
+	// we cannot verify the registration status because GetNamespace requires namespace_name.
+	// In this case, we trust the state and skip verification.
+	if data.NamespaceType.ValueString() == "serverless" {
+		identifier := data.ServerlessNamespaceIdentifier.ValueString()
+		// Check if it looks like a UUID (8-4-4-4-12 format)
+		if len(identifier) == 36 && identifier[8] == '-' && identifier[13] == '-' {
+			// Assume it's a UUID, skip verification
+			response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+			return
+		}
+	}
+
 	conn := r.Meta().RedshiftClient(ctx)
 	serverlessConn := r.Meta().RedshiftServerlessClient(ctx)
 
+	// LakehouseRegistrationStatus is not immediately populated by AWS after registration,
+	// particularly for provisioned clusters. We verify the resource exists but don't
+	// treat empty status as "not registered".
 	_, err := findNamespaceRegistrationByID(ctx, conn, serverlessConn,
 		data.ConsumerIdentifier.ValueString(),
 		data.NamespaceType.ValueString(),
@@ -147,7 +226,7 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 		data.ServerlessWorkgroupIdentifier.ValueString(),
 		data.ProvisionedClusterIdentifier.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -199,10 +278,6 @@ func (r *namespaceRegistrationResource) Delete(ctx context.Context, request reso
 		response.Diagnostics.AddError("deleting Redshift Namespace Registration", err.Error())
 		return
 	}
-}
-
-func (r *namespaceRegistrationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type namespaceRegistrationResourceModel struct {

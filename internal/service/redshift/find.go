@@ -5,6 +5,7 @@ package redshift
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -986,12 +987,6 @@ func findServerlessNamespaceRegistrationStatus(ctx context.Context, conn *redshi
 	}
 
 	status := aws.ToString(output.Namespace.LakehouseRegistrationStatus)
-	if status == "" {
-		return "", &retry.NotFoundError{
-			Message: "namespace not registered to Glue Data Catalog",
-		}
-	}
-
 	return status, nil
 }
 
@@ -1002,11 +997,16 @@ func findProvisionedClusterRegistrationStatus(ctx context.Context, conn *redshif
 	}
 
 	status := aws.ToString(cluster.LakehouseRegistrationStatus)
-	if status == "" {
-		return "", &retry.NotFoundError{
-			Message: "cluster not registered to Glue Data Catalog",
-		}
+	return status, nil
+}
+
+func findInternalDataShareByNamespaceID(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region string) (*awstypes.DataShare, error) {
+	dataShareARN := fmt.Sprintf("arn:aws:redshift:%s:%s:datashare:%s/ds_internal_namespace",
+		region, accountID, namespaceID)
+
+	input := &redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(dataShareARN),
 	}
 
-	return status, nil
+	return findDataShare(ctx, conn, input)
 }
