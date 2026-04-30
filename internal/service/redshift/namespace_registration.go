@@ -232,11 +232,11 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 	} else {
 		// Provisioned cluster - get namespace ID from cluster
 		cluster, err := findClusterByID(ctx, conn, data.ProvisionedClusterIdentifier.ValueString())
+		if retry.NotFound(err) {
+			response.State.RemoveResource(ctx)
+			return
+		}
 		if err != nil {
-			if retry.NotFound(err) {
-				response.State.RemoveResource(ctx)
-				return
-			}
 			response.Diagnostics.AddError("reading Redshift Cluster", err.Error())
 			return
 		}
