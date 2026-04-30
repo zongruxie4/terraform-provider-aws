@@ -457,7 +457,7 @@ func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, name, err := readCatalogResourceID(state.ID.ValueString())
+	name, err := readCatalogResourceID(state.ID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
@@ -489,7 +489,7 @@ func (r *resourceCatalog) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
-	_, name, err := readCatalogResourceID(id)
+	name, err := readCatalogResourceID(id)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
@@ -583,19 +583,12 @@ func statusCatalog(ctx context.Context, conn *glue.Client, id string) retry.Stat
 	}
 }
 
-func readCatalogResourceID(id string) (catalogId, name string, err error) {
+func readCatalogResourceID(id string) (name string, err error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog_id,name", id)
+		return "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog_id,name", id)
 	}
-	return parts[0], parts[1], nil
-}
-
-func resolveCatalogID(catalogId, name string) string {
-	if name == s3TablesCatalogName {
-		return name
-	}
-	return catalogId
+	return parts[1], nil
 }
 
 type resourceCatalogModel struct {
