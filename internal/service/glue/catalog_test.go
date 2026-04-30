@@ -708,7 +708,7 @@ resource "aws_glue_catalog" "test" {
 }
 
 func testAccCatalogConfig_targetRedshiftCatalogProvisioned(rName string) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf(` //lintignore:AWSAT005
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
