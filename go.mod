@@ -268,7 +268,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.22
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.72.0
-	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.2
+	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.12
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.21
