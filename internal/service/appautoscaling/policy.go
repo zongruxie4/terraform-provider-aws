@@ -22,24 +22,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
+// @IdentityAttribute("service_namespace")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("scalable_dimension")
+// @IdentityAttribute("name")
+// @ImportIDHandler("policyImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalingPolicy")
+// @Testing(importStateIdFunc=testAccPolicyImportStateIdFunc)
+// @Testing(name="Policy")
+// @Testing(preIdentityVersion="v6.43.0")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyPut,
 		DeleteWithoutTimeout: resourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourcePolicyImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -621,21 +628,9 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts, err := policyParseImportID(d.Id())
-	if err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
-
-	serviceNamespace := parts[0]
-	resourceID := parts[1]
-	scalableDimension := parts[2]
-	name := parts[3]
-
-	d.SetId(name)
-	d.Set(names.AttrName, name)
-	d.Set(names.AttrResourceID, resourceID)
-	d.Set("scalable_dimension", scalableDimension)
-	d.Set("service_namespace", serviceNamespace)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -726,6 +721,30 @@ func policyParseImportID(id string) ([]string, error) {
 	}
 
 	return []string{serviceNamespace, resourceID, scalableDimension, name}, nil
+}
+
+var _ inttypes.SDKv2ImportID = policyImportID{}
+
+type policyImportID struct{}
+
+func (policyImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := policyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"service_namespace":  parts[0],
+		names.AttrResourceID: parts[1],
+		"scalable_dimension": parts[2],
+		names.AttrName:       parts[3],
+	}
+
+	return parts[3], result, nil
+}
+
+func (policyImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }
 
 func expandTargetTrackingScalingPolicyConfiguration(tfList []any) *awstypes.TargetTrackingScalingPolicyConfiguration {
