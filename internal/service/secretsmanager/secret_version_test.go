@@ -37,7 +37,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
@@ -71,7 +71,7 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_binary(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_binary", inttypes.Base64EncodeOnce([]byte("test-binary"))),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
@@ -104,7 +104,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_stagesSingle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
@@ -114,7 +114,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 			},
 			{
 				Config: testAccSecretVersionConfig_stagesSingleUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
@@ -124,7 +124,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 			},
 			{
 				Config: testAccSecretVersionConfig_stagesMultiple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "3"),
@@ -157,7 +157,7 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_stagesSingle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
@@ -179,7 +179,7 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 					}
 				},
 				Config: testAccSecretVersionConfig_stagesSingle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
@@ -205,7 +205,7 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName),
 				),
@@ -231,7 +231,7 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
@@ -257,7 +257,7 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_multipleVersions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resource1Name, &version1),
 					resource.TestCheckResourceAttr(resource1Name, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resource1Name, "version_stages.*", "one"),
@@ -294,7 +294,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
@@ -304,7 +304,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret2", 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret2"),
@@ -338,7 +338,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnlyLimitedPermissions(rName, "test-secret", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
 					resource.TestCheckResourceAttr(resourceName, "has_secret_string_wo", acctest.CtTrue),
@@ -347,7 +347,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 			},
 			{
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
@@ -376,7 +376,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingle(rName, "test-secret", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
@@ -389,7 +389,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesSingleUpdated(rName, "test-secret", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
@@ -402,7 +402,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 			},
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly_stagesMultiple(rName, "test-secret", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					testAccCheckSecretVersionExistsWriteOnly(ctx, t, resourceName, &versionWriteOnly),
 					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
