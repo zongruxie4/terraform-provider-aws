@@ -32,6 +32,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 const (
 	namespaceRegistrationInvalidClusterStateFaultTimeout = 15 * time.Minute
+	namespaceTypeServerless                              = "serverless"
+	namespaceTypeProvisioned                             = "provisioned"
 )
 
 // @FrameworkResource("aws_redshift_namespace_registration", name="Namespace Registration")
@@ -103,7 +105,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 		ConsumerIdentifiers: []string{data.ConsumerIdentifier.ValueString()},
 	}
 
-	if data.NamespaceType.ValueString() == "serverless" {
+	if data.NamespaceType.ValueString() == namespaceTypeServerless {
 		input.NamespaceIdentifier = &awstypes.NamespaceIdentifierUnionMemberServerlessIdentifier{
 			Value: awstypes.ServerlessIdentifier{
 				NamespaceIdentifier: fwflex.StringFromFramework(ctx, data.ServerlessNamespaceIdentifier),
@@ -128,7 +130,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 	}
 
 	// Wait for the internal data share to be created
-	if data.NamespaceType.ValueString() == "serverless" {
+	if data.NamespaceType.ValueString() == namespaceTypeServerless {
 		// Get the namespace ID (UUID) for building the data share ARN
 		// serverless_namespace_identifier can be either name or ID
 		serverlessConn := r.Meta().RedshiftServerlessClient(ctx)
@@ -156,7 +158,7 @@ func (r *namespaceRegistrationResource) Create(ctx context.Context, request reso
 			response.Diagnostics.AddError("waiting for Redshift internal data share creation", err.Error())
 			return
 		}
-	} else if data.NamespaceType.ValueString() == "provisioned" {
+	} else if data.NamespaceType.ValueString() == namespaceTypeProvisioned {
 		// Get the namespace ID from the cluster
 		cluster, err := findClusterByID(ctx, conn, data.ProvisionedClusterIdentifier.ValueString())
 		if err != nil {
@@ -211,7 +213,7 @@ func (r *namespaceRegistrationResource) Read(ctx context.Context, request resour
 	var namespaceID string
 	var err error
 
-	if data.NamespaceType.ValueString() == "serverless" {
+	if data.NamespaceType.ValueString() == namespaceTypeServerless {
 		identifier := data.ServerlessNamespaceIdentifier.ValueString()
 		// Check if it looks like a UUID (already the namespace ID)
 		if len(identifier) == 36 && identifier[8] == '-' && identifier[13] == '-' {
@@ -281,7 +283,7 @@ func (r *namespaceRegistrationResource) Delete(ctx context.Context, request reso
 		ConsumerIdentifiers: []string{data.ConsumerIdentifier.ValueString()},
 	}
 
-	if data.NamespaceType.ValueString() == "serverless" {
+	if data.NamespaceType.ValueString() == namespaceTypeServerless {
 		input.NamespaceIdentifier = &awstypes.NamespaceIdentifierUnionMemberServerlessIdentifier{
 			Value: awstypes.ServerlessIdentifier{
 				NamespaceIdentifier: fwflex.StringFromFramework(ctx, data.ServerlessNamespaceIdentifier),
@@ -332,7 +334,7 @@ func (namespaceRegistrationImportID) Parse(id string) (string, map[string]any, e
 	if len(parts) == 3 {
 		result := map[string]any{
 			"consumer_identifier":             parts[0],
-			"namespace_type":                  "serverless",
+			"namespace_type":                  namespaceTypeServerless,
 			"serverless_namespace_identifier": parts[1],
 			"serverless_workgroup_identifier": parts[2],
 		}
@@ -343,7 +345,7 @@ func (namespaceRegistrationImportID) Parse(id string) (string, map[string]any, e
 	if len(parts) == 2 {
 		result := map[string]any{
 			"consumer_identifier":            parts[0],
-			"namespace_type":                 "provisioned",
+			"namespace_type":                 namespaceTypeProvisioned,
 			"provisioned_cluster_identifier": parts[1],
 		}
 		return id, result, nil
