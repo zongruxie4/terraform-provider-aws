@@ -367,6 +367,11 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 					testAccCheckSecretVersionWriteOnlyValueEmpty(t, &versionWriteOnly),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
