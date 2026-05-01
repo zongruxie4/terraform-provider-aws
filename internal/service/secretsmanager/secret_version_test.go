@@ -97,7 +97,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			}),
 			expectedForceNew: []string{"secret_string"},
 		},
-		"secret_string unkown": {
+		"secret_string unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
 				"secret_string": cty.StringVal("old"),
 			}),
