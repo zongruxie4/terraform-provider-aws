@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
@@ -38,7 +39,7 @@ func testAccCatalog_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
@@ -74,7 +75,7 @@ func testAccCatalog_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
@@ -90,8 +91,9 @@ func testAccCatalog_tags(t *testing.T) {
 					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsPercent), knownvalue.Int64Exact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsKey1), knownvalue.StringExact(acctest.CtValue1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 			},
 			{
@@ -105,9 +107,10 @@ func testAccCatalog_tags(t *testing.T) {
 					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsPercent), knownvalue.Int64Exact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsKey1), knownvalue.StringExact(acctest.CtValue1Updated)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsKey2), knownvalue.StringExact(acctest.CtValue2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 			{
@@ -116,8 +119,9 @@ func testAccCatalog_tags(t *testing.T) {
 					testAccCheckCatalogExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsPercent), knownvalue.Int64Exact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtTagsKey2), knownvalue.StringExact(acctest.CtValue2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 		},
@@ -197,7 +201,7 @@ func testAccCatalog_federatedCatalog_mySQL(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
@@ -408,7 +412,7 @@ func testAccCatalog_configurationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCatalogConfig_missingConfiguration(rName),
-				ExpectError: regexache.MustCompile("Missing Required Configuration"),
+				ExpectError: regexache.MustCompile("Missing (Required Configuration|Attribute Configuration)"),
 			},
 		},
 	})
@@ -427,13 +431,13 @@ func testAccCheckCatalogDestroy(ctx context.Context, t *testing.T) resource.Test
 
 			_, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
-				continue
+				return nil
 			}
 			if err != nil {
-				return err
+				return smarterr.NewError(err)
 			}
 
-			return fmt.Errorf("Glue Catalog %s still exists", rs.Primary.ID)
+			return smarterr.NewError(errors.New("not destroyed"))
 		}
 
 		return nil
@@ -514,19 +518,9 @@ func testAccPreCheckS3TablesCatalogDoesNotExist(ctx context.Context, t *testing.
 // --- Config functions ---
 
 func testAccCatalogConfig_catalogPropertiesDataLakeAccess(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -588,11 +582,14 @@ resource "aws_glue_catalog" "test" {
     time_sleep.iam_propagation,
   ]
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccCatalogConfig_federatedCatalog_mySQL(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -601,9 +598,6 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -710,23 +704,19 @@ resource "aws_glue_catalog" "test" {
     identifier      = aws_glue_connection.test.name
   }
 
-  depends_on = [aws_lakeformation_resource.test]
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccCatalogConfig_targetRedshiftCatalog(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -793,24 +783,15 @@ resource "aws_glue_catalog" "test" {
     catalog_arn = "${aws_glue_catalog.producer.arn}/dev"
   }
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccCatalogConfig_targetRedshiftCatalogProvisioned(rName string) string {
 	//nolint:lll // long Terraform config
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -927,7 +908,7 @@ resource "aws_glue_catalog" "test" {
   name = %[1]q
 
   target_redshift_catalog {
-    catalog_arn = "$${aws_glue_catalog.target.arn}/$${aws_redshift_cluster.test.database_name}"
+    catalog_arn = "${aws_glue_catalog.target.arn}/${aws_redshift_cluster.test.database_name}"
   }
 
   catalog_properties {
@@ -942,15 +923,14 @@ resource "aws_glue_catalog" "test" {
     aws_iam_role_policy.test,
   ]
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccCatalogConfig_federatedCatalog_s3Tables(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_s3TablesBase(rName),
+		fmt.Sprintf(`
 resource "aws_s3tables_table_bucket" "test" {
   name = %[1]q
 }
@@ -961,85 +941,161 @@ resource "aws_glue_catalog" "test" {
 
   federated_catalog {
     connection_name = "aws:s3tables"
-    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:bucket/*"
+    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
   }
 
-  create_database_default_permissions {
-    permissions = ["ALL"]
-
-    principal {
-      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
-    }
-  }
-
-  create_table_default_permissions {
-    permissions = ["ALL"]
-
-    principal {
-      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
-    }
-  }
-
-  depends_on = [aws_s3tables_table_bucket.test]
+  depends_on = [
+    aws_s3tables_table_bucket.test,
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
-`, rName)
+`, rName),
+	)
+}
+
+func testAccCatalogConfig_lakeFormationAdminBase() string {
+	return `
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+`
+}
+
+func testAccCatalogConfig_s3TablesBase(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "lakeformation.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity",
+        "sts:SetContext"
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "LakeFormationPermissionsForS3ListTableBucket"
+        Effect   = "Allow"
+        Action   = ["s3tables:ListTableBuckets"]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "LakeFormationDataAccessPermissionsForS3TableBucket"
+        Effect = "Allow"
+        Action = [
+          "s3tables:CreateTableBucket",
+          "s3tables:GetTableBucket",
+          "s3tables:CreateNamespace",
+          "s3tables:GetNamespace",
+          "s3tables:ListNamespaces",
+          "s3tables:DeleteNamespace",
+          "s3tables:DeleteTableBucket",
+          "s3tables:CreateTable",
+          "s3tables:DeleteTable",
+          "s3tables:GetTable",
+          "s3tables:ListTables",
+          "s3tables:RenameTable",
+          "s3tables:UpdateTableMetadataLocation",
+          "s3tables:GetTableMetadataLocation",
+          "s3tables:GetTableData",
+          "s3tables:PutTableData"
+        ]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_lakeformation_resource" "test" {
+  arn      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName),
+	)
 }
 
 func testAccCatalogConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_s3TablesBase(rName),
+		fmt.Sprintf(`
 resource "aws_glue_catalog" "test" {
   name        = "s3tablescatalog"
-  description = "test s3 tables catalog"
+  description = "Test S3 Tables federated catalog"
 
   federated_catalog {
+    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
     connection_name = "aws:s3tables"
-    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:bucket/*"
   }
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 
-  depends_on = [aws_s3tables_table_bucket.test]
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
-`, rName, tagKey1, tagValue1)
+`, tagKey1, tagValue1),
+	)
 }
 
 func testAccCatalogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_s3TablesBase(rName),
+		fmt.Sprintf(`
 resource "aws_glue_catalog" "test" {
   name        = "s3tablescatalog"
-  description = "test s3 tables catalog"
+  description = "Test S3 Tables federated catalog"
 
   federated_catalog {
+    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
     connection_name = "aws:s3tables"
-    identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:bucket/*"
   }
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 
-  depends_on = [aws_s3tables_table_bucket.test]
+  depends_on = [
+    aws_lakeformation_resource.test,
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2),
+	)
 }
 
 func testAccCatalogConfig_missingConfiguration(rName string) string {
