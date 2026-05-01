@@ -575,27 +575,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alarm_arns", tfslices.ApplyToAll(output.Alarms, func(v awstypes.Alarm) string {
-		return aws.ToString(v.AlarmARN)
-	}))
-	d.Set(names.AttrARN, output.PolicyARN)
-	d.Set(names.AttrName, output.PolicyName)
-	d.Set("policy_type", output.PolicyType)
-	if output.PredictiveScalingPolicyConfiguration != nil {
-		if err := d.Set("predictive_scaling_policy_configuration", []any{flattenPredictiveScalingPolicyConfiguration(output.PredictiveScalingPolicyConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_policy_configuration: %s", err)
-		}
-	} else {
-		d.Set("predictive_scaling_policy_configuration", nil)
-	}
-	d.Set(names.AttrResourceID, output.ResourceId)
-	d.Set("scalable_dimension", output.ScalableDimension)
-	d.Set("service_namespace", output.ServiceNamespace)
-	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(output.StepScalingPolicyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting step_scaling_policy_configuration: %s", err)
-	}
-	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(output.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_tracking_scaling_policy_configuration: %s", err)
+	if err := resourcePolicyFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -677,6 +658,33 @@ func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.Clien
 	}
 
 	return output, nil
+}
+
+func resourcePolicyFlatten(ctx context.Context, policy *awstypes.ScalingPolicy, d *schema.ResourceData) error {
+	d.Set("alarm_arns", tfslices.ApplyToAll(policy.Alarms, func(v awstypes.Alarm) string {
+		return aws.ToString(v.AlarmARN)
+	}))
+	d.Set(names.AttrARN, policy.PolicyARN)
+	d.Set(names.AttrName, policy.PolicyName)
+	d.Set("policy_type", policy.PolicyType)
+	if policy.PredictiveScalingPolicyConfiguration != nil {
+		if err := d.Set("predictive_scaling_policy_configuration", []any{flattenPredictiveScalingPolicyConfiguration(policy.PredictiveScalingPolicyConfiguration)}); err != nil {
+			return fmt.Errorf("setting predictive_scaling_policy_configuration: %w", err)
+		}
+	} else {
+		d.Set("predictive_scaling_policy_configuration", nil)
+	}
+	d.Set(names.AttrResourceID, policy.ResourceId)
+	d.Set("scalable_dimension", policy.ScalableDimension)
+	d.Set("service_namespace", policy.ServiceNamespace)
+	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(policy.StepScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("setting step_scaling_policy_configuration: %w", err)
+	}
+	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(policy.TargetTrackingScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("setting target_tracking_scaling_policy_configuration: %w", err)
+	}
+
+	return nil
 }
 
 func policyParseImportID(id string) ([]string, error) {
