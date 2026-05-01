@@ -554,7 +554,7 @@ func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.Va
 		return
 	}
 
-	if allocatedStorage.IsNull() || allocatedStorage.IsUnknown() {
+	if isNullOrUnknownValue(allocatedStorage) {
 		return
 	}
 

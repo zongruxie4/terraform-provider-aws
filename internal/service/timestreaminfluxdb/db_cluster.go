@@ -639,11 +639,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		return
 	}
 
-	isNullOrUnknown := func(val attr.Value) bool {
-		return val.IsNull() || val.IsUnknown()
-	}
-
-	if !isNullOrUnknown(data.AllocatedStorage) {
+	if !isNullOrUnknownValue(data.AllocatedStorage) {
 		switch v := data.AllocatedStorage.ValueInt64(); {
 		case v > math.MaxInt32:
 			resp.Diagnostics.AddError(
@@ -672,12 +668,8 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 			return
 		}
 
-		isNullOrUnknown := func(val attr.Value) bool {
-			return val.IsNull() || val.IsUnknown()
-		}
-
 		var isV3Cluster bool
-		if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
+		if !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
 			meta := r.Meta()
 			if meta == nil {
 				return
@@ -691,12 +683,12 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 			isV3Cluster = isV3
 
 			// Check for V2 fields when using non-V3 parameter group
-			hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
-				!isNullOrUnknown(data.Bucket) ||
-				!isNullOrUnknown(data.DeploymentType) ||
-				!isNullOrUnknown(data.Organization) ||
-				!isNullOrUnknown(data.Password) ||
-				!isNullOrUnknown(data.Username)
+			hasV2Fields := !isNullOrUnknownValue(data.AllocatedStorage) ||
+				!isNullOrUnknownValue(data.Bucket) ||
+				!isNullOrUnknownValue(data.DeploymentType) ||
+				!isNullOrUnknownValue(data.Organization) ||
+				!isNullOrUnknownValue(data.Password) ||
+				!isNullOrUnknownValue(data.Username)
 
 			if !hasV2Fields && !isV3Cluster {
 				resp.Diagnostics.AddAttributeError(
@@ -720,7 +712,7 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 					{data.Password, names.AttrPassword},
 					{data.Username, names.AttrUsername},
 				} {
-					if !isNullOrUnknown(v.val) {
+					if !isNullOrUnknownValue(v.val) {
 						resp.Diagnostics.AddAttributeError(
 							path.Root(v.path),
 							"Invalid Configuration for InfluxDB V3",
@@ -730,7 +722,7 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 				}
 			}
 
-			if !isNullOrUnknown(data.MaintenanceSchedule) {
+			if !isNullOrUnknownValue(data.MaintenanceSchedule) {
 				resp.Diagnostics.AddAttributeError(
 					path.Root("maintenance_schedule"),
 					"Invalid Configuration for InfluxDB V2",
@@ -909,4 +901,8 @@ type dbClusterMaintenanceScheduleData struct {
 type dbClusterS3ConfigurationData struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 	Enabled    types.Bool   `tfsdk:"enabled"`
+}
+
+func isNullOrUnknownValue(val attr.Value) bool {
+	return val.IsNull() || val.IsUnknown()
 }
