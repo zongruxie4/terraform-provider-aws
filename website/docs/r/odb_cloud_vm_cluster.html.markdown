@@ -88,7 +88,6 @@ resource "aws_odb_cloud_vm_cluster" "gi_version_tag_example" {
   timezone                        = "UTC"
   scan_listener_port_tcp          = 1521
   tags = {
-    "env" = "dev"
     "odb:input_gi_version" = "23.0.0.0"
   }
   data_collection_options {
