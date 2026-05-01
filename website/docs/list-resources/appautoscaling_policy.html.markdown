@@ -26,5 +26,5 @@ list "aws_appautoscaling_policy" "example" {
 
 This list resource supports the following arguments:
 
-* `service_namespace` - (Required) Namespace of the AWS service that owns the scalable target. Valid values: `appstream`, `cassandra`, `comprehend`, `custom-resource`, `dynamodb`, `ec2`, `ecs`, `elasticache`, `elasticmapreduce`, `kafka`, `lambda`, `neptune`, `rds`, `sagemaker`, `workspaces`.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `service_namespace` - (Required) Namespace of the AWS service that owns the scalable target. Valid values: `appstream`, `cassandra`, `comprehend`, `custom-resource`, `dynamodb`, `ec2`, `ecs`, `elasticache`, `elasticmapreduce`, `kafka`, `lambda`, `neptune`, `rds`, `sagemaker`, `workspaces`.

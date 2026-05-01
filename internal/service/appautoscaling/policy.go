@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -575,7 +574,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	if err := resourcePolicyFlatten(ctx, output, d); err != nil {
+	if err := resourcePolicyFlatten(output, d); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
@@ -606,14 +605,6 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
-}
-
-func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if err := importer.Import(ctx, d, meta); err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findScalingPolicyByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScalingPolicy, error) {
@@ -660,7 +651,7 @@ func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.Clien
 	return output, nil
 }
 
-func resourcePolicyFlatten(ctx context.Context, policy *awstypes.ScalingPolicy, d *schema.ResourceData) error {
+func resourcePolicyFlatten(policy *awstypes.ScalingPolicy, d *schema.ResourceData) error {
 	d.Set("alarm_arns", tfslices.ApplyToAll(policy.Alarms, func(v awstypes.Alarm) string {
 		return aws.ToString(v.AlarmARN)
 	}))

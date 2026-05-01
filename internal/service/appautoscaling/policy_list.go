@@ -93,7 +93,7 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 			rd.Set("scalable_dimension", item.ScalableDimension)
 
 			if request.IncludeResource {
-				if err := resourcePolicyFlatten(ctx, &item, rd); err != nil {
+				if err := resourcePolicyFlatten(&item, rd); err != nil {
 					tflog.Error(ctx, "Reading Application Auto Scaling Policy", map[string]any{
 						"error": err.Error(),
 					})
