@@ -734,6 +734,200 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly_stages(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretVersion_ConvertStringToStringWriteOnly_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+	secretValue := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with `secret_string`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_string(rName, secretValue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", secretValue),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo_version"),
+				),
+			},
+			// Step 2: Convert to `secret_string_wo`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_stringWriteOnly(rName, secretValue, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, secretValue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckResourceAttr(resourceName, "secret_string_wo_version", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_ConvertStringToStringWriteOnly_withChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+	secretValue := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	secretValueUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with `secret_string`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_string(rName, secretValue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", secretValue),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo_version"),
+				),
+			},
+			// Step 2: Convert to `secret_string_wo`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_stringWriteOnly(rName, secretValueUpdated, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, secretValueUpdated),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckResourceAttr(resourceName, "secret_string_wo_version", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_ConvertStringWriteOnlyToString_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+	secretValue := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with `secret_string_wo`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_stringWriteOnly(rName, secretValue, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, secretValue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckResourceAttr(resourceName, "secret_string_wo_version", "1"),
+				),
+			},
+			// Step 2: Convert to `secret_string`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_string(rName, secretValue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", secretValue),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo_version"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_ConvertStringWriteOnlyToString_withChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+	secretValue := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	secretValueUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with `secret_string_wo`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_stringWriteOnly(rName, secretValue, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, secretValue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckResourceAttr(resourceName, "secret_string_wo_version", "0"),
+				),
+			},
+			// Step 2: Convert to `secret_string`
+			{
+				Config: testAccSecretVersionConfig_convertStringToStringWriteOnly_string(rName, secretValueUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", secretValueUpdated),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_string_wo_version"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckSecretVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
@@ -1009,6 +1203,33 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_string_wo_version = %[3]d
 
   version_stages = ["one", "two", "AWSCURRENT"]
+}
+`, rName, secret, version)
+}
+
+func testAccSecretVersionConfig_convertStringToStringWriteOnly_string(rName, secret string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = %[2]q
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+`, rName, secret)
+}
+
+func testAccSecretVersionConfig_convertStringToStringWriteOnly_stringWriteOnly(rName, secret string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id                = aws_secretsmanager_secret.test.id
+  secret_string_wo         = %[2]q
+  secret_string_wo_version = %[3]d
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
 }
 `, rName, secret, version)
 }
