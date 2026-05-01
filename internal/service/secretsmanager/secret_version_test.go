@@ -121,6 +121,11 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccSecretVersionConfig_stagesSingleUpdated(rName),
@@ -131,6 +136,11 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccSecretVersionConfig_stagesMultiple(rName),
@@ -142,6 +152,11 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -196,6 +211,11 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
