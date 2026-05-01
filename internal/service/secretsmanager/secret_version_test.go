@@ -6,10 +6,13 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-cty/cty"
 	tfcversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,6 +24,203 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+type mockRawDiffer struct {
+	state    cty.Value
+	config   cty.Value
+	forceNew []string
+}
+
+func (d *mockRawDiffer) GetRawState() cty.Value {
+	return d.state
+}
+
+func (d *mockRawDiffer) GetRawConfig() cty.Value {
+	return d.config
+}
+
+func (d *mockRawDiffer) ForceNew(key string) error {
+	d.forceNew = append(d.forceNew, key)
+	return nil
+}
+
+func secretVersionValuesObjectState(values map[string]cty.Value) cty.Value {
+	allValues := map[string]cty.Value{
+		"secret_binary":            cty.StringVal(""),
+		"secret_string":            cty.StringVal(""),
+		"secret_string_wo":         cty.NullVal(cty.String),
+		"secret_string_wo_version": cty.NullVal(cty.Number),
+	}
+
+	maps.Copy(allValues, values)
+
+	return cty.ObjectVal(allValues)
+}
+
+func secretVersionValuesObjectConfig(values map[string]cty.Value) cty.Value {
+	allValues := map[string]cty.Value{
+		"secret_binary":            cty.NullVal(cty.String),
+		"secret_string":            cty.NullVal(cty.String),
+		"secret_string_wo":         cty.NullVal(cty.String),
+		"secret_string_wo_version": cty.NullVal(cty.Number),
+	}
+
+	maps.Copy(allValues, values)
+
+	return cty.ObjectVal(allValues)
+}
+
+func TestSecretVersionForceNewXXX(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		state            cty.Value
+		config           cty.Value
+		expectedForceNew []string
+	}{
+		"new resource": {},
+
+		"secret_string no change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("value"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.StringVal("value"),
+			}),
+		},
+		"secret_string with change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("old"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.StringVal("new"),
+			}),
+			expectedForceNew: []string{"secret_string"},
+		},
+		"secret_string unkown": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("old"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.UnknownVal(cty.String),
+			}),
+		},
+
+		"secret_string_wo_version no change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+		},
+		"secret_string_wo_version with change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo_version": cty.NumberIntVal(2),
+			}),
+			expectedForceNew: []string{"secret_string_wo_version"},
+		},
+		"secret_string_wo_version unknown": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo_version": cty.UnknownVal(cty.Number),
+			}),
+		},
+
+		"secret_string to secret_string_wo no change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("value"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+		},
+		"secret_string to secret_string_wo no change version unknown": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("value"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo_version": cty.UnknownVal(cty.Number),
+			}),
+		},
+		"secret_string to secret_string_wo with change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("old"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("new"),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			expectedForceNew: []string{"secret_string", "secret_string_wo"},
+		},
+		"secret_string to secret_string_wo with change version unknown": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("old"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("old"),
+				"secret_string_wo_version": cty.UnknownVal(cty.Number),
+			}),
+		},
+
+		"secret_string_wo to secret_string no change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.StringVal("value"),
+			}),
+			expectedForceNew: []string{"secret_string"},
+		},
+		"secret_string_wo to secret_string with change": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("old"),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.StringVal("new"),
+			}),
+			expectedForceNew: []string{"secret_string"},
+		},
+		"secret_string_wo to secret_string unknown": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.UnknownVal(cty.String),
+			}),
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diff := mockRawDiffer{
+				state:  testcase.state,
+				config: testcase.config,
+			}
+
+			err := tfsecretsmanager.SecretVersionForceNewCustomDiffInner(t.Context(), &diff, nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if diff := cmp.Diff(testcase.expectedForceNew, diff.forceNew); diff != "" {
+				t.Errorf("unexpected differences: %s", diff)
+			}
+		})
+	}
+}
 
 func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 	ctx := acctest.Context(t)

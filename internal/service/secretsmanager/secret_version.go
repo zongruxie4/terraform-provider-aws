@@ -75,7 +75,6 @@ func resourceSecretVersion() *schema.Resource {
 			"secret_string": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_binary", "secret_string_wo"},
 			},
@@ -90,7 +89,6 @@ func resourceSecretVersion() *schema.Resource {
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				RequiredWith: []string{"secret_string_wo"},
 			},
 			"version_id": {
@@ -104,6 +102,8 @@ func resourceSecretVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+
+		CustomizeDiff: secretVersionForceNewCustomDiff,
 	}
 }
 
@@ -506,4 +506,98 @@ func (secretVersionImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return id, results, nil
+}
+
+func secretVersionForceNewCustomDiff(ctx context.Context, rd *schema.ResourceDiff, meta any) error {
+	return secretVersionForceNewCustomDiffInner(ctx, rd, meta)
+}
+
+type rawDiffer interface {
+	GetRawState() cty.Value
+	GetRawConfig() cty.Value
+	ForceNew(key string) error
+}
+
+func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, meta any) error {
+	rawState := diff.GetRawState()
+	if rawState.IsNull() {
+		return nil
+	}
+
+	rawConfig := diff.GetRawConfig()
+	if rawConfig.IsNull() {
+		return nil
+	}
+
+	stateStringValue := rawState.GetAttr("secret_string")
+	hasStateString := stateStringValue.IsKnown() && !stateStringValue.IsNull()
+	if hasStateString {
+		hasStateString = stateStringValue.AsString() != ""
+	}
+
+	if hasStateString {
+		configStringValue := rawConfig.GetAttr("secret_string")
+		hasConfigString := configStringValue.IsKnown() && !configStringValue.IsNull()
+		if hasConfigString {
+			hasConfigString = configStringValue.AsString() != ""
+		}
+
+		if hasConfigString {
+			stateString := stateStringValue.AsString()
+			configString := configStringValue.AsString()
+			if stateString != configString {
+				if err := diff.ForceNew("secret_string"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		configStringWOValue := rawConfig.GetAttr("secret_string_wo")
+		hasStateStringWO := configStringWOValue.IsKnown() && !configStringWOValue.IsNull()
+		if hasStateStringWO {
+			stateString := stateStringValue.AsString()
+			configString := configStringWOValue.AsString()
+			if stateString != configString {
+				if err := diff.ForceNew("secret_string"); err != nil {
+					return err
+				}
+				if err := diff.ForceNew("secret_string_wo"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}
+
+	stateStringWoVersionValue := rawState.GetAttr("secret_string_wo_version")
+	hasStateStringWoVersion := stateStringWoVersionValue.IsKnown() && !stateStringWoVersionValue.IsNull()
+
+	if hasStateStringWoVersion {
+		configStringWoVersionValue := rawConfig.GetAttr("secret_string_wo_version")
+		if !configStringWoVersionValue.IsKnown() {
+			return nil
+		}
+
+		if !configStringWoVersionValue.IsNull() {
+			if configStringWoVersionValue.Equals(stateStringWoVersionValue).False() {
+				if err := diff.ForceNew("secret_string_wo_version"); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		configStringValue := rawConfig.GetAttr("secret_string")
+		if !configStringValue.IsKnown() {
+			return nil
+		}
+		if !configStringValue.IsNull() {
+			if err := diff.ForceNew("secret_string"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
