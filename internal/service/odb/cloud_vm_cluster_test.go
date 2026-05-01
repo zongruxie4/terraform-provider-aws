@@ -959,7 +959,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
     is_incident_logs_enabled      = false
   }
   tags = {
-    "foo"                  = "bar"
+    "foo" = "bar"
   }
 
 }
