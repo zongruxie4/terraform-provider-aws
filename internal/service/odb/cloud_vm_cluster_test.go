@@ -870,7 +870,7 @@ To ensure fallback works as expected, an additional acceptance tests which creat
 that does not have the GI version tag, then upgrade to the latest version.
 We are using an ExternalProviders block to pin to a previous version of the provider for the first test step.
 */
-func TestAccODBCloudVmCluster_giVersionTag_upgrade(t *testing.T) {
+func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -898,14 +898,14 @@ func TestAccODBCloudVmCluster_giVersionTag_upgrade(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "6.31.0",
+						VersionConstraint: "6.43.0",
 					},
 				},
 				Config: vmcWithGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
 			},
 			{
