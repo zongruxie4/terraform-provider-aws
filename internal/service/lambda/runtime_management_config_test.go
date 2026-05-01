@@ -99,7 +99,7 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_runtime_management_config.test"
 	functionResourceName := "aws_lambda_function.test"
-	var runtimeVersionARN string
+	var runtimeVersionARN *string
 	runtimeVersionConfigVars := config.Variables{}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -133,8 +133,8 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 						t.Fatal("runtime version ARN not found")
 					}
 
-					runtimeVersionARN = *function.Configuration.RuntimeVersionConfig.RuntimeVersionArn
-					runtimeVersionConfigVars["runtime_version_arn"] = config.StringVariable(runtimeVersionARN)
+					runtimeVersionARN = function.Configuration.RuntimeVersionConfig.RuntimeVersionArn
+					runtimeVersionConfigVars["runtime_version_arn"] = config.StringVariable(*runtimeVersionARN)
 				},
 				Config:          testAccRuntimeManagementConfigConfig_runtimeVersionARN(rName),
 				ConfigVariables: runtimeVersionConfigVars,
@@ -142,7 +142,12 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 					testAccCheckRuntimeManagementConfigExists(ctx, t, resourceName, &cfg),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnManual)),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version_arn", runtimeVersionARN),
+					resource.TestCheckResourceAttrWith(resourceName, "runtime_version_arn", func(value string) error {
+						if got, want := value, *runtimeVersionARN; got != want {
+							return fmt.Errorf("Attribute 'runtime_version_arn' expected %q, got: %s", want, got)
+						}
+						return nil
+					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
 				),
 			},
