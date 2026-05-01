@@ -78,12 +78,7 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCatalogID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -233,43 +228,6 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"federated_catalog": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[federatedCatalogModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"connection_name": schema.StringAttribute{
-							Optional: true,
-						},
-						"connection_type": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-						names.AttrIdentifier: schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"target_redshift_catalog": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"catalog_arn": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Required:   true,
-						},
-					},
-				},
-			},
 			"create_database_default_permissions": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[principalPermissionsModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -320,6 +278,43 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"federated_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[federatedCatalogModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"connection_name": schema.StringAttribute{
+							Optional: true,
+						},
+						"connection_type": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+						names.AttrIdentifier: schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+			"target_redshift_catalog": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[targetRedshiftCatalogModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"catalog_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
 						},
 					},
 				},
@@ -412,6 +407,13 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		return
+	}
+	setTagsOut(ctx, tags.Map())
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -498,6 +500,13 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Handle tags update
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		if err := updateTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		}
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
@@ -540,6 +549,13 @@ func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstyp
 	out, err := conn.GetCatalog(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
+		// Lake Formation returns AccessDeniedException when catalog doesn't exist
+		// and caller lacks Lake Formation permissions
+		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Lake Formation permission") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -594,25 +610,28 @@ func waitCatalogReady(ctx context.Context, conn *glue.Client, id string, timeout
 	return catalog, err
 }
 
-// readCatalogIntoModel copies AWS fields onto the resource model. catalogPropertiesWasNull
-// preserves a null catalog_properties block when AWS auto-populates one (e.g.
-// custom_properties={"aws:PermissionsModel":"LAKEFORMATION"} on LF-managed
-// catalogs): otherwise a user who didn't declare the block would see a
-// permanent diff. ARN is set manually because flex does not rename
+// readCatalogIntoModel copies AWS fields onto the resource model.
+// catalog_properties is only populated when the user declared it (model is non-null)
+// or when the API returned real user-configured data (data_lake_access_properties),
+// preventing a permanent diff when AWS auto-populates custom_properties on
+// LF-managed catalogs. ARN is set manually because flex does not rename
 // ResourceArn -> ARN, and ID mirrors CatalogId.
-func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, catalogPropertiesWasNull bool, diags *diag.Diagnostics) {
+func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model *catalogResourceModel, _ bool, diags *diag.Diagnostics) {
+	// Flatten everything except catalog_properties first.
+	savedCatalogProperties := model.CatalogProperties
 	diags.Append(fwflex.Flatten(ctx, catalog, model)...)
 	if diags.HasError() {
 		return
 	}
 	model.ARN = types.StringPointerValue(catalog.ResourceArn)
 	model.ID = types.StringPointerValue(catalog.CatalogId)
-	if catalogPropertiesWasNull {
+	// Only populate catalog_properties when the user declared it or the API
+	// returned real user-configured data; suppress AWS-auto-populated values
+	// (e.g. custom_properties={"aws:PermissionsModel":"LAKEFORMATION"}).
+	if savedCatalogProperties.IsNull() && catalog.CatalogProperties != nil && catalog.CatalogProperties.DataLakeAccessProperties == nil {
 		model.CatalogProperties = fwtypes.NewListNestedObjectValueOfNull[catalogPropertiesModel](ctx)
 	}
 }
-
-// --- Model structs ---
 
 type catalogResourceModel struct {
 	framework.WithRegionModel
