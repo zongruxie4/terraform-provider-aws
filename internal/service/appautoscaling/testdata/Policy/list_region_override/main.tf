@@ -1,6 +1,27 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_appautoscaling_policy" "test" {
+  count  = var.resource_count
+  region = var.region
+
+  name               = "${var.rName}-${count.index}"
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_lower_bound = 0
+      scaling_adjustment          = 1
+    }
+  }
+}
+
 resource "aws_ecs_cluster" "test" {
   region = var.region
 
@@ -40,27 +61,6 @@ resource "aws_appautoscaling_target" "test" {
   resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
-}
-
-resource "aws_appautoscaling_policy" "test" {
-  count  = var.resource_count
-  region = var.region
-
-  name               = "${var.rName}-${count.index}"
-  resource_id        = aws_appautoscaling_target.test.resource_id
-  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.test.service_namespace
-
-  step_scaling_policy_configuration {
-    adjustment_type         = "ChangeInCapacity"
-    cooldown                = 60
-    metric_aggregation_type = "Average"
-
-    step_adjustment {
-      metric_interval_lower_bound = 0
-      scaling_adjustment          = 1
-    }
-  }
 }
 
 variable "rName" {
