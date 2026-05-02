@@ -31,7 +31,7 @@ type mockRawDiffer struct {
 	forceNew []string
 }
 
-func (d *mockRawDiffer) GetRawState() cty.Value {
+func (d *mockRawDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
 	return d.state
 }
 
@@ -82,10 +82,10 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 
 		"secret_string no change": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
-				"secret_string": cty.StringVal("value"),
+				"secret_string": cty.StringVal(names.AttrValue),
 			}),
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
-				"secret_string": cty.StringVal("value"),
+				"secret_string": cty.StringVal(names.AttrValue),
 			}),
 		},
 		"secret_string with change": {
@@ -134,19 +134,19 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 
 		"secret_string to secret_string_wo no change": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
-				"secret_string": cty.StringVal("value"),
+				"secret_string": cty.StringVal(names.AttrValue),
 			}),
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
-				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo":         cty.StringVal(names.AttrValue),
 				"secret_string_wo_version": cty.NumberIntVal(1),
 			}),
 		},
 		"secret_string to secret_string_wo no change version unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
-				"secret_string": cty.StringVal("value"),
+				"secret_string": cty.StringVal(names.AttrValue),
 			}),
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
-				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo":         cty.StringVal(names.AttrValue),
 				"secret_string_wo_version": cty.UnknownVal(cty.Number),
 			}),
 		},
@@ -172,11 +172,11 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 
 		"secret_string_wo to secret_string no change": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
-				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo":         cty.StringVal(names.AttrValue),
 				"secret_string_wo_version": cty.NumberIntVal(1),
 			}),
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
-				"secret_string": cty.StringVal("value"),
+				"secret_string": cty.StringVal(names.AttrValue),
 			}),
 			expectedForceNew: []string{"secret_string"},
 		},
@@ -192,7 +192,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 		},
 		"secret_string_wo to secret_string unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
-				"secret_string_wo":         cty.StringVal("value"),
+				"secret_string_wo":         cty.StringVal(names.AttrValue),
 				"secret_string_wo_version": cty.NumberIntVal(1),
 			}),
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
