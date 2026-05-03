@@ -5,7 +5,6 @@ package timestreaminfluxdb_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -732,36 +730,29 @@ func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			if err != nil {
-				return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Timestream InfluxDB DB Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, name string, dbCluster *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
+func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, n string, v *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
+
 		resp, err := tftimestreaminfluxdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
+			return err
 		}
 
-		*dbCluster = *resp
+		*v = *resp
 
 		return nil
 	}
