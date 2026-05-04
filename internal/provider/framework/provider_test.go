@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -43,10 +42,7 @@ func TestProviderInit(t *testing.T) {
 
 	provider := p.(*frameworkProvider)
 
-	err = validateResourceSchemas(ctx, provider)
-	if err != nil {
-		t.Errorf("Validating resource schemas: %s", err)
-	}
+	validateResourceSchemas(ctx, t, provider)
 }
 
 // To run these benchmarks:
@@ -115,8 +111,8 @@ func BenchmarkFrameworkProvider_SchemaInitialization_Resource(b *testing.B) {
 }
 
 // validateResourceSchemas is called in a unit test to validate Terraform Plugin Framework-style resource schemas.
-func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
-	var errs []error
+func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProvider) {
+	t.Helper()
 
 	for sp := range p.servicePackages {
 		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
@@ -124,7 +120,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 			inner, err := dataSourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source type (%s): %w", typeName, err))
+				t.Errorf("creating data source type (%s): %s", typeName, err)
 				continue
 			}
 
@@ -132,12 +128,12 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
 			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
+				t.Errorf("data source type %q: %s", typeName, err)
 				continue
 			}
 
 			if err := validateSchemaTagsForDataSource(dataSourceSpec.Tags, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
+				t.Errorf("data source type %q: %s", typeName, err)
 				continue
 			}
 		}
@@ -148,7 +144,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 				inner, err := ephemeralResourceSpec.Factory(ctx)
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("creating ephemeral resource type (%s): %w", typeName, err))
+					t.Errorf("creating ephemeral resource type (%s): %s", typeName, err)
 					continue
 				}
 
@@ -156,7 +152,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 				inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
 				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
-					errs = append(errs, fmt.Errorf("ephemeral resource type %q: %w", typeName, err))
+					t.Errorf("ephemeral resource type %q: %s", typeName, err)
 					continue
 				}
 			}
@@ -168,7 +164,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 				inner, err := actionSpec.Factory(ctx)
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("creating action type (%s): %w", typeName, err))
+					t.Errorf("creating action type (%s): %s", typeName, err)
 					continue
 				}
 
@@ -176,7 +172,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 				inner.Schema(ctx, action.SchemaRequest{}, &schemaResponse)
 
 				if err := validateSchemaRegionForAction(actionSpec.Region, schemaResponse.Schema); err != nil {
-					errs = append(errs, fmt.Errorf("action type %q: %w", typeName, err))
+					t.Errorf("action type %q: %s", typeName, err)
 					continue
 				}
 			}
@@ -187,7 +183,7 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 			inner, err := resourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource type (%s): %w", typeName, err))
+				t.Errorf("creating resource type (%s): %s", typeName, err)
 				continue
 			}
 
@@ -195,32 +191,30 @@ func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 			inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
 			if err := validateSchemaRegionForResource(resourceSpec.Region, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
+				t.Errorf("resource type %q: %s", typeName, err)
 				continue
 			}
 
 			if err := validateSchemaTagsForResource(resourceSpec.Tags, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
+				t.Errorf("resource type %q: %s", typeName, err)
 				continue
 			}
 
 			if resourceSpec.Import.WrappedImport {
 				if resourceSpec.Import.SetIDAttr {
 					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
-						errs = append(errs, fmt.Errorf("resource type %q: importer sets `%s` attribute, but creator isn't configured", resourceSpec.TypeName, names.AttrID))
+						t.Errorf("resource type %q: importer sets `%s` attribute, but creator isn't configured", resourceSpec.TypeName, names.AttrID)
 						continue
 					}
 				}
 
 				if _, ok := inner.(framework.ImportByIdentityer); !ok {
-					errs = append(errs, fmt.Errorf("resource type %q: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]()))
+					t.Errorf("resource type %q: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]())
 					continue
 				}
 			}
 		}
 	}
-
-	return errors.Join(errs...)
 }
 
 func validateSchemaRegionForDataSource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema datasourceschema.Schema) error {
