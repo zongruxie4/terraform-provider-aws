@@ -968,7 +968,7 @@ resource "aws_glue_catalog" "test" {
 func testAccCatalogConfig_targetRedshiftCatalogProvisioned(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
-		// lintignore:AWSAT005 - false positive
+		//lintignore:AWSAT005
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
