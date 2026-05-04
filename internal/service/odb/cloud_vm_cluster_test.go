@@ -875,7 +875,9 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var cloudvmcluster odbtypes.CloudVmCluster
+	var cloudvmcluster1 odbtypes.CloudVmCluster
+	var cloudvmcluster2 odbtypes.CloudVmCluster
+	var cloudvmcluster3 odbtypes.CloudVmCluster
 	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
@@ -903,7 +905,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 				},
 				Config: vmcWithoutGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
@@ -912,18 +914,30 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   vmcWithoutGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
+							return errors.New("Should  not create a new cloud vm cluster")
+						}
+						return nil
+					}),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   vmcWithGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster3),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.odb:input_gi_version", "23.0.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.odb:input_gi_version", "26.0.0.0"),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster3.CloudVmClusterId)) != 0 {
+							return errors.New("Should  not create a new cloud vm cluster")
+						}
+						return nil
+					}),
 				),
 			},
 		},
@@ -1009,7 +1023,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
     is_incident_logs_enabled      = false
   }
   tags = {
-    "odb:input_gi_version" = "23.0.0.0"
+    "odb:input_gi_version" = "26.0.0.0"
     "foo"                  = "bar"
   }
 
