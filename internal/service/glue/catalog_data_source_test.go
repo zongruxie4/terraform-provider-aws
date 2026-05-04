@@ -14,12 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// testAccCatalogDataSource_catalogPropertiesDataLakeAccess is intentionally
-// serial (resource.Test rather than acctest.ParallelTest):
-// data_lake_access_properties requires the caller to be a Lake Formation
-// admin, and the config manages aws_lakeformation_data_lake_settings — the
-// admin list is a single account/region-wide value, so a parallel Destroy on
-// one test can strip the admin principal while another test still needs it.
 func testAccCatalogDataSource_catalogPropertiesDataLakeAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -95,11 +89,6 @@ func testAccCatalogDataSource_federatedCatalog_mySQL(t *testing.T) {
 	})
 }
 
-// TestAccGlueCatalogDataSource_targetRedshiftCatalog is intentionally serial
-// (resource.Test rather than acctest.ParallelTest): the producer catalog uses
-// data_lake_access_properties, which requires the caller to be a Lake
-// Formation admin, and the config manages aws_lakeformation_data_lake_settings
-// — an account/region-wide singleton that collides under parallel execution.
 func testAccCatalogDataSource_targetRedshiftCatalog(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -134,9 +123,6 @@ func testAccCatalogDataSource_targetRedshiftCatalog(t *testing.T) {
 	})
 }
 
-// TestAccGlueCatalogDataSource_federatedCatalog_s3Tables is serial
-// (resource.Test, not ParallelTest): AWS requires the catalog name to be the
-// reserved value "s3tablescatalog", which is account/region-wide.
 func testAccCatalogDataSource_federatedCatalog_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

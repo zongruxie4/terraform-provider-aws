@@ -166,12 +166,6 @@ func testAccCatalog_tags(t *testing.T) {
 	})
 }
 
-// TestAccGlueCatalog_catalogPropertiesDataLakeAccess is intentionally serial
-// (resource.Test rather than acctest.ParallelTest): data_lake_access_properties
-// requires the caller to be a Lake Formation admin, and the config manages
-// aws_lakeformation_data_lake_settings — the admin list is a single
-// account/region-wide value, so a parallel Destroy on one test can strip the
-// admin principal while another test still needs it.
 func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -258,11 +252,6 @@ func testAccCatalog_federatedCatalog_mySQL(t *testing.T) {
 	})
 }
 
-// TestAccGlueCatalog_targetRedshiftCatalog is intentionally serial
-// (resource.Test rather than acctest.ParallelTest): the producer catalog uses
-// data_lake_access_properties, which requires the caller to be a Lake
-// Formation admin, and the config manages aws_lakeformation_data_lake_settings
-// — an account/region-wide singleton that collides under parallel execution.
 func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -348,11 +337,6 @@ func testAccCatalog_targetRedshiftCatalogProvisioned(t *testing.T) {
 	})
 }
 
-// TestAccGlueCatalog_federatedCatalog_s3Tables is intentionally serial
-// (resource.Test rather than acctest.ParallelTest): AWS requires the catalog
-// name to be the reserved value "s3tablescatalog", which is account/region-wide,
-// so parallel runs would collide with each other and with any S3 Tables
-// integration already enabled on the account.
 func testAccCatalog_federatedCatalog_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
