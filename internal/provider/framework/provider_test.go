@@ -12,7 +12,7 @@ import (
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/action"
-	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
+	actionschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -241,12 +241,10 @@ func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.
 	return nil
 }
 
-func validateSchemaRegionForAction(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schemaIface any) error {
+func validateSchemaRegionForAction(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema actionschema.Schema) error {
 	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
-		if schema, ok := schemaIface.(aschema.Schema); ok {
-			if _, ok := schema.Attributes[names.AttrRegion]; ok {
-				return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
-			}
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
 		}
 	}
 	return nil
