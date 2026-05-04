@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -78,24 +79,53 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("allowed_windows")),
 				},
 			},
-			"blocking_alarm_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Optional:    true,
-				ElementType: types.StringType,
-				Description: "List of CloudWatch alarm ARNs that can block practice runs when in alarm state.",
-			},
-			"outcome_alarm_arns": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Required:    true,
-				ElementType: types.StringType,
-				Description: "List of CloudWatch alarm ARNs that are monitored during practice runs. These alarms help determine the health of your application during zonal shifts.",
-			},
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
 				Description: "The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"blocking_alarms": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[controlConditionModel](ctx),
+				Description: "List of CloudWatch alarms that can block practice runs when in alarm state.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"alarm_identifier": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Required:    true,
+							Description: "ARN of the CloudWatch alarm.",
+						},
+						"type": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.ControlConditionType](),
+							Required:    true,
+							Description: "Type of control condition. Valid value: `CLOUDWATCH`.",
+						},
+					},
+				},
+			},
+			"outcome_alarms": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[controlConditionModel](ctx),
+				Description: "List of CloudWatch alarms monitored during practice runs. These alarms help determine the health of your application during zonal shifts.",
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"alarm_identifier": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Required:    true,
+							Description: "ARN of the CloudWatch alarm.",
+						},
+						"type": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.ControlConditionType](),
+							Required:    true,
+							Description: "Type of control condition. Valid value: `CLOUDWATCH`.",
+						},
+					},
 				},
 			},
 		},
@@ -113,10 +143,11 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 
 	input := arczonalshift.CreatePracticeRunConfigurationInput{
 		ResourceIdentifier: plan.ResourceARN.ValueStringPointer(),
-		OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
 	}
-
-	input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
 	input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
 	input.AllowedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.AllowedWindows)
@@ -193,7 +224,10 @@ func (r *resourceZonalAutoshiftConfiguration) Read(ctx context.Context, req reso
 		return
 	}
 
-	r.flatten(ctx, out, &state)
+	resp.Diagnostics.Append(r.flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -209,20 +243,20 @@ func (r *resourceZonalAutoshiftConfiguration) Update(ctx context.Context, req re
 
 	resourceIdentifier := plan.ResourceARN.ValueString()
 
-	practiceRunChanged := !plan.OutcomeAlarmARNs.Equal(state.OutcomeAlarmARNs) ||
-		!plan.BlockingAlarmARNs.Equal(state.BlockingAlarmARNs) ||
+	practiceRunChanged := !plan.OutcomeAlarms.Equal(state.OutcomeAlarms) ||
+		!plan.BlockingAlarms.Equal(state.BlockingAlarms) ||
 		!plan.BlockedDates.Equal(state.BlockedDates) ||
 		!plan.BlockedWindows.Equal(state.BlockedWindows) ||
 		!plan.AllowedWindows.Equal(state.AllowedWindows)
 
 	if practiceRunChanged {
-		input := arczonalshift.UpdatePracticeRunConfigurationInput{
-			ResourceIdentifier: aws.String(resourceIdentifier),
-			OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
-			BlockingAlarms:     alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs)),
-			BlockedDates:       flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates),
+		var input arczonalshift.UpdatePracticeRunConfigurationInput
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
-
+		input.ResourceIdentifier = aws.String(resourceIdentifier)
+		input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
 		if !plan.BlockedWindows.IsNull() {
 			input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
 			input.AllowedWindows = []string{}
@@ -298,44 +332,17 @@ func (r *resourceZonalAutoshiftConfiguration) Delete(ctx context.Context, req re
 	}
 }
 
-func (r *resourceZonalAutoshiftConfiguration) flatten(ctx context.Context, out *arczonalshift.GetManagedResourceOutput, data *resourceZonalAutoshiftConfigurationModel) {
+func (r *resourceZonalAutoshiftConfiguration) flatten(ctx context.Context, out *arczonalshift.GetManagedResourceOutput, data *resourceZonalAutoshiftConfigurationModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	data.ResourceARN = flex.StringToFrameworkARN(ctx, out.Arn)
 	data.AutoshiftEnabled = types.BoolValue(out.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled)
-	data.OutcomeAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.OutcomeAlarms))
-	data.BlockingAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.BlockingAlarms))
+	diags.Append(flex.Flatten(ctx, out.PracticeRunConfiguration, data)...)
 	data.BlockedDates = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedDates)
 	data.BlockedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedWindows)
 	data.AllowedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.AllowedWindows)
-}
 
-// controlConditionsToAlarmARNs extracts alarm ARNs from ControlCondition structs.
-func controlConditionsToAlarmARNs(conditions []awstypes.ControlCondition) []string {
-	if len(conditions) == 0 {
-		return nil
-	}
-
-	arns := make([]string, len(conditions))
-	for i, condition := range conditions {
-		arns[i] = aws.ToString(condition.AlarmIdentifier)
-	}
-	return arns
-}
-
-// alarmARNsToControlConditions converts alarm ARNs to ControlCondition structs.
-// The Type is always CloudWatch since that's the only supported type.
-func alarmARNsToControlConditions(arns []string) []awstypes.ControlCondition {
-	if len(arns) == 0 {
-		return nil
-	}
-
-	conditions := make([]awstypes.ControlCondition, len(arns))
-	for i, arn := range arns {
-		conditions[i] = awstypes.ControlCondition{
-			AlarmIdentifier: aws.String(arn),
-			Type:            awstypes.ControlConditionTypeCloudwatch,
-		}
-	}
-	return conditions
+	return diags
 }
 
 // Finder functions
@@ -360,11 +367,16 @@ func findManagedResourceByIdentifier(ctx context.Context, conn *arczonalshift.Cl
 
 type resourceZonalAutoshiftConfigurationModel struct {
 	framework.WithRegionModel
-	AllowedWindows    fwtypes.ListOfString `tfsdk:"allowed_windows"`
-	AutoshiftEnabled  types.Bool           `tfsdk:"autoshift_enabled"`
-	BlockedDates      fwtypes.ListOfString `tfsdk:"blocked_dates"`
-	BlockedWindows    fwtypes.ListOfString `tfsdk:"blocked_windows"`
-	BlockingAlarmARNs fwtypes.ListOfString `tfsdk:"blocking_alarm_arns"`
-	OutcomeAlarmARNs  fwtypes.ListOfString `tfsdk:"outcome_alarm_arns"`
-	ResourceARN       fwtypes.ARN          `tfsdk:"resource_arn"`
+	AllowedWindows   fwtypes.ListOfString                                   `tfsdk:"allowed_windows"`
+	AutoshiftEnabled types.Bool                                             `tfsdk:"autoshift_enabled"`
+	BlockedDates     fwtypes.ListOfString                                   `tfsdk:"blocked_dates"`
+	BlockedWindows   fwtypes.ListOfString                                   `tfsdk:"blocked_windows"`
+	BlockingAlarms   fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"blocking_alarms"`
+	OutcomeAlarms    fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"outcome_alarms"`
+	ResourceARN      fwtypes.ARN                                            `tfsdk:"resource_arn"`
+}
+
+type controlConditionModel struct {
+	AlarmIdentifier fwtypes.ARN                                       `tfsdk:"alarm_identifier"`
+	Type            fwtypes.StringEnum[awstypes.ControlConditionType] `tfsdk:"type"`
 }

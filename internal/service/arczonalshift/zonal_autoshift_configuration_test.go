@@ -41,7 +41,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_basic(t *testing.T) {
 					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttr(resourceName, "autoshift_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outcome_alarms.#", "1"),
 				),
 			},
 			{
@@ -148,8 +148,8 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_blockingAlarms(t *testing.T
 				Config: testAccZonalAutoshiftConfigurationConfig_blockingAlarms(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckZonalAutoshiftConfigurationExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "blocking_alarm_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outcome_alarms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "blocking_alarms.#", "1"),
 				),
 			},
 		},
@@ -353,9 +353,13 @@ func testAccZonalAutoshiftConfigurationConfig_basic(rName string) string {
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn       = aws_lb.test.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome.arn]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }
@@ -365,9 +369,13 @@ func testAccZonalAutoshiftConfigurationConfig_autoshiftDisabled(rName string) st
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn       = aws_lb.test.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome.arn]
-  autoshift_enabled  = false
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = false
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }
@@ -377,10 +385,18 @@ func testAccZonalAutoshiftConfigurationConfig_blockingAlarms(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn        = aws_lb.test.arn
-  outcome_alarm_arns  = [aws_cloudwatch_metric_alarm.outcome.arn]
-  blocking_alarm_arns = [aws_cloudwatch_metric_alarm.blocking.arn]
-  autoshift_enabled   = true
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
+
+  blocking_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.blocking.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }
@@ -390,10 +406,14 @@ func testAccZonalAutoshiftConfigurationConfig_blockedWindows(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn       = aws_lb.test.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome.arn]
-  blocked_windows    = ["Mon:00:00-Mon:08:00"]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = true
+  blocked_windows   = ["Mon:00:00-Mon:08:00"]
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }
@@ -403,10 +423,14 @@ func testAccZonalAutoshiftConfigurationConfig_allowedWindows(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn       = aws_lb.test.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome.arn]
-  allowed_windows    = ["Mon:09:00-Mon:17:00"]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = true
+  allowed_windows   = ["Mon:09:00-Mon:17:00"]
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }
@@ -416,10 +440,14 @@ func testAccZonalAutoshiftConfigurationConfig_blockedDates(rName string) string 
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn       = aws_lb.test.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome.arn]
-  blocked_dates      = ["2026-12-25"]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.test.arn
+  autoshift_enabled = true
+  blocked_dates     = ["2026-12-25"]
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
 }
 `)
 }

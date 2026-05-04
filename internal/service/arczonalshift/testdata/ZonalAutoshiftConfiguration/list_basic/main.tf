@@ -4,9 +4,13 @@
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
   count = var.resource_count
 
-  resource_arn       = aws_lb.test[count.index].arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.outcome[count.index].arn]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.test[count.index].arn
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome[count.index].arn
+    type             = "CLOUDWATCH"
+  }
 }
 
 resource "aws_lb" "test" {
