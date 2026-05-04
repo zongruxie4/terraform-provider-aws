@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_redshift_namespace_registration
 
-Registers an Amazon Redshift provisioned cluster or serverless namespace to the AWS Glue Data Catalog. This enables access to the Redshift data warehouse using the Apache Iceberg REST API.
+Manages an Amazon Redshift namespace registration to the AWS Glue Data Catalog. Use this resource to enable access to a Redshift data warehouse using the Apache Iceberg REST API.
 
 ~> **NOTE:** This resource has limited drift detection capabilities. AWS does not provide a reliable API to verify registration status after creation. The resource verifies that the underlying cluster or namespace exists and that an internal data share was created, but cannot detect if the registration was removed outside of Terraform.
 
@@ -60,14 +60,17 @@ resource "aws_redshift_namespace_registration" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `consumer_identifier` - (Required, Forces new resource) Consumer identifier for the registration. Typically in the format `DataCatalog/<account-id>`.
 * `namespace_type` - (Required, Forces new resource) Type of namespace being registered. Valid values: `serverless`, `provisioned`.
+
+The following arguments are optional:
+
+* `provisioned_cluster_identifier` - (Optional, Forces new resource) Identifier of the provisioned cluster. Required when `namespace_type` is `provisioned`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serverless_namespace_identifier` - (Optional, Forces new resource) Identifier of the serverless namespace. Required when `namespace_type` is `serverless`. Can be either the namespace name or namespace ID (UUID).
 * `serverless_workgroup_identifier` - (Optional, Forces new resource) Identifier of the serverless workgroup. Required when `namespace_type` is `serverless`.
-* `provisioned_cluster_identifier` - (Optional, Forces new resource) Identifier of the provisioned cluster. Required when `namespace_type` is `provisioned`.
 
 ## Attribute Reference
 
