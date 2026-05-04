@@ -639,17 +639,17 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	} else {
-		if data.DeploymentType.IsUnknown() {
-			data.DeploymentType = fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)
-			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), data.DeploymentType)
-		}
 		for _, v := range v2Fields {
 			if isNullOrUnknownValue(v.val) {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(v.path),
-					"Missing Required Configuration for InfluxDB V2",
-					v.path+" is required for InfluxDB V2 clusters",
-				)
+				if rootAttributeName := v.path; rootAttributeName == "deployment_type" {
+					resp.Plan.SetAttribute(ctx, path.Root(rootAttributeName), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
+				} else {
+					resp.Diagnostics.AddAttributeError(
+						path.Root(v.path),
+						"Missing Required Configuration for InfluxDB V2",
+						rootAttributeName+" is required for InfluxDB V2 clusters",
+					)
+				}
 			}
 		}
 
