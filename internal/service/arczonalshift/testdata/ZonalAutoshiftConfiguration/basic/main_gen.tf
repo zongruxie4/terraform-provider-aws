@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn      = aws_lb.test.arn
-  autoshift_enabled = true
+  resource_arn          = aws_lb.test.arn
+  zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
     alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn

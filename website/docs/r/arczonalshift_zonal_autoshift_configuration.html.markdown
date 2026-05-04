@@ -18,8 +18,8 @@ Zonal autoshift is a capability in AWS Application Recovery Controller (ARC) tha
 
 ```terraform
 resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn      = aws_lb.example.arn
-  autoshift_enabled = true
+  resource_arn           = aws_lb.example.arn
+  zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
     alarm_identifier = aws_cloudwatch_metric_alarm.example.arn
@@ -57,8 +57,8 @@ resource "aws_cloudwatch_metric_alarm" "example" {
 
 ```terraform
 resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn      = aws_lb.example.arn
-  autoshift_enabled = true
+  resource_arn           = aws_lb.example.arn
+  zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
     alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
@@ -76,9 +76,9 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
 
 ```terraform
 resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn      = aws_lb.example.arn
-  blocked_windows   = ["Mon:00:00-Mon:08:00"]
-  autoshift_enabled = true
+  resource_arn           = aws_lb.example.arn
+  zonal_autoshift_status = "ENABLED"
+  blocked_windows        = ["Mon:00:00-Mon:08:00"]
 
   outcome_alarms {
     alarm_identifier = aws_cloudwatch_metric_alarm.example.arn
@@ -91,9 +91,9 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
 
 The following arguments are required:
 
-* `autoshift_enabled` - (Required) Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.
 * `outcome_alarms` - (Required) List of CloudWatch alarms monitored during practice runs. See [`outcome_alarms`](#outcome_alarms) below.
 * `resource_arn` - (Required) The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.
+* `zonal_autoshift_status` - (Required) The status of zonal autoshift. Valid values: `ENABLED`, `DISABLED`.
 
 The following arguments are optional:
 
@@ -140,7 +140,7 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
 
 * `resource_arn` (String) ARN of the managed resource to configure zonal autoshift for.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_arn`. For example:
 
 ```terraform
 import {
@@ -149,7 +149,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_identifier`. For example:
+Using `terraform import`, import ARC Zonal Shift Zonal Autoshift Configuration using the `resource_arn`. For example:
 
 ```console
 % terraform import aws_arczonalshift_zonal_autoshift_configuration.example arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/example/50dc6c495c0c9188

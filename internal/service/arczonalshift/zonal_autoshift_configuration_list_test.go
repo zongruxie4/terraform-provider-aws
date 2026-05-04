@@ -124,7 +124,7 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_List_includeResource(t *tes
 					querycheck.ExpectResourceKnownValues("aws_arczonalshift_zonal_autoshift_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("autoshift_enabled"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("zonal_autoshift_status"), knownvalue.StringExact("ENABLED")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("outcome_alarms"), knownvalue.ListSizeExact(1)),
 					}),
 				},

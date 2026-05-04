@@ -60,9 +60,10 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("blocked_windows")),
 				},
 			},
-			"autoshift_enabled": schema.BoolAttribute{
+			"zonal_autoshift_status": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.ZonalAutoshiftStatus](),
 				Required:    true,
-				Description: "Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.",
+				Description: "The status of zonal autoshift. Valid values: `ENABLED`, `DISABLED`.",
 			},
 			"blocked_dates": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -99,7 +100,7 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 							Required:    true,
 							Description: "ARN of the CloudWatch alarm.",
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType:  fwtypes.StringEnumType[awstypes.ControlConditionType](),
 							Required:    true,
 							Description: "Type of control condition. Valid value: `CLOUDWATCH`.",
@@ -165,11 +166,7 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 
 	statusInput := arczonalshift.UpdateZonalAutoshiftConfigurationInput{
 		ResourceIdentifier:   plan.ResourceARN.ValueStringPointer(),
-		ZonalAutoshiftStatus: awstypes.ZonalAutoshiftStatusDisabled,
-	}
-
-	if plan.AutoshiftEnabled.ValueBool() {
-		statusInput.ZonalAutoshiftStatus = awstypes.ZonalAutoshiftStatusEnabled
+		ZonalAutoshiftStatus: plan.ZonalAutoshiftStatus.ValueEnum(),
 	}
 
 	out2, err := conn.UpdateZonalAutoshiftConfiguration(ctx, &statusInput)
@@ -275,15 +272,10 @@ func (r *resourceZonalAutoshiftConfiguration) Update(ctx context.Context, req re
 		}
 	}
 
-	if !plan.AutoshiftEnabled.Equal(state.AutoshiftEnabled) {
-		status := awstypes.ZonalAutoshiftStatusDisabled
-		if plan.AutoshiftEnabled.ValueBool() {
-			status = awstypes.ZonalAutoshiftStatusEnabled
-		}
-
+	if !plan.ZonalAutoshiftStatus.Equal(state.ZonalAutoshiftStatus) {
 		input := arczonalshift.UpdateZonalAutoshiftConfigurationInput{
 			ResourceIdentifier:   aws.String(resourceIdentifier),
-			ZonalAutoshiftStatus: status,
+			ZonalAutoshiftStatus: plan.ZonalAutoshiftStatus.ValueEnum(),
 		}
 		_, err := conn.UpdateZonalAutoshiftConfiguration(ctx, &input)
 		if err != nil {
@@ -336,7 +328,7 @@ func (r *resourceZonalAutoshiftConfiguration) flatten(ctx context.Context, out *
 	var diags diag.Diagnostics
 
 	data.ResourceARN = flex.StringToFrameworkARN(ctx, out.Arn)
-	data.AutoshiftEnabled = types.BoolValue(out.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled)
+	data.ZonalAutoshiftStatus = fwtypes.StringEnumValue(out.ZonalAutoshiftStatus)
 	diags.Append(flex.Flatten(ctx, out.PracticeRunConfiguration, data)...)
 	data.BlockedDates = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedDates)
 	data.BlockedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedWindows)
@@ -367,13 +359,13 @@ func findManagedResourceByIdentifier(ctx context.Context, conn *arczonalshift.Cl
 
 type resourceZonalAutoshiftConfigurationModel struct {
 	framework.WithRegionModel
-	AllowedWindows   fwtypes.ListOfString                                   `tfsdk:"allowed_windows"`
-	AutoshiftEnabled types.Bool                                             `tfsdk:"autoshift_enabled"`
-	BlockedDates     fwtypes.ListOfString                                   `tfsdk:"blocked_dates"`
-	BlockedWindows   fwtypes.ListOfString                                   `tfsdk:"blocked_windows"`
-	BlockingAlarms   fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"blocking_alarms"`
-	OutcomeAlarms    fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"outcome_alarms"`
-	ResourceARN      fwtypes.ARN                                            `tfsdk:"resource_arn"`
+	AllowedWindows       fwtypes.ListOfString                                   `tfsdk:"allowed_windows"`
+	BlockedDates         fwtypes.ListOfString                                   `tfsdk:"blocked_dates"`
+	BlockedWindows       fwtypes.ListOfString                                   `tfsdk:"blocked_windows"`
+	BlockingAlarms       fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"blocking_alarms"`
+	OutcomeAlarms        fwtypes.ListNestedObjectValueOf[controlConditionModel] `tfsdk:"outcome_alarms"`
+	ResourceARN          fwtypes.ARN                                            `tfsdk:"resource_arn"`
+	ZonalAutoshiftStatus fwtypes.StringEnum[awstypes.ZonalAutoshiftStatus]      `tfsdk:"zonal_autoshift_status"`
 }
 
 type controlConditionModel struct {

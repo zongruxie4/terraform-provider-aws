@@ -5,8 +5,8 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
   count  = var.resource_count
   region = var.region
 
-  resource_arn      = aws_lb.test[count.index].arn
-  autoshift_enabled = true
+  resource_arn           = aws_lb.test[count.index].arn
+  zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
     alarm_identifier = aws_cloudwatch_metric_alarm.outcome[count.index].arn
