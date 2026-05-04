@@ -60,11 +60,6 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("blocked_windows")),
 				},
 			},
-			"zonal_autoshift_status": schema.StringAttribute{
-				CustomType:  fwtypes.StringEnumType[awstypes.ZonalAutoshiftStatus](),
-				Required:    true,
-				Description: "The status of zonal autoshift. Valid values: `ENABLED`, `DISABLED`.",
-			},
 			"blocked_dates": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
@@ -87,6 +82,11 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"zonal_autoshift_status": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.ZonalAutoshiftStatus](),
+				Required:    true,
+				Description: "The status of zonal autoshift. Valid values: `ENABLED`, `DISABLED`.",
 			},
 		},
 		Blocks: map[string]schema.Block{
