@@ -1,6 +1,6 @@
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
 {{- template "region" }}
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {

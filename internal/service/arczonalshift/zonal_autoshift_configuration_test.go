@@ -353,7 +353,7 @@ func testAccZonalAutoshiftConfigurationConfig_basic(rName string) string {
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
@@ -369,7 +369,7 @@ func testAccZonalAutoshiftConfigurationConfig_autoshiftDisabled(rName string) st
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "DISABLED"
 
   outcome_alarms {
@@ -385,7 +385,7 @@ func testAccZonalAutoshiftConfigurationConfig_blockingAlarms(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
 
   outcome_alarms {
@@ -406,7 +406,7 @@ func testAccZonalAutoshiftConfigurationConfig_blockedWindows(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
   blocked_windows        = ["Mon:00:00-Mon:08:00"]
 
@@ -423,7 +423,7 @@ func testAccZonalAutoshiftConfigurationConfig_allowedWindows(rName string) strin
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
   allowed_windows        = ["Mon:09:00-Mon:17:00"]
 
@@ -440,7 +440,7 @@ func testAccZonalAutoshiftConfigurationConfig_blockedDates(rName string) string 
 		testAccZonalAutoshiftConfigurationConfig_base(rName),
 		`
 resource "aws_arczonalshift_zonal_autoshift_configuration" "test" {
-  resource_arn          = aws_lb.test.arn
+  resource_arn           = aws_lb.test.arn
   zonal_autoshift_status = "ENABLED"
   blocked_dates          = ["2026-12-25"]
 
