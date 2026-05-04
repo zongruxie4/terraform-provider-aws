@@ -13,11 +13,7 @@
 
 Exclusive resource types manage a whole set of relationships, not just one remote object. Their job is to make the full set of relationships in AWS match the Terraform configuration by adding missing relationships and removing ones that are not configured. This pattern is described in [Exclusive Relationship Management Resources](./exclusive-relationship-management-resources.md).
 
-That creates a design question for import support. In most cases, import is understood as a way to bring an existing remote object under Terraform management. For exclusive resources, import would do more than that because these resources manage a whole relationship set, not a single object.
-
-The provider also has a mix of newer exclusive resources that use the `_exclusive` suffix and older resources with the same behavior that were created before that naming pattern existed. Newer resources are easier to find because the `_exclusive` suffix makes their behavior more obvious. A few older exclusive resources do not have that suffix. One example is `aws_iam_policy_attachment`. Because of that, contributors can run into an exclusive resource and reasonably assume import should be added, since the resource name does not clearly show that it manages the full relationship set.
-
-This led to a broader question for the provider: should exclusive resource types support import at all?
+In most cases, import is understood as a way to bring an existing remote object under Terraform management. For exclusive resources, import would do more than that because these resources manage a whole relationship set, not a single object.
 
 ## Decision
 
