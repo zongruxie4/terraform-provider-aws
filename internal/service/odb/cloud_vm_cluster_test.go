@@ -885,7 +885,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 		return
 	}
 
-	vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmcDisplayName, publicKey)
+	vmcWithoutGiVersionTag, vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmcDisplayName, publicKey)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -901,7 +901,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 						VersionConstraint: "6.43.0",
 					},
 				},
-				Config: vmcWithGiVersionTag,
+				Config: vmcWithoutGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -910,22 +910,32 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   vmcWithoutGiVersionTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   vmcWithGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.odb:input_gi_version", "23.0.0.0"),
 				),
 			},
 		},
 	})
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmClusterDisplayName, sshKey string) string {
+func (cloudVmClusterResourceTest) cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmClusterDisplayName, sshKey string) (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
-	vmcWithGiVersionTag := fmt.Sprintf(`
+	vmcWithoutGiVersionTag := fmt.Sprintf(`
 
 
 %s
@@ -965,5 +975,46 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 }
 `, exaInfra, odbNet, vmClusterDisplayName, sshKey)
 
-	return vmcWithGiVersionTag
+	vmcWithGiVersionTag := fmt.Sprintf(`
+
+
+%s
+
+%s
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 16
+  gi_version                      = "26.0.0.0"
+  hostname_prefix                 = "apollo-12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "odb:input_gi_version" = "23.0.0.0"
+    "foo"                  = "bar"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	return vmcWithoutGiVersionTag, vmcWithGiVersionTag
 }
