@@ -43,7 +43,7 @@ func TestProviderInit(t *testing.T) {
 
 	provider := p.(*frameworkProvider)
 
-	err = provider.validateResourceSchemas(ctx)
+	err = validateResourceSchemas(ctx, provider)
 	if err != nil {
 		t.Errorf("Validating resource schemas: %s", err)
 	}
@@ -115,7 +115,7 @@ func BenchmarkFrameworkProvider_SchemaInitialization_Resource(b *testing.B) {
 }
 
 // validateResourceSchemas is called in a unit test to validate Terraform Plugin Framework-style resource schemas.
-func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
+func validateResourceSchemas(ctx context.Context, p *frameworkProvider) error {
 	var errs []error
 
 	for sp := range p.servicePackages {
