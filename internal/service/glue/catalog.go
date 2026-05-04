@@ -39,8 +39,10 @@ import (
 
 // @FrameworkResource("aws_glue_catalog", name="Catalog")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("id")
+// @IdentityAttribute("name")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="name")
+// @Testing(serialize=true)
 func newCatalogResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &catalogResource{}
 
@@ -95,7 +97,13 @@ func (r *catalogResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"overwrite_child_resource_permissions_with_default": schema.StringAttribute{
+				Optional:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.OverwriteChildResourcePermissionsWithDefaultEnum](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -351,6 +359,7 @@ func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest
 	if catalogInput.CreateTableDefaultPermissions == nil {
 		catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 	}
+	catalogInput.OverwriteChildResourcePermissionsWithDefault = plan.OverwriteChildResourcePermissionsWithDefault.ValueEnum()
 
 	input := &glue.CreateCatalogInput{
 		Name:         plan.Name.ValueStringPointer(),
@@ -358,17 +367,21 @@ func (r *catalogResource) Create(ctx context.Context, req resource.CreateRequest
 		Tags:         getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateCatalog(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.FederationSourceException](
+		ctx, iamPropagationTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateCatalog(ctx, input)
+		},
+		"Invalid role provided",
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	plan.ID = plan.Name
-
-	out, err := waitCatalogReady(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	out, err := waitCatalogReady(ctx, conn, plan.Name.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -391,14 +404,14 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	catalogPropertiesWasNull := state.CatalogProperties.IsNull()
 
-	out, err := findCatalogByID(ctx, conn, state.ID.ValueString())
+	out, err := findCatalogByName(ctx, conn, state.Name.ValueString())
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
@@ -409,7 +422,7 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 	setTagsOut(ctx, tags.Map())
@@ -476,22 +489,23 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 		if catalogInput.CreateTableDefaultPermissions == nil {
 			catalogInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 		}
+		catalogInput.OverwriteChildResourcePermissionsWithDefault = plan.OverwriteChildResourcePermissionsWithDefault.ValueEnum()
 
 		input := &glue.UpdateCatalogInput{
-			CatalogId:    plan.ID.ValueStringPointer(),
+			CatalogId:    plan.Name.ValueStringPointer(),
 			CatalogInput: &catalogInput,
 		}
 
 		_, err := conn.UpdateCatalog(ctx, input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 	}
 
-	out, err := findCatalogByID(ctx, conn, plan.ID.ValueString())
+	out, err := findCatalogByName(ctx, conn, plan.Name.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -503,7 +517,7 @@ func (r *catalogResource) Update(ctx context.Context, req resource.UpdateRequest
 	// Handle tags update
 	if !plan.TagsAll.Equal(state.TagsAll) {
 		if err := updateTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		}
 	}
 
@@ -527,7 +541,7 @@ func (r *catalogResource) Delete(ctx context.Context, req resource.DeleteRequest
 		r.DeleteTimeout(ctx, state.Timeouts),
 		func(ctx context.Context) (any, error) {
 			return conn.DeleteCatalog(ctx, &glue.DeleteCatalogInput{
-				CatalogId: state.ID.ValueStringPointer(),
+				CatalogId: state.Name.ValueStringPointer(),
 			})
 		},
 	)
@@ -537,13 +551,13 @@ func (r *catalogResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 	}
 }
 
-func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstypes.Catalog, error) {
+func findCatalogByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Catalog, error) {
 	input := &glue.GetCatalogInput{
-		CatalogId: aws.String(id),
+		CatalogId: aws.String(name),
 	}
 
 	out, err := conn.GetCatalog(ctx, input)
@@ -577,6 +591,7 @@ func findCatalogByID(ctx context.Context, conn *glue.Client, id string) (*awstyp
 // AVAILABLE. Empty string means no managed workgroup (catalogs without
 // data_lake_access_properties), which is also terminal.
 const (
+	iamPropagationTimeout           = 2 * time.Minute
 	managedWorkgroupStatusAvailable = "AVAILABLE"
 )
 
@@ -589,7 +604,7 @@ const (
 func waitCatalogReady(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.Catalog, error) {
 	var catalog *awstypes.Catalog
 	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
-		c, err := findCatalogByID(ctx, conn, id)
+		c, err := findCatalogByName(ctx, conn, id)
 		if err != nil {
 			return tfresource.NonRetryableError(err)
 		}
@@ -624,7 +639,6 @@ func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model 
 		return
 	}
 	model.ARN = types.StringPointerValue(catalog.ResourceArn)
-	model.ID = types.StringPointerValue(catalog.CatalogId)
 	// Only populate catalog_properties when the user declared it or the API
 	// returned real user-configured data; suppress AWS-auto-populated values
 	// (e.g. custom_properties={"aws:PermissionsModel":"LAKEFORMATION"}).
@@ -635,23 +649,23 @@ func readCatalogIntoModel(ctx context.Context, catalog *awstypes.Catalog, model 
 
 type catalogResourceModel struct {
 	framework.WithRegionModel
-	AllowFullTableExternalDataAccess fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum] `tfsdk:"allow_full_table_external_data_access"`
-	ARN                              types.String                                                      `tfsdk:"arn" autoflex:"-"`
-	CatalogID                        types.String                                                      `tfsdk:"catalog_id"`
-	CatalogProperties                fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]           `tfsdk:"catalog_properties"`
-	CreateDatabaseDefaultPermissions fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_database_default_permissions"`
-	CreateTableDefaultPermissions    fwtypes.ListNestedObjectValueOf[principalPermissionsModel]        `tfsdk:"create_table_default_permissions"`
-	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
-	Description                      types.String                                                      `tfsdk:"description"`
-	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
-	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
-	Name                             types.String                                                      `tfsdk:"name"`
-	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
-	Tags                             tftags.Map                                                        `tfsdk:"tags"`
-	TagsAll                          tftags.Map                                                        `tfsdk:"tags_all"`
-	TargetRedshiftCatalog            fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]       `tfsdk:"target_redshift_catalog"`
-	Timeouts                         timeouts.Value                                                    `tfsdk:"timeouts"`
-	UpdateTime                       timetypes.RFC3339                                                 `tfsdk:"update_time"`
+	AllowFullTableExternalDataAccess             fwtypes.StringEnum[awstypes.AllowFullTableExternalDataAccessEnum]             `tfsdk:"allow_full_table_external_data_access"`
+	ARN                                          types.String                                                                  `tfsdk:"arn" autoflex:"-"`
+	CatalogID                                    types.String                                                                  `tfsdk:"catalog_id"`
+	CatalogProperties                            fwtypes.ListNestedObjectValueOf[catalogPropertiesModel]                       `tfsdk:"catalog_properties"`
+	CreateDatabaseDefaultPermissions             fwtypes.ListNestedObjectValueOf[principalPermissionsModel]                    `tfsdk:"create_database_default_permissions"`
+	CreateTableDefaultPermissions                fwtypes.ListNestedObjectValueOf[principalPermissionsModel]                    `tfsdk:"create_table_default_permissions"`
+	CreateTime                                   timetypes.RFC3339                                                             `tfsdk:"create_time"`
+	Description                                  types.String                                                                  `tfsdk:"description"`
+	FederatedCatalog                             fwtypes.ListNestedObjectValueOf[federatedCatalogModel]                        `tfsdk:"federated_catalog"`
+	Name                                         types.String                                                                  `tfsdk:"name"`
+	OverwriteChildResourcePermissionsWithDefault fwtypes.StringEnum[awstypes.OverwriteChildResourcePermissionsWithDefaultEnum] `tfsdk:"overwrite_child_resource_permissions_with_default" autoflex:"-"`
+	Parameters                                   fwtypes.MapOfString                                                           `tfsdk:"parameters"`
+	Tags                                         tftags.Map                                                                    `tfsdk:"tags"`
+	TagsAll                                      tftags.Map                                                                    `tfsdk:"tags_all"`
+	TargetRedshiftCatalog                        fwtypes.ListNestedObjectValueOf[targetRedshiftCatalogModel]                   `tfsdk:"target_redshift_catalog"`
+	Timeouts                                     timeouts.Value                                                                `tfsdk:"timeouts"`
+	UpdateTime                                   timetypes.RFC3339                                                             `tfsdk:"update_time"`
 }
 
 type catalogPropertiesModel struct {
