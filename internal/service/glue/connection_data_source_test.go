@@ -157,26 +157,11 @@ data "aws_glue_connection" "test" {
 }
 
 func testAccConnectionDataSourceConfig_mySQL(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-glue-connection-mysql-ds"
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name   = "%[1]s"
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -187,22 +172,12 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "terraform-testacc-glue-connection-mysql-ds"
-  }
-}
-
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s"
+  bucket = %[1]q
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = "%[1]s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
@@ -218,7 +193,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_glue_connection" "test" {
-  name = "%[1]s"
+  name = %[1]q
 
   connection_type = "MYSQL"
 
@@ -239,14 +214,15 @@ resource "aws_glue_connection" "test" {
   }
 
   physical_connection_requirements {
-    availability_zone      = aws_subnet.test.availability_zone
+    availability_zone      = aws_subnet.test[0].availability_zone
     security_group_id_list = [aws_security_group.test.id]
-    subnet_id              = aws_subnet.test.id
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 
 data "aws_glue_connection" "test" {
   id = aws_glue_connection.test.id
 }
-`, rName)
+`, rName),
+	)
 }
