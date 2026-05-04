@@ -38,12 +38,7 @@ func testAccCatalogDataSource_catalogPropertiesDataLakeAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogDataSourceConfig_catalogPropertiesDataLakeAccess(rName),
@@ -52,6 +47,9 @@ func testAccCatalogDataSource_catalogPropertiesDataLakeAccess(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_properties.0.data_lake_access_properties.0.catalog_type", resourceName, "catalog_properties.0.data_lake_access_properties.0.catalog_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_properties.0.data_lake_access_properties.0.data_lake_access", resourceName, "catalog_properties.0.data_lake_access_properties.0.data_lake_access"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_properties.0.data_lake_access_properties.0.data_transfer_role", resourceName, "catalog_properties.0.data_lake_access_properties.0.data_transfer_role"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("allow_full_table_external_data_access"), knownvalue.StringExact("True")),
@@ -73,7 +71,7 @@ func testAccCatalogDataSource_federatedCatalog_mySQL(t *testing.T) {
 	dataSourceName := "data.aws_glue_catalog.test"
 	resourceName := "aws_glue_catalog.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
@@ -120,12 +118,7 @@ func testAccCatalogDataSource_targetRedshiftCatalog(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogDataSourceConfig_targetRedshiftCatalog(rName),

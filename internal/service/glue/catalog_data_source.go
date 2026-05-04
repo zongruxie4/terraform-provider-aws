@@ -49,7 +49,6 @@ func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
@@ -87,7 +86,8 @@ func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 										Computed: true,
 									},
 									"data_transfer_role": schema.StringAttribute{
-										Computed: true,
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
 									},
 									names.AttrKMSKey: schema.StringAttribute{
 										Computed: true,
@@ -102,6 +102,19 @@ func (d *catalogDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 										Computed: true,
 									},
 									names.AttrStatusMessage: schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+						"iceberg_optimization_properties": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[icebergOptimizationPropertiesModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"iceberg_retention_policy_enabled": schema.BoolAttribute{
+										Computed: true,
+									},
+									"iceberg_unreferenced_file_removal_enabled": schema.BoolAttribute{
 										Computed: true,
 									},
 								},
@@ -208,7 +221,13 @@ func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	data.ARN = types.StringPointerValue(out.ResourceArn)
-	data.ID = types.StringPointerValue(out.CatalogId)
+
+	tags, err := listTags(ctx, d.Meta().GlueClient(ctx), data.ARN.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
+		return
+	}
+	setTagsOut(ctx, tags.Map())
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -224,7 +243,6 @@ type catalogDataSourceModel struct {
 	CreateTime                       timetypes.RFC3339                                                 `tfsdk:"create_time"`
 	Description                      types.String                                                      `tfsdk:"description"`
 	FederatedCatalog                 fwtypes.ListNestedObjectValueOf[federatedCatalogModel]            `tfsdk:"federated_catalog"`
-	ID                               types.String                                                      `tfsdk:"id" autoflex:"-"`
 	Name                             types.String                                                      `tfsdk:"name"`
 	Parameters                       fwtypes.MapOfString                                               `tfsdk:"parameters"`
 	Tags                             tftags.Map                                                        `tfsdk:"tags"`
