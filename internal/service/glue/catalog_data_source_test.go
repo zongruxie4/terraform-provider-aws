@@ -55,7 +55,7 @@ func testAccCatalogDataSource_catalogPropertiesDataLakeAccess(t *testing.T) {
 	})
 }
 
-func testAccCatalogDataSource_federatedCatalog_mySQL(t *testing.T) {
+func testAccCatalogDataSource_FederatedCatalog_mySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -89,7 +89,7 @@ func testAccCatalogDataSource_federatedCatalog_mySQL(t *testing.T) {
 	})
 }
 
-func testAccCatalogDataSource_targetRedshiftCatalog(t *testing.T) {
+func testAccCatalogDataSource_TargetRedshiftCatalog_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -123,7 +123,7 @@ func testAccCatalogDataSource_targetRedshiftCatalog(t *testing.T) {
 	})
 }
 
-func testAccCatalogDataSource_federatedCatalog_s3Tables(t *testing.T) {
+func testAccCatalogDataSource_FederatedCatalog_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
