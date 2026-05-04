@@ -37,7 +37,7 @@ func testAccCatalog_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
@@ -96,7 +96,7 @@ func testAccCatalog_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
@@ -150,7 +150,7 @@ func testAccCatalog_List_includeResource(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),

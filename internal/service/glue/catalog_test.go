@@ -43,7 +43,7 @@ func testAccCatalog_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,7 +79,7 @@ func testAccCatalog_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -115,7 +115,7 @@ func testAccCatalog_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -179,7 +179,7 @@ func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -220,7 +220,7 @@ func testAccCatalog_FederatedCatalog_mySQL(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -265,7 +265,7 @@ func testAccCatalog_TargetRedshiftCatalog_serverless(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -310,7 +310,7 @@ func testAccCatalog_TargetRedshiftCatalog_provisioned(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -350,7 +350,7 @@ func testAccCatalog_FederatedCatalog_s3Tables(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 			testAccPreCheckS3TablesCatalogDoesNotExist(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
@@ -396,7 +396,7 @@ func testAccCatalog_configurationError(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCatalogPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -461,7 +461,7 @@ func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string) r
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccCatalogPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 	input := &glue.GetCatalogsInput{}
