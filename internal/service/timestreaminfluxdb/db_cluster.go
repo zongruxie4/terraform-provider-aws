@@ -8,7 +8,6 @@ package timestreaminfluxdb
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -589,34 +588,6 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 	default:
 		return false, diags
 	}
-}
-
-func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data dbClusterResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !isNullOrUnknownValue(data.AllocatedStorage) {
-		switch v := data.AllocatedStorage.ValueInt64(); {
-		case v > math.MaxInt32:
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was greater than the maximum allowed value for int32",
-			)
-			return
-		case v < math.MinInt32:
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was less than the minimum allowed value for int32",
-			)
-			return
-		}
-	}
-
-	// Note: Parameter group V3 validation is deferred to ModifyPlan where variables are fully resolved
-	// and the AWS client is properly initialized for API calls
 }
 
 func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
