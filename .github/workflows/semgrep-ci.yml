@@ -12,6 +12,7 @@ on:
     paths:
       - internal/**
       - .semgrep*yml
+      - .ci/semgrep*
       - .github/workflows/semgrep-ci.yml
 
 ## NOTE: !!!
@@ -51,6 +52,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: |
           semgrep --quiet --test .ci/semgrep/
+          semgrep --quiet --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
   semgrep:
     name: Code Quality Scan (make semgrep-code-quality)
