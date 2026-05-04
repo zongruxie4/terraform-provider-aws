@@ -17,6 +17,16 @@ Zonal autoshift is a capability in AWS Application Recovery Controller (ARC) tha
 ### Basic Usage
 
 ```terraform
+resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
+  resource_arn      = aws_lb.example.arn
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.example.arn
+    type             = "CLOUDWATCH"
+  }
+}
+
 resource "aws_lb" "example" {
   name               = "example"
   internal           = true
@@ -41,22 +51,24 @@ resource "aws_cloudwatch_metric_alarm" "example" {
     LoadBalancer = aws_lb.example.arn_suffix
   }
 }
-
-resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn       = aws_lb.example.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.example.arn]
-  autoshift_enabled  = true
-}
 ```
 
 ### With Blocking Alarms
 
 ```terraform
 resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn        = aws_lb.example.arn
-  outcome_alarm_arns  = [aws_cloudwatch_metric_alarm.outcome.arn]
-  blocking_alarm_arns = [aws_cloudwatch_metric_alarm.blocking.arn]
-  autoshift_enabled   = true
+  resource_arn      = aws_lb.example.arn
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.outcome.arn
+    type             = "CLOUDWATCH"
+  }
+
+  blocking_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.blocking.arn
+    type             = "CLOUDWATCH"
+  }
 }
 ```
 
@@ -64,10 +76,14 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
 
 ```terraform
 resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
-  resource_arn       = aws_lb.example.arn
-  outcome_alarm_arns = [aws_cloudwatch_metric_alarm.example.arn]
-  blocked_windows    = ["Mon:00:00-Mon:08:00"]
-  autoshift_enabled  = true
+  resource_arn      = aws_lb.example.arn
+  blocked_windows   = ["Mon:00:00-Mon:08:00"]
+  autoshift_enabled = true
+
+  outcome_alarms {
+    alarm_identifier = aws_cloudwatch_metric_alarm.example.arn
+    type             = "CLOUDWATCH"
+  }
 }
 ```
 
@@ -76,7 +92,7 @@ resource "aws_arczonalshift_zonal_autoshift_configuration" "example" {
 The following arguments are required:
 
 * `autoshift_enabled` - (Required) Whether zonal autoshift is enabled. When set to `true`, traffic will be automatically shifted away from an Availability Zone when AWS identifies a potential issue.
-* `outcome_alarm_arns` - (Required) List of CloudWatch alarm ARNs that are monitored during practice runs. These alarms help determine the health of your application during zonal shifts.
+* `outcome_alarms` - (Required) List of CloudWatch alarms monitored during practice runs. See [`outcome_alarms`](#outcome_alarms) below.
 * `resource_arn` - (Required) The ARN of the managed resource to configure zonal autoshift for (e.g., an Application Load Balancer). Changing this creates a new resource.
 
 The following arguments are optional:
@@ -84,8 +100,18 @@ The following arguments are optional:
 * `allowed_windows` - (Optional) List of time windows during which practice runs are allowed, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:09:00-Mon:17:00`). Cannot be used together with `blocked_windows`.
 * `blocked_dates` - (Optional) List of dates when practice runs should not be started, in the format `YYYY-MM-DD`.
 * `blocked_windows` - (Optional) List of time windows during which practice runs should not be started, in the format `Day:HH:MM-Day:HH:MM` (e.g., `Mon:00:00-Mon:08:00`). Cannot be used together with `allowed_windows`.
-* `blocking_alarm_arns` - (Optional) List of CloudWatch alarm ARNs that can block practice runs when in alarm state.
+* `blocking_alarms` - (Optional) List of CloudWatch alarms that can block practice runs when in alarm state. See [`blocking_alarms`](#blocking_alarms) below.
 * `region` - (Optional) AWS region where the resource is deployed.
+
+### `outcome_alarms`
+
+* `alarm_identifier` - (Required) ARN of the CloudWatch alarm.
+* `type` - (Required) Type of control condition. Valid value: `CLOUDWATCH`.
+
+### `blocking_alarms`
+
+* `alarm_identifier` - (Required) ARN of the CloudWatch alarm.
+* `type` - (Required) Type of control condition. Valid value: `CLOUDWATCH`.
 
 ## Attribute Reference
 

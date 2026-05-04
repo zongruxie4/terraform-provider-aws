@@ -120,7 +120,7 @@ func (r *resourceZonalAutoshiftConfiguration) Schema(ctx context.Context, req re
 							Required:    true,
 							Description: "ARN of the CloudWatch alarm.",
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType:  fwtypes.StringEnumType[awstypes.ControlConditionType](),
 							Required:    true,
 							Description: "Type of control condition. Valid value: `CLOUDWATCH`.",
