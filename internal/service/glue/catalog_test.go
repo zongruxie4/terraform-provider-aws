@@ -726,6 +726,9 @@ func testAccCatalogConfig_federatedCatalog_mySQL(rName string) string {
 		testAccCatalogConfig_lakeFormationAdminBase(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
