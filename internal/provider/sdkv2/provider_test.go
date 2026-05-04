@@ -5,6 +5,7 @@ package sdkv2
 
 import (
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -26,6 +27,11 @@ func BenchmarkSDKProviderInitialization(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+
+		err = validateResourceSchemas(ctx, slices.All(servicePackages(ctx)))
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
@@ -36,6 +42,11 @@ func TestProviderInit(t *testing.T) {
 	p, err := NewProvider(ctx)
 	if err != nil {
 		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	err = validateResourceSchemas(ctx, slices.All(servicePackages(ctx)))
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	p.TerraformVersion = "1.0.0"

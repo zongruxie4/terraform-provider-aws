@@ -845,9 +845,14 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 // validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
 func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
+	return validateResourceSchemas(ctx, p.servicePackages)
+}
+
+// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
+func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int, conns.ServicePackage]) error {
 	var errs []error
 
-	for _, sp := range p.servicePackages {
+	for _, sp := range servicePackages {
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
 			r := v.Factory()
