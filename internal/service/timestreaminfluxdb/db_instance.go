@@ -8,7 +8,6 @@ package timestreaminfluxdb
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -510,34 +509,6 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	if _, err := waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Instance (%s) delete", instanceID), err.Error())
-		return
-	}
-}
-
-func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var allocatedStorage types.Int64
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if isNullOrUnknownValue(allocatedStorage) {
-		return
-	}
-
-	if allocatedStorage.ValueInt64() > math.MaxInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was greater than the maximum allowed value for int32",
-		)
-		return
-	}
-
-	if allocatedStorage.ValueInt64() < math.MinInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was less than the minimum allowed value for int32",
-		)
 		return
 	}
 }
