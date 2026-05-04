@@ -72,7 +72,7 @@ resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
 }
 ```
 
-#### Resource: `aws_odb_cloud_vm_cluster.gi_version_tag_example`
+### With GI Version Tag
 
 ```terraform
 resource "aws_odb_cloud_vm_cluster" "gi_version_tag_example" {
