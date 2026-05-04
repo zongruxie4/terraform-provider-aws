@@ -27,7 +27,7 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogByID                 = findCatalogByID
+	FindCatalogByName               = findCatalogByName
 	FindCatalogTableOptimizer       = findCatalogTableOptimizer
 	FindClassifierByName            = findClassifierByName
 	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey

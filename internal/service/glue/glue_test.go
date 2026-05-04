@@ -14,6 +14,7 @@ func TestAccGlue_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Catalog": {
+			acctest.CtBasic:                    testAccCatalog_basic,
 			acctest.CtDisappears:               testAccCatalog_disappears,
 			"catalogPropertiesDataLakeAccess":  testAccCatalog_catalogPropertiesDataLakeAccess,
 			"configurationError":               testAccCatalog_configurationError,
@@ -22,6 +23,7 @@ func TestAccGlue_serial(t *testing.T) {
 			"tags":                             testAccCatalog_tags,
 			"targetRedshiftCatalog":            testAccCatalog_targetRedshiftCatalog,
 			"targetRedshiftCatalogProvisioned": testAccCatalog_targetRedshiftCatalogProvisioned,
+			"identity":                         testAccGlueCatalog_identitySerial,
 		},
 		"CatalogDataSource": {
 			"catalogPropertiesDataLakeAccess": testAccCatalogDataSource_catalogPropertiesDataLakeAccess,

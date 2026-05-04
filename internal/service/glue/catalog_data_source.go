@@ -197,7 +197,7 @@ func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	out, err := findCatalogByID(ctx, conn, data.Name.ValueString())
+	out, err := findCatalogByName(ctx, conn, data.Name.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
