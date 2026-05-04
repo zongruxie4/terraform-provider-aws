@@ -85,7 +85,7 @@ For serverless namespaces:
 ```terraform
 import {
   to = aws_redshift_namespace_registration.example
-  id = "DataCatalog/123456789012/example-namespace/example-workgroup"
+  id = "DataCatalog/123456789012,example-namespace,example-workgroup"
 }
 ```
 
@@ -94,7 +94,7 @@ For provisioned clusters:
 ```terraform
 import {
   to = aws_redshift_namespace_registration.example
-  id = "DataCatalog/123456789012/example-cluster"
+  id = "DataCatalog/123456789012,example-cluster"
 }
 ```
 
@@ -103,11 +103,11 @@ Using `terraform import`, import Redshift Namespace Registration using the compo
 For serverless namespaces:
 
 ```console
-% terraform import aws_redshift_namespace_registration.example DataCatalog/123456789012/example-namespace/example-workgroup
+% terraform import aws_redshift_namespace_registration.example DataCatalog/123456789012,example-namespace,example-workgroup
 ```
 
 For provisioned clusters:
 
 ```console
-% terraform import aws_redshift_namespace_registration.example DataCatalog/123456789012/example-cluster
+% terraform import aws_redshift_namespace_registration.example DataCatalog/123456789012,example-cluster
 ```
