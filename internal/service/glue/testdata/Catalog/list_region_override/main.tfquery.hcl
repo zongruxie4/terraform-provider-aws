@@ -2,5 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 list "aws_glue_catalog" "test" {
-  region = var.region
+  provider = aws
+
+  config {
+    region = var.region
+  }
 }

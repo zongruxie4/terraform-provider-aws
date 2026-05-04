@@ -58,3 +58,15 @@ resource "aws_glue_catalog" "test" {
     aws_iam_role_policy.test,
   ]
 }
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

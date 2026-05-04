@@ -1,13 +1,10 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_caller_identity" "current" {
-  region = var.region
-}
+data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  region = var.region
-  arn    = data.aws_caller_identity.current.arn
+  arn = data.aws_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
@@ -16,8 +13,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  region = var.region
-  name   = var.rName
+  name = var.rName
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -32,9 +28,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  region = var.region
-  name   = var.rName
-  role   = aws_iam_role.test.id
+  name = var.rName
+  role = aws_iam_role.test.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -64,4 +59,22 @@ resource "aws_glue_catalog" "test" {
     aws_lakeformation_data_lake_settings.test,
     aws_iam_role_policy.test,
   ]
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
