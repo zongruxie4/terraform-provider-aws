@@ -591,78 +591,74 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 }
 
 func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.Plan.Raw.IsNull() {
-		var data dbClusterResourceModel
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if req.Plan.Raw.IsNull() {
+		// Resource deletion.
+		return
+	}
+
+	var data dbClusterResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var isV3Cluster bool
+	if !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
+		conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+		paramGroupID := fwflex.StringValueFromFramework(ctx, data.DBParameterGroupIdentifier)
+		isV3, diags := isParameterGroupV3(ctx, conn, paramGroupID)
+		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		isV3Cluster = isV3
+	}
 
-		var isV3Cluster bool
-		if !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
-			meta := r.Meta()
-			if meta == nil {
-				return
-			}
-			paramGroupID := data.DBParameterGroupIdentifier.ValueString()
-			isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			isV3Cluster = isV3
+	v2Fields := []struct {
+		val  attr.Value
+		path string
+	}{
+		{data.AllocatedStorage, names.AttrAllocatedStorage},
+		{data.Bucket, names.AttrBucket},
+		{data.DeploymentType, "deployment_type"},
+		{data.Organization, "organization"},
+		{data.Password, names.AttrPassword},
+		{data.Username, names.AttrUsername},
+	}
 
-			// Check for V2 fields when using non-V3 parameter group
-			hasV2Fields := !isNullOrUnknownValue(data.AllocatedStorage) ||
-				!isNullOrUnknownValue(data.Bucket) ||
-				!isNullOrUnknownValue(data.DeploymentType) ||
-				!isNullOrUnknownValue(data.Organization) ||
-				!isNullOrUnknownValue(data.Password) ||
-				!isNullOrUnknownValue(data.Username)
-
-			if !hasV2Fields && !isV3Cluster {
+	// Validate V3-specific field restrictions
+	if isV3Cluster {
+		for _, v := range v2Fields {
+			if !isNullOrUnknownValue(v.val) {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("db_parameter_group_identifier"),
-					"Invalid Parameter Group Type",
-					"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
+					path.Root(v.path),
+					"Invalid Configuration for InfluxDB V3",
+					v.path+" must not be set when using an InfluxDB V3 db parameter group",
 				)
-				return
 			}
-
-			// Validate V3-specific field restrictions
-			if isV3Cluster {
-				for _, v := range []struct {
-					val  attr.Value
-					path string
-				}{
-					{data.AllocatedStorage, names.AttrAllocatedStorage},
-					{data.Bucket, names.AttrBucket},
-					{data.DeploymentType, "deployment_type"},
-					{data.Organization, "organization"},
-					{data.Password, names.AttrPassword},
-					{data.Username, names.AttrUsername},
-				} {
-					if !isNullOrUnknownValue(v.val) {
-						resp.Diagnostics.AddAttributeError(
-							path.Root(v.path),
-							"Invalid Configuration for InfluxDB V3",
-							v.path+" must not be set when using an InfluxDB V3 db parameter group",
-						)
-					}
-				}
-			}
-
-			if !isNullOrUnknownValue(data.MaintenanceSchedule) {
+		}
+	} else {
+		if data.DeploymentType.IsUnknown() {
+			data.DeploymentType = fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)
+			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), data.DeploymentType)
+		}
+		for _, v := range v2Fields {
+			if isNullOrUnknownValue(v.val) {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("maintenance_schedule"),
-					"Invalid Configuration for InfluxDB V2",
-					"maintenance_schedule is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group)",
+					path.Root(v.path),
+					"Missing Required Configuration for InfluxDB V2",
+					v.path+" is required for InfluxDB V2 clusters",
 				)
 			}
 		}
 
-		if !isV3Cluster && data.DeploymentType.IsUnknown() {
-			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
+		if !isNullOrUnknownValue(data.MaintenanceSchedule) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("maintenance_schedule"),
+				"Invalid Configuration for InfluxDB V2",
+				"maintenance_schedule is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group)",
+			)
 		}
 	}
 }
@@ -753,7 +749,7 @@ func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *tim
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
@@ -781,7 +777,7 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 

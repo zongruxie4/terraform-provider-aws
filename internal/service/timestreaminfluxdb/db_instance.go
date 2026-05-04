@@ -599,7 +599,7 @@ func findDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, in *ti
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
