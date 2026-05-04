@@ -92,6 +92,17 @@ This resource supports the following arguments:
 * `create` - (Default `60m`)
 * `delete` - (Default `10m`)
 
+~> **Long-running capacity tasks.** The default `create` timeout of `60m` is sufficient for most re-balancing operations on small to medium instance types. However, capacity tasks that change the configuration of bare-metal instance types (`*.metal`) or very large instance types (`24xlarge`, `48xlarge`, etc.) in the current or target state can take **8 to 12 hours** to complete, because AWS must stop, reconfigure, and re-start the underlying hardware. If your `instance_pool` configuration or the current state of the Outpost involves one of these instance types, override the `create` timeout accordingly — for example:
+
+```terraform
+timeouts {
+  create = "12h"
+  delete = "4h"
+}
+```
+
+If the `create` waiter times out before the capacity task reaches a terminal state, Terraform will return an error and will **not** write the resource to state, even though the task continues to run in AWS. Recovering from this condition requires locating the orphaned task (for example with `aws outposts list-capacity-tasks --outpost-identifier <outpost-id>`), waiting for it to complete, and then importing it using `terraform import aws_outposts_capacity_task.example <outpost-id>/<capacity-task-id>`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
