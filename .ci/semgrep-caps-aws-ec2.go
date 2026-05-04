@@ -17,3 +17,10 @@ func ThingCreate() {}
 
 // ok: aws-in-func-name
 func ReadWidget() {}
+
+type resourceData struct{}
+
+// ok: aws-in-func-name
+func (d *resourceData) GetRawState() cty.Value {
+	return cty.Value{}
+}
