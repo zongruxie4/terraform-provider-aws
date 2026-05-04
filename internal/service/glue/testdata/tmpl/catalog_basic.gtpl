@@ -1,3 +1,21 @@
+resource "aws_glue_catalog" "test" {
+{{- template "region" }}
+  name = var.rName
+
+  catalog_properties {
+    data_lake_access_properties {
+      catalog_type       = "aws:redshift"
+      data_lake_access   = true
+      data_transfer_role = aws_iam_role.test.arn
+    }
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test
+  ]
+{{- template "tags" . }}
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
@@ -39,22 +57,4 @@ resource "aws_iam_role_policy" "test" {
       Resource = "*"
     }]
   })
-}
-
-resource "aws_glue_catalog" "test" {
-{{- template "region" }}
-  name = var.rName
-
-  catalog_properties {
-    data_lake_access_properties {
-      catalog_type       = "aws:redshift"
-      data_lake_access   = true
-      data_transfer_role = aws_iam_role.test.arn
-    }
-  }
-
-  depends_on = [
-    aws_lakeformation_data_lake_settings.test
-  ]
-{{- template "tags" . }}
 }
