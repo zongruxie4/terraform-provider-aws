@@ -4,6 +4,10 @@
 package sdkv2
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"iter"
 	"os"
 	"slices"
 	"strings"
@@ -13,8 +17,10 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,11 +30,6 @@ func BenchmarkSDKProviderInitialization(b *testing.B) {
 	ctx := b.Context()
 	for b.Loop() {
 		_, err := NewProvider(ctx)
-		if err != nil {
-			b.Fatal(err)
-		}
-
-		err = validateResourceSchemas(ctx, slices.All(servicePackages(ctx)))
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -450,4 +451,83 @@ func popEnv(env []string) {
 		k, v, _ := strings.Cut(e, "=")
 		os.Setenv(k, v)
 	}
+}
+
+// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
+func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int, conns.ServicePackage]) error {
+	var errs []error
+
+	for _, sp := range servicePackages {
+		for _, v := range sp.SDKDataSources(ctx) {
+			typeName := v.TypeName
+			r := v.Factory()
+			s := r.SchemaMap()
+
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
+					continue
+				}
+			}
+		}
+
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
+			r := resource.Factory()
+			s := r.SchemaMap()
+
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(resource.Tags) {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := s[names.AttrTagsAll]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resource.Identity.IsCustomInherentRegion {
+				if resource.Identity.IsGlobalResource {
+					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
+					continue
+				}
+			}
+		}
+	}
+
+	return errors.Join(errs...)
 }
