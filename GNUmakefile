@@ -912,7 +912,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 test-naming: ## Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
-testacc: prereq-go fmt-check ## Run acceptance tests
+testacc: prereq-go fmt-check testacc-schema ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -944,6 +944,13 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
+
+testacc-schema: ## Validate schemas
+	@echo "make: Validating schemas"
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/sdkv2 -run=TestProviderInit
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/framework -run=TestProviderInit
 
 terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
 	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
