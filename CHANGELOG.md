@@ -2,7 +2,9 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_alb_target_group_attachment` ([#47724](https://github.com/hashicorp/terraform-provider-aws/issues/47724))
 * **New List Resource:** `aws_appautoscaling_policy` ([#47718](https://github.com/hashicorp/terraform-provider-aws/issues/47718))
+* **New List Resource:** `aws_lb_target_group_attachment` ([#47724](https://github.com/hashicorp/terraform-provider-aws/issues/47724))
 * **New List Resource:** `aws_securityhub_standards_control` ([#47702](https://github.com/hashicorp/terraform-provider-aws/issues/47702))
 
 ENHANCEMENTS:
