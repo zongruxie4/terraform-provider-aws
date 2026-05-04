@@ -6,6 +6,10 @@ aws_glue_catalog
 aws_glue_catalog
 ```
 
+```release-note:new-list-resource
+aws_glue_catalog
+```
+
 ```release-note:new-resource
 aws_redshift_namespace_registration
 ```
