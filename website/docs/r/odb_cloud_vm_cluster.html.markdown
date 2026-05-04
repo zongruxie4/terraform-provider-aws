@@ -40,7 +40,7 @@ resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
 }
 ```
 
-#### Resource: `aws_odb_cloud_vm_cluster.with_all_parameters`
+### With Optional Arguments
 
 ```terraform
 resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
