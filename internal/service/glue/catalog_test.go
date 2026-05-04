@@ -724,37 +724,8 @@ resource "aws_glue_catalog" "test" {
 func testAccCatalogConfig_federatedCatalog_mySQL(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -795,7 +766,7 @@ resource "aws_glue_connection" "test" {
   }
 
   athena_properties = {
-    lambda_function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:123456789012:function:athenafederatedcatalog_mysql"
+    lambda_function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:123456789012:function:athenafederatedcatalog_mysql"
     spill_bucket        = aws_s3_bucket.test.bucket
   }
 
@@ -805,9 +776,9 @@ resource "aws_glue_connection" "test" {
   }
 
   physical_connection_requirements {
-    availability_zone      = aws_subnet.test.availability_zone
+    availability_zone      = aws_subnet.test[0].availability_zone
     security_group_id_list = [aws_security_group.test.id]
-    subnet_id              = aws_subnet.test.id
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 
