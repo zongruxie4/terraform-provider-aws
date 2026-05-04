@@ -1,13 +1,43 @@
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# AGENTS.md
+This is the Go-based Terraform AWS Provider (`github.com/hashicorp/terraform-provider-aws`). It maps AWS API resources to Terraform resources, data sources, ephemeral resources and actions (collectively often referred to as just resources). The primary language is Go; HCL appears in acceptance test configurations and website documentation.
 
-This file provides guidance for AI agents working in the Terraform AWS Provider repository.
+# Agent Registry
 
-## Overview
+This project uses specialized personas for different tasks.
 
-This is the Go-based Terraform AWS Provider (`github.com/hashicorp/terraform-provider-aws`). It maps AWS API resources to Terraform resources and data sources. The primary language is Go; HCL appears in acceptance test configurations and website documentation.
+## Available Personas
+- **`@contributor`**: [Contributor Persona](./docs/ai-agent-guides/contributor.md) - Contributes code in the form of bugfixes, enhancements to existing resources, and new resources. Makes clarifications and corrections to existing documentation.
+- **`@maintainer`**: [Maintainer Persona](./docs/ai-agent-guides/maintainer.md) - Steward of the project, responsible for both internal and external quality. Reviews contributions. Maintains provider-level features, including new Terraform language constructs.
+- **`@tcm`**: [TCM Persona](./docs/ai-agent-guides/tcm.md) - Triages incoming GitHub issues and PRs. Engages with community members to answer technical and process questions. Suggests workarounds and alternatives to reported bugs.
+
+## Global Rules
+- Always use the requested persona for tasks.
+- If no persona is specified, default to `@contributor`.
+
+---
+# Global Rules
+
+## AI Usage Policy
+
+Per `docs/ai-usage.md`:
+- Disclose AI use in the PR description.
+- Include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
+- The human PR author is fully responsible for all submitted code and must understand it completely.
+- Human reviewers own the final code and must understand it fully.
+
+## Authoritative References
+
+- `GNUmakefile` — canonical list of all targets and variables.
+- `docs/naming.md` — naming rules for resources, files, functions, tests.
+- `docs/error-handling.md` — error handling patterns.
+- `docs/data-handling-and-conversion.md` — flatteners, expanders, AutoFlex.
+- `docs/retries-and-waiters.md` — retry and waiter helpers.
+- `docs/running-and-writing-acceptance-tests.md` — acceptance test patterns.
+- `names/caps.md` — enforced capitalization list for initialisms.
+- `.ci/.golangci*.yml` — golangci-lint configuration.
+- `docs/ai-agent-guides/` — task-specific agent guides (resource identity, list resources, etc.).
 
 ## Environment Setup
 
@@ -17,7 +47,7 @@ make tools       # install linters and helper binaries (run once)
 make build       # compile the provider
 ```
 
-Acceptance tests require Terraform CLI 0.12.26+ and AWS credentials in the environment (`AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` plus `AWS_DEFAULT_REGION`). The default acceptance test region is `us-west-2`.
+Acceptance tests require Terraform CLI 0.12.31+ and AWS credentials in the environment (`AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` plus `AWS_DEFAULT_REGION`). The default acceptance test region is `us-west-2`.
 
 ## Common Commands
 
@@ -158,22 +188,3 @@ Must name the specific linter and explain why: `//nolint:staticcheck // reason`.
 7. Acceptance tests — if AWS credentials are available and the change warrants it.
 
 Escalate to `make ci-quick` only when the above are clean or the change is broad.
-
-## AI Usage Policy
-
-Per `docs/ai-usage.md`:
-- Disclose AI use in the PR description.
-- Include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
-- The human PR author is fully responsible for all submitted code and must understand it completely.
-
-## Authoritative References
-
-- `GNUmakefile` — canonical list of all targets and variables.
-- `docs/naming.md` — naming rules for resources, files, functions, tests.
-- `docs/error-handling.md` — error handling patterns.
-- `docs/data-handling-and-conversion.md` — flatteners, expanders, AutoFlex.
-- `docs/retries-and-waiters.md` — retry and waiter helpers.
-- `docs/running-and-writing-acceptance-tests.md` — acceptance test patterns.
-- `names/caps.md` — enforced capitalization list for initialisms.
-- `.ci/.golangci*.yml` — golangci-lint configuration.
-- `docs/ai-agent-guides/` — task-specific agent guides (resource identity, list resources, etc.).
