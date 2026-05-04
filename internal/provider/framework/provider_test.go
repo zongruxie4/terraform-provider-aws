@@ -11,6 +11,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
+func TestProviderInit(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	primary, err := sdkv2.NewProvider(ctx)
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	p, err := NewProvider(ctx, primary)
+	if err != nil {
+		t.Fatalf("Initializing Framework provider: %s", err)
+	}
+
+	provider := p.(*frameworkProvider)
+
+	err = provider.validateResourceSchemas(ctx)
+	if err != nil {
+		t.Errorf("Validating resource schemas: %s", err)
+	}
+}
+
 // To run these benchmarks:
 // go test -bench=. -benchmem -run=^$ -v ./internal/provider/framework
 
