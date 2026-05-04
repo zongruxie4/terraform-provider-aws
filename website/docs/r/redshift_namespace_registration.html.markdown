@@ -78,7 +78,57 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Namespace Registration. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+For serverless namespaces:
+
+```terraform
+import {
+  to = aws_redshift_namespace_registration.example
+  identity = {
+    "consumer_identifier"             = "DataCatalog/123456789012"
+    "namespace_type"                  = "serverless"
+    "serverless_namespace_identifier" = "example-namespace"
+    "serverless_workgroup_identifier" = "example-workgroup"
+  }
+}
+
+resource "aws_redshift_namespace_registration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+For provisioned clusters:
+
+```terraform
+import {
+  to = aws_redshift_namespace_registration.example
+  identity = {
+    "consumer_identifier"            = "DataCatalog/123456789012"
+    "namespace_type"                 = "provisioned"
+    "provisioned_cluster_identifier" = "example-cluster"
+  }
+}
+
+resource "aws_redshift_namespace_registration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `consumer_identifier` (String) Consumer identifier for the registration.
+- `namespace_type` (String) Type of namespace being registered. Valid values: `serverless`, `provisioned`.
+
+#### Optional
+
+- `provisioned_cluster_identifier` (String) Identifier of the provisioned cluster. Required when `namespace_type` is `provisioned`.
+- `serverless_namespace_identifier` (String) Identifier of the serverless namespace. Required when `namespace_type` is `serverless`.
+- `serverless_workgroup_identifier` (String) Identifier of the serverless workgroup. Required when `namespace_type` is `serverless`.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Namespace Registration using the composite ID. For example:
 
 For serverless namespaces:
 
