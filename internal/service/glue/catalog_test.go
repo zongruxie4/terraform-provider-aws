@@ -30,6 +30,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccCatalog_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogExists(ctx, t, resourceName),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
+			},
+		},
+	})
+}
+
 func testAccCatalog_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -97,9 +133,11 @@ func testAccCatalog_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 			{
 				Config: testAccCatalogConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -151,12 +189,7 @@ func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogConfig_catalogPropertiesDataLakeAccess(rName),
@@ -170,23 +203,11 @@ func testAccCatalog_catalogPropertiesDataLakeAccess(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrTags,
-					names.AttrTagsAll,
-					// AWS auto-adds catalog_properties.custom_properties =
-					// {"aws:PermissionsModel": "LAKEFORMATION"} to every
-					// LF-managed catalog, which forces us to keep the flatten
-					// guarded on pre-populated state to avoid "block count
-					// changed from 0 to 1" on catalogs that don't declare the
-					// block (federated, s3Tables). Import starts with null
-					// state, so the guard skips flatten and the block is
-					// missing on re-read. Skipping verify here is the
-					// pragmatic trade-off.
-					"catalog_properties",
-				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -227,13 +248,11 @@ func testAccCatalog_federatedCatalog_mySQL(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrTags,
-					names.AttrTagsAll,
-				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -261,12 +280,7 @@ func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckCatalogDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCatalogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogConfig_targetRedshiftCatalog(rName),
@@ -284,13 +298,11 @@ func testAccCatalog_targetRedshiftCatalog(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrTags,
-					names.AttrTagsAll,
-				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -326,13 +338,11 @@ func testAccCatalog_targetRedshiftCatalogProvisioned(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrTags,
-					names.AttrTagsAll,
-				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -380,13 +390,11 @@ func testAccCatalog_federatedCatalog_s3Tables(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrTags,
-					names.AttrTagsAll,
-				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -429,7 +437,7 @@ func testAccCheckCatalogDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID)
+			_, err := tfglue.FindCatalogByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 			if retry.NotFound(err) {
 				return nil
 			}
@@ -455,14 +463,14 @@ func testAccCheckCatalogExists(ctx context.Context, t *testing.T, name string) r
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, ResNameCatalog, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrName] == "" {
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, ResNameCatalog, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-		if _, err := tfglue.FindCatalogByID(ctx, conn, rs.Primary.ID); err != nil {
-			return create.Error(names.Glue, create.ErrActionCheckingExistence, ResNameCatalog, rs.Primary.ID, err)
+		if _, err := tfglue.FindCatalogByName(ctx, conn, rs.Primary.Attributes[names.AttrName]); err != nil {
+			return create.Error(names.Glue, create.ErrActionCheckingExistence, ResNameCatalog, rs.Primary.Attributes[names.AttrName], err)
 		}
 
 		return nil
@@ -493,7 +501,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccPreCheckS3TablesCatalogDoesNotExist(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-	_, err := tfglue.FindCatalogByID(ctx, conn, "s3tablescatalog")
+	_, err := tfglue.FindCatalogByName(ctx, conn, "s3tablescatalog")
 	if retry.NotFound(err) {
 		return
 	}
@@ -517,10 +525,158 @@ func testAccPreCheckS3TablesCatalogDoesNotExist(ctx context.Context, t *testing.
 
 // --- Config functions ---
 
+func testAccCatalogConfig_lakeFormationAdminBase() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+`
+}
+
+func testAccCatalogConfig_s3TablesBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "lakeformation.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity",
+        "sts:SetContext"
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "LakeFormationPermissionsForS3ListTableBucket"
+        Effect   = "Allow"
+        Action   = ["s3tables:ListTableBuckets"]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "LakeFormationDataAccessPermissionsForS3TableBucket"
+        Effect = "Allow"
+        Action = [
+          "s3tables:CreateTableBucket",
+          "s3tables:GetTableBucket",
+          "s3tables:CreateNamespace",
+          "s3tables:GetNamespace",
+          "s3tables:ListNamespaces",
+          "s3tables:DeleteNamespace",
+          "s3tables:DeleteTableBucket",
+          "s3tables:CreateTable",
+          "s3tables:DeleteTable",
+          "s3tables:GetTable",
+          "s3tables:ListTables",
+          "s3tables:RenameTable",
+          "s3tables:UpdateTableMetadataLocation",
+          "s3tables:GetTableMetadataLocation",
+          "s3tables:GetTableData",
+          "s3tables:PutTableData"
+        ]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_lakeformation_resource" "test" {
+  arn      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
+  role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccCatalogConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "glue.amazonaws.com",
+          "redshift.amazonaws.com",
+        ]
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["glue:GetCatalog", "glue:GetDatabase", "kms:Decrypt", "kms:GenerateDataKey"]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_glue_catalog" "test" {
+  name = %[1]q
+
+  catalog_properties {
+    data_lake_access_properties {
+      catalog_type       = "aws:redshift"
+      data_lake_access   = true
+      data_transfer_role = aws_iam_role.test.arn
+    }
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test
+  ]
+}`, rName))
+}
+
 func testAccCatalogConfig_catalogPropertiesDataLakeAccess(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -558,11 +714,6 @@ resource "aws_iam_role_policy" "test" {
   })
 }
 
-resource "time_sleep" "iam_propagation" {
-  depends_on      = [aws_iam_role_policy.test]
-  create_duration = "30s"
-}
-
 resource "aws_glue_catalog" "test" {
   name        = %[1]q
   description = "test catalog with data lake access properties"
@@ -579,7 +730,7 @@ resource "aws_glue_catalog" "test" {
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
-    time_sleep.iam_propagation,
+    aws_iam_role_policy.test,
   ]
 }
 `, rName),
@@ -590,6 +741,9 @@ func testAccCatalogConfig_federatedCatalog_mySQL(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -717,20 +871,28 @@ func testAccCatalogConfig_targetRedshiftCatalog(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
         Service = [
+          "lakeformation.amazonaws.com",
           "glue.amazonaws.com",
           "redshift.amazonaws.com",
         ]
       }
+      Action = [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity",
+        "sts:SetContext"
+      ]
     }]
   })
 }
@@ -744,35 +906,81 @@ resource "aws_iam_role_policy" "test" {
     Statement = [{
       Effect = "Allow"
       Action = [
-        "glue:GetCatalog",
-        "glue:GetDatabase",
-        "kms:Decrypt",
-        "kms:GenerateDataKey",
+        "redshift-serverless:GetCredentials",
+        "redshift-serverless:GetWorkgroup",
       ]
       Resource = "*"
     }]
   })
 }
 
-resource "time_sleep" "iam_propagation" {
-  depends_on      = [aws_iam_role_policy.test]
-  create_duration = "30s"
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+  db_name        = "test"
 }
 
-resource "aws_glue_catalog" "producer" {
-  name = "%[1]s-producer"
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+}
+
+resource "aws_redshift_namespace_registration" "test" {
+  consumer_identifier             = format("DataCatalog/%%s", data.aws_caller_identity.current.account_id)
+  namespace_type                  = "serverless"
+  serverless_namespace_identifier = aws_redshiftserverless_namespace.test.namespace_id
+  serverless_workgroup_identifier = aws_redshiftserverless_workgroup.test.workgroup_name
+}
+
+locals {
+  data_share_arn = format("arn:%%s:redshift:%%s:%%s:datashare:%%s/%%s",
+    data.aws_partition.current.partition,
+    data.aws_region.current.name,
+    data.aws_caller_identity.current.account_id,
+    aws_redshiftserverless_namespace.test.namespace_id,
+    "ds_internal_namespace",
+  )
+}
+
+resource "aws_redshift_data_share_consumer_association" "test" {
+  data_share_arn = local.data_share_arn
+  consumer_arn = format("arn:%%s:glue:%%s:%%s:catalog",
+    data.aws_partition.current.partition,
+    data.aws_region.current.name,
+    data.aws_caller_identity.current.account_id,
+  )
+
+  depends_on = [
+    aws_redshift_namespace_registration.test,
+  ]
+}
+
+resource "aws_lakeformation_resource" "test" {
+  depends_on = [aws_redshift_data_share_consumer_association.test]
+
+  arn                     = local.data_share_arn
+  use_service_linked_role = false
+}
+
+resource "aws_glue_catalog" "target" {
+  name = "%[1]s-target"
 
   catalog_properties {
     data_lake_access_properties {
-      catalog_type       = "aws:redshift"
       data_lake_access   = true
       data_transfer_role = aws_iam_role.test.arn
     }
   }
 
+  federated_catalog {
+    identifier      = local.data_share_arn
+    connection_name = "aws:redshift"
+  }
+
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
-    time_sleep.iam_propagation,
+    aws_redshift_namespace_registration.test,
+    aws_lakeformation_resource.test,
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -780,18 +988,32 @@ resource "aws_glue_catalog" "test" {
   name = %[1]q
 
   target_redshift_catalog {
-    catalog_arn = "${aws_glue_catalog.producer.arn}/dev"
+    catalog_arn = "${aws_glue_catalog.target.arn}/${aws_redshiftserverless_namespace.test.db_name}"
   }
+
+  catalog_properties {
+    data_lake_access_properties {
+      data_lake_access   = true
+      data_transfer_role = aws_iam_role.test.arn
+    }
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_iam_role_policy.test,
+  ]
 }
 `, rName),
 	)
 }
 
 func testAccCatalogConfig_targetRedshiftCatalogProvisioned(rName string) string {
-	//nolint:lll // long Terraform config
 	return acctest.ConfigCompose(
 		testAccCatalogConfig_lakeFormationAdminBase(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -929,6 +1151,7 @@ resource "aws_glue_catalog" "test" {
 
 func testAccCatalogConfig_federatedCatalog_s3Tables(rName string) string {
 	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
 		testAccCatalogConfig_s3TablesBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3tables_table_bucket" "test" {
@@ -948,98 +1171,8 @@ resource "aws_glue_catalog" "test" {
     aws_s3tables_table_bucket.test,
     aws_lakeformation_resource.test,
     aws_lakeformation_data_lake_settings.test,
+    aws_iam_role_policy.test,
   ]
-}
-`, rName),
-	)
-}
-
-func testAccCatalogConfig_lakeFormationAdminBase() string {
-	return `
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-`
-}
-
-func testAccCatalogConfig_s3TablesBase(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCatalogConfig_lakeFormationAdminBase(),
-		fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "lakeformation.amazonaws.com"
-      }
-      Action = [
-        "sts:AssumeRole",
-        "sts:SetSourceIdentity",
-        "sts:SetContext"
-      ]
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid      = "LakeFormationPermissionsForS3ListTableBucket"
-        Effect   = "Allow"
-        Action   = ["s3tables:ListTableBuckets"]
-        Resource = ["*"]
-      },
-      {
-        Sid    = "LakeFormationDataAccessPermissionsForS3TableBucket"
-        Effect = "Allow"
-        Action = [
-          "s3tables:CreateTableBucket",
-          "s3tables:GetTableBucket",
-          "s3tables:CreateNamespace",
-          "s3tables:GetNamespace",
-          "s3tables:ListNamespaces",
-          "s3tables:DeleteNamespace",
-          "s3tables:DeleteTableBucket",
-          "s3tables:CreateTable",
-          "s3tables:DeleteTable",
-          "s3tables:GetTable",
-          "s3tables:ListTables",
-          "s3tables:RenameTable",
-          "s3tables:UpdateTableMetadataLocation",
-          "s3tables:GetTableMetadataLocation",
-          "s3tables:GetTableData",
-          "s3tables:PutTableData"
-        ]
-        Resource = [
-          "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_lakeformation_resource" "test" {
-  arn      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
-  role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName),
 	)
@@ -1047,6 +1180,7 @@ resource "aws_lakeformation_resource" "test" {
 
 func testAccCatalogConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
 		testAccCatalogConfig_s3TablesBase(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog" "test" {
@@ -1065,6 +1199,7 @@ resource "aws_glue_catalog" "test" {
   depends_on = [
     aws_lakeformation_resource.test,
     aws_lakeformation_data_lake_settings.test,
+    aws_iam_role_policy.test,
   ]
 }
 `, tagKey1, tagValue1),
@@ -1073,6 +1208,7 @@ resource "aws_glue_catalog" "test" {
 
 func testAccCatalogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
+		testAccCatalogConfig_lakeFormationAdminBase(),
 		testAccCatalogConfig_s3TablesBase(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog" "test" {
@@ -1092,6 +1228,7 @@ resource "aws_glue_catalog" "test" {
   depends_on = [
     aws_lakeformation_resource.test,
     aws_lakeformation_data_lake_settings.test,
+    aws_iam_role_policy.test,
   ]
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2),
