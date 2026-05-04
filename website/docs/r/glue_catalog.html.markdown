@@ -108,11 +108,13 @@ This resource supports the following arguments:
 * `federated_catalog` - (Optional) A configuration block for a federated catalog. See [`federated_catalog`](#federated_catalog) below.
 * `target_redshift_catalog` - (Optional) A configuration block for a target Redshift catalog. See [`target_redshift_catalog`](#target_redshift_catalog) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `overwrite_child_resource_permissions_with_default` - (Optional) Whether to overwrite existing Lake Formation permissions on child resources with the default permissions. Valid values are `Accept` and `Deny`.
 
 ### catalog_properties
 
 * `custom_properties` - (Optional) Map of custom key-value pairs for the catalog properties.
 * `data_lake_access_properties` - (Optional) A configuration block for data lake access properties. See [`data_lake_access_properties`](#data_lake_access_properties) below.
+* `iceberg_optimization_properties` - (Optional) A configuration block for Iceberg optimization properties. See [`iceberg_optimization_properties`](#iceberg_optimization_properties) below.
 
 #### data_lake_access_properties
 
@@ -120,6 +122,11 @@ This resource supports the following arguments:
 * `data_lake_access` - (Optional) Whether data lake access is enabled.
 * `data_transfer_role` - (Optional) The ARN of the IAM role used for data transfer.
 * `kms_key` - (Optional) The ARN of the KMS key used for encryption.
+
+#### iceberg_optimization_properties
+
+* `iceberg_retention_policy_enabled` - (Optional) Whether Iceberg retention policy optimization is enabled.
+* `iceberg_unreferenced_file_removal_enabled` - (Optional) Whether Iceberg unreferenced file removal optimization is enabled.
 
 ### federated_catalog
 
@@ -150,9 +157,8 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Catalog.
-* `catalog_id` - The ID of the Glue Catalog.
+* `catalog_id` - The ID of the parent catalog.
 * `create_time` - The time at which the catalog was created.
-* `id` - The ID of the Glue Catalog (same as `catalog_id`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `update_time` - The time at which the catalog was last updated.
 
@@ -179,7 +185,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_glue_catalog.example
   identity = {
-    id = "catalog-id-12345678"
+    name = "example"
   }
 }
 
@@ -192,24 +198,24 @@ resource "aws_glue_catalog" "example" {
 
 #### Required
 
-* `id` (String) The ID of the Glue Catalog.
+* `name` (String) Name of the Glue Catalog.
 
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog using the catalog ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog using the catalog name. For example:
 
 ```terraform
 import {
   to = aws_glue_catalog.example
-  id = "catalog-id-12345678"
+  id = "example"
 }
 ```
 
-Using `terraform import`, import Glue Catalog using the catalog ID. For example:
+Using `terraform import`, import Glue Catalog using the catalog name. For example:
 
 ```console
-% terraform import aws_glue_catalog.example catalog-id-12345678
+% terraform import aws_glue_catalog.example example
 ```

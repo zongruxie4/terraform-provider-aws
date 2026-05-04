@@ -31,7 +31,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `allow_full_table_external_data_access` - Whether third-party engines can access data in Amazon S3 locations that are registered with Lake Formation.
 * `arn` - ARN of the Glue Catalog.
-* `catalog_id` - The ID of the Glue Catalog.
+* `catalog_id` - The ID of the parent catalog.
 * `create_time` - The time at which the catalog was created.
 * `description` - Description of the catalog.
 * `parameters` - Map of key-value pairs that define parameters and properties of the catalog.
@@ -44,6 +44,7 @@ The following nested blocks are also exported:
 
 * `custom_properties` - Map of custom key-value pairs for the catalog properties.
 * `data_lake_access_properties` - Data lake access properties. See below.
+* `iceberg_optimization_properties` - Iceberg optimization properties. See below.
 
 #### data_lake_access_properties
 
@@ -55,6 +56,11 @@ The following nested blocks are also exported:
 * `managed_workgroup_status` - The managed workgroup status.
 * `redshift_database_name` - The Redshift database name.
 * `status_message` - A status message.
+
+#### iceberg_optimization_properties
+
+* `iceberg_retention_policy_enabled` - Whether Iceberg retention policy optimization is enabled.
+* `iceberg_unreferenced_file_removal_enabled` - Whether Iceberg unreferenced file removal optimization is enabled.
 
 ### federated_catalog
 
