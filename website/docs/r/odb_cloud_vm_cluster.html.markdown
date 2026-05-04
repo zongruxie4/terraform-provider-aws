@@ -16,8 +16,6 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 
 ### Basic Usage
 
-#### Resource: `aws_odb_cloud_vm_cluster.with_minimum_parameter`
-
 ```terraform
 resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
   display_name                    = "my_vm_cluster"
