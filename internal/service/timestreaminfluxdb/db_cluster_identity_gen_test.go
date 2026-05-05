@@ -85,7 +85,7 @@ func TestAccTimestreamInfluxDBDBCluster_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -104,7 +104,7 @@ func TestAccTimestreamInfluxDBDBCluster_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -178,7 +178,7 @@ func TestAccTimestreamInfluxDBDBCluster_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -198,7 +198,7 @@ func TestAccTimestreamInfluxDBDBCluster_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
