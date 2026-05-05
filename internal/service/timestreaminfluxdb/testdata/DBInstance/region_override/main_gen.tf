@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
+  region = var.region
+
   name                   = var.rName
   allocated_storage      = 20
   username               = "admin"
@@ -52,6 +54,8 @@ locals {
 }
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   vpc_id = aws_vpc.test.id
 }
 
