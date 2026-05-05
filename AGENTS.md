@@ -16,19 +16,21 @@ This project uses specialized personas for different tasks.
 
 ### Available Personas
 
-- **`@contributor`**: [Contributor Persona](./docs/ai-agent-guides/contributor.md) - Contributes code in the form of bugfixes, enhancements to existing resources, and new resources. Makes clarifications and corrections to existing documentation.
-- **`@maintainer`**: [Maintainer Persona](./docs/ai-agent-guides/maintainer.md) - Steward of the project, responsible for both internal and external quality. Reviews contributions. Maintains provider-level features, including new Terraform language constructs.
-- **`@tcm`**: [TCM Persona](./docs/ai-agent-guides/tcm.md) - Triages incoming GitHub issues and PRs. Engages with community members to answer technical and process questions. Suggests workarounds and alternatives to reported bugs.
+- **`@contributor`**: [Contributor Persona](./.agents/contributor.md) - Contributes code in the form of bugfixes, enhancements to existing resources, and new resources. Makes clarifications and corrections to existing documentation.
+- **`@maintainer`**: [Maintainer Persona](./.agents/maintainer.md) - Steward of the project, responsible for both internal and external quality. Reviews contributions. Maintains provider-level features, including new Terraform language constructs.
+- **`@tcm`**: [TCM Persona](./.agents/tcm.md) - Triages incoming GitHub issues and PRs. Engages with community members to answer technical and process questions. Suggests workarounds and alternatives to reported bugs.
 
 ### Global Rules
 
 - Always use the requested persona for tasks.
 - If no persona is specified, default to `@contributor`.
+- A persona defines a role with a perspective and responsibilities.
+- Personas may invoke skills.
 
 ---
 ## Skills
 
-Skills are loaded from `./.skills`. Each skill supplies step-by-step instructions, code patterns, and guardrails for a specific task.
+Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step instructions, code patterns, and guardrails for a specific task.
 
 | Skill | Task |
 |---|---|
