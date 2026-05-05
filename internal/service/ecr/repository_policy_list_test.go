@@ -122,7 +122,7 @@ func TestAccECRRepositoryPolicy_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("repository"), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), tfknownvalue.AccountID()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
 					}),
 				},
