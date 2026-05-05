@@ -233,6 +233,10 @@ type stringMatchIdentity struct {
 var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
 
 func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringMatchIdentity{
 		handling: handling,
 		re:       re,
