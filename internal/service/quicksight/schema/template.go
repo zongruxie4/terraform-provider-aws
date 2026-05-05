@@ -280,6 +280,13 @@ func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema 
 	return s
 }
 
+var stringComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
+})
+
 // syncMap is a type-safe wrapper around `sync.Map`
 type syncMap[K comparable, V any] struct {
 	m sync.Map
