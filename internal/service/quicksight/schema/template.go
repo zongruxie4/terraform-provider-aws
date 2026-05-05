@@ -136,6 +136,10 @@ func (x attrHandling) isComputed() bool {
 var arnStringSchemaCache syncMap[attrHandling, *schema.Schema]
 
 func arnStringSchema(handling attrHandling) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	s, ok := arnStringSchemaCache.Load(handling)
 	if ok {
 		return s
@@ -191,6 +195,10 @@ type stringLenBetweenIdentity struct {
 var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
 
 func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringLenBetweenIdentity{
 		handling: handling,
 		min:      min,
@@ -259,6 +267,10 @@ type stringEnumIdentity struct {
 var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
 
 func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema {
+	if handling == attrComputed {
+		return stringComputedOnly()
+	}
+
 	id := stringEnumIdentity{
 		handling: handling,
 		typ:      reflect.TypeFor[T](),
