@@ -156,6 +156,10 @@ func arnStringSchema(handling attrHandling) *schema.Schema {
 	return s
 }
 
+func arnStringDataSourceSchema() *schema.Schema {
+	return arnStringSchema(attrComputed)
+}
+
 var utcTimestampStringSchemaCache syncMap[attrHandling, *schema.Schema]
 
 func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
@@ -278,6 +282,10 @@ func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema 
 		},
 	)
 	return s
+}
+
+func stringEnumDataSourceSchema[T enum.Valueser[T]]() *schema.Schema {
+	return stringEnumSchema[T](attrComputed)
 }
 
 var stringComputedOnly = sync.OnceValue(func() *schema.Schema {
