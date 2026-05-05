@@ -46,8 +46,10 @@ import (
 
 // @FrameworkResource("aws_timestreaminfluxdb_db_cluster", name="DB Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
+// @Testing(preIdentityVersion="v6.43.0")
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 
@@ -61,7 +63,7 @@ func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, er
 type dbClusterResource struct {
 	framework.ResourceWithModel[dbClusterResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
