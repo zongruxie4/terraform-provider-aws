@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -370,40 +372,12 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"left_join_key_properties": { // TODO: Factor out join key properties
-											Type:     schema.TypeList,
-											Computed: true,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-														Optional: true,
-													},
-												},
-											},
-										},
-										"left_operand": stringLenBetweenSchema(attrRequired, 1, 64),
-										"on_clause":    stringLenBetweenSchema(attrRequired, 1, 512),
-										"right_join_key_properties": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-														Optional: true,
-													},
-												},
-											},
-										},
-										"right_operand": stringLenBetweenSchema(attrRequired, 1, 64),
-										names.AttrType:  stringEnumSchema[awstypes.JoinType](attrRequired),
+										"left_join_key_properties":  dataSetJoinKeyPropertiesSchema(),
+										"left_operand":              stringLenBetweenSchema(attrRequired, 1, 64),
+										"on_clause":                 stringLenBetweenSchema(attrRequired, 1, 512),
+										"right_join_key_properties": dataSetJoinKeyPropertiesSchema(),
+										"right_operand":             stringLenBetweenSchema(attrRequired, 1, 64),
+										names.AttrType:              stringEnumSchema[awstypes.JoinType](attrRequired),
 									},
 								},
 							},
@@ -548,34 +522,12 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"left_join_key_properties": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-													},
-												},
-											},
-										},
-										"left_operand": stringComputedOnly(),
-										"on_clause":    stringComputedOnly(),
-										"right_join_key_properties": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"unique_key": {
-														Type:     schema.TypeBool,
-														Computed: true,
-													},
-												},
-											},
-										},
-										"right_operand": stringComputedOnly(),
-										names.AttrType:  stringEnumDataSourceSchema[awstypes.JoinType](),
+										"left_join_key_properties":  dataSetJoinKeyPropertiesDataSourceSchema(),
+										"left_operand":              stringComputedOnly(),
+										"on_clause":                 stringComputedOnly(),
+										"right_join_key_properties": dataSetJoinKeyPropertiesDataSourceSchema(),
+										"right_operand":             stringComputedOnly(),
+										names.AttrType:              stringEnumDataSourceSchema[awstypes.JoinType](),
 									},
 								},
 							},
@@ -587,6 +539,39 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 		},
 	}
 }
+
+var dataSetJoinKeyPropertiesSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"unique_key": {
+					Type:     schema.TypeBool,
+					Computed: true,
+					Optional: true,
+				},
+			},
+		},
+	}
+})
+
+var dataSetJoinKeyPropertiesDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"unique_key": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			},
+		},
+	}
+})
 
 func DataSetOutputColumnsSchema() *schema.Schema {
 	return &schema.Schema{
