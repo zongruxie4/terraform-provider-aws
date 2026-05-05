@@ -307,7 +307,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_timestreaminfluxdb_db_cluster.example
   identity = {
-    id = "9cjk47xtlr"
+    id = "hzfuy146ke"
   }
 }
 
@@ -332,12 +332,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_timestreaminfluxdb_db_cluster.example
-  id = "9cjk47xtlr"
+  id = "hzfuy146ke"
 }
 ```
 
 Using `terraform import`, import Timestream for InfluxDB clusters using `id`. For example:
 
 ```console
-% terraform import aws_timestreaminfluxdb_db_cluster.example 9cjk47xtlr
+% terraform import aws_timestreaminfluxdb_db_cluster.example hzfuy146ke
 ```

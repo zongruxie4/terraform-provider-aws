@@ -5,3 +5,7 @@ resource/aws_timestreaminfluxdb_db_cluster: Correct plan-time validation of `db_
 ```release-note:enhancement
 resource/aws_timestreaminfluxdb_db_cluster: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_instance: Add Resource Identity support
+```

@@ -44,8 +44,10 @@ import (
 
 // @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
+// @Testing(preIdentityVersion="v6.43.0")
 func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbInstanceResource{}
 
@@ -59,7 +61,7 @@ func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, e
 type dbInstanceResource struct {
 	framework.ResourceWithModel[dbInstanceResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
