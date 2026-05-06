@@ -123,6 +123,7 @@ func TestAccS3BucketLogging_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_bucket"), knownvalue.StringExact(rName+"-log")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_prefix"), knownvalue.StringExact("log/")),
 					}),
 				},
