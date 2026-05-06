@@ -167,3 +167,19 @@ rules:
           }
     fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
     severity: WARNING
+
+  - id: quicksight-schema-string-computed-only
+    languages: [go]
+    message: Computed-Only String attributes should use stringComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeString,
+            Computed: true,
+          }
+    fix: stringComputedOnly()
+    severity: WARNING

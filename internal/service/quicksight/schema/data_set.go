@@ -579,18 +579,9 @@ func DataSetOutputColumnsSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrDescription: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrType: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
+				names.AttrDescription: stringComputedOnly(),
+				names.AttrName:        stringComputedOnly(),
+				names.AttrType:        stringComputedOnly(),
 			},
 		},
 	}
