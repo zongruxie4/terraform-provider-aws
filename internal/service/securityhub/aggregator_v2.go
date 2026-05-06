@@ -5,21 +5,26 @@ package securityhub
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -54,15 +59,18 @@ func (r *aggregatorV2Resource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"linked_regions": schema.ListAttribute{
+				ElementType: types.StringType,
+				CustomType:  fwtypes.ListOfStringType,
+				Optional:    true,
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+				},
+				Description: "The list of Regions linked to the aggregation Region.",
+			},
 			"region_linking_mode": schema.StringAttribute{
 				Required:    true,
 				Description: "Determines how Regions are linked: ALL_REGIONS, ALL_REGIONS_EXCEPT_SPECIFIED, or SPECIFIED_REGIONS.",
-			},
-			"linked_regions": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Optional:    true,
-				ElementType: types.StringType,
-				Description: "The list of Regions linked to the aggregation Region.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -79,19 +87,15 @@ func (r *aggregatorV2Resource) Create(ctx context.Context, request resource.Crea
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	input := securityhub.CreateAggregatorV2Input{
-		RegionLinkingMode: data.RegionLinkingMode.ValueStringPointer(),
-		Tags:              getTagsIn(ctx),
+	var input securityhub.CreateAggregatorV2Input
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !data.LinkedRegions.IsNull() && !data.LinkedRegions.IsUnknown() {
-		var regions []string
-		response.Diagnostics.Append(data.LinkedRegions.ElementsAs(ctx, &regions, false)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.LinkedRegions = regions
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAggregatorV2(ctx, &input)
 
@@ -100,14 +104,9 @@ func (r *aggregatorV2Resource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.AggregatorV2Arn)
 	data.AggregationRegion = fwflex.StringToFramework(ctx, output.AggregationRegion)
-
-	if output.LinkedRegions != nil {
-		regionsList, diags := types.ListValueFrom(ctx, types.StringType, output.LinkedRegions)
-		response.Diagnostics.Append(diags...)
-		data.LinkedRegions = fwtypes.ListValueOf[types.String]{ListValue: regionsList}
-	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -121,7 +120,8 @@ func (r *aggregatorV2Resource) Read(ctx context.Context, request resource.ReadRe
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	output, err := findAggregatorV2ByARN(ctx, conn, data.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
+	output, err := findAggregatorV2ByARN(ctx, conn, arn)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -130,22 +130,19 @@ func (r *aggregatorV2Resource) Read(ctx context.Context, request resource.ReadRe
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("reading Security Hub V2 Aggregator", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Security Hub V2 Aggregator (%s)", arn), err.Error())
 		return
 	}
 
-	data.ARN = fwflex.StringToFramework(ctx, output.AggregatorV2Arn)
-	data.AggregationRegion = fwflex.StringToFramework(ctx, output.AggregationRegion)
-	if output.RegionLinkingMode != nil {
-		data.RegionLinkingMode = fwflex.StringToFramework(ctx, output.RegionLinkingMode)
-	}
+	// Sort linked regions for consistent ordering.
 	if output.LinkedRegions != nil {
-		sorted := make([]string, len(output.LinkedRegions))
-		copy(sorted, output.LinkedRegions)
-		slices.Sort(sorted)
-		regionsList, diags := types.ListValueFrom(ctx, types.StringType, sorted)
-		response.Diagnostics.Append(diags...)
-		data.LinkedRegions = fwtypes.ListValueOf[types.String]{ListValue: regionsList}
+		slices.Sort(output.LinkedRegions)
+	}
+
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -165,32 +162,21 @@ func (r *aggregatorV2Resource) Update(ctx context.Context, request resource.Upda
 	conn := r.Meta().SecurityHubClient(ctx)
 
 	if !new.RegionLinkingMode.Equal(old.RegionLinkingMode) || !new.LinkedRegions.Equal(old.LinkedRegions) {
-		input := securityhub.UpdateAggregatorV2Input{
-			AggregatorV2Arn:   old.ARN.ValueStringPointer(),
-			RegionLinkingMode: new.RegionLinkingMode.ValueStringPointer(),
-		}
-
-		if !new.LinkedRegions.IsNull() && !new.LinkedRegions.IsUnknown() {
-			var regions []string
-			response.Diagnostics.Append(new.LinkedRegions.ElementsAs(ctx, &regions, false)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			input.LinkedRegions = regions
-		}
-
-		output, err := conn.UpdateAggregatorV2(ctx, &input)
-
-		if err != nil {
-			response.Diagnostics.AddError("updating Security Hub V2 Aggregator", err.Error())
+		arn := fwflex.StringValueFromFramework(ctx, new.ARN)
+		var input securityhub.UpdateAggregatorV2Input
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		new.AggregationRegion = fwflex.StringToFramework(ctx, output.AggregationRegion)
-		if output.LinkedRegions != nil {
-			regionsList, diags := types.ListValueFrom(ctx, types.StringType, output.LinkedRegions)
-			response.Diagnostics.Append(diags...)
-			new.LinkedRegions = fwtypes.ListValueOf[types.String]{ListValue: regionsList}
+		// Additional fields.
+		input.AggregatorV2Arn = aws.String(arn)
+
+		_, err := conn.UpdateAggregatorV2(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Security Hub V2 Aggregator (%s)", arn), err.Error())
+			return
 		}
 	}
 
@@ -206,8 +192,9 @@ func (r *aggregatorV2Resource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
 	input := securityhub.DeleteAggregatorV2Input{
-		AggregatorV2Arn: data.ARN.ValueStringPointer(),
+		AggregatorV2Arn: aws.String(arn),
 	}
 	_, err := conn.DeleteAggregatorV2(ctx, &input)
 
@@ -216,7 +203,8 @@ func (r *aggregatorV2Resource) Delete(ctx context.Context, request resource.Dele
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting Security Hub V2 Aggregator", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Hub V2 Aggregator (%s)", arn), err.Error())
+		return
 	}
 }
 
@@ -224,7 +212,12 @@ func findAggregatorV2ByARN(ctx context.Context, conn *securityhub.Client, arn st
 	input := securityhub.GetAggregatorV2Input{
 		AggregatorV2Arn: aws.String(arn),
 	}
-	output, err := conn.GetAggregatorV2(ctx, &input)
+
+	return findAggregatorV2(ctx, conn, &input)
+}
+
+func findAggregatorV2(ctx context.Context, conn *securityhub.Client, input *securityhub.GetAggregatorV2Input) (*securityhub.GetAggregatorV2Output, error) {
+	output, err := conn.GetAggregatorV2(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -245,10 +238,10 @@ func findAggregatorV2ByARN(ctx context.Context, conn *securityhub.Client, arn st
 
 type aggregatorV2ResourceModel struct {
 	framework.WithRegionModel
-	ARN               types.String                      `tfsdk:"arn"`
-	AggregationRegion types.String                      `tfsdk:"aggregation_region"`
-	LinkedRegions     fwtypes.ListValueOf[types.String] `tfsdk:"linked_regions"`
-	RegionLinkingMode types.String                      `tfsdk:"region_linking_mode"`
-	Tags              tftags.Map                        `tfsdk:"tags"`
-	TagsAll           tftags.Map                        `tfsdk:"tags_all"`
+	ARN               types.String         `tfsdk:"arn"`
+	AggregationRegion types.String         `tfsdk:"aggregation_region"`
+	LinkedRegions     fwtypes.ListOfString `tfsdk:"linked_regions"`
+	RegionLinkingMode types.String         `tfsdk:"region_linking_mode"`
+	Tags              tftags.Map           `tfsdk:"tags"`
+	TagsAll           tftags.Map           `tfsdk:"tags_all"`
 }
