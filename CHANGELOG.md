@@ -1,4 +1,4 @@
-## 6.44.0 (Unreleased)
+## 6.44.0 (May 6, 2025)
 
 NOTES:
 
@@ -42,7 +42,7 @@ BUG FIXES:
 * resource/aws_securityhub_configuration_policy_association: Fix `waiting for Security Hub Configuration Policy Association (...) success: timeout while waiting for state to become 'SUCCESS' (last state: 'PENDING', timeout: 5m0s)` errors on Create. This fixes a regression introduced in [v6.34.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6340-february-25-2026) ([#47783](https://github.com/hashicorp/terraform-provider-aws/issues/47783))
 * resource/aws_timestreaminfluxdb_db_cluster: Correct plan-time validation of `db_parameter_group_identifier` ([#47052](https://github.com/hashicorp/terraform-provider-aws/issues/47052))
 
-## 6.43.0 (29 April, 2026)
+## 6.43.0 (April 29, 2026)
 
 FEATURES:
 
