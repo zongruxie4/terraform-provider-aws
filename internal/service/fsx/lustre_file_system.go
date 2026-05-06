@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -444,7 +445,7 @@ func resourceLustreFileSystemTypeVersionCustomizeDiff(_ context.Context, d *sche
 		oldVersion := o.(string)
 		newVersion := n.(string)
 
-		if newVersion < oldVersion {
+		if semver.LessThan(newVersion, oldVersion) {
 			if err := d.ForceNew("file_system_type_version"); err != nil {
 				return err
 			}
