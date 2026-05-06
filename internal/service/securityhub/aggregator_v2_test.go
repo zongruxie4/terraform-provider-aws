@@ -115,7 +115,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("region_linking_mode"), knownvalue.StringExact("SPECIFIED_REGIONS")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("linked_regions"), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("linked_regions"), knownvalue.SetSizeExact(2)),
 				},
 			},
 			{
@@ -135,7 +135,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("region_linking_mode"), knownvalue.StringExact("SPECIFIED_REGIONS")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("linked_regions"), knownvalue.ListSizeExact(3)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("linked_regions"), knownvalue.SetSizeExact(3)),
 				},
 			},
 		},

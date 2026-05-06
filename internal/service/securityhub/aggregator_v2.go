@@ -6,12 +6,11 @@ package securityhub
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -59,12 +58,12 @@ func (r *aggregatorV2Resource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"linked_regions": schema.ListAttribute{
+			"linked_regions": schema.SetAttribute{
 				ElementType: types.StringType,
-				CustomType:  fwtypes.ListOfStringType,
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
-				Validators: []validator.List{
-					listvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
 				},
 				Description: "The list of Regions linked to the aggregation Region.",
 			},
@@ -132,11 +131,6 @@ func (r *aggregatorV2Resource) Read(ctx context.Context, request resource.ReadRe
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Security Hub V2 Aggregator (%s)", arn), err.Error())
 		return
-	}
-
-	// Sort linked regions for consistent ordering.
-	if output.LinkedRegions != nil {
-		slices.Sort(output.LinkedRegions)
 	}
 
 	// Set attributes for import.
@@ -238,10 +232,10 @@ func findAggregatorV2(ctx context.Context, conn *securityhub.Client, input *secu
 
 type aggregatorV2ResourceModel struct {
 	framework.WithRegionModel
-	ARN               types.String         `tfsdk:"arn"`
-	AggregationRegion types.String         `tfsdk:"aggregation_region"`
-	LinkedRegions     fwtypes.ListOfString `tfsdk:"linked_regions"`
-	RegionLinkingMode types.String         `tfsdk:"region_linking_mode"`
-	Tags              tftags.Map           `tfsdk:"tags"`
-	TagsAll           tftags.Map           `tfsdk:"tags_all"`
+	ARN               types.String        `tfsdk:"arn"`
+	AggregationRegion types.String        `tfsdk:"aggregation_region"`
+	LinkedRegions     fwtypes.SetOfString `tfsdk:"linked_regions"`
+	RegionLinkingMode types.String        `tfsdk:"region_linking_mode"`
+	Tags              tftags.Map          `tfsdk:"tags"`
+	TagsAll           tftags.Map          `tfsdk:"tags_all"`
 }
