@@ -58,7 +58,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Security Hub V2 Aggregator using its ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_aggregator_v2.example
+  identity = {
+    arn = "arn:aws:securityhub:us-east-1:123456789012:aggregator/v2/example"
+  }
+}
+
+resource "aws_securityhub_aggregator_v2" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Security Hub V2 aggregator.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub V2 aggregators using `arn`. For example:
 
 ```terraform
 import {
@@ -67,7 +88,7 @@ import {
 }
 ```
 
-Using `terraform import`, import a Security Hub V2 Aggregator using its ARN. For example:
+Using `terraform import`, import Security Hub V2 aggregators using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_aggregator_v2.example arn:aws:securityhub:us-east-1:123456789012:aggregator/v2/example
