@@ -300,17 +300,11 @@ func numericRangeFilterDataSourceSchema() *schema.Schema {
 				"filter_id":            idDataSourceSchema(),
 				"null_option":          stringEnumDataSourceSchema[awstypes.FilterNullOption](),
 				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-				"include_maximum": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"include_minimum": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"range_maximum":      numericRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
-				"range_minimum":      numericRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
-				"select_all_options": stringEnumDataSourceSchema[awstypes.NumericFilterSelectAllOptions](),
+				"include_maximum":      boolComputedOnly(),
+				"include_minimum":      boolComputedOnly(),
+				"range_maximum":        numericRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
+				"range_minimum":        numericRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericRangeFilterValue.html
+				"select_all_options":   stringEnumDataSourceSchema[awstypes.NumericFilterSelectAllOptions](),
 			},
 		},
 	}
@@ -462,17 +456,11 @@ func timeRangeFilterDataSourceSchema() *schema.Schema {
 				"filter_id":                    idDataSourceSchema(),
 				"null_option":                  stringEnumDataSourceSchema[awstypes.FilterNullOption](),
 				"exclude_period_configuration": excludePeriodConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
-				"include_maximum": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"include_minimum": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"range_maximum_value": timeRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
-				"range_minimum_value": timeRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
-				"time_granularity":    stringEnumDataSourceSchema[awstypes.TimeGranularity](),
+				"include_maximum":              boolComputedOnly(),
+				"include_minimum":              boolComputedOnly(),
+				"range_maximum_value":          timeRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
+				"range_minimum_value":          timeRangeFilterValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeRangeFilterValue.html
+				"time_granularity":             stringEnumDataSourceSchema[awstypes.TimeGranularity](),
 			},
 		},
 	}

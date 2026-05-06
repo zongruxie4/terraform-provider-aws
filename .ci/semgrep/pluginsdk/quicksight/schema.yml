@@ -183,3 +183,19 @@ rules:
           }
     fix: stringComputedOnly()
     severity: WARNING
+
+  - id: quicksight-schema-bool-computed-only
+    languages: [go]
+    message: Computed-Only Bool attributes should use boolComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeBool,
+            Computed: true,
+          }
+    fix: boolComputedOnly()
+    severity: WARNING

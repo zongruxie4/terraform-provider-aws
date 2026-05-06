@@ -151,14 +151,8 @@ func DataSetUsageConfigurationSchemaDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"disable_use_as_direct_query_source": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"disable_use_as_imported_source": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
+				"disable_use_as_direct_query_source": boolComputedOnly(),
+				"disable_use_as_imported_source":     boolComputedOnly(),
 			},
 		},
 	}
@@ -564,10 +558,7 @@ var dataSetJoinKeyPropertiesDataSourceSchema = sync.OnceValue(func() *schema.Sch
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"unique_key": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
+				"unique_key": boolComputedOnly(),
 			},
 		},
 	}
@@ -772,12 +763,9 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"contains_header": {
-											Type:     schema.TypeBool,
-											Computed: true,
-										},
-										"delimiter":      stringComputedOnly(),
-										names.AttrFormat: stringEnumDataSourceSchema[awstypes.FileFormat](),
+										"contains_header": boolComputedOnly(),
+										"delimiter":       stringComputedOnly(),
+										names.AttrFormat:  stringEnumDataSourceSchema[awstypes.FileFormat](),
 										"start_from_row": {
 											Type:     schema.TypeInt,
 											Computed: true,

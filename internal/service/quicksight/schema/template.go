@@ -311,6 +311,13 @@ var stringComputedOnly = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var boolComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeBool,
+		Computed: true,
+	}
+})
+
 // syncMap is a type-safe wrapper around `sync.Map`
 type syncMap[K comparable, V any] struct {
 	m sync.Map

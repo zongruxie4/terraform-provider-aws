@@ -353,10 +353,7 @@ func visualCustomActionsDataSourceSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			"include_null_value": {
-																				Type:     schema.TypeBool,
-																				Computed: true,
-																			},
+																			"include_null_value": boolComputedOnly(),
 																		},
 																	},
 																},

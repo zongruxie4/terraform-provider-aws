@@ -203,10 +203,7 @@ func ThemeConfigurationDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"show": {
-														Type:     schema.TypeBool,
-														Computed: true,
-													},
+													"show": boolComputedOnly(),
 												},
 											},
 										},
@@ -223,10 +220,7 @@ func ThemeConfigurationDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"show": {
-														Type:     schema.TypeBool,
-														Computed: true,
-													},
+													"show": boolComputedOnly(),
 												},
 											},
 										},
@@ -235,10 +229,7 @@ func ThemeConfigurationDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"show": {
-														Type:     schema.TypeBool,
-														Computed: true,
-													},
+													"show": boolComputedOnly(),
 												},
 											},
 										},
