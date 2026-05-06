@@ -213,7 +213,7 @@ func findAggregatorV2ByARN(ctx context.Context, conn *securityhub.Client, arn st
 func findAggregatorV2(ctx context.Context, conn *securityhub.Client, input *securityhub.GetAggregatorV2Input) (*securityhub.GetAggregatorV2Output, error) {
 	output, err := conn.GetAggregatorV2(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Security Hub V2 is not enabled") {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
