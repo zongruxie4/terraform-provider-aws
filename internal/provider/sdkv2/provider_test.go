@@ -461,6 +461,13 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
 			r := v.Factory()
+
+			// Ensure that the correct CRUD handler variants are used.
+			if r.Read != nil || r.ReadContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
+				continue
+			}
+
 			s := r.SchemaMap()
 
 			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
@@ -488,6 +495,24 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 		for _, resource := range sp.SDKResources(ctx) {
 			typeName := resource.TypeName
 			r := resource.Factory()
+
+			// Ensure that the correct CRUD handler variants are used.
+			if r.Create != nil || r.CreateContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Read != nil || r.ReadContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Update != nil || r.UpdateContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Delete != nil || r.DeleteContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
+				continue
+			}
 			s := r.SchemaMap()
 
 			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
