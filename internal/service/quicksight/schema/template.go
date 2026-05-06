@@ -455,6 +455,20 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 	return s
 }
 
+var aggregationFunctionDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"categorical_aggregation_function": stringEnumDataSourceSchema[awstypes.CategoricalAggregationFunction](),
+				"date_aggregation_function":        stringEnumDataSourceSchema[awstypes.DateAggregationFunction](),
+				"numerical_aggregation_function":   numericalAggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+			},
+		},
+	}
+})
+
 var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 		Type:     schema.TypeSet,
@@ -466,6 +480,20 @@ var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 32000),
 				names.AttrName:        stringLenBetweenSchema(attrRequired, 1, 128),
+			},
+		},
+	}
+})
+
+var calculatedFieldsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				names.AttrExpression:  stringComputedOnly(),
+				names.AttrName:        stringComputedOnly(),
 			},
 		},
 	}
@@ -510,6 +538,30 @@ func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 	return s
 }
 
+var numericalAggregationFunctionDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"percentile_value": {
+								Type:     schema.TypeFloat,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"simple_numerical_aggregation": stringEnumDataSourceSchema[awstypes.SimpleNumericalAggregationFunction](),
+			},
+		},
+	}
+})
+
 var idSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeString,
@@ -518,6 +570,13 @@ var idSchema = sync.OnceValue(func() *schema.Schema {
 			validation.StringLenBetween(1, 512),
 			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
+	}
+})
+
+var idDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
 	}
 })
 
@@ -549,6 +608,19 @@ func columnSchema(required bool) *schema.Schema {
 	)
 	return s
 }
+
+var columnDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_name":         stringComputedOnly(),
+				"data_set_identifier": stringComputedOnly(),
+			},
+		},
+	}
+})
 
 func dataSetConfigurationSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html
@@ -636,6 +708,19 @@ var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
 				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
+			},
+		},
+	}
+})
+
+var rollingDateConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				names.AttrExpression:  stringComputedOnly(),
 			},
 		},
 	}
