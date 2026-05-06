@@ -32,6 +32,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtDisappears: testAccAggregatorV2_disappears,
 			"specifiedRegions":   testAccAggregatorV2_specifiedRegions,
 			"tags":               testAccAggregatorV2_tags,
+			"Identity":           testAccSecurityHubAggregatorV2_identitySerial,
 		},
 		"AutomationRule": {
 			acctest.CtBasic:      testAccAutomationRule_basic,
