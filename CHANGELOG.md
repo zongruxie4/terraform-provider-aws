@@ -38,6 +38,7 @@ BUG FIXES:
 
 * resource/aws_odb_cloud_vm_cluster: Attempt to read GI Version from resource tags to avoid failures due to new API response values ([#46589](https://github.com/hashicorp/terraform-provider-aws/issues/46589))
 * resource/aws_s3files_synchronization_configuration: Fix `Delete` to use the file system prefix when resetting the synchronization configuration ([#47760](https://github.com/hashicorp/terraform-provider-aws/issues/47760))
+* resource/aws_securityhub_configuration_policy_association: Fix `waiting for Security Hub Configuration Policy Association (...) success: timeout while waiting for state to become 'SUCCESS' (last state: 'PENDING', timeout: 5m0s)` errors on Create. This fixes a regression introduced in [v6.34.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6340-february-25-2026) ([#47783](https://github.com/hashicorp/terraform-provider-aws/issues/47783))
 * resource/aws_timestreaminfluxdb_db_cluster: Correct plan-time validation of `db_parameter_group_identifier` ([#47052](https://github.com/hashicorp/terraform-provider-aws/issues/47052))
 
 ## 6.43.0 (29 April, 2026)
