@@ -644,16 +644,10 @@ var gridLayoutConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Sche
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_span": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
+							"column_span":  intComputedOnly(),
 							"element_id":   idDataSourceSchema(),
 							"element_type": stringEnumDataSourceSchema[awstypes.LayoutElementType](),
-							"row_span": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
+							"row_span":     intComputedOnly(),
 							"column_index": {
 								Type:     nullable.TypeNullableInt,
 								Computed: true,

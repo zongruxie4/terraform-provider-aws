@@ -134,7 +134,7 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													names.AttrValue: {Type: schema.TypeInt, Computed: true},
+													names.AttrValue: intComputedOnly(),
 												},
 											},
 										},
@@ -143,13 +143,13 @@ func histogramVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bin_count_limit": {Type: schema.TypeInt, Computed: true},
-													names.AttrValue:   {Type: schema.TypeFloat, Computed: true},
+													"bin_count_limit": intComputedOnly(),
+													names.AttrValue:   floatComputedOnly(),
 												},
 											},
 										},
 										"selected_bin_type": stringEnumDataSourceSchema[awstypes.HistogramBinType](),
-										"start_value":       {Type: schema.TypeFloat, Computed: true},
+										"start_value":       floatComputedOnly(),
 									},
 								},
 							},

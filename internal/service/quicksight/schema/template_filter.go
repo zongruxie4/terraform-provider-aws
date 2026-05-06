@@ -253,10 +253,7 @@ func numericEqualityFilterDataSourceSchema() *schema.Schema {
 				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 				"parameter_name":       parameterNameDataSourceSchema(),
 				"select_all_options":   stringEnumDataSourceSchema[awstypes.NumericFilterSelectAllOptions](),
-				names.AttrValue: {
-					Type:     schema.TypeFloat,
-					Computed: true,
-				},
+				names.AttrValue:        floatComputedOnly(),
 			},
 		},
 	}
@@ -371,10 +368,7 @@ func relativeDatesFilterDataSourceSchema() *schema.Schema {
 				"exclude_period_configuration": excludePeriodConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ExcludePeriodConfiguration.html
 				"minimum_granularity":          stringEnumDataSourceSchema[awstypes.TimeGranularity](),
 				"parameter_name":               parameterNameDataSourceSchema(),
-				"relative_date_value": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
+				"relative_date_value":          intComputedOnly(),
 			},
 		},
 	}
@@ -517,12 +511,9 @@ func topBottomFilterDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"column":    columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"filter_id": idDataSourceSchema(),
-				"limit": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
+				"column":           columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"filter_id":        idDataSourceSchema(),
+				"limit":            intComputedOnly(),
 				"parameter_name":   parameterNameDataSourceSchema(),
 				"time_granularity": stringEnumDataSourceSchema[awstypes.TimeGranularity](),
 			},
@@ -555,10 +546,7 @@ var excludePeriodConfigurationDataSourceSchema = sync.OnceValue(func() *schema.S
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"amount": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
+				"amount":         intComputedOnly(),
 				"granularity":    stringEnumDataSourceSchema[awstypes.TimeGranularity](),
 				names.AttrStatus: stringEnumDataSourceSchema[awstypes.Status](),
 			},
@@ -598,10 +586,7 @@ var numericRangeFilterValueDataSourceSchema = sync.OnceValue(func() *schema.Sche
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				names.AttrParameter: stringComputedOnly(),
-				"static_value": {
-					Type:     schema.TypeFloat,
-					Computed: true,
-				},
+				"static_value":      floatComputedOnly(),
 			},
 		},
 	}
@@ -732,11 +717,8 @@ var drillDownFilterDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column": columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							names.AttrValue: {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"column":        columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							names.AttrValue: floatComputedOnly(),
 						},
 					},
 				},

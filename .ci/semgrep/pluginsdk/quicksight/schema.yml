@@ -199,3 +199,35 @@ rules:
           }
     fix: boolComputedOnly()
     severity: WARNING
+
+  - id: quicksight-schema-int-computed-only
+    languages: [go]
+    message: Computed-Only Int attributes should use intComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeInt,
+            Computed: true,
+          }
+    fix: intComputedOnly()
+    severity: WARNING
+
+  - id: quicksight-schema-float-computed-only
+    languages: [go]
+    message: Computed-Only Float attributes should use floatComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeFloat,
+            Computed: true,
+          }
+    fix: floatComputedOnly()
+    severity: WARNING

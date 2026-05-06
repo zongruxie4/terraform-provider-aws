@@ -342,12 +342,12 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"lower_boundary":      {Type: schema.TypeFloat, Computed: true},
-													"periods_backward":    {Type: schema.TypeInt, Computed: true},
-													"periods_forward":     {Type: schema.TypeInt, Computed: true},
-													"prediction_interval": {Type: schema.TypeInt, Computed: true},
-													"seasonality":         {Type: schema.TypeInt, Computed: true},
-													"upper_boundary":      {Type: schema.TypeFloat, Computed: true},
+													"lower_boundary":      floatComputedOnly(),
+													"periods_backward":    intComputedOnly(),
+													"periods_forward":     intComputedOnly(),
+													"prediction_interval": intComputedOnly(),
+													"seasonality":         intComputedOnly(),
+													"upper_boundary":      floatComputedOnly(),
 												},
 											},
 										},
@@ -362,7 +362,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"date":          stringComputedOnly(),
-																names.AttrValue: {Type: schema.TypeFloat, Computed: true},
+																names.AttrValue: floatComputedOnly(),
 															},
 														},
 													},
@@ -373,7 +373,7 @@ func lineChartVisualDataSourceSchema() *schema.Schema {
 															Schema: map[string]*schema.Schema{
 																"end_date":      stringComputedOnly(),
 																"start_date":    stringComputedOnly(),
-																names.AttrValue: {Type: schema.TypeFloat, Computed: true},
+																names.AttrValue: floatComputedOnly(),
 															},
 														},
 													},

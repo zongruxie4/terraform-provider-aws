@@ -213,8 +213,8 @@ func paginationConfigurationDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"page_number": {Type: schema.TypeInt, Computed: true},
-				"page_size":   {Type: schema.TypeInt, Computed: true},
+				"page_number": intComputedOnly(),
+				"page_size":   intComputedOnly(),
 			},
 		},
 	}

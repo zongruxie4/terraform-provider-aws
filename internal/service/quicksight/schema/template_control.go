@@ -234,20 +234,11 @@ var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"filter_control_id": idDataSourceSchema(),
 							"source_filter_id":  idDataSourceSchema(),
 							"title":             stringComputedOnly(),
-							"maximum_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
-							"minimum_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
-							"step_size": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
-							"display_options": sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							names.AttrType:    stringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
+							"maximum_value":     floatComputedOnly(),
+							"minimum_value":     floatComputedOnly(),
+							"step_size":         floatComputedOnly(),
+							"display_options":   sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+							names.AttrType:      stringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
 						},
 					},
 				},

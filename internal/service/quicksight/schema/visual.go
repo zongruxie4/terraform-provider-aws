@@ -681,11 +681,8 @@ var colorScaleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringComputedOnly(),
-							"data_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"color":      stringComputedOnly(),
+							"data_value": floatComputedOnly(),
 						},
 					},
 				},
@@ -694,11 +691,8 @@ var colorScaleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringComputedOnly(),
-							"data_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"color":      stringComputedOnly(),
+							"data_value": floatComputedOnly(),
 						},
 					},
 				},

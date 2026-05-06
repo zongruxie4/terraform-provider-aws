@@ -766,11 +766,8 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 										"contains_header": boolComputedOnly(),
 										"delimiter":       stringComputedOnly(),
 										names.AttrFormat:  stringEnumDataSourceSchema[awstypes.FileFormat](),
-										"start_from_row": {
-											Type:     schema.TypeInt,
-											Computed: true,
-										},
-										"text_qualifier": stringEnumDataSourceSchema[awstypes.TextQualifier](),
+										"start_from_row":  intComputedOnly(),
+										"text_qualifier":  stringEnumDataSourceSchema[awstypes.TextQualifier](),
 									},
 								},
 							},

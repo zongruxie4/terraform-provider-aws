@@ -98,9 +98,9 @@ var conditionalFormattingColorDataSourceSchema = sync.OnceValue(func() *schema.S
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"gradient_offset": {Type: schema.TypeFloat, Computed: true},
+													"gradient_offset": floatComputedOnly(),
 													"color":           stringComputedOnly(),
-													"data_value":      {Type: schema.TypeFloat, Computed: true},
+													"data_value":      floatComputedOnly(),
 												},
 											},
 										},

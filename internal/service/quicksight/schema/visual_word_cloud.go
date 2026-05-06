@@ -139,7 +139,7 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cloud_layout":          stringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
-										"maximum_string_length": {Type: schema.TypeInt, Computed: true},
+										"maximum_string_length": intComputedOnly(),
 										"word_casing":           stringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
 										"word_orientation":      stringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
 										"word_padding":          stringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),

@@ -179,7 +179,7 @@ func radarChartVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"start_angle":    {Type: schema.TypeFloat, Computed: true},
+							"start_angle":    floatComputedOnly(),
 							"visual_palette": visualPaletteDataSourceSchema(),
 						},
 					},

@@ -252,10 +252,7 @@ var decimalPlacesConfigurationDataSourceSchema = sync.OnceValue(func() *schema.S
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_places": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
+				"decimal_places": intComputedOnly(),
 			},
 		},
 	}

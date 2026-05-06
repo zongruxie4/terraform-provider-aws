@@ -199,10 +199,7 @@ var decimalParameterDeclarationDataSourceSchema = sync.OnceValue(func() *schema.
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"custom_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"custom_value":            floatComputedOnly(),
 							"value_when_unset_option": stringEnumDataSourceSchema[awstypes.ValueWhenUnsetOption](),
 						},
 					},
@@ -296,10 +293,7 @@ var integerParameterDeclarationDataSourceSchema = sync.OnceValue(func() *schema.
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"custom_value": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
+							"custom_value":            intComputedOnly(),
 							"value_when_unset_option": stringEnumDataSourceSchema[awstypes.ValueWhenUnsetOption](),
 						},
 					},
@@ -606,18 +600,9 @@ var parameterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 							"source_parameter_name": parameterNameDataSourceSchema(),
 							"title":                 stringComputedOnly(),
 							"display_options":       sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							"maximum_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
-							"minimum_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
-							"step_size": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"maximum_value":         floatComputedOnly(),
+							"minimum_value":         floatComputedOnly(),
+							"step_size":             floatComputedOnly(),
 						},
 					},
 				},

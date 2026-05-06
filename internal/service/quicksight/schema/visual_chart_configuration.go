@@ -233,8 +233,8 @@ var axisDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"maximum": {Type: schema.TypeFloat, Computed: true},
-																"minimum": {Type: schema.TypeFloat, Computed: true},
+																"maximum": floatComputedOnly(),
+																"minimum": floatComputedOnly(),
 															},
 														},
 													},
@@ -251,8 +251,8 @@ var axisDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"step_count": {Type: schema.TypeInt, Computed: true},
-																"step_size":  {Type: schema.TypeFloat, Computed: true},
+																"step_count": intComputedOnly(),
+																"step_size":  floatComputedOnly(),
 															},
 														},
 													},
@@ -261,7 +261,7 @@ var axisDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"base": {Type: schema.TypeFloat, Computed: true},
+																"base": floatComputedOnly(),
 															},
 														},
 													},
@@ -291,8 +291,8 @@ var axisDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"from": {Type: schema.TypeFloat, Computed: true},
-													"to":   {Type: schema.TypeFloat, Computed: true},
+													"from": floatComputedOnly(),
+													"to":   floatComputedOnly(),
 												},
 											},
 										},
@@ -308,7 +308,7 @@ var axisDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"label_options":  labelOptionsDataSourceSchema(),
-							"rotation_angle": {Type: schema.TypeFloat, Computed: true},
+							"rotation_angle": floatComputedOnly(),
 						},
 					},
 				},
@@ -416,7 +416,7 @@ var itemsLimitConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Sche
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"items_limit":      {Type: schema.TypeInt, Computed: true},
+				"items_limit":      intComputedOnly(),
 				"other_categories": stringEnumDataSourceSchema[awstypes.OtherCategories](),
 			},
 		},
@@ -600,7 +600,7 @@ var referenceLineDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrValue: {Type: schema.TypeFloat, Computed: true},
+										names.AttrValue: floatComputedOnly(),
 									},
 								},
 							},
@@ -712,8 +712,8 @@ var smallMultiplesOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"max_visible_columns": {Type: schema.TypeInt, Computed: true},
-				"max_visible_rows":    {Type: schema.TypeInt, Computed: true},
+				"max_visible_columns": intComputedOnly(),
+				"max_visible_rows":    intComputedOnly(),
 				"panel_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,

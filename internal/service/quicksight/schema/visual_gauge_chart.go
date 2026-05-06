@@ -189,7 +189,7 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_angle":     {Type: schema.TypeFloat, Computed: true},
+													"arc_angle":     floatComputedOnly(),
 													"arc_thickness": stringEnumDataSourceSchema[awstypes.ArcThicknessOptions](),
 												},
 											},
@@ -204,12 +204,12 @@ func gaugeChartVisualDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrMax: {Type: schema.TypeFloat, Computed: true},
-																names.AttrMin: {Type: schema.TypeFloat, Computed: true},
+																names.AttrMax: floatComputedOnly(),
+																names.AttrMin: floatComputedOnly(),
 															},
 														},
 													},
-													"reserve_range": {Type: schema.TypeInt, Computed: true},
+													"reserve_range": intComputedOnly(),
 												},
 											},
 										},

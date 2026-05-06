@@ -76,10 +76,10 @@ var geospatialWindowOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sche
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"east":  {Type: schema.TypeFloat, Computed: true},
-							"north": {Type: schema.TypeFloat, Computed: true},
-							"south": {Type: schema.TypeFloat, Computed: true},
-							"west":  {Type: schema.TypeFloat, Computed: true},
+							"east":  floatComputedOnly(),
+							"north": floatComputedOnly(),
+							"south": floatComputedOnly(),
+							"west":  floatComputedOnly(),
 						},
 					},
 				},

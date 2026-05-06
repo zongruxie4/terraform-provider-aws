@@ -318,6 +318,20 @@ var boolComputedOnly = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var intComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeInt,
+		Computed: true,
+	}
+})
+
+var floatComputedOnly = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeFloat,
+		Computed: true,
+	}
+})
+
 // syncMap is a type-safe wrapper around `sync.Map`
 type syncMap[K comparable, V any] struct {
 	m sync.Map
@@ -556,10 +570,7 @@ var numericalAggregationFunctionDataSourceSchema = sync.OnceValue(func() *schema
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"percentile_value": {
-								Type:     schema.TypeFloat,
-								Computed: true,
-							},
+							"percentile_value": floatComputedOnly(),
 						},
 					},
 				},

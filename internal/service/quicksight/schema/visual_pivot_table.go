@@ -457,7 +457,7 @@ var tableBorderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"color":     stringComputedOnly(),
 				"style":     stringEnumDataSourceSchema[awstypes.TableBorderStyle](),
-				"thickness": {Type: schema.TypeInt, Computed: true},
+				"thickness": intComputedOnly(),
 			},
 		},
 	}
@@ -541,7 +541,7 @@ var tableCellStyleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					},
 				},
 				"font_configuration":        fontConfigurationDataSourceSchema(),
-				"height":                    {Type: schema.TypeInt, Computed: true},
+				"height":                    intComputedOnly(),
 				"horizontal_text_alignment": stringEnumDataSourceSchema[awstypes.HorizontalTextAlignment](),
 				"text_wrap":                 stringEnumDataSourceSchema[awstypes.TextWrap](),
 				"vertical_text_alignment":   stringEnumDataSourceSchema[awstypes.VerticalTextAlignment](),
