@@ -184,6 +184,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	}
 }
 
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newTableResourceAsListResource,
+			TypeName: "aws_dynamodb_table",
+			Name:     "Table",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+	})
+}
+
 func (p *servicePackage) ServicePackageName() string {
 	return names.DynamoDB
 }
