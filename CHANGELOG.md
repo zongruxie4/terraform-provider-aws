@@ -12,6 +12,7 @@ FEATURES:
 * **New List Resource:** `aws_appautoscaling_policy` ([#47718](https://github.com/hashicorp/terraform-provider-aws/issues/47718))
 * **New List Resource:** `aws_arczonalshift_zonal_autoshift_configuration` ([#46114](https://github.com/hashicorp/terraform-provider-aws/issues/46114))
 * **New List Resource:** `aws_dynamodb_global_secondary_index` ([#47785](https://github.com/hashicorp/terraform-provider-aws/issues/47785))
+* **New List Resource:** `aws_dynamodb_table` ([#47518](https://github.com/hashicorp/terraform-provider-aws/issues/47518))
 * **New List Resource:** `aws_ecr_repository_policy` ([#47763](https://github.com/hashicorp/terraform-provider-aws/issues/47763))
 * **New List Resource:** `aws_glue_catalog` ([#43583](https://github.com/hashicorp/terraform-provider-aws/issues/43583))
 * **New List Resource:** `aws_lb_target_group_attachment` ([#47724](https://github.com/hashicorp/terraform-provider-aws/issues/47724))
