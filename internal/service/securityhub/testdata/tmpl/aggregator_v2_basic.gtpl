@@ -1,7 +1,7 @@
 resource "aws_securityhub_aggregator_v2" "test" {
 {{- template "region" }}
   region_linking_mode = "SPECIFIED_REGIONS"
-  linked_regions      = ["us-east-1"]
+  linked_regions      = ["ap-southeast-1"]
 
 {{- template "tags" . }}
 

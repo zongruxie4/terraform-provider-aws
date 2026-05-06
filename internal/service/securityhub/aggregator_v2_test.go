@@ -6,7 +6,6 @@ package securityhub_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -106,7 +105,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckAggregatorV2Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAggregatorV2Config_specifiedRegions([]string{endpoints.UsEast1RegionID, endpoints.EuWest1RegionID}),
+				Config: testAccAggregatorV2Config_specifiedRegions(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregatorV2Exists(ctx, t, resourceName, &aggregator),
 				),
@@ -128,7 +127,7 @@ func testAccAggregatorV2_specifiedRegions(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccAggregatorV2Config_specifiedRegions([]string{endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID}),
+				Config: testAccAggregatorV2Config_specifiedRegions(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregatorV2Exists(ctx, t, resourceName, &aggregator),
 				),
@@ -281,11 +280,7 @@ resource "aws_securityhub_aggregator_v2" "test" {
 `, endpoints.UsEast1RegionID))
 }
 
-func testAccAggregatorV2Config_specifiedRegions(regions []string) string {
-	quoted := make([]string, len(regions))
-	for i, r := range regions {
-		quoted[i] = fmt.Sprintf("%q", r)
-	}
+func testAccAggregatorV2Config_specifiedRegions(regions ...string) string {
 	return acctest.ConfigCompose(testAccAggregatorV2Config_base(), fmt.Sprintf(`
 resource "aws_securityhub_aggregator_v2" "test" {
   region_linking_mode = "SPECIFIED_REGIONS"
@@ -293,7 +288,7 @@ resource "aws_securityhub_aggregator_v2" "test" {
 
   depends_on = [aws_securityhub_account_v2.test]
 }
-`, strings.Join(quoted, ", ")))
+`, acctest.ListOfStrings(regions...)))
 }
 
 func testAccAggregatorV2Config_tags1(tagKey1, tagValue1 string) string {
