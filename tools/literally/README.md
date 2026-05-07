@@ -13,6 +13,7 @@ literally [options]
 ```
 
 **Common options:**
+
 - `--mincount N` - Minimum occurrences to report (default: 5)
 - `--minpkgcount N` - Minimum packages literal must appear in (default: 4)
 - `--minlen N` - Minimum string length (default: 1)
@@ -34,6 +35,7 @@ literally --replace \
 ```
 
 **Example:**
+
 ```bash
 literally --replace \
   --literal "checksum" \
@@ -44,12 +46,14 @@ literally --replace \
 ```
 
 **What it does:**
+
 1. Creates constants file if it doesn't exist
 2. Adds constant to file in alphabetical order (if not present)
 3. Replaces all matching string literals in non-test `.go` files
 4. Preserves formatting with `go/format`
 
 **Replace options:**
+
 - `--replace` - Enable replace mode
 - `--literal` - String literal to replace (required)
 - `--constant` - Constant name to use (required)
