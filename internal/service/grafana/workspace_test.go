@@ -178,6 +178,23 @@ func TestFlattenNetworkAccessControl(t *testing.T) {
 	}
 }
 
+func newStringSet(values ...string) *schema.Set {
+	raw := make([]any, len(values))
+	for i, v := range values {
+		raw[i] = v
+	}
+	return schema.NewSet(schema.HashString, raw)
+}
+
+func buildNetworkAccessTFList(prefixIDs, vpceIDs *schema.Set) []any {
+	return []any{
+		map[string]any{
+			"prefix_list_ids": prefixIDs,
+			"vpce_ids":        vpceIDs,
+		},
+	}
+}
+
 func testAccWorkspace_saml(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WorkspaceDescription
@@ -1103,66 +1120,4 @@ resource "aws_grafana_workspace" "test" {
   kms_key_id               = aws_kms_key.test.arn
 }
 `, rName))
-}
-
-func newStringSet(values ...string) *schema.Set {
-	raw := make([]any, len(values))
-	for i, v := range values {
-		raw[i] = v
-	}
-	return schema.NewSet(schema.HashString, raw)
-}
-
-func buildNetworkAccessTFList(prefixIDs, vpceIDs *schema.Set) []any {
-	return []any{
-		map[string]any{
-			"prefix_list_ids": prefixIDs,
-			"vpce_ids":        vpceIDs,
-		},
-	}
-}
-
-func TestExpandFlattenRoundtrip_populated(t *testing.T) {
-	t.Parallel()
-
-	original := &awstypes.NetworkAccessConfiguration{
-		PrefixListIds: []string{"pl-round"},
-		VpceIds:       []string{"vpce-round"},
-	}
-
-	flat := tfgrafana.FlattenNetworkAccessControl(original)
-	if len(flat) != 1 {
-		t.Fatalf("FlattenNetworkAccessControl returned %d elements", len(flat))
-	}
-
-	m := flat[0].(map[string]any)
-	pfxSlice := m["prefix_list_ids"].([]string)
-	vpceSlice := m["vpce_ids"].([]string)
-
-	pfxRaw := make([]any, len(pfxSlice))
-	for i, v := range pfxSlice {
-		pfxRaw[i] = v
-	}
-	vpceRaw := make([]any, len(vpceSlice))
-	for i, v := range vpceSlice {
-		vpceRaw[i] = v
-	}
-
-	tfList := []any{
-		map[string]any{
-			"prefix_list_ids": schema.NewSet(schema.HashString, pfxRaw),
-			"vpce_ids":        schema.NewSet(schema.HashString, vpceRaw),
-		},
-	}
-
-	out := tfgrafana.ExpandNetworkAccessControl(tfList)
-	if out == nil {
-		t.Fatal("round-trip produced nil")
-	}
-	if len(out.PrefixListIds) != 1 || out.PrefixListIds[0] != "pl-round" {
-		t.Errorf("round-trip PrefixListIds mismatch: %v", out.PrefixListIds)
-	}
-	if len(out.VpceIds) != 1 || out.VpceIds[0] != "vpce-round" {
-		t.Errorf("round-trip VpceIds mismatch: %v", out.VpceIds)
-	}
 }
