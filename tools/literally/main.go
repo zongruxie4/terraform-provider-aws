@@ -472,13 +472,13 @@ func main() {
 // If the file doesn't exist, it creates a new one with the basic structure
 func parseConstantsFile(path string) (*token.FileSet, *ast.File, error) {
 	fset := token.NewFileSet()
-	
+
 	// Check if file exists
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
 		// Create new constants file
 		dir := filepath.Dir(path)
 		pkgName := filepath.Base(dir)
-		
+
 		content := fmt.Sprintf(`// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
@@ -487,13 +487,13 @@ package %s
 // Schema attribute name constants used across package
 const ()
 `, pkgName)
-		
+
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			return nil, nil, fmt.Errorf("creating constants file: %w", err)
 		}
 		fmt.Printf("Created new constants file: %s\n", path)
 	}
-	
+
 	f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing constants file: %w", err)

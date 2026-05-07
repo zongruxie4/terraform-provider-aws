@@ -1,4 +1,6 @@
 # literally
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
 A tool for analyzing and replacing string literals in Go code.
 
