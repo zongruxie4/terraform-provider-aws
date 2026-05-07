@@ -30,6 +30,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccTelemetryEvaluationPreCheck")
+// @Testing(generator=false)
 func newTelemetryEvaluationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &telemetryEvaluationResource{}
 
@@ -50,7 +51,7 @@ func (r *telemetryEvaluationResource) Schema(ctx context.Context, req resource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 			"failure_reason": schema.StringAttribute{
