@@ -143,7 +143,7 @@ skaff resource --name ExampleThing --service example
 
 After scaffolding:
 1. Fill in the schema and CRUD handlers.
-2. Add `@FrameworkResource("aws_example_thing", name="Example Thing")` (Framework) or `@SDKResource(...)` (SDKv2) annotation.
+2. Add `@FrameworkResource("aws_example_thing", name="Example Thing")` annotation.
 3. Run `make gen` to register the resource.
 4. Write at minimum: `basic`, `disappears`, and key argument tests.
 
