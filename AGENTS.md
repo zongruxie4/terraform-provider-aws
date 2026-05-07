@@ -10,6 +10,7 @@ This file provides guidance to AI coding agents when working with code in this r
 This is the Go-based Terraform AWS Provider (`github.com/hashicorp/terraform-provider-aws`). It maps AWS API resources to Terraform resources, data sources, ephemeral resources and actions (collectively often referred to as just resources). The primary language is Go; HCL appears in acceptance test configurations and website documentation.
 
 ---
+
 ## Agent Registry
 
 This project uses specialized personas for different tasks.
@@ -28,6 +29,7 @@ This project uses specialized personas for different tasks.
 - Personas may invoke skills.
 
 ---
+
 ## Skills
 
 Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step instructions, code patterns, and guardrails for a specific task.
@@ -36,6 +38,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 |---|---|
 
 ---
+
 ## Global Rules
 
 ### Non-negotiables
@@ -47,6 +50,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 ### AI Usage Policy
 
 Per `docs/ai-usage.md`:
+
 - Disclose AI use in the PR description.
 - Include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
 - The human PR author is fully responsible for all submitted code and must understand it completely.
@@ -142,6 +146,7 @@ skaff resource --name ExampleThing --service example
 ```
 
 After scaffolding:
+
 1. Fill in the schema and CRUD handlers.
 2. Add `@FrameworkResource("aws_example_thing", name="Example Thing")` annotation.
 3. Run `make gen` to register the resource.
@@ -166,6 +171,7 @@ Net-new resources must use Terraform Plugin Framework. Existing SDKv2 resources 
 Order: standard library → third-party → local. Enforced by `make import-lint`.
 
 Required aliases:
+
 - `github.com/hashicorp/terraform-plugin-sdk/v2/helper/id` → `sdkid`
 - `github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry` → `sdkretry`
 - `github.com/hashicorp/terraform-plugin-testing/helper/acctest` → `sdkacctest`
